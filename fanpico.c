@@ -21,10 +21,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
+#include "hardware/adc.h"
 #include "hardware/clocks.h"
 
 #include "fanpico.h"
@@ -69,7 +71,20 @@ const uint MBFAN3_PWM_READ_PIN = 17; /* PWM0B */
 const uint MBFAN4_PWM_READ_PIN = 19; /* PWM1B */
 
 
+float get_pico_temp()
+{
+	uint16_t raw;
+	float temp, volt;
+	float cal_value = 0.0;
 
+	adc_select_input(4);
+	raw = adc_read();
+	volt = raw * 3.25 / (1 << 12);
+	temp = 27 - ((volt - 0.706) / 0.001721) + cal_value;
+
+	printf("get_pico_temp(): raw=%u, volt=%f, temp=%f\n", raw, volt, temp);
+	return roundf(temp);
+}
 
 void set_binary_info()
 {
@@ -111,17 +126,27 @@ void set_binary_info()
 
 void setup()
 {
+	int res;
+
 	set_binary_info();
 	stdio_init_all();
 
+	sleep_ms(500);
 	printf("\n\n\n");
 	printf("FanPico v%s\n", VERSION);
 	printf("Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>\n");
 	printf("Build date: %s\n", __DATE__);
 
 
+	/* Enable ADC */
+	printf("Initialize ADC...\n");
+	adc_init();
+	adc_set_temp_sensor_enabled(true);
+	adc_select_input(4);
+
 	/* Setup GPIO pins */
 
+	printf("Initialize GPIO...\n");
 	gpio_init(LED_PIN);
 	gpio_set_dir(LED_PIN, GPIO_OUT);
 	gpio_put(LED_PIN, 1);
@@ -160,6 +185,9 @@ void setup()
 	set_pwm_duty_cycle(FAN1_PWM_GEN_PIN, 50.0);
 	set_pwm_duty_cycle(FAN2_PWM_GEN_PIN, 25.0);
 
+
+	read_config();
+
 	printf("Initialization complete.\n\n");
 }
 
@@ -194,6 +222,8 @@ int main()
 #endif
 		get_pwm_duty_cycles(pins,4,duty);
 		printf("all: fan1=%f,fan2=%f,fan3=%f,fan4=%f\n", duty[0], duty[1], duty[2], duty[3]);
+		float temp = get_pico_temp();
+		printf("temperature=%fC\n", temp);
 		sleep_ms(1000);
 	}
 }
