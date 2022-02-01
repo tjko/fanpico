@@ -57,6 +57,9 @@ extern const uint MBFAN4_PWM_READ_PIN; /* PWM1B */
 
 
 
+/* config.c */
+void read_config();
+
 
 /* pwm.c */
 void set_pwm_duty_cycle(uint pin, float duty);
