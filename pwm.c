@@ -60,7 +60,7 @@ float get_pwm_duty_cycle(uint pin)
 	pwm_set_enabled(slice_num, false);
 	counter = pwm_get_counter(slice_num);
 
-	float duty = counter / pwm_in_max_count;
+	float duty = counter * 100 / pwm_in_max_count;
 	//printf("get_pwm_duty_cycle(pin=%d): duty=%f (counter=%u)\n", pin, duty, counter);
 
 	return duty;
@@ -90,7 +90,7 @@ void get_pwm_duty_cycles(uint *pins, uint count, float *duty)
 	}
 
 	for (i=0; i < count; i++) {
-		duty[i] = pwm_get_counter(slices[i]) / pwm_in_max_count;
+		duty[i] = pwm_get_counter(slices[i]) * 100 / pwm_in_max_count;
 	}
 }
 
