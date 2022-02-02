@@ -47,7 +47,7 @@ float get_pico_temp()
 	volt = raw * 3.25 / (1 << 12);
 	temp = 27 - ((volt - 0.706) / 0.001721) + cal_value;
 
-	printf("get_pico_temp(): raw=%u, volt=%f, temp=%f\n", raw, volt, temp);
+	//printf("get_pico_temp(): raw=%u, volt=%f, temp=%f\n", raw, volt, temp);
 	return roundf(temp);
 }
 
@@ -137,6 +137,7 @@ int main()
 	/* Initialize MCU and other hardware... */
 	setup();
 
+	uint count = 0;
 	uint8_t buf[32];
 	float duty[4];
 	uint pins[4] = {
@@ -162,6 +163,7 @@ int main()
 		float d2 = get_pwm_duty_cycle(MBFAN2_PWM_READ_PIN);
 		printf("fan2 duty=%f\n", d2);
 #endif
+#if 0
 		get_pwm_duty_cycles(pins,4,duty);
 		printf("all: fan1=%f,fan2=%f,fan3=%f,fan4=%f\n", duty[0], duty[1], duty[2], duty[3]);
 		float temp = get_pico_temp();
@@ -171,6 +173,18 @@ int main()
 			fan_tacho_counters[1],
 			fan_tacho_counters[2],
 			fan_tacho_counters[3] );
+#endif
+
+		if (count % 1 == 0) {
+			update_tacho_freq();
+			printf("tacho (Hz): fan1=%0.2f, fan2=%0.2f, fan3=%0.2f, fan4=%0.2f\n",
+				fan_tacho_freq[0],
+				fan_tacho_freq[1],
+				fan_tacho_freq[2],
+				fan_tacho_freq[3] );
+		}
+		count++;
+
 		sleep_ms(1000);
 	}
 }

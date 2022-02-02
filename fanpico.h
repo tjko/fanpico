@@ -77,9 +77,10 @@ void setup_pwm_inputs();
 
 
 /* tacho.c */
-extern uint fan_tacho_counters[FAN_MAX_COUNT];
+extern float fan_tacho_freq[FAN_MAX_COUNT];
 void setup_tacho_inputs();
 void setup_tacho_outputs();
+void update_tacho_freq();
 
 
 /* crc32.c */

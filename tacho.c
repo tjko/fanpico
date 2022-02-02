@@ -24,6 +24,7 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 
+
 #include "fanpico.h"
 
 
@@ -42,7 +43,12 @@ uint8_t fan_gpio_tacho_map[FAN_MAX_COUNT] = {
 /* mapping from GPIO pin to FAN (index) */
 uint8_t gpio_fan_tacho_map[32];
 
-uint fan_tacho_counters[FAN_MAX_COUNT];
+/* tacho pulse counters updated by GPIO interrupt */
+volatile uint fan_tacho_counters[FAN_MAX_COUNT];
+
+uint fan_tacho_counters_last[FAN_MAX_COUNT];
+absolute_time_t fan_tacho_last_read;
+float fan_tacho_freq[FAN_MAX_COUNT];
 
 
 /* Interrupt handler to keep count on pulses received on fan tachometer pins... */
@@ -57,44 +63,70 @@ void __not_in_flash_func(fan_tacho_read_callback)(uint gpio, uint32_t events)
 }
 
 
+void update_tacho_freq()
+{
+	uint counters[FAN_MAX_COUNT];
+	int64_t delta;
+	double s;
+	uint pulses;
+	double f;
+	int i;
+
+	/* read current counter values */
+	for (i = 0; i < FAN_MAX_COUNT; i++) {
+		counters[i] = fan_tacho_counters[i];
+	}
+	absolute_time_t read_time = get_absolute_time();
+
+	/* calculate new frequency values, if enough time has passed... */
+	delta = absolute_time_diff_us(fan_tacho_last_read, read_time);
+	if (delta < 1000000)
+		return;
+
+	s = delta / 1000000.0;
+	for (i = 0; i < FAN_MAX_COUNT; i++) {
+		pulses = counters[i] - fan_tacho_counters_last[i];
+		f = pulses / s;
+		fan_tacho_freq[i] = f;
+		//printf("pulses=%d, delta=%lld (%lf), f=%f\n", pulses, delta, s, f);
+	}
+
+	/* save counter values for next time... */
+	for (i = 0; i < FAN_MAX_COUNT; i++) {
+		fan_tacho_counters_last[i] = counters[i];
+	}
+	fan_tacho_last_read = read_time;
+}
+
+
 void setup_tacho_inputs()
 {
-	int i;
+	int i, pin;
 
 	printf("Setting up Tacho Input pins...\n");
 
-	/* Build GPIO to FAN mapping and reset counters */
+	/* Configure pins and build GPIO to FAN mapping */
 	memset(gpio_fan_tacho_map, 0, sizeof(gpio_fan_tacho_map));
+
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
-		gpio_fan_tacho_map[fan_gpio_tacho_map[i]] = 1 + i;
+		pin = fan_gpio_tacho_map[i];
+
+		gpio_fan_tacho_map[pin] = 1 + i;
 		fan_tacho_counters[i] = 0;
+		fan_tacho_counters_last[i] = 0;
+		fan_tacho_freq[i] = 0.0;
+
+		gpio_init(pin);
+		gpio_set_dir(pin, GPIO_IN);
 	}
 
-	/* Configure pins as inputs... */
-	gpio_init(FAN1_TACHO_READ_PIN);
-	gpio_set_dir(FAN1_TACHO_READ_PIN, GPIO_IN);
-	gpio_init(FAN2_TACHO_READ_PIN);
-	gpio_set_dir(FAN2_TACHO_READ_PIN, GPIO_IN);
-	gpio_init(FAN3_TACHO_READ_PIN);
-	gpio_set_dir(FAN3_TACHO_READ_PIN, GPIO_IN);
-	gpio_init(FAN4_TACHO_READ_PIN);
-	gpio_set_dir(FAN4_TACHO_READ_PIN, GPIO_IN);
-	gpio_init(FAN5_TACHO_READ_PIN);
-	gpio_set_dir(FAN5_TACHO_READ_PIN, GPIO_IN);
-	gpio_init(FAN6_TACHO_READ_PIN);
-	gpio_set_dir(FAN6_TACHO_READ_PIN, GPIO_IN);
-	gpio_init(FAN7_TACHO_READ_PIN);
-	gpio_set_dir(FAN7_TACHO_READ_PIN, GPIO_IN);
-	gpio_init(FAN8_TACHO_READ_PIN);
-	gpio_set_dir(FAN8_TACHO_READ_PIN, GPIO_IN);
-
 	/* Enable interrupts on Fan Tacho input pins */
-	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_RISE,
+	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_FALL,
 					true, &fan_tacho_read_callback);
 	for (i = 1; i < FAN_MAX_COUNT; i++) {
 		gpio_set_irq_enabled(fan_gpio_tacho_map[i], GPIO_IRQ_EDGE_RISE, true);
 	}
-
+	fan_tacho_last_read = get_absolute_time();
 }
 
 
@@ -108,5 +140,4 @@ void setup_tacho_outputs()
 	gpio_set_dir(MBFAN3_TACHO_GEN_PIN, GPIO_OUT);
 	gpio_init(MBFAN4_TACHO_GEN_PIN);
 	gpio_set_dir(MBFAN4_TACHO_GEN_PIN, GPIO_OUT);
-
 }
