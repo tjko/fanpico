@@ -18,6 +18,7 @@ add_executable(fanpico
   fanpico.c
   config.c
   pwm.c
+  tacho.c
   crc32.c
   )
 

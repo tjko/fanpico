@@ -23,37 +23,44 @@
 #define FANPICO_H 1
 
 
+#define FAN_MAX_COUNT 8
+#define MBFAN_MAX_COUNT 4
 
-extern const uint FAN1_TACHO_READ_PIN;
-extern const uint FAN2_TACHO_READ_PIN;
-extern const uint FAN3_TACHO_READ_PIN;
-extern const uint FAN4_TACHO_READ_PIN;
-extern const uint FAN5_TACHO_READ_PIN;
-extern const uint FAN6_TACHO_READ_PIN;
-extern const uint FAN7_TACHO_READ_PIN;
-extern const uint FAN8_TACHO_READ_PIN;
+#define LED_PIN 25
 
-extern const uint FAN1_PWM_GEN_PIN;  /* PWM2A */
-extern const uint FAN2_PWM_GEN_PIN;  /* PWM2B */
-extern const uint FAN3_PWM_GEN_PIN;  /* PWM3A */
-extern const uint FAN4_PWM_GEN_PIN;  /* PWM3B */
-extern const uint FAN5_PWM_GEN_PIN;  /* PWM4A */
-extern const uint FAN6_PWM_GEN_PIN;  /* PWM4B */
-extern const uint FAN7_PWM_GEN_PIN; /* PWM5A */
-extern const uint FAN8_PWM_GEN_PIN; /* PWM5B */
+/* Pins for Fan Signals */
+
+#define FAN1_TACHO_READ_PIN 2
+#define FAN2_TACHO_READ_PIN 3
+#define FAN3_TACHO_READ_PIN 20
+#define FAN4_TACHO_READ_PIN 21
+#define FAN5_TACHO_READ_PIN 22
+#define FAN6_TACHO_READ_PIN 26
+#define FAN7_TACHO_READ_PIN 27
+#define FAN8_TACHO_READ_PIN 28
+
+#define FAN1_PWM_GEN_PIN 4  /* PWM2A */
+#define FAN2_PWM_GEN_PIN 5  /* PWM2B */
+#define FAN3_PWM_GEN_PIN 6  /* PWM3A */
+#define FAN4_PWM_GEN_PIN 7  /* PWM3B */
+#define FAN5_PWM_GEN_PIN 8  /* PWM4A */
+#define FAN6_PWM_GEN_PIN 9  /* PWM4B */
+#define FAN7_PWM_GEN_PIN 10 /* PWM5A */
+#define FAN8_PWM_GEN_PIN 11 /* PWM5B */
 
 
 /* Pins for Motherboar Fan Connector Signals */
 
-extern const uint MBFAN1_TACHO_GEN_PIN;
-extern const uint MBFAN2_TACHO_GEN_PIN;
-extern const uint MBFAN3_TACHO_GEN_PIN;
-extern const uint MBFAN4_TACHO_GEN_PIN;
+#define MBFAN1_TACHO_GEN_PIN 12
+#define MBFAN2_TACHO_GEN_PIN 14
+#define MBFAN3_TACHO_GEN_PIN 16
+#define MBFAN4_TACHO_GEN_PIN 18
 
-extern const uint MBFAN1_PWM_READ_PIN; /* PWM6B */
-extern const uint MBFAN2_PWM_READ_PIN; /* PWM7B */
-extern const uint MBFAN3_PWM_READ_PIN; /* PWM0B */
-extern const uint MBFAN4_PWM_READ_PIN; /* PWM1B */
+#define MBFAN1_PWM_READ_PIN 13 /* PWM6B */
+#define MBFAN2_PWM_READ_PIN 15 /* PWM7B */
+#define MBFAN3_PWM_READ_PIN 17 /* PWM0B */
+#define MBFAN4_PWM_READ_PIN 19 /* PWM1B */
+
 
 
 
@@ -67,6 +74,12 @@ float get_pwm_duty_cycle(uint pin);
 void get_pwm_duty_cycles(uint *pins, uint count, float *duty);
 void setup_pwm_outputs();
 void setup_pwm_inputs();
+
+
+/* tacho.c */
+extern uint fan_tacho_counters[FAN_MAX_COUNT];
+void setup_tacho_inputs();
+void setup_tacho_outputs();
 
 
 /* crc32.c */
