@@ -18,7 +18,7 @@
 ; GNU General Public License for more details.
 ;
 ; You should have received a copy of the GNU General Public License
-; along with Foobar. If not, see <https://www.gnu.org/licenses/>.
+; along with FanPico. If not, see <https://www.gnu.org/licenses/>.
 ;
 
 ; Adjustable Square Wave generator that reads 'period' from FIFO.
@@ -29,14 +29,15 @@
 .side_set 1 opt
 
 start:
-    pull noblock    side 1 ; Pull from FIFO to OSR if available, else copy X to OSR.
-    mov x, osr             ; Copy most-recently-pulled value back to scratch X
+    pull noblock    side 0 ; Read FIFO to OSR (or copy copy X to OSR if FIFO empty)
+    mov x, osr             ; Save 'period' in X
     mov y, x               ; Copy X to Y
-    jmp !y start	   ; Steady high output if period is 0
+    jmp !y start	   ; Steady low output if period is 0
 hi_loop:
     nop
     jmp y-- hi_loop        ; Loop until Y hits 0
-    mov y, x        side 0 ; Reset Y back to X and set output low
+    mov y, x        side 1 ; Reset Y back to X and set output low
+    nop             [3]    ; Wait 3 cycle to keep both sides same length
 lo_loop:
     nop
     jmp y-- lo_loop        ; Loop until Y hits 0
