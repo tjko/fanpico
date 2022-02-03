@@ -23,7 +23,9 @@
 #include <string.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
+#include "hardware/pio.h"
 
+#include "square_wave_gen.pio.h"
 
 #include "fanpico.h"
 
@@ -130,8 +132,34 @@ void setup_tacho_inputs()
 }
 
 
+void square_wave_gen_program_init(PIO pio, uint sm, uint offset, uint pin)
+{
+	pio_sm_config config = square_wave_gen_program_get_default_config(offset);
+
+	pio_gpio_init(pio, pin);
+	pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+	sm_config_set_sideset_pins(&config, pin);
+	pio_sm_init(pio, sm, offset, &config);
+}
+
+void pio_square_wave_gen_set_period(PIO pio, uint sm, uint32_t period)
+{
+	/* Write 'period' to TX FIFO. State machine copies this into register X */
+	pio_sm_put_blocking(pio, sm, period);
+}
+
 void setup_tacho_outputs()
 {
+	PIO pio = pio0;
+	uint offset = pio_add_program(pio, &square_wave_gen_program);
+	int sm = 0;
+
+	square_wave_gen_program_init(pio, sm, offset, MBFAN1_TACHO_GEN_PIN);
+	pio_sm_set_enabled(pio, sm, true);
+	pio_square_wave_gen_set_period(pio, sm, 300000);
+
+
+#if 0
 	gpio_init(MBFAN1_TACHO_GEN_PIN);
 	gpio_set_dir(MBFAN1_TACHO_GEN_PIN, GPIO_OUT);
 	gpio_init(MBFAN2_TACHO_GEN_PIN);
@@ -140,4 +168,5 @@ void setup_tacho_outputs()
 	gpio_set_dir(MBFAN3_TACHO_GEN_PIN, GPIO_OUT);
 	gpio_init(MBFAN4_TACHO_GEN_PIN);
 	gpio_set_dir(MBFAN4_TACHO_GEN_PIN, GPIO_OUT);
+#endif
 }

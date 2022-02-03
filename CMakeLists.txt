@@ -24,6 +24,8 @@ add_executable(fanpico
   crc32.c
   )
 
+pico_generate_pio_header(fanpico ${CMAKE_CURRENT_LIST_DIR}/square_wave_gen.pio)
+
 
 
 add_subdirectory(../pico-littlefs/lfs lfs)
@@ -32,7 +34,12 @@ add_subdirectory(../pico-littlefs/lfs lfs)
 pico_enable_stdio_usb(fanpico 1)
 pico_enable_stdio_uart(fanpico 1)
 pico_add_extra_outputs(fanpico)
-target_link_libraries(fanpico pico_stdlib hardware_pwm hardware_adc lfs)
+target_link_libraries(fanpico
+  pico_stdlib
+  hardware_pwm
+  hardware_pio
+  hardware_adc
+  lfs)
 
 target_compile_options(fanpico PRIVATE "-Wall")
 

@@ -1,0 +1,45 @@
+;
+; square_wave_gen.pio
+;
+; Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+;
+; SPDX-License-Identifier: GPL-3.0-or-later
+;
+; This file is part of FanPico.
+;
+; FanPico is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; Foobar is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with Foobar. If not, see <https://www.gnu.org/licenses/>.
+;
+
+; Adjustable Square Wave generator that reads 'period' from FIFO.
+;
+; Side-set pin 0 is used for output
+
+.program square_wave_gen
+.side_set 1 opt
+
+start:
+    pull noblock    side 1 ; Pull from FIFO to OSR if available, else copy X to OSR.
+    mov x, osr             ; Copy most-recently-pulled value back to scratch X
+    mov y, x               ; Copy X to Y
+    jmp !y start	   ; Steady high output if period is 0
+hi_loop:
+    nop
+    jmp y-- hi_loop        ; Loop until Y hits 0
+    mov y, x        side 0 ; Reset Y back to X and set output low
+lo_loop:
+    nop
+    jmp y-- lo_loop        ; Loop until Y hits 0
+
+
+; eof :-)
