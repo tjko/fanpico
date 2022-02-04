@@ -23,7 +23,7 @@
 
 ; Adjustable Square Wave signal generator that reads 'period' from FIFO.
 ; Output is square wave (at 50% duty cycle) where length of each pulse
-; is  8 + (period + 1) * 4 clock cycles.
+; is 10+2*period clock cycles.
 ;
 ; Side-set pin 0 is used for output
 
@@ -37,16 +37,14 @@ start:
     mov y, x               ; Copy X to Y (which is used as counter).
     jmp !y start	   ; Steady low output if period is 0
 
-hi_loop:
-    nop
-    jmp y-- hi_loop        ; Loop until Y hits 0
+lo_loop:
+    jmp y-- lo_loop        ; Loop until Y hits 0
 
     mov y, x        side 1 ; Reset Y back to X and set output low
     nop             [2]    ; Wait 3 cycle to keep both sides same length
 
-lo_loop:
-    nop
-    jmp y-- lo_loop        ; Loop until Y hits 0
+hi_loop:
+    jmp y-- hi_loop        ; Loop until Y hits 0
 
 
 ; eof :-)
