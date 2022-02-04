@@ -165,7 +165,7 @@ int main()
 		printf("fan2 duty=%f\n", d2);
 #endif
 		get_pwm_duty_cycles();
-		printf("all: fan1=%f,fan2=%f,fan3=%f,fan4=%f\n",
+		printf("mbpwm: fan1=%f,fan2=%f,fan3=%f,fan4=%f\n",
 			mbfan_pwm_duty[0],
 			mbfan_pwm_duty[1],
 			mbfan_pwm_duty[2],
@@ -182,11 +182,16 @@ int main()
 
 		if (count % 1 == 0) {
 			update_tacho_input_freq();
-			printf("tacho (Hz): fan1=%0.2f, fan2=%0.2f, fan3=%0.2f, fan4=%0.2f\n",
+			printf("tacho in (Hz): f1=%0.2f, f2=%0.2f, f3=%0.2f, f4=%0.2f, f5=%0.2f, f6=%0.2f, f7=%0.2f, f8=%0.2f\n",
 				fan_tacho_freq[0],
 				fan_tacho_freq[1],
 				fan_tacho_freq[2],
-				fan_tacho_freq[3] );
+				fan_tacho_freq[3],
+				fan_tacho_freq[4],
+				fan_tacho_freq[5],
+				fan_tacho_freq[6],
+				fan_tacho_freq[7]
+				);
 		}
 		count++;
 
