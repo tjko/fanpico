@@ -10,9 +10,8 @@ project(fanpico_project C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+
 pico_sdk_init()
-
-
 
 
 
@@ -21,11 +20,11 @@ add_executable(fanpico
   config.c
   pwm.c
   tacho.c
+  square_wave_gen.c
   crc32.c
   )
 
 pico_generate_pio_header(fanpico ${CMAKE_CURRENT_LIST_DIR}/square_wave_gen.pio)
-
 
 
 add_subdirectory(../pico-littlefs/lfs lfs)

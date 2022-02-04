@@ -10,7 +10,7 @@
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   Foobar is distributed in the hope that it will be useful,
+   FanPico is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
@@ -91,7 +91,7 @@ void set_binary_info()
 
 void setup()
 {
-	int res;
+	int i;
 
 	set_binary_info();
 	stdio_init_all();
@@ -120,12 +120,19 @@ void setup()
 	/* Configure PWM pins... */
 	setup_pwm_outputs();
 	setup_pwm_inputs();
-	set_pwm_duty_cycle(FAN1_PWM_GEN_PIN, 50.0);
-	set_pwm_duty_cycle(FAN2_PWM_GEN_PIN, 25.0);
+
+	for (i = 0; i < FAN_MAX_COUNT; i++) {
+		set_pwm_duty_cycle(i, 10 + i * 10);
+	}
 
 	/* Configure Tacho pins... */
 	setup_tacho_outputs();
 	setup_tacho_inputs();
+
+	set_tacho_output_freq(0,42);
+	set_tacho_output_freq(1,43);
+	set_tacho_output_freq(2,44);
+	set_tacho_output_freq(3,45);
 
 
 	printf("Initialization complete.\n\n");
@@ -139,13 +146,7 @@ int main()
 
 	uint count = 0;
 	uint8_t buf[32];
-	float duty[4];
-	uint pins[4] = {
-		MBFAN1_PWM_READ_PIN,
-		MBFAN2_PWM_READ_PIN,
-		MBFAN3_PWM_READ_PIN,
-		MBFAN4_PWM_READ_PIN
-	};
+
 
 
 
@@ -158,14 +159,18 @@ int main()
 		checksum = xcrc32(buf, sizeof(buf), checksum);
 		printf("Hello World %x\n", checksum);
 #if 0
-		float d = get_pwm_duty_cycle(MBFAN1_PWM_READ_PIN);
+		float d = get_pwm_duty_cycle(0);
 		printf("fan1 duty=%f\n", d);
-		float d2 = get_pwm_duty_cycle(MBFAN2_PWM_READ_PIN);
+		float d2 = get_pwm_duty_cycle(1);
 		printf("fan2 duty=%f\n", d2);
 #endif
+		get_pwm_duty_cycles();
+		printf("all: fan1=%f,fan2=%f,fan3=%f,fan4=%f\n",
+			mbfan_pwm_duty[0],
+			mbfan_pwm_duty[1],
+			mbfan_pwm_duty[2],
+			mbfan_pwm_duty[3]);
 #if 0
-		get_pwm_duty_cycles(pins,4,duty);
-		printf("all: fan1=%f,fan2=%f,fan3=%f,fan4=%f\n", duty[0], duty[1], duty[2], duty[3]);
 		float temp = get_pico_temp();
 		printf("temperature=%fC\n", temp);
 		printf("tacho: fan1=%u, fan2=%u, fan3=%u, fan4=%u\n",
@@ -176,7 +181,7 @@ int main()
 #endif
 
 		if (count % 1 == 0) {
-			update_tacho_freq();
+			update_tacho_input_freq();
 			printf("tacho (Hz): fan1=%0.2f, fan2=%0.2f, fan3=%0.2f, fan4=%0.2f\n",
 				fan_tacho_freq[0],
 				fan_tacho_freq[1],

@@ -10,7 +10,7 @@
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   Foobar is distributed in the hope that it will be useful,
+   FanPico is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
@@ -19,15 +19,19 @@
    along with FanPico. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#define PARAM_ASSERTIONS_ENABLE_ALL 1
+
+
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
-
-#include "square_wave_gen.pio.h"
+#include "square_wave_gen.h"
 
 #include "fanpico.h"
+
 
 
 /* mapping from FAN (index) to GPIO pins */
@@ -45,12 +49,23 @@ uint8_t fan_gpio_tacho_map[FAN_MAX_COUNT] = {
 /* mapping from GPIO pin to FAN (index) */
 uint8_t gpio_fan_tacho_map[32];
 
+
+uint8_t mbfan_gpio_tacho_map[MBFAN_MAX_COUNT] = {
+	MBFAN1_TACHO_GEN_PIN,
+	MBFAN2_TACHO_GEN_PIN,
+	MBFAN3_TACHO_GEN_PIN,
+	MBFAN4_TACHO_GEN_PIN,
+};
+
+
 /* tacho pulse counters updated by GPIO interrupt */
 volatile uint fan_tacho_counters[FAN_MAX_COUNT];
 
 uint fan_tacho_counters_last[FAN_MAX_COUNT];
 absolute_time_t fan_tacho_last_read;
 float fan_tacho_freq[FAN_MAX_COUNT];
+
+PIO pio = pio0;
 
 
 /* Interrupt handler to keep count on pulses received on fan tachometer pins... */
@@ -65,7 +80,7 @@ void __not_in_flash_func(fan_tacho_read_callback)(uint gpio, uint32_t events)
 }
 
 
-void update_tacho_freq()
+void update_tacho_input_freq()
 {
 	uint counters[FAN_MAX_COUNT];
 	int64_t delta;
@@ -132,41 +147,25 @@ void setup_tacho_inputs()
 }
 
 
-void square_wave_gen_program_init(PIO pio, uint sm, uint offset, uint pin)
+void set_tacho_output_freq(uint fan, double frequency)
 {
-	pio_sm_config config = square_wave_gen_program_get_default_config(offset);
-
-	pio_gpio_init(pio, pin);
-	pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
-	sm_config_set_sideset_pins(&config, pin);
-	pio_sm_init(pio, sm, offset, &config);
-}
-
-void pio_square_wave_gen_set_period(PIO pio, uint sm, uint32_t period)
-{
-	/* Write 'period' to TX FIFO. State machine copies this into register X */
-	pio_sm_put_blocking(pio, sm, period);
+	assert(fan < MBFAN_MAX_COUNT);
+	square_wave_gen_set_freq(pio, fan, frequency);
 }
 
 void setup_tacho_outputs()
 {
-	PIO pio = pio0;
-	uint offset = pio_add_program(pio, &square_wave_gen_program);
-	int sm = 0;
+	uint i;
 
-	square_wave_gen_program_init(pio, sm, offset, MBFAN1_TACHO_GEN_PIN);
-	pio_sm_set_enabled(pio, sm, true);
-	pio_square_wave_gen_set_period(pio, sm, 300000);
+	printf("Setting up Tacho Output pins...\n");
 
+	uint pio_program_addr = square_wave_gen_load_program(pio);
+	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+		uint pin = mbfan_gpio_tacho_map[i];
+		uint sm = i;
+		square_wave_gen_program_init(pio, sm, pio_program_addr, pin);
+		square_wave_gen_enabled(pio, sm, true);
+		//square_wave_gen_set_freq(pio, sm, 256 + (i*64));
+	}
 
-#if 0
-	gpio_init(MBFAN1_TACHO_GEN_PIN);
-	gpio_set_dir(MBFAN1_TACHO_GEN_PIN, GPIO_OUT);
-	gpio_init(MBFAN2_TACHO_GEN_PIN);
-	gpio_set_dir(MBFAN2_TACHO_GEN_PIN, GPIO_OUT);
-	gpio_init(MBFAN3_TACHO_GEN_PIN);
-	gpio_set_dir(MBFAN3_TACHO_GEN_PIN, GPIO_OUT);
-	gpio_init(MBFAN4_TACHO_GEN_PIN);
-	gpio_set_dir(MBFAN4_TACHO_GEN_PIN, GPIO_OUT);
-#endif
 }

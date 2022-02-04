@@ -10,7 +10,7 @@
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   Foobar is distributed in the hope that it will be useful,
+   FanPico is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
@@ -23,10 +23,11 @@
 #define FANPICO_H 1
 
 
-#define FAN_MAX_COUNT 8
-#define MBFAN_MAX_COUNT 4
+#define FAN_MAX_COUNT 8      /* Number of Fan outputs on the board */
+#define MBFAN_MAX_COUNT 4    /* Number of (Motherboard) Fan inputs on the board */
 
 #define LED_PIN 25
+
 
 /* Pins for Fan Signals */
 
@@ -69,18 +70,20 @@ void read_config();
 
 
 /* pwm.c */
-void set_pwm_duty_cycle(uint pin, float duty);
-float get_pwm_duty_cycle(uint pin);
-void get_pwm_duty_cycles(uint *pins, uint count, float *duty);
-void setup_pwm_outputs();
+extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];
 void setup_pwm_inputs();
+void setup_pwm_outputs();
+void set_pwm_duty_cycle(uint fan, float duty);
+float get_pwm_duty_cycle(uint fan);
+void get_pwm_duty_cycles();
 
 
 /* tacho.c */
 extern float fan_tacho_freq[FAN_MAX_COUNT];
 void setup_tacho_inputs();
 void setup_tacho_outputs();
-void update_tacho_freq();
+void update_tacho_input_freq();
+void set_tacho_output_freq(uint fan, double frequency);
 
 
 /* crc32.c */
