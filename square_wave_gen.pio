@@ -12,7 +12,7 @@
 ; the Free Software Foundation, either version 3 of the License, or
 ; (at your option) any later version.
 ;
-; Foobar is distributed in the hope that it will be useful,
+; FanPico is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ; GNU General Public License for more details.
@@ -21,7 +21,9 @@
 ; along with FanPico. If not, see <https://www.gnu.org/licenses/>.
 ;
 
-; Adjustable Square Wave generator that reads 'period' from FIFO.
+; Adjustable Square Wave signal generator that reads 'period' from FIFO.
+; Output is square wave (at 50% duty cycle) where length of each pulse
+; is  8 + (period + 1) * 4 clock cycles.
 ;
 ; Side-set pin 0 is used for output
 
@@ -40,7 +42,7 @@ hi_loop:
     jmp y-- hi_loop        ; Loop until Y hits 0
 
     mov y, x        side 1 ; Reset Y back to X and set output low
-    nop             [3]    ; Wait 3 cycle to keep both sides same length
+    nop             [2]    ; Wait 3 cycle to keep both sides same length
 
 lo_loop:
     nop
