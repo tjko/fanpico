@@ -26,12 +26,24 @@
 
 #include "fanpico.h"
 
+/* default_config.s */
+extern uint8_t fanpico_default_config_start;
+extern uint8_t fanpico_default_config_end;
+
+
+
 
 void read_config()
 {
 	int res, fd;
 
+	const char *default_config = (const char*)&fanpico_default_config_start;
+	uint32_t default_config_size = &fanpico_default_config_end - &fanpico_default_config_start;
+
 	printf("Reading configuration...\n");
+
+	printf("config size = %lu\n", default_config_size);
+	printf("default config:\n---\n%s\n---\n", default_config);
 
 	/* Mount flash filesystem... */
 	if ((res = pico_mount(false)) < 0) {
