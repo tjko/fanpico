@@ -68,14 +68,13 @@ float fan_tacho_freq[FAN_MAX_COUNT];
 PIO pio = pio0;
 
 
-/* Interrupt handler to keep count on pulses received on fan tachometer pins... */
-
 void __not_in_flash_func(fan_tacho_read_callback)(uint gpio, uint32_t events)
 {
+        /* Interrupt handler to keep count on pulses received on fan
+           tachometer pins... */
 	uint fan = gpio_fan_tacho_map[(gpio & 0x1f)];
 	if (fan > 0) {
 		fan_tacho_counters[fan-1]++;
-		//printf("GPIO %d: fan=%d, events=%x, counter=%u\n", gpio, fan, events, fan_tacho_counters[fan-1]);
 	}
 }
 
@@ -153,6 +152,7 @@ void set_tacho_output_freq(uint fan, double frequency)
 	square_wave_gen_set_freq(pio, fan, frequency);
 }
 
+
 void setup_tacho_outputs()
 {
 	uint i;
@@ -165,7 +165,6 @@ void setup_tacho_outputs()
 		uint sm = i;
 		square_wave_gen_program_init(pio, sm, pio_program_addr, pin);
 		square_wave_gen_enabled(pio, sm, true);
-		//square_wave_gen_set_freq(pio, sm, 256 + (i*64));
 	}
 
 }

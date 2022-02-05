@@ -30,6 +30,7 @@
 #define PWM_IN_CLOCK_DIVIDER 100
 #define PWM_IN_SAMPLE_INTERVAL 10 /* milliseconds */
 
+
 /* Every two pins must be the A and B pins of same PWM block */
 uint8_t fan_gpio_pwm_map[FAN_MAX_COUNT] = {
 	FAN1_PWM_GEN_PIN,
@@ -58,12 +59,10 @@ float pwm_in_max_count = 0;
 
 void set_pwm_duty_cycle(uint fan, float duty)
 {
-	uint level;
+	uint level, pin;
 
-	if (fan >= FAN_MAX_COUNT)
-		return;
-
-	uint pin = fan_gpio_pwm_map[fan];
+	assert(fan < FAN_MAX_COUNT);
+	pin = fan_gpio_pwm_map[fan];
 	if (duty >= 100.0) {
 		level = pwm_out_top + 1;
 	} else if (duty > 0.0) {
@@ -79,12 +78,11 @@ void set_pwm_duty_cycle(uint fan, float duty)
 float get_pwm_duty_cycle(uint fan)
 {
 	uint16_t counter;
+	uint slice_num, pin;
 
-	if (fan >= MBFAN_MAX_COUNT)
-		return -1.0;
-
-	uint pin = mbfan_gpio_pwm_map[fan];
-	uint slice_num = pwm_gpio_to_slice_num(pin);
+	assert(fan < MBFAN_MAX_COUNT);
+	pin = mbfan_gpio_pwm_map[fan];
+	slice_num = pwm_gpio_to_slice_num(pin);
 
 	pwm_set_enabled(slice_num, false);
 	pwm_set_counter(slice_num, 0);
@@ -155,6 +153,7 @@ void setup_pwm_outputs()
 		gpio_set_function(pin1, GPIO_FUNC_PWM);
 		gpio_set_function(pin2, GPIO_FUNC_PWM);
 		slice_num = pwm_gpio_to_slice_num(pin1);
+		/* two consecutive pins must belong to same PWM slice... */
 		assert(slice_num == pwm_gpio_to_slice_num(pin2));
 		pwm_init(slice_num, &config, true);
 	}
@@ -181,6 +180,7 @@ void setup_pwm_inputs()
 		mbfan_pwm_duty[i] = 0.0;
 
 		slice_num = pwm_gpio_to_slice_num(pin);
+		/* reading PWM signal must be done on B channel... */
 		assert(pwm_gpio_to_channel(pin) == PWM_CHAN_B);
 		pwm_init(slice_num, &config, false);
 		gpio_set_function(pin, GPIO_FUNC_PWM);
