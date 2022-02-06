@@ -24,11 +24,13 @@
 #include <math.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
+#include "pico/unique_id.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
 #include "hardware/adc.h"
 #include "hardware/clocks.h"
 
+#include "cJSON.h"
 #include "fanpico.h"
 
 #define VERSION "1.0beta"
@@ -91,6 +93,7 @@ void set_binary_info()
 
 void setup()
 {
+	pico_unique_board_id_t board_id;
 	int i;
 
 	set_binary_info();
@@ -98,9 +101,23 @@ void setup()
 
 	sleep_ms(500);
 	printf("\n\n\n");
-	printf("FanPico v%s\n", VERSION);
+	printf("FanPico v%s ", VERSION);
+	printf("(Build date: %s)\n", __DATE__);
 	printf("Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>\n");
-	printf("Build date: %s\n", __DATE__);
+	printf("License GPLv3+: GNU GPL version 3 or later "
+		"<https://gnu.org/licenses/gpl.html>\n"
+		"This is free software: you are free to change and "
+                "redistribute it.\n"
+		"There is NO WARRANTY, to the extent permitted by law.\n\n");
+
+	printf("Board: " PICO_BOARD "\n");
+	printf("Serial Number: ");
+	pico_get_unique_board_id(&board_id);
+	for (i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
+		printf("%02x", board_id.id[i]);
+	printf("\n");
+	printf("RP2040 Chip Version: %d\n", rp2040_chip_version());
+	printf("RP2040 ROM Version: %d\n", rp2040_rom_version());
 
 	read_config();
 

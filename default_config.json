@@ -1,0 +1,67 @@
+{
+    "id": "fanpico-config-v1",
+    "fans": [
+	{
+	    "name": "fan1",
+	    "min_pwm": 20,
+	    "max_pwm": 100,
+	},
+	{
+	    "name": "fan2",
+	    "min_pwm": 20,
+	    "max_pwm": 100,
+	},
+	{
+	    "name": "fan3",
+	    "min_pwm": 20,
+	    "max_pwm": 100,
+	},
+	{
+	    "name": "fan4",
+	    "min_pwm": 20,
+	    "max_pwm": 100,
+	},
+	{
+	    "name": "fan5",
+	    "min_pwm": 20,
+	    "max_pwm": 100,
+	},
+	{
+	    "name": "fan6",
+	    "min_pwm": 20,
+	    "max_pwm": 100,
+	},
+	{
+	    "name": "fan7",
+	    "min_pwm": 20,
+	    "max_pwm": 100,
+	},
+	{
+	    "name": "fan8",
+	    "min_pwm": 20,
+	    "max_pwm": 100,
+	},
+    ],
+    "mbfans": [
+	{
+	    "name": "mbfan1",
+	    "min_rpm": 0,
+	    "max_rpm": 10000,
+	},
+	{
+	    "name": "mbfan2",
+	    "min_rpm": 0,
+	    "max_rpm": 10000,
+	},
+	{
+	    "name": "mbfan3",
+	    "min_rpm": 0,
+	    "max_rpm": 10000,
+	},
+	{
+	    "name": "mbfan4",
+	    "min_rpm": 0,
+	    "max_rpm": 10000,
+	},
+    ],
+}
