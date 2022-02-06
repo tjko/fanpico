@@ -1,6 +1,4 @@
-;
 ; square_wave_gen.pio
-;
 ; Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
 ;
 ; SPDX-License-Identifier: GPL-3.0-or-later
@@ -31,8 +29,8 @@
 .side_set 1 opt
 
 start:
-    pull noblock    side 0 ; Read 'period from FIFO to OSR
-                           ; (noblock cause X to be copied into OSR if FIFO empty)
+    pull noblock    side 0 ; Read 'period from FIFO to OSR and set output low
+                           ; ('noblock' causes X to be copied into OSR if FIFO empty)
     mov x, osr             ; Save 'period' in X
     mov y, x               ; Copy X to Y (which is used as counter).
     jmp !y start	   ; Steady low output if period is 0
@@ -40,11 +38,10 @@ start:
 lo_loop:
     jmp y-- lo_loop        ; Loop until Y hits 0
 
-    mov y, x        side 1 ; Reset Y back to X and set output low
+    mov y, x        side 1 ; Reset Y back to X and set output high
     nop             [2]    ; Wait 3 cycle to keep both sides same length
 
 hi_loop:
     jmp y-- hi_loop        ; Loop until Y hits 0
-
 
 ; eof :-)
