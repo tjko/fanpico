@@ -1,67 +1,161 @@
 {
     "id": "fanpico-config-v1",
+    "sensors": [
+	{
+	    "id": 0,
+	    "name": "pico_temp",
+	    "temp_map": [
+		[ 0, 20 ],
+		[ 100, 40 ]
+	    ]
+	}
+    ],
     "fans": [
 	{
+	    "id": 0,
 	    "name": "fan1",
-	    "min_pwm": 20,
+	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "source_type": "mbfan",
+	    "source_id": 0,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ]
 	},
 	{
+	    "id": 1,
 	    "name": "fan2",
-	    "min_pwm": 20,
+	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "source_type": "mbfan",
+	    "source_id": 1,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ]
 	},
 	{
+	    "id": 2,
 	    "name": "fan3",
-	    "min_pwm": 20,
+	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "source_type": "mbfan",
+	    "source_id": 2,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ]
 	},
 	{
+	    "id": 3,
 	    "name": "fan4",
-	    "min_pwm": 20,
+	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "source_type": "mbfan",
+	    "source_id": 3,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ]
 	},
 	{
+	    "id": 4,
 	    "name": "fan5",
-	    "min_pwm": 20,
+	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "source_type": "mbfan",
+	    "source_id": 0,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ]
 	},
 	{
+	    "id": 5,
 	    "name": "fan6",
-	    "min_pwm": 20,
+	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "source_type": "mbfan",
+	    "source_id": 1,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ]
 	},
 	{
+	    "id": 6,
 	    "name": "fan7",
-	    "min_pwm": 20,
+	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "source_type": "mbfan",
+	    "source_id": 2,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ]
 	},
 	{
+	    "id": 7,
 	    "name": "fan8",
-	    "min_pwm": 20,
+	    "min_pwm": 0,
 	    "max_pwm": 100,
-	},
+	    "source_type": "mbfan",
+	    "source_id": 3,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ]
+	}
     ],
     "mbfans": [
 	{
+	    "id": 0,
 	    "name": "mbfan1",
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
+	    "source_type": "fan",
+	    "source_id": 0,
+	    "rpm_map": [
+		[ 0, 0 ],
+		[ 10000, 10000 ]
+	    ]
 	},
 	{
+	    "id": 1,
 	    "name": "mbfan2",
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
+	    "source_type": "fan",
+	    "source_id": 1,
+	    "rpm_map": [
+		[ 0, 0 ],
+		[ 10000, 10000 ]
+	    ]
 	},
 	{
+	    "id": 2,
 	    "name": "mbfan3",
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
+	    "source_type": "fan",
+	    "source_id": 2,
+	    "rpm_map": [
+		[ 0, 0 ],
+		[ 10000, 10000 ]
+	    ]
 	},
 	{
+	    "id": 3,
 	    "name": "mbfan4",
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
-	},
-    ],
+	    "source_type": "fan",
+	    "source_id": 3,
+	    "rpm_map": [
+		[ 0, 0 ],
+		[ 10000, 10000 ]
+	    ]
+	}
+    ]
 }
