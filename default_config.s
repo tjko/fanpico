@@ -14,6 +14,7 @@
 	.global fanpico_default_config_end
 
 	.section .rodata
+
 	.p2align 2
 fanpico_default_config_start:
 	.incbin	"default_config.json"
