@@ -19,9 +19,6 @@
    along with FanPico. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define PARAM_ASSERTIONS_ENABLE_ALL 1
-
-
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -32,9 +29,15 @@
 
 #include "fanpico.h"
 
+/*
+ * Functions for generating (emulating) fan tachometer output using PIO
+ * and functions for reading tachometer singals from fans to calculate
+ * signal frequency and fan RPM.
+ */
 
 
-/* mapping from FAN (index) to GPIO pins */
+/* Map of input pins to read fan tachometer signals.
+ */
 uint8_t fan_gpio_tacho_map[FAN_MAX_COUNT] = {
 	FAN1_TACHO_READ_PIN,
 	FAN2_TACHO_READ_PIN,
@@ -46,10 +49,13 @@ uint8_t fan_gpio_tacho_map[FAN_MAX_COUNT] = {
 	FAN8_TACHO_READ_PIN,
 };
 
-/* mapping from GPIO pin to FAN (index) */
+/* Reverse map of input pin numbers to fan numbers.
+ */
 uint8_t gpio_fan_tacho_map[32];
 
 
+/* Map of output pins that output/generate tachometer signal using PIO.
+ */
 uint8_t mbfan_gpio_tacho_map[MBFAN_MAX_COUNT] = {
 	MBFAN1_TACHO_GEN_PIN,
 	MBFAN2_TACHO_GEN_PIN,
@@ -58,28 +64,32 @@ uint8_t mbfan_gpio_tacho_map[MBFAN_MAX_COUNT] = {
 };
 
 
-/* tacho pulse counters updated by GPIO interrupt */
+/* Tachometer pulse counters updated by GPIO interrupt */
 volatile uint fan_tacho_counters[FAN_MAX_COUNT];
 
 uint fan_tacho_counters_last[FAN_MAX_COUNT];
 absolute_time_t fan_tacho_last_read;
+
+/* Array holding calculated fan tachometer (input) frequencies. */
 float fan_tacho_freq[FAN_MAX_COUNT];
 
 PIO pio = pio0;
 
 
-/* Interrupt handler to keep count on pulses received on fan tachometer pins... */
 
+/* Interrupt handler to keep count on pulses received on fan tachometer pins...
+ */
 void __not_in_flash_func(fan_tacho_read_callback)(uint gpio, uint32_t events)
 {
 	uint fan = gpio_fan_tacho_map[(gpio & 0x1f)];
 	if (fan > 0) {
 		fan_tacho_counters[fan-1]++;
-		//printf("GPIO %d: fan=%d, events=%x, counter=%u\n", gpio, fan, events, fan_tacho_counters[fan-1]);
 	}
 }
 
 
+/* Function to update tachometer frequencies in fan_tacho_freq[]
+ */
 void update_tacho_input_freq()
 {
 	uint counters[FAN_MAX_COUNT];
@@ -89,13 +99,13 @@ void update_tacho_input_freq()
 	double f;
 	int i;
 
-	/* read current counter values */
+	/* Read current counter values. */
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
 		counters[i] = fan_tacho_counters[i];
 	}
 	absolute_time_t read_time = get_absolute_time();
 
-	/* calculate new frequency values, if enough time has passed... */
+	/* Calculate new frequency values, if enough time has passed... */
 	delta = absolute_time_diff_us(fan_tacho_last_read, read_time);
 	if (delta < 1000000)
 		return;
@@ -105,10 +115,9 @@ void update_tacho_input_freq()
 		pulses = counters[i] - fan_tacho_counters_last[i];
 		f = pulses / s;
 		fan_tacho_freq[i] = f;
-		//printf("pulses=%d, delta=%lld (%lf), f=%f\n", pulses, delta, s, f);
 	}
 
-	/* save counter values for next time... */
+	/* Save counter values for next time... */
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
 		fan_tacho_counters_last[i] = counters[i];
 	}
@@ -116,6 +125,8 @@ void update_tacho_input_freq()
 }
 
 
+/* Function to initialize inputs for reading tachometer signals.
+ */
 void setup_tacho_inputs()
 {
 	int i, pin;
@@ -147,25 +158,32 @@ void setup_tacho_inputs()
 }
 
 
+/* Function to set output frequency for tachometer output pin.
+ */
 void set_tacho_output_freq(uint fan, double frequency)
 {
 	assert(fan < MBFAN_MAX_COUNT);
 	square_wave_gen_set_freq(pio, fan, frequency);
 }
 
+
+/* Funcition to initialize tachometer output (generator) pins.
+ */
 void setup_tacho_outputs()
 {
 	uint i;
 
 	printf("Setting up Tacho Output pins...\n");
 
+	/* Load square wave generator program to PIO */
 	uint pio_program_addr = square_wave_gen_load_program(pio);
+
+	/* Initialize PIO State machines for each tachometer output pin. */
 	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
 		uint pin = mbfan_gpio_tacho_map[i];
 		uint sm = i;
 		square_wave_gen_program_init(pio, sm, pio_program_addr, pin);
 		square_wave_gen_enabled(pio, sm, true);
-		//square_wave_gen_set_freq(pio, sm, 256 + (i*64));
 	}
 
 }

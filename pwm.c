@@ -30,7 +30,16 @@
 #define PWM_IN_CLOCK_DIVIDER 100
 #define PWM_IN_SAMPLE_INTERVAL 10 /* milliseconds */
 
-/* Every two pins must be the A and B pins of same PWM block */
+/*
+ * Functions for generating (emulating) fan PWM control signal and
+ * reading (motherboard) PWM signal for controlling fans.
+ * Pico PWM hardware is used for both.
+ */
+
+
+/* Map of fan PWM signal output pins.
+   Every two pins must be the A and B pins of same PWM slice.
+ */
 uint8_t fan_gpio_pwm_map[FAN_MAX_COUNT] = {
 	FAN1_PWM_GEN_PIN,
 	FAN2_PWM_GEN_PIN,
@@ -42,7 +51,9 @@ uint8_t fan_gpio_pwm_map[FAN_MAX_COUNT] = {
 	FAN8_PWM_GEN_PIN,
 };
 
-/* Every pin must be the B pin of a PWM block */
+/* Map of motherboard PWM input pins.
+   Every pin must be the B pin of a PWM slice.
+ */
 uint8_t mbfan_gpio_pwm_map[MBFAN_MAX_COUNT] = {
 	MBFAN1_PWM_READ_PIN,
 	MBFAN2_PWM_READ_PIN,
@@ -50,12 +61,15 @@ uint8_t mbfan_gpio_pwm_map[MBFAN_MAX_COUNT] = {
 	MBFAN4_PWM_READ_PIN,
 };
 
+/* Measured duty cycles from (motherboard) fan connectors.  */
 float mbfan_pwm_duty[MBFAN_MAX_COUNT];
 
 uint pwm_out_top = 0;
 float pwm_in_max_count = 0;
 
 
+/* Set PMW output signal duty cycle.
+ */
 void set_pwm_duty_cycle(uint fan, float duty)
 {
 	uint level;
@@ -71,11 +85,12 @@ void set_pwm_duty_cycle(uint fan, float duty)
 	} else {
 		level = 0;
 	}
-	//printf("set_pwm_duty_cycle(pin=%u, duty=%f): level=%u\n", pin, duty, level);
 	pwm_set_gpio_level(pin, level);
 }
 
 
+/* Measure duty cycle of input PWM signal.
+ */
 float get_pwm_duty_cycle(uint fan)
 {
 	uint16_t counter;
@@ -86,33 +101,38 @@ float get_pwm_duty_cycle(uint fan)
 	uint pin = mbfan_gpio_pwm_map[fan];
 	uint slice_num = pwm_gpio_to_slice_num(pin);
 
+	/* Reset current counter value in PWM slice. */
 	pwm_set_enabled(slice_num, false);
 	pwm_set_counter(slice_num, 0);
+
+	/* Turn PWM slice (counter) on for short time... */
 	pwm_set_enabled(slice_num, true);
 	sleep_ms(PWM_IN_SAMPLE_INTERVAL);
 	pwm_set_enabled(slice_num, false);
-	counter = pwm_get_counter(slice_num);
 
+	/* Get counter value and calculate duty cycle. */
+	counter = pwm_get_counter(slice_num);
 	float duty = counter * 100 / pwm_in_max_count;
-	//printf("get_pwm_duty_cycle(pin=%d): duty=%f (counter=%u)\n", pin, duty, counter);
 
 	return duty;
 }
 
 
-/* Read multiple PWM signals simultaneously... */
+/* Read multiple PWM signals simultaneously using PWM hardware.
+ */
 void get_pwm_duty_cycles()
 {
 	uint slices[MBFAN_MAX_COUNT];
 	int i;
 
-	/* reset counters on all PWM slices */
+	/* Reset counters on all PWM slices. */
 	for (i=0; i < MBFAN_MAX_COUNT; i++) {
 		slices[i] = pwm_gpio_to_slice_num(mbfan_gpio_pwm_map[i]);
 		pwm_set_enabled(slices[i], false);
 		pwm_set_counter(slices[i], 0);
 	}
 
+	/* Turn on all PWM slices for short period of time... */
 	for (i=0; i < MBFAN_MAX_COUNT; i++) {
 		pwm_set_enabled(slices[i], true);
 	}
@@ -121,12 +141,15 @@ void get_pwm_duty_cycles()
 		pwm_set_enabled(slices[i], false);
 	}
 
+	/* Calculate duty cycles based on measurements. */
 	for (i=0; i < MBFAN_MAX_COUNT; i++) {
 		mbfan_pwm_duty[i] = pwm_get_counter(slices[i]) * 100 / pwm_in_max_count;
 	}
 }
 
 
+/* Initialize PWM hardware to generate 25kHz PWM signal on output pins.
+ */
 void setup_pwm_outputs()
 {
 	uint32_t sys_clock = clock_get_hz(clk_sys);
@@ -162,6 +185,8 @@ void setup_pwm_outputs()
 }
 
 
+/* Initialize PWM hardware for measuring input signal duty cycle on input pins.
+ */
 void setup_pwm_inputs()
 {
 	pwm_config config = pwm_get_default_config();

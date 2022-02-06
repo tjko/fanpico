@@ -22,7 +22,7 @@
 ;
 
 ; Adjustable Square Wave signal generator that reads 'period' from FIFO.
-; Output is square wave (at 50% duty cycle) where length of each pulse
+; Output is a square wave (at 50% duty cycle) where length of each pulse
 ; is 10+2*period clock cycles.
 ;
 ; Side-set pin 0 is used for output
