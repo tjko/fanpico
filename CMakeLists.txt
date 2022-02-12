@@ -61,4 +61,4 @@ target_link_libraries(fanpico
 
 target_compile_options(fanpico PRIVATE -Wall)
 target_compile_definitions(fanpico PRIVATE PARAM_ASSERTIONS_ENABLE_ALL=1) 
-
+target_compile_definitions(fanpico PRIVATE PICO_MALLOC_PANIC=0)

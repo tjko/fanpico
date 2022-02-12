@@ -20,30 +20,38 @@
 */
 
 #include <stdio.h>
+#include <malloc.h>
 #include "pico/stdlib.h"
-
+#include "cJSON.h"
 #include "pico_hal.h"
 
 #include "fanpico.h"
 
 /* default_config.s */
-extern uint8_t fanpico_default_config_start;
-extern uint8_t fanpico_default_config_end;
+extern const char fanpico_default_config[];
 
+cJSON *config = NULL;
 
-
+void print_mallinfo()
+{
+	printf("mallinfo:\n");
+	printf("  arena: %u\n", mallinfo().arena);
+	printf(" ordblks: %u\n", mallinfo().ordblks);
+	printf("uordblks: %u\n", mallinfo().uordblks);
+	printf("fordblks: %u\n", mallinfo().fordblks);
+}
 
 void read_config()
 {
 	int res, fd;
 
-	const char *default_config = (const char*)&fanpico_default_config_start;
-	uint32_t default_config_size = &fanpico_default_config_end - &fanpico_default_config_start;
+	const char *default_config = fanpico_default_config;
+	uint32_t default_config_size = strlen(default_config);
 
 	printf("Reading configuration...\n");
 
 	printf("config size = %lu\n", default_config_size);
-	printf("default config:\n---\n%s\n---\n", default_config);
+//	printf("default config:\n---\n%s\n---\n", default_config);
 
 	/* Mount flash filesystem... */
 	if ((res = pico_mount(false)) < 0) {
@@ -51,21 +59,46 @@ void read_config()
 		printf("Trying to initialize a new filesystem...\n");
 		if ((res = pico_mount(true)) < 0) {
 			printf("Unable to initialize flash filesystem!\n");
-			return;
 		} else {
 			printf("Filesystem successfully initialized. (%d)\n", res);
 		}
+	} else {
+		printf("Filesystem mounted OK\n");
+		/* Read configuration file... */
+		if ((fd = pico_open("fanpico.cfg", LFS_O_RDONLY)) < 0) {
+			printf("Cannot open fanpico.cfg: %d (%s)\n", fd, pico_errmsg(fd));
+		} else {
+			// read saved config...
+		}
 	}
-	printf("Filesystem mounted OK\n");
-
-	/* Read configuration file... */
-	if ((fd = pico_open("fanpico.cfg", LFS_O_RDONLY)) < 0) {
-		printf("Cannot open fanpico.cfg: %d (%s)\n", fd, pico_errmsg(fd));
-		pico_unmount();
-		return;
-	}
-
-
-
 	pico_unmount();
+
+	print_mallinfo();
+	if (!config) {
+		printf("Using default configuration...\n");
+		config = cJSON_Parse(fanpico_default_config);
+		if (!config) {
+			const char *error_str = cJSON_GetErrorPtr();
+			panic("Failed to parse default config: %s\n",
+				(error_str ? error_str : "") );
+		}
+	}
+	print_mallinfo();
+	cJSON *id;
+
+	id = cJSON_GetObjectItem(config, "id");
+	if (id)
+		printf("config version: %s\n", id->valuestring);
+
+
+	uint8_t *buf = malloc(64*1024);
+	if (!buf)
+		printf("malloc failed\n");
+
+	print_mallinfo();
+
+	cJSON_Delete(config);
+	print_mallinfo();
+	sleep_ms(10000);
+
 }

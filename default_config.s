@@ -10,13 +10,13 @@
 # Stub for embedding default_config.json in the executable.
 #
 
-	.global fanpico_default_config_start
+	.global fanpico_default_config
 	.global fanpico_default_config_end
 
 	.section .rodata
 
 	.p2align 2
-fanpico_default_config_start:
+fanpico_default_config:
 	.incbin	"default_config.json"
 	.byte	 0x00
 fanpico_default_config_end:
