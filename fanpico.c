@@ -176,7 +176,9 @@ int main()
 	setup();
 	print_mallinfo();
 
-	//save_config();
+	print_config();
+//	save_config();
+//	delete_config();
 
 	print_mallinfo();
 	panic("test");

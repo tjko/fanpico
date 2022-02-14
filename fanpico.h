@@ -136,6 +136,8 @@ void print_mallinfo();
 extern struct fanpico_config cfg;
 void read_config();
 void save_config();
+void delete_config();
+void print_config();
 
 
 /* pwm.c */
