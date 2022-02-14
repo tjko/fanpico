@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <malloc.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "pico/unique_id.h"
@@ -36,6 +37,15 @@
 #define VERSION "1.0beta"
 
 
+
+void print_mallinfo()
+{
+	printf("mallinfo:\n");
+	printf("  arena: %u\n", mallinfo().arena);
+	printf(" ordblks: %u\n", mallinfo().ordblks);
+	printf("uordblks: %u\n", mallinfo().uordblks);
+	printf("fordblks: %u\n", mallinfo().fordblks);
+}
 
 
 float get_pico_temp()
@@ -158,14 +168,18 @@ void setup()
 
 int main()
 {
-	/* Initialize MCU and other hardware... */
-	setup();
-
 	uint count = 0;
 	uint8_t buf[32];
 
+	/* Initialize MCU and other hardware... */
+	print_mallinfo();
+	setup();
+	print_mallinfo();
 
+	//save_config();
 
+	print_mallinfo();
+	panic("test");
 
 	uint checksum = 0xffffffff;
 

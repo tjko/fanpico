@@ -25,6 +25,10 @@
 
 #define FAN_MAX_COUNT 8      /* Number of Fan outputs on the board */
 #define MBFAN_MAX_COUNT 4    /* Number of (Motherboard) Fan inputs on the board */
+#define SENSOR_MAX_COUNT 1   /* Number of sensor inputs on the board */
+
+#define MAX_NAME_LEN 64
+#define MAX_MAP_POINTS 32
 
 #define LED_PIN 25
 
@@ -62,11 +66,76 @@
 #define MBFAN3_PWM_READ_PIN 17 /* PWM0B */
 #define MBFAN4_PWM_READ_PIN 19 /* PWM1B */
 
+enum pwm_source_types {
+	PWM_FIXED   = 0,     /* fixed speed set by s_id */
+	PWM_MB      = 1,     /* mb pwm signal */
+	PWM_SENSOR  = 2,     /* sensor signal */
+	PWM_FAN     = 3,     /* another fan */
+};
 
+enum tacho_source_types {
+	TACHO_FIXED  = 0,     /* fixed speed set by s_id */
+	TACHO_FAN    = 1,     /* fan tacho signal */
+};
+
+struct pwm_map {
+	uint8_t points;
+	uint8_t pwm[MAX_MAP_POINTS][2];
+};
+
+struct tacho_map {
+	uint8_t points;
+	uint16_t tacho[MAX_MAP_POINTS][2];
+};
+
+struct temp_map {
+	uint8_t points;
+	float temp[MAX_MAP_POINTS][2];
+};
+
+struct fan_output {
+	char name[MAX_NAME_LEN];
+	uint8_t min_pwm;
+	uint8_t max_pwm;
+	float pwm_coefficient;
+	enum pwm_source_types s_type;
+	uint16_t s_id;
+	struct pwm_map map;
+};
+
+struct mb_input {
+	char name[MAX_NAME_LEN];
+	uint16_t min_rpm;
+	uint16_t max_rpm;
+	float rpm_coefficient;
+	enum tacho_source_types s_type;
+	uint16_t s_id;
+	struct tacho_map map;
+};
+
+struct sensor_input {
+	char name[MAX_NAME_LEN];
+	float temp_offset;
+	float temp_coefficient;
+	struct temp_map map;
+};
+
+struct fanpico_config {
+	struct sensor_input sensors[SENSOR_MAX_COUNT];
+	struct fan_output fans[FAN_MAX_COUNT];
+	struct mb_input mbfans[MBFAN_MAX_COUNT];
+};
+
+
+
+/* fanpico.c */
+void print_mallinfo();
 
 
 /* config.c */
+extern struct fanpico_config cfg;
 void read_config();
+void save_config();
 
 
 /* pwm.c */
