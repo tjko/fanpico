@@ -4,6 +4,8 @@
 	{
 	    "id": 0,
 	    "name": "pico_temp",
+	    "temp_offset": 0.0,
+	    "temp_coefficient": 1.0,
 	    "temp_map": [
 		[ 0, 20 ],
 		[ 100, 40 ]
@@ -16,6 +18,7 @@
 	    "name": "fan1",
 	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
 	    "source_type": "mbfan",
 	    "source_id": 0,
 	    "pwm_map": [
@@ -28,6 +31,7 @@
 	    "name": "fan2",
 	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
 	    "source_type": "mbfan",
 	    "source_id": 1,
 	    "pwm_map": [
@@ -40,6 +44,7 @@
 	    "name": "fan3",
 	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
 	    "source_type": "mbfan",
 	    "source_id": 2,
 	    "pwm_map": [
@@ -52,6 +57,7 @@
 	    "name": "fan4",
 	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
 	    "source_type": "mbfan",
 	    "source_id": 3,
 	    "pwm_map": [
@@ -64,6 +70,7 @@
 	    "name": "fan5",
 	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
 	    "source_type": "mbfan",
 	    "source_id": 0,
 	    "pwm_map": [
@@ -76,6 +83,7 @@
 	    "name": "fan6",
 	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
 	    "source_type": "mbfan",
 	    "source_id": 1,
 	    "pwm_map": [
@@ -88,6 +96,7 @@
 	    "name": "fan7",
 	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
 	    "source_type": "mbfan",
 	    "source_id": 2,
 	    "pwm_map": [
@@ -100,6 +109,7 @@
 	    "name": "fan8",
 	    "min_pwm": 0,
 	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
 	    "source_type": "mbfan",
 	    "source_id": 3,
 	    "pwm_map": [
@@ -114,6 +124,7 @@
 	    "name": "mbfan1",
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
+	    "rpm_coefficient": 1.0,
 	    "source_type": "fan",
 	    "source_id": 0,
 	    "rpm_map": [
@@ -126,6 +137,7 @@
 	    "name": "mbfan2",
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
+	    "rpm_coefficient": 1.0,
 	    "source_type": "fan",
 	    "source_id": 1,
 	    "rpm_map": [
@@ -138,6 +150,7 @@
 	    "name": "mbfan3",
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
+	    "rpm_coefficient": 1.0,
 	    "source_type": "fan",
 	    "source_id": 2,
 	    "rpm_map": [
@@ -150,6 +163,7 @@
 	    "name": "mbfan4",
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
+	    "rpm_coefficient": 1.0,
 	    "source_type": "fan",
 	    "source_id": 3,
 	    "rpm_map": [
