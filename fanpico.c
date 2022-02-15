@@ -168,8 +168,16 @@ void setup()
 
 int main()
 {
-	uint count = 0;
 	uint8_t buf[32];
+	absolute_time_t t_now;
+	absolute_time_t t_last = 0;
+	absolute_time_t t_poll_pwm = 0;
+	absolute_time_t t_poll_tacho = 0;
+	absolute_time_t t_led = 0;
+	absolute_time_t t_temp = 0;
+	uint8_t led_state = 0;
+	int64_t delta;
+	int64_t max_delta = 0;
 
 	/* Initialize MCU and other hardware... */
 	print_mallinfo();
@@ -179,41 +187,53 @@ int main()
 	print_config();
 //	save_config();
 //	delete_config();
-
 	print_mallinfo();
-	panic("test");
 
 	uint checksum = 0xffffffff;
+	t_last=get_absolute_time();
 
 	while (1) {
-		gpio_put(LED_PIN, 0);
-		sleep_ms(250);
-		gpio_put(LED_PIN, 1);
-		checksum = xcrc32(buf, sizeof(buf), checksum);
-		printf("Hello World %x\n", checksum);
-#if 0
-		float d = get_pwm_duty_cycle(0);
-		printf("fan1 duty=%f\n", d);
-		float d2 = get_pwm_duty_cycle(1);
-		printf("fan2 duty=%f\n", d2);
-#endif
-		get_pwm_duty_cycles();
-		printf("mbpwm: fan1=%f,fan2=%f,fan3=%f,fan4=%f\n",
-			mbfan_pwm_duty[0],
-			mbfan_pwm_duty[1],
-			mbfan_pwm_duty[2],
-			mbfan_pwm_duty[3]);
-#if 0
-		float temp = get_pico_temp();
-		printf("temperature=%fC\n", temp);
-		printf("tacho: fan1=%u, fan2=%u, fan3=%u, fan4=%u\n",
-			fan_tacho_counters[0],
-			fan_tacho_counters[1],
-			fan_tacho_counters[2],
-			fan_tacho_counters[3] );
-#endif
+		t_now = get_absolute_time();
+		delta = absolute_time_diff_us(t_last, t_now);
+		t_last = t_now;
 
-		if (count % 1 == 0) {
+		if (delta > max_delta) {
+			max_delta = delta;
+			printf("%llu: max_loop_time=%lld\n", t_now, max_delta);
+		}
+
+		/* Toggle LED every 1000ms */
+		t_now = get_absolute_time();
+		if (delayed_by_ms(t_led, 1000) < t_now) {
+			t_led = t_now;
+			led_state = (led_state > 0 ? 0 : 1);
+			gpio_put(LED_PIN, led_state);
+		}
+
+		checksum = xcrc32(buf, sizeof(buf), checksum);
+		//printf("Hello World %x\n", checksum);
+
+		t_now = get_absolute_time();
+		if (delayed_by_ms(t_poll_pwm, 1500) < t_now) {
+			t_poll_pwm = t_now;
+			get_pwm_duty_cycles();
+			printf("mbpwm: fan1=%f,fan2=%f,fan3=%f,fan4=%f\n",
+				mbfan_pwm_duty[0],
+				mbfan_pwm_duty[1],
+				mbfan_pwm_duty[2],
+				mbfan_pwm_duty[3]);
+		}
+
+		t_now = get_absolute_time();
+		if (delayed_by_ms(t_temp, 10000) < t_now) {
+			t_temp = t_now;
+			float temp = get_pico_temp();
+			printf("temperature=%fC\n", temp);
+		}
+
+		t_now = get_absolute_time();
+		if (delayed_by_ms(t_poll_tacho, 2000) < t_now) {
+			t_poll_tacho = t_now;
 			update_tacho_input_freq();
 			printf("tacho in (Hz): f1=%0.2f, f2=%0.2f, f3=%0.2f, f4=%0.2f, f5=%0.2f, f6=%0.2f, f7=%0.2f, f8=%0.2f\n",
 				fan_tacho_freq[0],
@@ -226,9 +246,8 @@ int main()
 				fan_tacho_freq[7]
 				);
 		}
-		count++;
 
-		sleep_ms(1000);
+		sleep_ms(10);
 	}
 }
 
