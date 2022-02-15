@@ -79,7 +79,7 @@ PIO pio = pio0;
 
 /* Interrupt handler to keep count on pulses received on fan tachometer pins...
  */
-void __not_in_flash_func(fan_tacho_read_callback)(uint gpio, uint32_t events)
+void __time_critical_func(fan_tacho_read_callback)(uint gpio, uint32_t events)
 {
 	uint fan = gpio_fan_tacho_map[(gpio & 0x1f)];
 	if (fan > 0) {
