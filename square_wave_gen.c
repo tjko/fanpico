@@ -83,10 +83,15 @@ void square_wave_gen_set_freq(PIO pio, uint sm, double freq)
 	uint32_t sys_clock = clock_get_hz(clk_sys);
 	uint32_t period;
 
-	// Calculate 'period' needed to produce requested frequency square wave...
-	period = sys_clock / (freq * 2);
-	if (period > 5)
-		period -= 5;
+	if (freq > 0) {
+		// Calculate 'period' needed to produce requested frequency square wave...
+		period = sys_clock / (freq * 2);
+		if (period > 5)
+			period -= 5;
+	} else {
+		// no output if frequency <= 0 ...
+		period = 0;
+	}
 
 	square_wave_gen_set_period(pio, sm, period);
 }
