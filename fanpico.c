@@ -383,7 +383,7 @@ int main()
 	setup();
 	print_mallinfo();
 
-	print_config();
+//	print_config();
 //	save_config();
 //	delete_config();
 	print_mallinfo();
@@ -459,8 +459,13 @@ int main()
 		}
 
 		while ((c = getchar_timeout_us(0)) != PICO_ERROR_TIMEOUT) {
+			// printf("input: '%c' [0x%02x]\n", c, c);
 			if (c == 0xff)
 				continue;
+			if (c == 0x7f || c == 0x08) {
+				if (i_ptr > 0) i_ptr--;
+				continue;
+			}
 			if (c == 10 || c == 13 || i_ptr >= sizeof(input_buf)) {
 				input_buf[i_ptr] = 0;
 				if (i_ptr > 0) {
@@ -476,3 +481,5 @@ int main()
 	}
 }
 
+
+/* eof :-) */

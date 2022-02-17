@@ -23,6 +23,7 @@
 #include <string.h>
 #include <assert.h>
 #include "pico/stdlib.h"
+#include "pico/unique_id.h"
 
 #include "fanpico.h"
 
@@ -30,5 +31,16 @@
 
 void process_command(struct fanpico_state *state, struct fanpico_config *config, const char *command)
 {
+	int i;
+
 	printf(">%s\n", command);
+
+	if (!strncmp(command, "*IDN?", 5)) {
+		pico_unique_board_id_t board_id;
+		printf("TJKO Industries,FANPICO-0408,");
+		pico_get_unique_board_id(&board_id);
+		for (i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
+			printf("%02x", board_id.id[i]);
+		printf(",%s\n", FANPICO_VERSION);
+	}
 }
