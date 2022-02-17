@@ -149,7 +149,7 @@ void setup_tacho_inputs()
 	}
 
 	/* Enable interrupts on Fan Tacho input pins */
-	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_FALL,
+	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_RISE,
 					true, &fan_tacho_read_callback);
 	for (i = 1; i < FAN_MAX_COUNT; i++) {
 		gpio_set_irq_enabled(fan_gpio_tacho_map[i], GPIO_IRQ_EDGE_RISE, true);
@@ -183,6 +183,7 @@ void setup_tacho_outputs()
 		uint pin = mbfan_gpio_tacho_map[i];
 		uint sm = i;
 		square_wave_gen_program_init(pio, sm, pio_program_addr, pin);
+		square_wave_gen_set_period(pio, sm, 0);
 		square_wave_gen_enabled(pio, sm, true);
 	}
 
