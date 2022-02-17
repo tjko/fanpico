@@ -34,7 +34,6 @@
 #include "cJSON.h"
 #include "fanpico.h"
 
-#define VERSION "1.0beta"
 
 
 struct fanpico_state system_state;
@@ -68,7 +67,7 @@ float get_pico_temp()
 void set_binary_info()
 {
 	bi_decl(bi_program_description("FanPico - Smart PWM Fan Controller"));
-	bi_decl(bi_program_version_string(VERSION " ("__DATE__")"));
+	bi_decl(bi_program_version_string(FANPICO_VERSION " ("__DATE__")"));
 	bi_decl(bi_program_url("https://github.com/tjko/fanpico/"));
 
 	bi_decl(bi_1pin_with_name(LED_PIN, "On-board LED"));
@@ -113,7 +112,7 @@ void setup()
 
 	sleep_ms(500);
 	printf("\n\n\n");
-	printf("FanPico v%s ", VERSION);
+	printf("FanPico v%s ", FANPICO_VERSION);
 	printf("(Build date: %s)\n", __DATE__);
 	printf("Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>\n");
 	printf("License GPLv3+: GNU GPL version 3 or later "
@@ -464,10 +463,10 @@ int main()
 				continue;
 			if (c == 10 || c == 13 || i_ptr >= sizeof(input_buf)) {
 				input_buf[i_ptr] = 0;
-				if (i_ptr == 0)
-					continue;
-				printf("command: '%s'\n", input_buf);
-				i_ptr = 0;
+				if (i_ptr > 0) {
+					process_command(st, cfg, input_buf);
+					i_ptr = 0;
+				}
 				continue;
 			}
 			input_buf[i_ptr++] = c;

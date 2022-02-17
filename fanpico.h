@@ -22,6 +22,7 @@
 #ifndef FANPICO_H
 #define FANPICO_H 1
 
+#define FANPICO_VERSION "1.0beta"
 
 #define FAN_MAX_COUNT 8      /* Number of Fan outputs on the board */
 #define MBFAN_MAX_COUNT 4    /* Number of (Motherboard) Fan inputs on the board */
@@ -140,6 +141,8 @@ struct fanpico_state {
 /* fanpico.c */
 void print_mallinfo();
 
+/* command.c */
+void process_command(struct fanpico_state *state, struct fanpico_config *config, const char *command);
 
 /* config.c */
 extern struct fanpico_config *cfg;
@@ -148,7 +151,6 @@ void save_config();
 void delete_config();
 void print_config();
 
-
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];
 void setup_pwm_inputs();
@@ -156,7 +158,6 @@ void setup_pwm_outputs();
 void set_pwm_duty_cycle(uint fan, float duty);
 float get_pwm_duty_cycle(uint fan);
 void get_pwm_duty_cycles();
-
 
 /* tacho.c */
 extern float fan_tacho_freq[FAN_MAX_COUNT];

@@ -33,6 +33,7 @@ set_property(SOURCE default_config.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_C
 
 add_executable(fanpico
   fanpico.c
+  command.c
   config.c
   pwm.c
   tacho.c
