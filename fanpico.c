@@ -37,6 +37,8 @@
 #define VERSION "1.0beta"
 
 
+struct fanpico_state system_state;
+
 
 void print_mallinfo()
 {
@@ -149,35 +151,233 @@ void setup()
 	setup_pwm_inputs();
 
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
-		set_pwm_duty_cycle(i, 10 + i * 10);
+		//set_pwm_duty_cycle(i, 10 + i * 10);
+		set_pwm_duty_cycle(i, 0);
 	}
 
 	/* Configure Tacho pins... */
 	setup_tacho_outputs();
 	setup_tacho_inputs();
 
-	set_tacho_output_freq(0,42);
-	set_tacho_output_freq(1,43);
-	set_tacho_output_freq(2,44);
-	set_tacho_output_freq(3,45);
-
-
 	printf("Initialization complete.\n\n");
+}
+
+
+void clear_state(struct fanpico_state *s)
+{
+	int i;
+
+	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+		s->mbfan_duty[i] = 0.0;
+		s->mbfan_freq[i] = 0.0;
+	}
+	for (i = 0; i < FAN_MAX_COUNT; i++) {
+		s->fan_duty[i] = 0.0;
+		s->fan_freq[i] = 0.0;
+	}
+	for (i = 0; i < SENSOR_MAX_COUNT; i++) {
+		s->temp[i] = 0.0;
+	}
+}
+
+
+int check_for_change(double oldval, double newval, double treshold)
+{
+	double delta = fabs(oldval - newval);
+
+	if (delta >= treshold || newval < oldval)
+		return 1;
+
+	return 0;
+}
+
+
+double sensor_get_temp(struct sensor_input *sensor, double temp)
+{
+	double newval;
+
+	newval = (temp * sensor->temp_coefficient) + sensor->temp_offset;
+
+	return newval;
+}
+
+
+double sensor_get_duty(struct sensor_input *sensor, double temp)
+{
+	int i;
+	double a, t;
+	struct temp_map *map;
+
+	t = sensor_get_temp(sensor, temp);
+	map = &sensor->map;
+
+	if (t <= map->temp[0][0])
+		return map->temp[0][1];
+
+	i = 1;
+	while (i < map->points && map->temp[i][0] < t)
+		i++;
+
+	if (t >= map->temp[i][0])
+		return map->temp[i][1];
+
+	a = (double)(map->temp[i][1] - map->temp[i-1][1]) / (double)(map->temp[i][0] - map->temp[i-1][0]);
+	return map->temp[i-1][1] + a * (t - map->temp[i-1][0]);
+}
+
+
+double pwm_map(struct pwm_map *map, double val)
+{
+	int i;
+	double newval;
+
+	// value is equal or smaller than first map point
+	if (val <= map->pwm[0][0])
+		return map->pwm[0][1];
+
+	// find the map points that the value falls in between of...
+	i = 1;
+	while(i < map->points && map->pwm[i][0] < val)
+		i++;
+
+	// value is larger or equal than last map point
+	if (val >= map->pwm[i][0])
+		return map->pwm[i][1];
+
+	// calculate mapping using the map points left (i-i) and right (i) of the value...
+	double a = (double)(map->pwm[i][1] - map->pwm[i-1][1]) / (double)(map->pwm[i][0] - map->pwm[i-1][0]);
+	newval = map->pwm[i-1][1] + a * (val - map->pwm[i-1][0]);
+
+	return newval;
+}
+
+
+double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *config, int i)
+{
+	struct fan_output *fan;
+	double val = 0;
+
+	fan = &config->fans[i];
+
+	/* get source value  */
+	switch (fan->s_type) {
+	case PWM_FIXED:
+		val = fan->s_id;
+		break;
+	case PWM_MB:
+		val = state->mbfan_duty[fan->s_id];
+		break;
+	case PWM_SENSOR:
+		val = sensor_get_duty(&config->sensors[fan->s_id], state->temp[fan->s_id]);
+		//printf("temp duty: %fC --> %lf\n", state->temp[fan->s_id], val);
+		break;
+	case PWM_FAN:
+		val = state->fan_duty[fan->s_id];
+		break;
+	}
+
+	/* apply mapping */
+	val = pwm_map(&fan->map, val);
+
+	/* apply coefficient */
+	val *= fan->pwm_coefficient;
+
+	/* final step to enforce min/max limits for output */
+	if (val < fan->min_pwm) val = fan->min_pwm;
+	if (val > fan->max_pwm) val = fan->max_pwm;
+
+	return val;
+}
+
+
+double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i)
+{
+	struct mb_input *mbfan;
+	double val = 0;
+
+	mbfan = &config->mbfans[i];
+
+	switch (mbfan->s_type) {
+	case TACHO_FIXED:
+		val = mbfan->s_id;
+		break;
+	case TACHO_FAN:
+		val = state->fan_freq[mbfan->s_id];
+		break;
+	}
+
+	return val;
+}
+
+
+void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
+{
+	int i;
+	double new;
+
+	/* update fan PWM signals */
+	for (i = 0; i < FAN_MAX_COUNT; i++) {
+		new = calculate_pwm_duty(state, config, i);
+		if (check_for_change(state->fan_duty[i], new, 0.1)) {
+			printf("Set output PWM for fan%d: %.1f --> %.1f\n",
+				i+1,
+				state->fan_duty[i],
+				new);
+			state->fan_duty[i] = new;
+			set_pwm_duty_cycle(i, new);
+		}
+	}
+
+	/* update mb tacho signals */
+	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+		new = calculate_tacho_freq(state, config, i);
+		if (check_for_change(state->mbfan_freq[i], new, 0.1)) {
+			printf("Set output tacho for mbfan%d: %.1f --> %.1f\n",
+				i+1,
+				state->mbfan_freq[i],
+				new);
+			state->mbfan_freq[i] = new;
+			set_tacho_output_freq(i, new);
+		}
+	}
+}
+
+
+int time_passed(absolute_time_t *t, uint32_t us)
+{
+	absolute_time_t t_now = get_absolute_time();
+
+	if (t == NULL)
+		return -1;
+
+	if (*t == 0 || delayed_by_ms(*t, us) < t_now) {
+		*t = t_now;
+		return 1;
+	}
+
+	return 0;
 }
 
 
 int main()
 {
-	uint8_t buf[32];
+	struct fanpico_state *st = &system_state;
 	absolute_time_t t_now;
 	absolute_time_t t_last = 0;
 	absolute_time_t t_poll_pwm = 0;
 	absolute_time_t t_poll_tacho = 0;
 	absolute_time_t t_led = 0;
 	absolute_time_t t_temp = 0;
+	absolute_time_t t_set_outputs = 0;
 	uint8_t led_state = 0;
 	int64_t delta;
 	int64_t max_delta = 0;
+	int c;
+	char input_buf[1024];
+	int i_ptr = 0;
+
+
+	clear_state(st);
 
 	/* Initialize MCU and other hardware... */
 	print_mallinfo();
@@ -189,8 +389,7 @@ int main()
 //	delete_config();
 	print_mallinfo();
 
-	uint checksum = 0xffffffff;
-	t_last=get_absolute_time();
+
 
 	while (1) {
 		t_now = get_absolute_time();
@@ -203,51 +402,78 @@ int main()
 		}
 
 		/* Toggle LED every 1000ms */
-		t_now = get_absolute_time();
-		if (delayed_by_ms(t_led, 1000) < t_now) {
-			t_led = t_now;
+		if (time_passed(&t_led, 1000)) {
 			led_state = (led_state > 0 ? 0 : 1);
 			gpio_put(LED_PIN, led_state);
 		}
 
-		checksum = xcrc32(buf, sizeof(buf), checksum);
-		//printf("Hello World %x\n", checksum);
 
-		t_now = get_absolute_time();
-		if (delayed_by_ms(t_poll_pwm, 1500) < t_now) {
-			t_poll_pwm = t_now;
+		if (time_passed(&t_poll_pwm, 1500)) {
+			int i;
+			float new_duty;
+
 			get_pwm_duty_cycles();
-			printf("mbpwm: fan1=%f,fan2=%f,fan3=%f,fan4=%f\n",
-				mbfan_pwm_duty[0],
-				mbfan_pwm_duty[1],
-				mbfan_pwm_duty[2],
-				mbfan_pwm_duty[3]);
+			for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+				new_duty = roundf(mbfan_pwm_duty[i]);
+				if (check_for_change(st->mbfan_duty[i], new_duty, 0.5)) {
+					printf("mbfan%d: duty cycle change %.1f --> %.1f\n",
+						i+1,
+						st->mbfan_duty[i],
+						new_duty);
+					st->mbfan_duty[i] = new_duty;
+					t_set_outputs = 0;
+				}
+			}
 		}
 
-		t_now = get_absolute_time();
-		if (delayed_by_ms(t_temp, 10000) < t_now) {
-			t_temp = t_now;
+		if (time_passed(&t_temp, 10000)) {
 			float temp = get_pico_temp();
-			printf("temperature=%fC\n", temp);
+
+			if (check_for_change(st->temp[0], temp, 0.5)) {
+				printf("temperature change %.1fC --> %.1fC\n",
+					st->temp[0],
+					temp);
+				st->temp[0] = temp;
+			}
 		}
 
-		t_now = get_absolute_time();
-		if (delayed_by_ms(t_poll_tacho, 2000) < t_now) {
-			t_poll_tacho = t_now;
+		if (time_passed(&t_poll_tacho, 2000)) {
+			int i;
+			float new_freq;
+
 			update_tacho_input_freq();
-			printf("tacho in (Hz): f1=%0.2f, f2=%0.2f, f3=%0.2f, f4=%0.2f, f5=%0.2f, f6=%0.2f, f7=%0.2f, f8=%0.2f\n",
-				fan_tacho_freq[0],
-				fan_tacho_freq[1],
-				fan_tacho_freq[2],
-				fan_tacho_freq[3],
-				fan_tacho_freq[4],
-				fan_tacho_freq[5],
-				fan_tacho_freq[6],
-				fan_tacho_freq[7]
-				);
+			for (i = 0; i < FAN_MAX_COUNT; i++) {
+				new_freq = roundf(fan_tacho_freq[i]*10)/10.0;
+				if (check_for_change(st->fan_freq[i], new_freq, 1.0)) {
+					printf("fan%d: tacho frequency change %.1f --> %.1f (%f)\n",
+						i+1,
+						st->fan_freq[i],
+						new_freq,
+						fan_tacho_freq[i]);
+					st->fan_freq[i] = new_freq;
+				}
+			}
 		}
 
-		sleep_ms(10);
+		if (time_passed(&t_set_outputs, 5000)) {
+			update_outputs(st, cfg);
+		}
+
+		while ((c = getchar_timeout_us(0)) != PICO_ERROR_TIMEOUT) {
+			if (c == 0xff)
+				continue;
+			if (c == 10 || c == 13 || i_ptr >= sizeof(input_buf)) {
+				input_buf[i_ptr] = 0;
+				if (i_ptr == 0)
+					continue;
+				printf("command: '%s'\n", input_buf);
+				i_ptr = 0;
+				continue;
+			}
+			input_buf[i_ptr++] = c;
+		}
+
+		//sleep_ms(1);
 	}
 }
 

@@ -126,6 +126,15 @@ struct fanpico_config {
 	struct mb_input mbfans[MBFAN_MAX_COUNT];
 };
 
+struct fanpico_state {
+	/* inputs */
+	float mbfan_duty[MBFAN_MAX_COUNT];
+	float fan_freq[FAN_MAX_COUNT];
+	float temp[SENSOR_MAX_COUNT];
+	/* outputs */
+	float fan_duty[FAN_MAX_COUNT];
+	float mbfan_freq[MBFAN_MAX_COUNT];
+};
 
 
 /* fanpico.c */
@@ -133,7 +142,7 @@ void print_mallinfo();
 
 
 /* config.c */
-extern struct fanpico_config cfg;
+extern struct fanpico_config *cfg;
 void read_config();
 void save_config();
 void delete_config();

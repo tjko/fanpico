@@ -31,7 +31,8 @@
 extern const char fanpico_default_config[];
 
 
-struct fanpico_config cfg;
+struct fanpico_config config;
+struct fanpico_config *cfg = &config;
 
 
 int str2pwm_source(const char *s)
@@ -462,8 +463,8 @@ void read_config()
 
 
         /* Parse JSON configuration */
-	clear_config(&cfg);
-	if (json_to_config(config, &cfg) < 0) {
+	clear_config(cfg);
+	if (json_to_config(config, cfg) < 0) {
 		printf("Error parsing JSON configuration\n");
 	}
 
@@ -479,7 +480,7 @@ void save_config()
 
 	printf("Saving configuration...\n");
 
-	config = config_to_json(&cfg);
+	config = config_to_json(cfg);
 	if (!config) {
 		printf("Out of memory?");
 		return;
@@ -523,7 +524,7 @@ void print_config()
 	cJSON *config;
 	char *str;
 
-	config = config_to_json(&cfg);
+	config = config_to_json(cfg);
 	if (!config) {
 		printf("Out of memory?");
 		return;
