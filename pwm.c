@@ -212,3 +212,69 @@ void setup_pwm_inputs()
 	}
 
 }
+
+
+double pwm_map(struct pwm_map *map, double val)
+{
+	int i;
+	double newval;
+
+	// value is equal or smaller than first map point
+	if (val <= map->pwm[0][0])
+		return map->pwm[0][1];
+
+	// find the map points that the value falls in between of...
+	i = 1;
+	while(i < map->points && map->pwm[i][0] < val)
+		i++;
+
+	// value is larger or equal than last map point
+	if (val >= map->pwm[i][0])
+		return map->pwm[i][1];
+
+	// calculate mapping using the map points left (i-i) and right (i) of the value...
+	double a = (double)(map->pwm[i][1] - map->pwm[i-1][1]) / (double)(map->pwm[i][0] - map->pwm[i-1][0]);
+	newval = map->pwm[i-1][1] + a * (val - map->pwm[i-1][0]);
+
+	return newval;
+}
+
+
+double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *config, int i)
+{
+	struct fan_output *fan;
+	double val = 0;
+
+	fan = &config->fans[i];
+
+	/* get source value  */
+	switch (fan->s_type) {
+	case PWM_FIXED:
+		val = fan->s_id;
+		break;
+	case PWM_MB:
+		val = state->mbfan_duty[fan->s_id];
+		break;
+	case PWM_SENSOR:
+		val = sensor_get_duty(&config->sensors[fan->s_id], state->temp[fan->s_id]);
+		//printf("temp duty: %fC --> %lf\n", state->temp[fan->s_id], val);
+		break;
+	case PWM_FAN:
+		val = state->fan_duty[fan->s_id];
+		break;
+	}
+
+	/* apply mapping */
+	val = pwm_map(&fan->map, val);
+
+	/* apply coefficient */
+	val *= fan->pwm_coefficient;
+
+	/* final step to enforce min/max limits for output */
+	if (val < fan->min_pwm) val = fan->min_pwm;
+	if (val > fan->max_pwm) val = fan->max_pwm;
+
+	return val;
+}
+
+

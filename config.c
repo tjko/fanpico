@@ -215,6 +215,7 @@ void clear_config(struct fanpico_config *cfg)
 		f->s_type=PWM_FIXED;
 		f->s_id=0;
 		f->map.points=0;
+		f->rpm_factor=2;
 	}
 
 	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
@@ -224,6 +225,7 @@ void clear_config(struct fanpico_config *cfg)
 		m->min_rpm=0;
 		m->max_rpm=0;
 		m->rpm_coefficient=0.0;
+		m->rpm_factor=2;
 		m->s_type=TACHO_FIXED;
 		m->s_id=0;
 		m->map.points=0;
@@ -260,6 +262,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 		cJSON_AddItemToObject(o, "source_type", cJSON_CreateString(pwm_source2str(f->s_type)));
 		cJSON_AddItemToObject(o, "source_id", cJSON_CreateNumber(f->s_id));
 		cJSON_AddItemToObject(o, "pwm_map", pwm_map2json(&f->map));
+		cJSON_AddItemToObject(o, "rpm_factor", cJSON_CreateNumber(f->rpm_factor));
 		cJSON_AddItemToArray(fans, o);
 	}
 	cJSON_AddItemToObject(config, "fans", fans);
@@ -279,6 +282,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 		cJSON_AddItemToObject(o, "min_rpm", cJSON_CreateNumber(m->min_rpm));
 		cJSON_AddItemToObject(o, "max_rpm", cJSON_CreateNumber(m->max_rpm));
 		cJSON_AddItemToObject(o, "rpm_coefficient", cJSON_CreateNumber(m->rpm_coefficient));
+		cJSON_AddItemToObject(o, "rpm_factor", cJSON_CreateNumber(m->rpm_factor));
 		cJSON_AddItemToObject(o, "source_type", cJSON_CreateString(tacho_source2str(m->s_type)));
 		cJSON_AddItemToObject(o, "source_id", cJSON_CreateNumber(m->s_id));
 		cJSON_AddItemToObject(o, "rpm_map", tacho_map2json(&m->map));
@@ -346,6 +350,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			f->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));
 			if ((r = cJSON_GetObjectItem(item, "pwm_map")))
 				json2pwm_map(r, &f->map);
+			f->rpm_factor = cJSON_GetNumberValue(cJSON_GetObjectItem(item,"rpm_factor"));
 		}
 	}
 
@@ -362,6 +367,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			m->min_rpm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "min_rpm"));
 			m->max_rpm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "max_rpm"));
 			m->rpm_coefficient = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "rpm_coefficient"));
+			m->rpm_factor = cJSON_GetNumberValue(cJSON_GetObjectItem(item,"rpm_factor"));
 			m->s_type = str2tacho_source(cJSON_GetStringValue(cJSON_GetObjectItem(item, "source_type")));
 			m->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));
 			if ((r = cJSON_GetObjectItem(item, "rpm_map")))

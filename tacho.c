@@ -188,3 +188,64 @@ void setup_tacho_outputs()
 	}
 
 }
+
+
+double tacho_map(struct tacho_map *map, double val)
+{
+	int i;
+	double newval;
+
+	// value is equal or smaller than first map point
+	if (val <= map->tacho[0][0])
+		return map->tacho[0][1];
+
+	// find the map points that the value falls in between of...
+	i = 1;
+	while(i < map->points && map->tacho[i][0] < val)
+		i++;
+
+	// value is larger or equal than last map point
+	if (val >= map->tacho[i][0])
+		return map->tacho[i][1];
+
+	// calculate mapping using the map points left (i-i) and right (i) of the value...
+	double a = (double)(map->tacho[i][1] - map->tacho[i-1][1]) / (double)(map->tacho[i][0] - map->tacho[i-1][0]);
+	newval = map->tacho[i-1][1] + a * (val - map->tacho[i-1][0]);
+
+	return newval;
+}
+
+
+double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i)
+{
+	struct mb_input *mbfan;
+	double val = 0;
+
+	mbfan = &config->mbfans[i];
+
+	switch (mbfan->s_type) {
+	case TACHO_FIXED:
+		val = mbfan->s_id;
+		break;
+	case TACHO_FAN:
+		val = state->fan_freq[mbfan->s_id] * 60.0 / config->fans[mbfan->s_id].rpm_factor;
+		break;
+	}
+
+
+	/* apply mapping */
+	val = tacho_map(&mbfan->map, val);
+
+	/* apply coefficient */
+	val *= mbfan->rpm_coefficient;
+
+	if (val < mbfan->min_rpm) val = mbfan->min_rpm;
+	if (val > mbfan->max_rpm) val = mbfan->max_rpm;
+
+	/* convert RPM to frequency */
+	val = val / 60.0 * mbfan->rpm_factor;
+
+	return val;
+}
+
+

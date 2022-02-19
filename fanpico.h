@@ -96,19 +96,27 @@ struct temp_map {
 
 struct fan_output {
 	char name[MAX_NAME_LEN];
+
+	/* output PWM signal settings */
 	uint8_t min_pwm;
 	uint8_t max_pwm;
 	float pwm_coefficient;
 	enum pwm_source_types s_type;
 	uint16_t s_id;
 	struct pwm_map map;
+
+	/* input Tacho signal settings */
+	uint8_t rpm_factor;
 };
 
 struct mb_input {
 	char name[MAX_NAME_LEN];
+
+	/* output Tacho signal settings */
 	uint16_t min_rpm;
 	uint16_t max_rpm;
 	float rpm_coefficient;
+	uint8_t rpm_factor;
 	enum tacho_source_types s_type;
 	uint16_t s_id;
 	struct tacho_map map;
@@ -158,6 +166,13 @@ void setup_pwm_outputs();
 void set_pwm_duty_cycle(uint fan, float duty);
 float get_pwm_duty_cycle(uint fan);
 void get_pwm_duty_cycles();
+double pwm_map(struct pwm_map *map, double val);
+double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *config, int i);
+
+/* sensors.c */
+float get_pico_temp();
+double sensor_get_temp(struct sensor_input *sensor, double temp);
+double sensor_get_duty(struct sensor_input *sensor, double temp);
 
 /* tacho.c */
 extern float fan_tacho_freq[FAN_MAX_COUNT];
@@ -165,6 +180,8 @@ void setup_tacho_inputs();
 void setup_tacho_outputs();
 void update_tacho_input_freq();
 void set_tacho_output_freq(uint fan, double frequency);
+double tacho_map(struct tacho_map *map, double val);
+double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i);
 
 
 /* crc32.c */

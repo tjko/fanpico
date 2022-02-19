@@ -22,9 +22,11 @@
 	    "source_type": "mbfan",
 	    "source_id": 0,
 	    "pwm_map": [
-		[ 0, 0	],
-		[ 100, 100 ]
-	    ]
+		[ 0, 20	],
+		[ 25, 20 ],
+		[ 100, 90 ]
+	    ],
+	    "rpm_factor": 2
 	},
 	{
 	    "id": 1,
@@ -37,7 +39,8 @@
 	    "pwm_map": [
 		[ 0, 0	],
 		[ 100, 100 ]
-	    ]
+	    ],
+	    "rpm_factor": 2
 	},
 	{
 	    "id": 2,
@@ -50,7 +53,8 @@
 	    "pwm_map": [
 		[ 0, 0	],
 		[ 100, 100 ]
-	    ]
+	    ],
+	    "rpm_factor": 2
 	},
 	{
 	    "id": 3,
@@ -63,7 +67,8 @@
 	    "pwm_map": [
 		[ 0, 0	],
 		[ 100, 100 ]
-	    ]
+	    ],
+	    "rpm_factor": 2
 	},
 	{
 	    "id": 4,
@@ -76,7 +81,8 @@
 	    "pwm_map": [
 		[ 0, 0	],
 		[ 100, 100 ]
-	    ]
+	    ],
+	    "rpm_factor": 2
 	},
 	{
 	    "id": 5,
@@ -89,7 +95,8 @@
 	    "pwm_map": [
 		[ 0, 0	],
 		[ 100, 100 ]
-	    ]
+	    ],
+	    "rpm_factor": 2
 	},
 	{
 	    "id": 6,
@@ -102,7 +109,8 @@
 	    "pwm_map": [
 		[ 0, 0	],
 		[ 100, 100 ]
-	    ]
+	    ],
+	    "rpm_factor": 2
 	},
 	{
 	    "id": 7,
@@ -115,7 +123,8 @@
 	    "pwm_map": [
 		[ 0, 0	],
 		[ 100, 100 ]
-	    ]
+	    ],
+	    "rpm_factor": 2
 	}
     ],
     "mbfans": [
@@ -125,6 +134,7 @@
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
 	    "rpm_coefficient": 1.0,
+	    "rpm_factor": 2,
 	    "source_type": "fan",
 	    "source_id": 0,
 	    "rpm_map": [
@@ -138,6 +148,7 @@
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
 	    "rpm_coefficient": 1.0,
+	    "rpm_factor": 2,
 	    "source_type": "fan",
 	    "source_id": 1,
 	    "rpm_map": [
@@ -151,6 +162,7 @@
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
 	    "rpm_coefficient": 1.0,
+	    "rpm_factor": 2,
 	    "source_type": "fan",
 	    "source_id": 2,
 	    "rpm_map": [
@@ -164,6 +176,7 @@
 	    "min_rpm": 0,
 	    "max_rpm": 10000,
 	    "rpm_coefficient": 1.0,
+	    "rpm_factor": 2,
 	    "source_type": "fan",
 	    "source_id": 3,
 	    "rpm_map": [

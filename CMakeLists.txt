@@ -37,6 +37,7 @@ add_executable(fanpico
   config.c
   pwm.c
   tacho.c
+  sensors.c
   square_wave_gen.c
   crc32.c
   default_config.s

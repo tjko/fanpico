@@ -26,9 +26,9 @@
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "pico/unique_id.h"
+#include "hardware/adc.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
-#include "hardware/adc.h"
 #include "hardware/clocks.h"
 
 #include "cJSON.h"
@@ -48,21 +48,6 @@ void print_mallinfo()
 	printf("fordblks: %u\n", mallinfo().fordblks);
 }
 
-
-float get_pico_temp()
-{
-	uint16_t raw;
-	float temp, volt;
-	float cal_value = 0.0;
-
-	adc_select_input(4);
-	raw = adc_read();
-	volt = raw * 3.25 / (1 << 12);
-	temp = 27 - ((volt - 0.706) / 0.001721) + cal_value;
-
-	//printf("get_pico_temp(): raw=%u, volt=%f, temp=%f\n", raw, volt, temp);
-	return roundf(temp);
-}
 
 void set_binary_info()
 {
@@ -191,124 +176,6 @@ int check_for_change(double oldval, double newval, double treshold)
 }
 
 
-double sensor_get_temp(struct sensor_input *sensor, double temp)
-{
-	double newval;
-
-	newval = (temp * sensor->temp_coefficient) + sensor->temp_offset;
-
-	return newval;
-}
-
-
-double sensor_get_duty(struct sensor_input *sensor, double temp)
-{
-	int i;
-	double a, t;
-	struct temp_map *map;
-
-	t = sensor_get_temp(sensor, temp);
-	map = &sensor->map;
-
-	if (t <= map->temp[0][0])
-		return map->temp[0][1];
-
-	i = 1;
-	while (i < map->points && map->temp[i][0] < t)
-		i++;
-
-	if (t >= map->temp[i][0])
-		return map->temp[i][1];
-
-	a = (double)(map->temp[i][1] - map->temp[i-1][1]) / (double)(map->temp[i][0] - map->temp[i-1][0]);
-	return map->temp[i-1][1] + a * (t - map->temp[i-1][0]);
-}
-
-
-double pwm_map(struct pwm_map *map, double val)
-{
-	int i;
-	double newval;
-
-	// value is equal or smaller than first map point
-	if (val <= map->pwm[0][0])
-		return map->pwm[0][1];
-
-	// find the map points that the value falls in between of...
-	i = 1;
-	while(i < map->points && map->pwm[i][0] < val)
-		i++;
-
-	// value is larger or equal than last map point
-	if (val >= map->pwm[i][0])
-		return map->pwm[i][1];
-
-	// calculate mapping using the map points left (i-i) and right (i) of the value...
-	double a = (double)(map->pwm[i][1] - map->pwm[i-1][1]) / (double)(map->pwm[i][0] - map->pwm[i-1][0]);
-	newval = map->pwm[i-1][1] + a * (val - map->pwm[i-1][0]);
-
-	return newval;
-}
-
-
-double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *config, int i)
-{
-	struct fan_output *fan;
-	double val = 0;
-
-	fan = &config->fans[i];
-
-	/* get source value  */
-	switch (fan->s_type) {
-	case PWM_FIXED:
-		val = fan->s_id;
-		break;
-	case PWM_MB:
-		val = state->mbfan_duty[fan->s_id];
-		break;
-	case PWM_SENSOR:
-		val = sensor_get_duty(&config->sensors[fan->s_id], state->temp[fan->s_id]);
-		//printf("temp duty: %fC --> %lf\n", state->temp[fan->s_id], val);
-		break;
-	case PWM_FAN:
-		val = state->fan_duty[fan->s_id];
-		break;
-	}
-
-	/* apply mapping */
-	val = pwm_map(&fan->map, val);
-
-	/* apply coefficient */
-	val *= fan->pwm_coefficient;
-
-	/* final step to enforce min/max limits for output */
-	if (val < fan->min_pwm) val = fan->min_pwm;
-	if (val > fan->max_pwm) val = fan->max_pwm;
-
-	return val;
-}
-
-
-double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i)
-{
-	struct mb_input *mbfan;
-	double val = 0;
-
-	mbfan = &config->mbfans[i];
-
-	switch (mbfan->s_type) {
-	case TACHO_FIXED:
-		val = mbfan->s_id;
-		break;
-	case TACHO_FAN:
-		val = state->fan_freq[mbfan->s_id];
-		break;
-	}
-
-	return val;
-}
-
-
 void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 {
 	int i;
@@ -407,6 +274,7 @@ int main()
 		}
 
 
+		/* Read PWM input signals (duty cycle) periodically */
 		if (time_passed(&t_poll_pwm, 1500)) {
 			int i;
 			float new_duty;
@@ -425,6 +293,7 @@ int main()
 			}
 		}
 
+		/* Read temperature sensors periodically */
 		if (time_passed(&t_temp, 10000)) {
 			float temp = get_pico_temp();
 
@@ -436,6 +305,7 @@ int main()
 			}
 		}
 
+		/* Calculate frequencies from input tachometer signals peridocially */
 		if (time_passed(&t_poll_tacho, 2000)) {
 			int i;
 			float new_freq;
@@ -458,6 +328,7 @@ int main()
 			update_outputs(st, cfg);
 		}
 
+		/* Process any (user) input */
 		while ((c = getchar_timeout_us(0)) != PICO_ERROR_TIMEOUT) {
 			// printf("input: '%c' [0x%02x]\n", c, c);
 			if (c == 0xff)
