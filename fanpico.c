@@ -241,9 +241,11 @@ int main()
 	clear_state(st);
 
 	/* Initialize MCU and other hardware... */
-//	print_mallinfo();
+	if (get_debug_level() >= 2)
+		print_mallinfo();
 	setup();
-	print_mallinfo();
+	if (get_debug_level() >= 2)
+		print_mallinfo();
 
 	t_last = get_absolute_time();
 
@@ -254,7 +256,7 @@ int main()
 
 		if (delta > max_delta) {
 			max_delta = delta;
-			printf("%llu: max_loop_time=%lld\n", t_now, max_delta);
+			debug(2, "%llu: max_loop_time=%lld\n", t_now, max_delta);
 		}
 
 		/* Toggle LED every 1000ms */
@@ -273,7 +275,7 @@ int main()
 			for (i = 0; i < MBFAN_MAX_COUNT; i++) {
 				new_duty = roundf(mbfan_pwm_duty[i]);
 				if (check_for_change(st->mbfan_duty[i], new_duty, 0.5)) {
-					printf("mbfan%d: duty cycle change %.1f --> %.1f\n",
+					debug(1, "mbfan%d: duty cycle change %.1f --> %.1f\n",
 						i+1,
 						st->mbfan_duty[i],
 						new_duty);
@@ -304,7 +306,7 @@ int main()
 			for (i = 0; i < FAN_MAX_COUNT; i++) {
 				new_freq = roundf(fan_tacho_freq[i]*10)/10.0;
 				if (check_for_change(st->fan_freq[i], new_freq, 1.0)) {
-					debug(1, "fan%d: tacho frequency change %.1f --> %.1f (%f)\n",
+					debug(1, "fan%d: tacho freq change %.1f --> %.1f (%f)\n",
 						i+1,
 						st->fan_freq[i],
 						new_freq,

@@ -35,116 +35,228 @@ struct cmd_t {
 	const char   *cmd;
 	uint8_t       min_match;
 	struct cmd_t *subcmds;
-	int (*func)(const char *cmd, const char *args);
+	int (*func)(const char *cmd, const char *args, int query);
 };
 
+struct fanpico_state *st = NULL;
+struct fanpico_config *conf = NULL;
 
-int cmd_idn(const char *cmd, const char *args)
+
+int cmd_idn(const char *cmd, const char *args, int query)
 {
 	int i;
 	pico_unique_board_id_t board_id;
 
-	printf("TJKO Industries,FANPICO-0408,");
-	pico_get_unique_board_id(&board_id);
-	for (i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
-		printf("%02x", board_id.id[i]);
-	printf(",%s\n", FANPICO_VERSION);
+	if (query) {
+		printf("TJKO Industries,FANPICO-%s,", FANPICO_MODEL);
+		pico_get_unique_board_id(&board_id);
+		for (i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
+			printf("%02x", board_id.id[i]);
+		printf(",%s\n", FANPICO_VERSION);
+	}
 
 	return 0;
 }
 
-
-int cmd_null(const char *cmd, const char *args)
+int cmd_null(const char *cmd, const char *args, int query)
 {
-	debug(1, "null command: %s %s\n", cmd, args);
+	debug(1, "null command: %s %s (query=%d)\n", cmd, args, query);
 	return 0;
 }
 
-int cmd_set_debug(const char *cmd, const char *args)
+int cmd_debug(const char *cmd, const char *args, int query)
 {
 	int level = atoi(args);
 
-	set_debug_level((level < 0 ? 0 : level));
+	if (query) {
+		printf("%d\n", get_debug_level());
+	} else {
+		set_debug_level((level < 0 ? 0 : level));
+	}
 	return 0;
 }
 
-int cmd_get_debug(const char *cmd, const char *args)
+int cmd_reset(const char *cmd, const char *args, int query)
 {
-	printf("%d\n", get_debug_level());
+	if (!query) {
+		debug(1, "Initiating reboot...\n");
+		watchdog_enable(10, 0);
+		while (1);
+	}
 	return 0;
 }
 
-int cmd_reset(const char *cmd, const char *args)
+int cmd_save_config(const char *cmd, const char *args, int query)
 {
-	debug(1, "Initiating reboot...\n");
-	watchdog_enable(10, 0);
-	while (1);
-}
-
-int cmd_save_config(const char *cmd, const char *args)
-{
-	save_config();
+	if (!query)
+		save_config();
 	return 0;
 }
 
-int cmd_print_config(const char *cmd, const char *args)
+int cmd_print_config(const char *cmd, const char *args, int query)
 {
-	print_config();
+	if (!query)
+		print_config();
 	return 0;
 }
 
-int cmd_delete_config(const char *cmd, const char *args)
+int cmd_delete_config(const char *cmd, const char *args, int query)
 {
-	delete_config();
+	if (!query)
+		delete_config();
+	return 0;
+}
+
+int cmd_one(const char *cmd, const char *args, int query)
+{
+	if (query)
+		printf("1\n");
+	return 0;
+}
+
+int cmd_zero(const char *cmd, const char *args, int query)
+{
+	if (query)
+		printf("0\n");
+	return 0;
+}
+
+int cmd_read(const char *cmd, const char *args, int query)
+{
+	if (!query)
+		return 0;
+
+
+
+	return 0;
+}
+
+int cmd_fan_rpm(const char *cmd, const char *args, int query)
+{
+	int fan;
+	double rpm;
+
+	if (query) {
+		fan = atoi(&cmd[3]);
+		if (fan >= 0 && fan < FAN_MAX_COUNT) {
+			rpm = st->fan_freq[fan] * 60.0 / 2.0;
+			debug(2,"fan%d (tacho = %fHz) rpm = %.1lf\n", fan+1,
+				st->fan_freq[fan], rpm);
+			printf("%.0lf\n", rpm);
+		}
+	}
+	return 0;
+}
+
+int cmd_fan_tacho(const char *cmd, const char *args, int query)
+{
+	int fan;
+	float f;
+
+	if (query) {
+		fan = atoi(&cmd[3]);
+		if (fan >= 0 && fan < FAN_MAX_COUNT) {
+			f = st->fan_freq[fan];
+			debug(2,"fan%d tacho = %fHz\n", fan+1, f);
+			printf("%.1f\n", f);
+		}
+	}
+	return 0;
+}
+
+int cmd_fan_pwm(const char *cmd, const char *args, int query)
+{
+	int fan;
+	float d;
+
+	if (query) {
+		fan = atoi(&cmd[3]);
+		if (fan >= 0 && fan < FAN_MAX_COUNT) {
+			d = st->fan_duty[fan];
+			debug(2,"fan%d duty = %f%%\n", fan+1, d);
+			printf("%.0f\n", d);
+		}
+	}
+	return 0;
+}
+
+int cmd_mbfan_rpm(const char *cmd, const char *args, int query)
+{
+	if (query) {
+	}
+	return 0;
+}
+
+int cmd_mbfan_tacho(const char *cmd, const char *args, int query)
+{
+	if (query) {
+	}
+	return 0;
+}
+
+int cmd_mbfan_pwm(const char *cmd, const char *args, int query)
+{
+	if (query) {
+	}
 	return 0;
 }
 
 
 
 struct cmd_t system_commands[] = {
-	{ "MODe", 3,  NULL, cmd_null },
-	{ "DEBUG?",6, NULL, cmd_get_debug },
-	{ "DEBUG", 5, NULL, cmd_set_debug },
+	{ "MODe",   3, NULL,              cmd_null },
+	{ "DEBUG",  5, NULL,              cmd_debug },
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t config_commands[] = {
-	{ "SAVe", 3, NULL, cmd_save_config },
-	{ "PRInt", 3, NULL, cmd_print_config },
-	{ "DELete", 3, NULL, cmd_delete_config },
+	{ "SAVe",    3, NULL,             cmd_save_config },
+	{ "Read",    1, NULL,             cmd_print_config },
+	{ "DELete",  3, NULL,             cmd_delete_config },
+	{ 0, 0, 0, 0}
+};
+
+struct cmd_t fan_commands[] = {
+	{ "RPM",     3, NULL,             cmd_fan_rpm },
+	{ "PWM",     3, NULL,             cmd_fan_pwm },
+	{ "TACho",   3, NULL,             cmd_fan_tacho },
+};
+
+struct cmd_t mbfan_commands[] = {
+	{ "RPM",     3, NULL,             cmd_mbfan_rpm },
+	{ "PWM",     3, NULL,             cmd_mbfan_pwm },
+	{ "TACho",   3, NULL,             cmd_mbfan_tacho },
+};
+
+struct cmd_t measure_commands[] = {
+	{ "FAN",     3, fan_commands,     NULL },
+	{ "MBFAN",   3, mbfan_commands,   NULL },
+	{ 0, 0, 0, 0}
 };
 
 struct cmd_t commands[] = {
-	{ "*IDN?", 5, NULL, cmd_idn },
-	{ "*CLS", 4, NULL, cmd_null },
-	{ "*RST", 4, NULL, cmd_reset },
-	{ "SYStem", 3, system_commands, NULL },
-	{ "CONFig", 4, config_commands, NULL },
+	{ "*CLS",    4, NULL,             cmd_null },
+	{ "*ESE",    4, NULL,             cmd_null },
+	{ "*ESR",    4, NULL,             cmd_zero },
+	{ "*IDN",    4, NULL,             cmd_idn },
+	{ "*OPC",    4, NULL,             cmd_one },
+	{ "*RST",    4, NULL,             cmd_reset },
+	{ "*SRE",    4, NULL,             cmd_zero },
+	{ "*STB",    4, NULL,             cmd_zero },
+	{ "*TST",    4, NULL,             cmd_zero },
+	{ "*WAI",    4, NULL,             cmd_null },
+	{ "CONFig",  4, config_commands,  NULL },
+	{ "MEAsure", 3, measure_commands, NULL },
+	{ "SYStem",  3, system_commands,  NULL },
+	{ "Read",    1, NULL,             cmd_read },
 	{ 0, 0, 0, 0 }
 };
 
 
-char *trim_str(char *s)
+
+struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level)
 {
-	char *e;
-
-	if (!s) return NULL;
-
-	while (iswspace(*s))
-		s++;
-	e = s + strlen(s) - 1;
-	while (e >= s && iswspace(*e))
-		*e-- = 0;
-
-	return s;
-}
-
-
-
-struct cmd_t* run_cmd(struct fanpico_state *state, struct fanpico_config *config,
-		char *cmd, struct cmd_t *cmd_level)
-{
-	int i;
+	int i, query;
 	int res = -1;
 	char *saveptr1, *saveptr2, *t, *sub, *s, *arg;
 
@@ -156,7 +268,7 @@ struct cmd_t* run_cmd(struct fanpico_state *state, struct fanpico_config *config
 		}
 		/* Split command to subcommands and search from command tree ... */
 		sub = strtok_r(t, ":", &saveptr2);
-		while (sub) {
+		while (sub && strlen(sub) > 0) {
 			s = sub;
 			sub = NULL;
 			i = 0;
@@ -168,8 +280,10 @@ struct cmd_t* run_cmd(struct fanpico_state *state, struct fanpico_config *config
 						cmd_level = cmd_level[i].subcmds;
 					} else {
 						/* Match for command */
+						query = (s[strlen(s)-1] == '?' ? 1 : 0);
 						arg = strtok_r(NULL, " \t", &saveptr1);
-						res = cmd_level[i].func(s, (arg ? arg : ""));
+						res = cmd_level[i].func(s, (arg ? arg : ""),
+									query);
 					}
 					break;
 				}
@@ -190,12 +304,18 @@ void process_command(struct fanpico_state *state, struct fanpico_config *config,
 	char *saveptr, *cmd;
 	struct cmd_t *cmd_level = commands;
 
+	if (!state || !config || !command)
+		return;
+
+	st = state;
+	conf = config;
+
 	cmd = strtok_r(command, ";", &saveptr);
 	while (cmd) {
 		cmd = trim_str(cmd);
 		debug(1, "command: '%s'\n", cmd);
 		if (cmd && strlen(cmd) > 0) {
-			cmd_level = run_cmd(state, config, cmd, cmd_level);
+			cmd_level = run_cmd(cmd, cmd_level);
 		}
 		cmd = strtok_r(NULL, ";", &saveptr);
 	}

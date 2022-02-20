@@ -68,5 +68,20 @@ void print_mallinfo()
 }
 
 
+char *trim_str(char *s)
+{
+	char *e;
+
+	if (!s) return NULL;
+
+	while (iswspace(*s))
+		s++;
+	e = s + strlen(s) - 1;
+	while (e >= s && iswspace(*e))
+		*e-- = 0;
+
+	return s;
+}
+
 
 
