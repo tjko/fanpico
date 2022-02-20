@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <malloc.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "pico/unique_id.h"
@@ -30,6 +29,7 @@
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
 #include "hardware/clocks.h"
+#include "hardware/watchdog.h"
 
 #include "cJSON.h"
 #include "fanpico.h"
@@ -38,15 +38,6 @@
 
 struct fanpico_state system_state;
 
-
-void print_mallinfo()
-{
-	printf("mallinfo:\n");
-	printf("  arena: %u\n", mallinfo().arena);
-	printf(" ordblks: %u\n", mallinfo().ordblks);
-	printf("uordblks: %u\n", mallinfo().uordblks);
-	printf("fordblks: %u\n", mallinfo().fordblks);
-}
 
 
 void set_binary_info()
@@ -94,9 +85,13 @@ void setup()
 
 	set_binary_info();
 	stdio_init_all();
+	sleep_ms(100);
 
-	sleep_ms(500);
 	printf("\n\n\n");
+	if (watchdog_caused_reboot()) {
+		printf("[Rebooted by watchdog]\n\n");
+	}
+
 	printf("FanPico v%s ", FANPICO_VERSION);
 	printf("(Build date: %s)\n", __DATE__);
 	printf("Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>\n");
@@ -185,7 +180,7 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
 		new = calculate_pwm_duty(state, config, i);
 		if (check_for_change(state->fan_duty[i], new, 0.1)) {
-			printf("Set output PWM for fan%d: %.1f --> %.1f\n",
+			debug(1, "fan%d: Set output PWM %.1f --> %.1f\n",
 				i+1,
 				state->fan_duty[i],
 				new);
@@ -198,7 +193,7 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
 		new = calculate_tacho_freq(state, config, i);
 		if (check_for_change(state->mbfan_freq[i], new, 0.1)) {
-			printf("Set output tacho for mbfan%d: %.1f --> %.1f\n",
+			debug(1, "mbfan%d: Set output Tacho %.1f --> %.1f\n",
 				i+1,
 				state->mbfan_freq[i],
 				new);
@@ -246,16 +241,11 @@ int main()
 	clear_state(st);
 
 	/* Initialize MCU and other hardware... */
-	print_mallinfo();
+//	print_mallinfo();
 	setup();
 	print_mallinfo();
 
-//	print_config();
-//	save_config();
-//	delete_config();
-	print_mallinfo();
-
-
+	t_last = get_absolute_time();
 
 	while (1) {
 		t_now = get_absolute_time();
@@ -298,7 +288,7 @@ int main()
 			float temp = get_pico_temp();
 
 			if (check_for_change(st->temp[0], temp, 0.5)) {
-				printf("temperature change %.1fC --> %.1fC\n",
+				debug(1, "Temperature change %.1fC --> %.1fC\n",
 					st->temp[0],
 					temp);
 				st->temp[0] = temp;
@@ -314,7 +304,7 @@ int main()
 			for (i = 0; i < FAN_MAX_COUNT; i++) {
 				new_freq = roundf(fan_tacho_freq[i]*10)/10.0;
 				if (check_for_change(st->fan_freq[i], new_freq, 1.0)) {
-					printf("fan%d: tacho frequency change %.1f --> %.1f (%f)\n",
+					debug(1, "fan%d: tacho frequency change %.1f --> %.1f (%f)\n",
 						i+1,
 						st->fan_freq[i],
 						new_freq,

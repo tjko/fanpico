@@ -150,7 +150,7 @@ struct fanpico_state {
 void print_mallinfo();
 
 /* command.c */
-void process_command(struct fanpico_state *state, struct fanpico_config *config, const char *command);
+void process_command(struct fanpico_state *state, struct fanpico_config *config, char *command);
 
 /* config.c */
 extern struct fanpico_config *cfg;
@@ -182,6 +182,12 @@ void update_tacho_input_freq();
 void set_tacho_output_freq(uint fan, double frequency);
 double tacho_map(struct tacho_map *map, double val);
 double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i);
+
+/* util.c */
+int get_debug_level();
+void set_debug_level(int level);
+void debug(int debug_level, const char *fmt, ...);
+void print_mallinfo();
 
 
 /* crc32.c */
