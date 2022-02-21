@@ -243,6 +243,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 		return NULL;
 
 	cJSON_AddItemToObject(config, "id", cJSON_CreateString("fanpico-config-v1"));
+	cJSON_AddItemToObject(config, "debug", cJSON_CreateNumber(get_debug_level()));
 
 	/* Fan outputs */
 	fans = cJSON_CreateArray();
@@ -331,7 +332,11 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 
 	ref = cJSON_GetObjectItem(config, "id");
 	if (ref)
-		printf("config version: %s\n", ref->valuestring);
+		printf("Config version: %s\n", ref->valuestring);
+	ref = cJSON_GetObjectItem(config, "debug");
+	if (ref) {
+		set_debug_level(cJSON_GetNumberValue(ref));
+	}
 
 	/* Fan output configurations */
 	ref = cJSON_GetObjectItem(config, "fans");
