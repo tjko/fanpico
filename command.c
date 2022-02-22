@@ -797,12 +797,11 @@ struct cmd_t commands[] = {
 
 
 
-struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level)
+struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level, char **prev_subcmd)
 {
 	int i, query, cmd_len, total_len;
-	int res = -1;
-	char *prev_subcmd = NULL;
 	char *saveptr1, *saveptr2, *t, *sub, *s, *arg;
+	int res = -1;
 
 	total_len = strlen(cmd);
 	t = strtok_r(cmd, " \t", &saveptr1);
@@ -811,6 +810,7 @@ struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level)
 		if (*t == ':' || *t == '*') {
 			/* reset command level to 'root' */
 			cmd_level = commands;
+			*prev_subcmd = NULL;
 		}
 		/* Split command to subcommands and search from command tree ... */
 		sub = strtok_r(t, ":", &saveptr2);
@@ -823,7 +823,7 @@ struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level)
 					sub = strtok_r(NULL, ":", &saveptr2);
 					if (cmd_level[i].subcmds && sub && strlen(sub) > 0) {
 						/* Match for subcommand...*/
-						prev_subcmd = s;
+						*prev_subcmd = s;
 						cmd_level = cmd_level[i].subcmds;
 					} else if (cmd_level[i].func) {
 						/* Match for command */
@@ -832,7 +832,7 @@ struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level)
 						res = cmd_level[i].func(s,
 								(total_len > cmd_len+1 ? arg : ""),
 								query,
-								(prev_subcmd ? prev_subcmd : ""));
+								(*prev_subcmd ? *prev_subcmd : ""));
 					}
 					break;
 				}
@@ -851,6 +851,7 @@ struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level)
 void process_command(struct fanpico_state *state, struct fanpico_config *config, char *command)
 {
 	char *saveptr, *cmd;
+	char *prev_subcmd = NULL;
 	struct cmd_t *cmd_level = commands;
 
 	if (!state || !config || !command)
@@ -864,7 +865,7 @@ void process_command(struct fanpico_state *state, struct fanpico_config *config,
 		cmd = trim_str(cmd);
 		debug(1, "command: '%s'\n", cmd);
 		if (cmd && strlen(cmd) > 0) {
-			cmd_level = run_cmd(cmd, cmd_level);
+			cmd_level = run_cmd(cmd, cmd_level, &prev_subcmd);
 		}
 		cmd = strtok_r(NULL, ";", &saveptr);
 	}
