@@ -77,6 +77,18 @@ int cmd_debug(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_echo(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int val = atoi(args);
+
+	if (query) {
+		printf("%u\n", cfg->local_echo);
+	} else {
+		cfg->local_echo = (val > 0 ? true : false);
+	}
+	return 0;
+}
+
 int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (!query) {
@@ -835,7 +847,8 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd
 
 
 struct cmd_t system_commands[] = {
-	{ "DEBUG",     5, NULL,              cmd_debug },
+	{ "DEBug",     5, NULL,              cmd_debug },
+	{ "ECHO",      4, NULL,              cmd_echo },
 	{ 0, 0, 0, 0 }
 };
 

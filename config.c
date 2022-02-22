@@ -272,6 +272,8 @@ void clear_config(struct fanpico_config *cfg)
 		m->s_id=0;
 		m->map.points=0;
 	}
+
+	cfg->local_echo = false;
 }
 
 
@@ -286,6 +288,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 
 	cJSON_AddItemToObject(config, "id", cJSON_CreateString("fanpico-config-v1"));
 	cJSON_AddItemToObject(config, "debug", cJSON_CreateNumber(get_debug_level()));
+	cJSON_AddItemToObject(config, "local_echo", cJSON_CreateBool(cfg->local_echo));
 
 	/* Fan outputs */
 	fans = cJSON_CreateArray();
@@ -372,13 +375,12 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 
 	/* Parse JSON configuration */
 
-	ref = cJSON_GetObjectItem(config, "id");
-	if (ref)
+	if ((ref = cJSON_GetObjectItem(config, "id")))
 		printf("Config version: %s\n", ref->valuestring);
-	ref = cJSON_GetObjectItem(config, "debug");
-	if (ref) {
+	if ((ref = cJSON_GetObjectItem(config, "debug")))
 		set_debug_level(cJSON_GetNumberValue(ref));
-	}
+	if ((ref = cJSON_GetObjectItem(config, "local_echo")))
+		cfg->local_echo = (cJSON_IsTrue(ref) ? true : false);
 
 	/* Fan output configurations */
 	ref = cJSON_GetObjectItem(config, "fans");

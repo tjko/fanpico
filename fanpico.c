@@ -324,14 +324,15 @@ int main()
 
 		/* Process any (user) input */
 		while ((c = getchar_timeout_us(0)) != PICO_ERROR_TIMEOUT) {
-			// printf("input: '%c' [0x%02x]\n", c, c);
 			if (c == 0xff)
 				continue;
 			if (c == 0x7f || c == 0x08) {
 				if (i_ptr > 0) i_ptr--;
+				if (cfg->local_echo) printf("\b \b");
 				continue;
 			}
 			if (c == 10 || c == 13 || i_ptr >= sizeof(input_buf)) {
+				if (cfg->local_echo) printf("\r\n");
 				input_buf[i_ptr] = 0;
 				if (i_ptr > 0) {
 					process_command(st, cfg, input_buf);
@@ -340,6 +341,7 @@ int main()
 				continue;
 			}
 			input_buf[i_ptr++] = c;
+			if (cfg->local_echo) printf("%c", c);
 		}
 
 		//sleep_ms(1);

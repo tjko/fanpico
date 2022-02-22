@@ -22,7 +22,7 @@
 #ifndef FANPICO_H
 #define FANPICO_H 1
 
-#define FANPICO_VERSION   "1.0beta"
+#define FANPICO_VERSION   "1.0b"
 #define FANPICO_MODEL     "0804"
 
 #define FAN_MAX_COUNT     8   /* Number of Fan outputs on the board */
@@ -134,6 +134,7 @@ struct fanpico_config {
 	struct sensor_input sensors[SENSOR_MAX_COUNT];
 	struct fan_output fans[FAN_MAX_COUNT];
 	struct mb_input mbfans[MBFAN_MAX_COUNT];
+	bool local_echo;
 };
 
 struct fanpico_state {

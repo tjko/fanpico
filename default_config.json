@@ -1,6 +1,7 @@
 {
     "id": "fanpico-config-v1",
     "debug": 0,
+    "local_echo": false,
     "sensors": [
 	{
 	    "id": 0,
