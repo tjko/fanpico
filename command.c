@@ -238,6 +238,49 @@ int cmd_fan_pwm_coef(const char *cmd, const char *args, int query, char *prev_cm
 	return 0;
 }
 
+int cmd_fan_pwm_map(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int fan, i, count;
+	int val;
+	char *arg, *t, *saveptr;
+	struct pwm_map *map;
+	struct pwm_map new_map;
+
+	fan = atoi(&prev_cmd[3]) - 1;
+	if (fan < 0 || fan >= FAN_MAX_COUNT)
+		return 0;
+	map = &conf->fans[fan].map;
+	new_map.points = 0;
+
+	if (query) {
+		for (i = 0; i < map->points; i++) {
+			if (i > 0)
+				printf(",");
+			printf("%u,%u", map->pwm[i][0], map->pwm[i][1]);
+		}
+		printf("\n");
+	} else {
+		arg = strdup(args);
+		count = 0;
+		t = strtok_r(arg, ",", &saveptr);
+		while (t) {
+			val = atoi(t);
+			new_map.pwm[count / 2][count % 2] = val;
+			count++;
+			t = strtok_r(NULL, ",", &saveptr);
+		}
+		if ((count >= 4) && (count % 2 == 0)) {
+			new_map.points = count / 2;
+			*map = new_map;
+		} else {
+			debug(1,"fan%d: invalid new map: %s\n", fan + 1, args);
+		}
+		free(arg);
+	}
+
+	return 0;
+}
+
 int cmd_fan_rpm_factor(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int fan;
@@ -496,6 +539,49 @@ int cmd_mbfan_rpm_factor(const char *cmd, const char *args, int query, char *pre
 	return 0;
 }
 
+int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int fan, i, count;
+	int val;
+	char *arg, *t, *saveptr;
+	struct tacho_map *map;
+	struct tacho_map new_map;
+
+	fan = atoi(&prev_cmd[5]) - 1;
+	if (fan < 0 || fan >= MBFAN_MAX_COUNT)
+		return 0;
+	map = &conf->mbfans[fan].map;
+	new_map.points = 0;
+
+	if (query) {
+		for (i = 0; i < map->points; i++) {
+			if (i > 0)
+				printf(",");
+			printf("%u,%u", map->tacho[i][0], map->tacho[i][1]);
+		}
+		printf("\n");
+	} else {
+		arg = strdup(args);
+		count = 0;
+		t = strtok_r(arg, ",", &saveptr);
+		while (t) {
+			val = atoi(t);
+			new_map.tacho[count / 2][count % 2] = val;
+			count++;
+			t = strtok_r(NULL, ",", &saveptr);
+		}
+		if ((count >= 4) && (count % 2 == 0)) {
+			new_map.points = count / 2;
+			*map = new_map;
+		} else {
+			debug(1,"mbfan%d: invalid new map: %s\n", fan + 1, args);
+		}
+		free(arg);
+	}
+
+	return 0;
+}
+
 int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int fan;
@@ -681,6 +767,49 @@ int cmd_sensor_temp_coef(const char *cmd, const char *args, int query, char *pre
 	return 0;
 }
 
+int cmd_sensor_temp_map(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor, i, count;
+	float val;
+	char *arg, *t, *saveptr;
+	struct temp_map *map;
+	struct temp_map new_map;
+
+	sensor = atoi(&prev_cmd[6]) - 1;
+	if (sensor < 0 || sensor >= SENSOR_MAX_COUNT)
+		return 0;
+	map = &conf->sensors[sensor].map;
+	new_map.points = 0;
+
+	if (query) {
+		for (i = 0; i < map->points; i++) {
+			if (i > 0)
+				printf(",");
+			printf("%f,%f", map->temp[i][0], map->temp[i][1]);
+		}
+		printf("\n");
+	} else {
+		arg = strdup(args);
+		count = 0;
+		t = strtok_r(arg, ",", &saveptr);
+		while (t) {
+			val = atof(t);
+			new_map.temp[count / 2][count % 2] = val;
+			count++;
+			t = strtok_r(NULL, ",", &saveptr);
+		}
+		if ((count >= 4) && (count % 2 == 0)) {
+			new_map.points = count / 2;
+			*map = new_map;
+		} else {
+			debug(1,"sensor%d: invalid new map: %s\n", sensor + 1, args);
+		}
+		free(arg);
+	}
+
+	return 0;
+}
+
 int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int sensor;
@@ -717,6 +846,7 @@ struct cmd_t fan_c_commands[] = {
 	{ "PWMCoeff",  4, NULL,              cmd_fan_pwm_coef },
 	{ "RPMFactor", 4, NULL,              cmd_fan_rpm_factor },
 	{ "SOUrce",    3, NULL,              cmd_fan_source },
+	{ "PWMMap",    4, NULL,              cmd_fan_pwm_map },
 	{ 0, 0, 0, 0 }
 };
 
@@ -727,6 +857,7 @@ struct cmd_t mbfan_c_commands[] = {
 	{ "RPMCoeff",  4, NULL,              cmd_mbfan_rpm_coef },
 	{ "RPMFactor", 4, NULL,              cmd_mbfan_rpm_factor },
 	{ "SOUrce",    3, NULL,              cmd_mbfan_source },
+	{ "RPMMap",    4, NULL,              cmd_mbfan_rpm_map },
 	{ 0, 0, 0, 0 }
 };
 
@@ -734,6 +865,7 @@ struct cmd_t sensor_c_commands[] = {
 	{ "NAME",       4, NULL,             cmd_sensor_name },
 	{ "TEMPOffset", 5, NULL,             cmd_sensor_temp_offset },
 	{ "TEMPCoeff",  5, NULL,             cmd_sensor_temp_coef },
+	{ "TEMPMap",    5, NULL,             cmd_sensor_temp_map },
 	{ 0, 0, 0, 0 }
 };
 
