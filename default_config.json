@@ -8,8 +8,8 @@
 	    "temp_offset": 0.0,
 	    "temp_coefficient": 1.0,
 	    "temp_map": [
-		[ 0, 20 ],
-		[ 100, 40 ]
+		[ 20, 0 ],
+		[ 50, 100 ]
 	    ]
 	}
     ],
