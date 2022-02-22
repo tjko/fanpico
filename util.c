@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <wctype.h>
 #include <assert.h>
 #include <malloc.h>
 #include "pico/stdlib.h"

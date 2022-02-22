@@ -65,6 +65,30 @@ const char* pwm_source2str(enum pwm_source_types source)
 }
 
 
+int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id)
+{
+	int ret = 0;
+
+	switch (source) {
+	case PWM_FIXED:
+		ret = (s_id >= 0 && s_id <= 100 ? 1 : 0);
+		break;
+		;;
+	case PWM_MB:
+		ret = (s_id >= 0 && s_id < MBFAN_MAX_COUNT ? 1 : 0);
+		break;
+	case PWM_SENSOR:
+		ret = (s_id >= 0 && s_id < SENSOR_MAX_COUNT ? 1 : 0);
+		break;
+	case PWM_FAN:
+		ret = (s_id >= 0 && s_id < FAN_MAX_COUNT ? 1 : 0);
+		break;
+	}
+
+	return ret;
+}
+
+
 int str2tacho_source(const char *s)
 {
 	int ret = 0;
@@ -84,6 +108,24 @@ const char* tacho_source2str(enum tacho_source_types source)
 		return "fan";
 
 	return "fixed";
+}
+
+
+int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id)
+{
+	int ret = 0;
+
+	switch (source) {
+	case TACHO_FIXED:
+		ret = (s_id >= 0 && s_id <= 50000 ? 1 : 0);
+		break;
+		;;
+	case TACHO_FAN:
+		ret = (s_id >= 0 && s_id < FAN_MAX_COUNT ? 1 : 0);
+		break;
+	}
+
+	return ret;
 }
 
 

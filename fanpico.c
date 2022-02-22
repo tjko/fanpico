@@ -174,13 +174,13 @@ int check_for_change(double oldval, double newval, double treshold)
 void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 {
 	int i;
-	double new;
+	float new;
 
 	/* update fan PWM signals */
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
 		new = calculate_pwm_duty(state, config, i);
 		if (check_for_change(state->fan_duty[i], new, 0.1)) {
-			debug(1, "fan%d: Set output PWM %.1f --> %.1f\n",
+			debug(1, "fan%d: Set output PWM %.1f%% --> %.1f%%\n",
 				i+1,
 				state->fan_duty[i],
 				new);
@@ -193,7 +193,7 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
 		new = calculate_tacho_freq(state, config, i);
 		if (check_for_change(state->mbfan_freq[i], new, 0.1)) {
-			debug(1, "mbfan%d: Set output Tacho %.1f --> %.1f\n",
+			debug(1, "mbfan%d: Set output Tacho %.2fHz --> %.2fHz\n",
 				i+1,
 				state->mbfan_freq[i],
 				new);
@@ -287,7 +287,9 @@ int main()
 
 		/* Read temperature sensors periodically */
 		if (time_passed(&t_temp, 10000)) {
-			float temp = get_pico_temp();
+			double temp = get_pico_temp() * cfg->sensors[0].temp_coefficient
+				+ cfg->sensors[0].temp_offset;
+
 
 			if (check_for_change(st->temp[0], temp, 0.5)) {
 				debug(1, "Temperature change %.1fC --> %.1fC\n",

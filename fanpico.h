@@ -155,10 +155,17 @@ void process_command(struct fanpico_state *state, struct fanpico_config *config,
 
 /* config.c */
 extern struct fanpico_config *cfg;
+int str2pwm_source(const char *s);
+const char* pwm_source2str(enum pwm_source_types source);
+int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id);
+int str2tacho_source(const char *s);
+const char* tacho_source2str(enum tacho_source_types source);
+int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id);
 void read_config();
 void save_config();
 void delete_config();
 void print_config();
+
 
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];
