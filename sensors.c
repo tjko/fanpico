@@ -38,13 +38,31 @@ float get_pico_temp()
 
 	adc_select_input(4);
 	raw = adc_read();
-	volt = raw * 3.25 / (1 << 12);
+	volt = raw * (3.0 / (1 << 12));
 	temp = 27 - ((volt - 0.706) / 0.001721) + cal_value;
 
-	//printf("get_pico_temp(): raw=%u, volt=%f, temp=%f\n", raw, volt, temp);
+	printf("get_pico_temp(): raw=%u, volt=%f, temp=%f\n", raw, volt, temp);
 	return roundf(temp);
 }
 
+float get_thermistor_temp(uint8_t input)
+{
+	uint16_t raw;
+	float r, temp, volt;
+
+	adc_select_input(input);
+	raw = adc_read();
+	volt = raw * (3.0 / (1 << 12));
+	r = 10000.0 / ( ((float)(1<<12) / raw ) - 1);
+	temp = log(r / 10000.0);
+	temp /= 3950.0;
+	temp += 1.0 / (25.0 + 273.15);
+	temp = 1.0 / temp;
+	temp -= 273.15;
+
+	printf("get_thermistor_temp(): raw=%u, volt=%f, r=%f temp=%f\n", raw, volt, r,  temp);
+	return roundf(temp);
+}
 
 double sensor_get_temp(struct sensor_input *sensor, double temp)
 {

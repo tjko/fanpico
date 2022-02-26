@@ -88,7 +88,7 @@ void setup()
 	sleep_ms(100);
 
 	printf("\n\n\n");
-	if (watchdog_caused_reboot()) {
+	if (watchdog_enable_caused_reboot()) {
 		printf("[Rebooted by watchdog]\n\n");
 	}
 
@@ -116,6 +116,9 @@ void setup()
 	printf("Initialize ADC...\n");
 	adc_init();
 	adc_set_temp_sensor_enabled(true);
+	gpio_set_function(28, GPIO_FUNC_SIO);
+	gpio_disable_pulls(28);
+	gpio_set_input_enabled(28, true);
 	adc_select_input(4);
 
 	/* Setup GPIO pins... */
@@ -290,7 +293,7 @@ int main()
 			double temp = get_pico_temp() * cfg->sensors[0].temp_coefficient
 				+ cfg->sensors[0].temp_offset;
 
-
+			float t2 = get_thermistor_temp(2);
 			if (check_for_change(st->temp[0], temp, 0.5)) {
 				debug(1, "Temperature change %.1fC --> %.1fC\n",
 					st->temp[0],
