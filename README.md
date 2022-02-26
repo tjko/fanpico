@@ -28,3 +28,19 @@ Reference PCB was designed with KiCad.
 Firmware is developed in C using the Pico SDK.
 Plan is to release firmware files (.u2f) after Fanpico is ready for 'release', currently one must compile the firmware from the sources.
 
+### Building Firmware Images
+
+Raspberry Pi Pico C/C++ SDK is required for compiling the firmware: 
+
+#### Requirements
+* [Raspberry Pi Pico C/C++ SDK](https://www.raspberrypi.com/documentation/microcontrollers/c_sdk.html)
+* [cJSON](https://github.com/DaveGamble/cJSON)
+* [pico-littlefs](https://github.com/lurk101/pico-littlefs)
+
+(When building fanpico firmware libraries are expected to be in following locations: ../cJSON/ and ../pico-littlefs/)
+
+
+
+
+
+
