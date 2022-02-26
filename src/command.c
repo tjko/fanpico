@@ -160,6 +160,12 @@ int cmd_read(const char *cmd, const char *args, int query, char *prev_cmd)
 			st->fan_duty[i]);
 	}
 
+	for (i = 0; i < SENSOR_MAX_COUNT; i++) {
+		printf("sensor%d,\"%s\",%.1lf\n", i+1,
+			conf->sensors[i].name,
+			st->temp[i]);
+	}
+
 	return 0;
 }
 
