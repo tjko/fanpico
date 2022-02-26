@@ -10,7 +10,7 @@ fatal() { echo "`basename $0`: $*"; exit 1; }
 
 
 # asm hack (CMake cant seem to handle .incbin in .s file)
-for s_file in *.s; do
+for s_file in src/*.s; do
 	d_file=$(echo $s_file | sed -e 's/\.s/.json/')
 	if [ -s "$d_file" ]; then
 		if [ "$d_file" -nt "$s_file" ]; then
@@ -30,7 +30,7 @@ cd "${BUILD_DIR}" || fatal "cannot access: $BUILD_DIR"
 make -j4 
 if [ $? -eq 0 ]; then
 	echo "Build successful."
-	picotool info -a fanpico.elf
+	picotool info -a src/fanpico.elf
 else
 	echo "Build failed."
 	exit 1
