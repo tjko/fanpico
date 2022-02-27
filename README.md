@@ -18,6 +18,7 @@ Fanpico is Open Source Hardware, reference design is provided for the "0804" mod
 Initially Fanpico will be only a DIY project, but if there is succifient interested then DIY kits may be made available. Since this is Open Hardware, we hope that there will be sellers that eventually offer pre-built units as well as kits....
 
 Additional models with different combinations of fan inputs/outputs could be easily designed (takining into account limitations of Raspberry Pi Pico I/O limits). New and improved PCB models/designs are most welcome.
+![Fanpico Prototype PCB](images/fanpico-prototype.jpg)
 
 ### Hardware Design
 Fanpico (reference design) utilizes all available I/O pins on Raspberry Pi Pico.
@@ -31,6 +32,7 @@ Fanpico (reference design) utilizes all available I/O pins on Raspberry Pi Pico.
 * [FANPICO-0804](boards/0804/)
 
 Reference PCB was designed with KiCad.
+![FANPICO-0804 PCB](images/fanpico-0804.png)
 
 ## Firmware
 Firmware is developed in C using the Pico SDK.
