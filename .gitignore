@@ -13,3 +13,7 @@ _deps
 # Emacs
 *~
 
+# MacOS
+
+.DS_Store
+
