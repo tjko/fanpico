@@ -21,8 +21,8 @@ Additional models with different combinations of fan inputs/outputs could be eas
 ![Fanpico Prototype PCB](images/fanpico-prototype.jpg)
 
 ### Hardware Design
-Fanpico (reference design) utilizes all available I/O pins on Raspberry Pi Pico.
-* Fan PWM outputs are drive by the Pico's PWM hardware.
+Fanpico (reference design) utilizes all available I/O pins on a Raspberry Pi Pico.
+* Fan PWM outputs are driven by the Pico's PWM hardware.
 * Motherboard Fan PWM inputs are read using Pico's PWM hardware.
 * Tacho signal output (for motherboard connectors) is generated using Pico's PIO hardware, providing extremely stable tachometer signal.
 * Tacho signal inputs (from fans) is read using GPIO interrupts (counting number of pulses received over a period of time)
