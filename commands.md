@@ -81,8 +81,11 @@ unconditionally will send these:
 ### Common Commands
 
 #### *IDN?
-Identify device. This returns string that contains following fields: <manufacturer>,<model number>,<serial number>,<firmware version>
-  
+Identify device. This returns string that contains following fields:
+```
+<manufacturer>,<model number>,<serial number>,<firmware version>
+```
+
 Example:
 ```
 *IDN?
