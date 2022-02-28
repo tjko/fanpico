@@ -18,6 +18,8 @@ Fanpico is Open Source Hardware, reference design is provided for the "0804" mod
 Initially Fanpico will be only a DIY project, but if there is succifient interested then DIY kits may be made available. Since this is Open Hardware, we hope that there will be sellers that eventually offer pre-built units as well as kits....
 
 Additional models with different combinations of fan inputs/outputs could be easily designed (takining into account limitations of Raspberry Pi Pico I/O limits). New and improved PCB models/designs are most welcome.
+
+Photo of the first prototype:
 ![Fanpico Prototype PCB](images/fanpico-prototype.jpg)
 
 ### Hardware Design
@@ -27,6 +29,8 @@ Fanpico (reference design) utilizes all available I/O pins on a Raspberry Pi Pic
 * Tacho signal output (for motherboard connectors) is generated using Pico's PIO hardware, providing extremely stable tachometer signal.
 * Tacho signal inputs (from fans) is read using GPIO interrupts (counting number of pulses received over a period of time)
 * Temperature readings are done using ADC, with help of a accurrate 3V voltage reference (LM4040)
+* Each FAN output has jumper to select whether fan gets its power from associated MBFAN connector or from the AUX connector
+* There is a jumper to select wheter power the Fanpico itself from MBFAN1 or AUX connector.
 
 ### Models (PCB designs)
 * [FANPICO-0804](boards/0804/)
