@@ -338,3 +338,189 @@ CONF:FAN1:PWMMAP?
 ```
 
 
+### CONFigure:MBFANx Commands
+MBFANx commands are used to configure specific motherboard fan input port.
+Where x is a number from 1 to 4.
+
+For example:
+```
+CONF:MBFAN4:NAME Water Pump
+```
+
+#### CONFigure:MBFANx:NAME
+Set name for motherboard fan (input) port.
+
+For example:
+```
+CONF:MBFAN1:NAME CPU Fan
+```
+
+#### CONFigure:MBFANx:NAME?
+Query name of a motherboard fan (input) port.
+  
+For example:
+```
+CONF:MBFAN1:NAME?
+CPU Fan
+```
+
+#### CONFigure:MBFANx:MINrpm
+Set absolute minimum RPM value for given motherboard fan port.
+This can be used to make sure motherboard never sees "fan"
+running slower than this value (even if fan is not running at all).
+
+Default: 0
+ 
+Example: Set minimum RPM (sent to motheboard) to be at least 500
+```
+CONF:MBFAN1:MIN 500
+```
+
+#### CONFigure:MBFANx:MINrpm?
+Query current minimum RPM value configured on a motherboard fan port.
+ 
+Example: 
+```
+CONF:MBFAN1:MIN?
+500
+```
+
+#### CONFigure:MBFANx:MAXrpm
+Set absolute maximum value for given motherboard fan port.
+This can be used to make sure motherboard never sees "fan"
+running ffaster than this value.
+
+Default: 10000
+ 
+Example: Set maximum RPM value motheboard can see to 3000
+```
+CONF:MBFAN1:MAX 3000
+```
+
+#### CONFigure:MBFANx:MAXrpm?
+Query current maximum RPM value configured on a motherboard fan port.
+ 
+Example: 
+```
+CONF:MBFAN1:MAX?
+3000
+```
+
+#### CONFigure:MBFANx:RPMCoeff
+Set scaling factor for the motherboard fan Tachometer (output) signal.
+This is applied to adjust the output RPM (and tachometer signal frequency).
+
+Default: 1.0
+ 
+Example: Scale the MBFAN4 port Tachometer (RPM) values to be 20% higher than input.
+```
+CONF:MBFAN4:RPMC 1.2
+```
+
+#### CONFigure:MBFANx:RPMCoeff?
+Query current TAchometer (RPM) scaling factor configured on a motherboard fan port.
+ 
+Example: 
+```
+CONF:MBFAN6:RPMC?
+1.2
+```
+
+#### CONFigure:MBFANx:RPMFactor
+Set number of pulses per one revolution in the generated tachometer signal (going out to motherboard).
+This is mainly only needed if using Fanpico with something else than PC motherboard, that expects
+to see tachometer signal from Fans that produce other than the default 2 pulses per revolution.
+
+Default: 2
+ 
+Example: Adjust factor for (emulating fan that produces 4 pulses per revolution
+```
+CONF:MBFAN1:RPMF 4
+```
+
+#### CONFigure:MBFANx:RPMFactor?
+Query current RPM conversion factor configured on a motherboard fan port.
+ 
+Example: 
+```
+CONF:MBFAN1:RPMF?
+4
+```
+
+#### CONFigure:MBFANx:SOUrce
+Configure source for the Tachometer (RPM) signal for a motheboard fan (output) port.
+
+Source types:
+* FAN (signal received from a fan)
+* FIXED (static signal at given RPM)
+
+
+Defaults:
+MBFAN|SOURCE
+---|------
+1|FAN 1
+2|FAN 2
+3|FAN 3
+4|FAN 4
+ 
+Example: Set MBFAN 2 to follow Tachometer signal from FAN8
+```
+CONF:MBFAN2:SOURCE FAN 8
+```
+
+Example: Set MBFAN 4 to see fixed 1500 RPM tachometer signal
+```
+CONF:MBFAN4:SOURCE FIXED 1500
+```
+
+#### CONFigure:MBFANx:SOUrce?
+Query current signal source for a motherboar fan (Tachometer output).
+
+Command returns response in following format:
+```
+source_type,source_no
+```
+ 
+Example: 
+```
+CONF:MBFAN1:SOU?
+fan,1
+```
+
+#### CONFigure:MBFANx:RPMMap
+Set mapping (curve) for the Tachometer (RPM) output signal to motherboard.
+This can be used to customize what motherboard sees as the "fan" RPM.
+
+Mapping is specified with up to 32 points (that can be plotted as a curve)
+that map the relation of the input signal (x value) to output signal (y value).
+Mapping should at minimum include that start and end points of the expected input signal
+(typically 0 and 100).
+
+Default mapping is linear (1:1) mapping:
+x|y
+-|-
+0|0
+10000|10000
+
+Example: Assuming we have configured FAN1 to only run above 30% PWM signal, but our 
+motherboard sets alarm when it doesnt detect fan running, we can provide 'fake' 500RPM
+speed to the motherboard until fan is actually running at least 500 RPM...
+```
+CONF:MBFAN1:PWMMAP 0,500,500,500,10000,10000
+```
+
+#### CONFigure:MBFANx:RPMMap?
+Display currently active mapping (curve) for the tachometer signal sent to motherboard
+fan port.
+
+Mapping is displayed as comma separated list of values:
+```
+x_1,y_1,x_2,y_2,...,x_n,y_n
+```
+
+For example:
+```
+CONF:MBFAN1:RPMMAP?
+0,0,10000,10000
+```
+
