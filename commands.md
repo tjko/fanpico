@@ -17,33 +17,37 @@ Fanpico supports following commands:
 * [CONFigure:FANx:MINpwm](#configurefanxminpwm)
 * [CONFigure:FANx:MINpwm?](#configurefanxminpwm-1)
 * [CONFigure:FANx:MAXpwm](#configurefanxmaxpwm)
-* [CONFigure:FANx:MAXpwm?](#configurefanxmaxpwm)
+* [CONFigure:FANx:MAXpwm?](#configurefanxmaxpwm-1)
 * [CONFigure:FANx:PWMCoeff](#configurefanxpwmcoeff)
-* [CONFigure:FANx:PWMCoeff?](#configurefanxpwmcoeff)
+* [CONFigure:FANx:PWMCoeff?](#configurefanxpwmcoeff-1)
 * [CONFigure:FANx:RPMFactor](#configurefanxrpmfactor)
-* [CONFigure:FANx:RPMFactor?](#configurefanxrpmfactor)
+* [CONFigure:FANx:RPMFactor?](#configurefanxrpmfactor-1)
 * [CONFigure:FANx:SOUrce](#configurefanxsource)
-* [CONFigure:FANx:SOUrce?](#configurefanxsource)
+* [CONFigure:FANx:SOUrce?](#configurefanxsource-1)
 * [CONFigure:FANx:PWMMap](#configurefanxpwmmap)
-* [CONFigure:FANx:PWMMap?](#configurefanxpwmmap)
+* [CONFigure:FANx:PWMMap?](#configurefanxpwmmap-1)
 * [CONFigure:MBFANx:NAME](#configurembfanxname)
-* [CONFigure:MBFANx:NAME?](#configurembfanxname)
+* [CONFigure:MBFANx:NAME?](#configurembfanxname-1)
 * [CONFigure:MBFANx:MINrpm](#configurembfanxminrpm)
-* [CONFigure:MBFANx:MINrpm?](#configurembfanxminrpm)
+* [CONFigure:MBFANx:MINrpm?](#configurembfanxminrpm-1)
 * [CONFigure:MBFANx:MAXrpm](#configurembfanxmaxrpm)
-* [CONFigure:MBFANx:MAXrpm?](#configurembfanxmaxrpm)
+* [CONFigure:MBFANx:MAXrpm?](#configurembfanxmaxrpm-1)
 * [CONFigure:MBFANx:RPMCoeff](#configurembfanxrpmcoeff)
-* [CONFigure:MBFANx:RPMCoeff?](#configurembfanxrpmcoeff)
+* [CONFigure:MBFANx:RPMCoeff?](#configurembfanxrpmcoeff-1)
 * [CONFigure:MBFANx:RPMFactor](#configurembfanxrpmfactor)
-* [CONFigure:MBFANx:RPMFactor?](#configurembfanxrpmfactor)
+* [CONFigure:MBFANx:RPMFactor?](#configurembfanxrpmfactor-1)
 * [CONFigure:MBFANx:SOUrce](#configurembfanxsource)
-* [CONFigure:MBFANx:SOUrce?](#configurembfanxsource)
+* [CONFigure:MBFANx:SOUrce?](#configurembfanxsource-1)
 * [CONFigure:MBFANx:RPMMap](#configurembfanxrpmmap)
-* [CONFigure:MBFANx:RPMMap?](#configurembfanxrpmmap)
+* [CONFigure:MBFANx:RPMMap?](#configurembfanxrpmmap-1)
 * [CONFigure:SENSORx:NAME](#configuresensorxname)
+* [CONFigure:SENSORx:NAME?](#configuresensorxname-1)
 * [CONFigure:SENSORx:TEMPOffset](#configuresensorxtempoffset)
+* [CONFigure:SENSORx:TEMPOffset?](#configuresensorxtempoffset-1)
 * [CONFigure:SENSORx:TEMPCoeff](#configuresensorxtempcoeff)
+* [CONFigure:SENSORx:TEMPCoeff?](#configuresensorxtempcoeff-1)
 * [CONFigure:SENSORx:TEMPMap](#configuresensorxtempmap)
+* [CONFigure:SENSORx:TEMPMap?](#configuresensorxtempmap-1)
 * [MEASure:Read?](#measureread)
 * [MEASure:FANx?](#measurefanx)
 * [MEASure:FANx:Read?](#measurefanxread)
@@ -523,4 +527,385 @@ For example:
 CONF:MBFAN1:RPMMAP?
 0,0,10000,10000
 ```
+
+### CONFigure:SENSORx Commands
+SENSORx commands are used to configure specific (temperature) sensor.
+Where x is a number from 1 to 3.
+
+Sensor|Description
+------|-----------
+1|Thermistor connected to SENSOR1 connector.
+2|Thermistor connected to SENSOR2 connector.
+3|Internal temperature sensor on RP2040 (can be used for "Ambient" temperature measurementes as RP2040 doesn't heat up significantly).
+
+For example:
+```
+CONF:SENSOR1:NAME Air Intake
+```
+
+#### CONFigure:SENSORx:NAME
+Set name for temperature sensor.
+
+For example:
+```
+CONF:SENSOR1:NAME Air Intake
+```
+
+#### CONFigure:SENSORx:NAME?
+Query name of a temperature sensor.
+  
+For example:
+```
+CONF:SENSOR1:NAME?
+Air Intake
+```
+
+#### CONFigure:SENSORx:TEMPOffset
+Set offset that is applied to measured temperature.
+This can be used as a grude calibration method by setting offset to 
+the difference of actual temperature vs. what sensor is reporting.
+
+Default: 0.0
+
+For example: Sensor is reporting 2.5 degrees "high", so set offset to -2.5:
+```
+CONF:SENSOR1:TEMPO -2.5
+```
+
+#### CONFigure:SENSORx:TEMPOffset?
+Get the current temperature offset configured for the sensor.
+  
+For example:
+```
+CONF:SENSOR1:TEMPO?
+-2.5
+```
+
+#### CONFigure:SENSORx:TEMPCoeff
+Set coefficient that is used to multiply the (raw) temperature sensor reports.
+This can be used to correct error in temperature measurements.
+
+Default: 1.0
+
+For example: Sensor is consistently reading 10% higher than actual temperature
+```
+CONF:SENSOR1:TEMPC 0.9
+```
+
+#### CONFigure:SENSORx:TEMPCoeff?
+Get the current temperature coefficient configured for the sensor.
+  
+For example:
+```
+CONF:SENSOR1:TEMPC?
+0.9
+```
+
+#### CONFigure:SENSORx:TEMPMap
+Set mapping (curve) for converting temperature to PWM signal duty cycle (%).
+This can be used to customize how temperature affects fan speed.
+
+Mapping is specified with up to 32 points (that can be plotted as a curve)
+that map the relation of the temperature (x value) to output PWM signal (y value).
+Mapping should at minimum include that start and end points of the expected input signal.
+
+
+Default mapping:
+x (Temperature in C)|y (Fan Duty Cycle in %)
+-|-
+20|0
+50|100
+
+Example: Set Fan to start running at 20% duty cycle at 25C and to be full speed at 50C
+```
+CONF:SENSOR1:TEMPMAP 25,20,50,100
+```
+
+#### CONFigure:SENSORx:TEMPMap?
+Display currently active mapping (curve) for convertin measured temperature
+to PWM duty cycle (%) for the fan output signal.
+
+Mapping is displayed as comma separated list of values:
+```
+x_1,y_1,x_2,y_2,...,x_n,y_n
+```
+
+For example:
+```
+CONF:SENSOR1:TEMPMAP?
+20,0,50,10000
+```
+
+### MEASure Commands
+These commands are for reading (measuring) the current input/output values on Fan and Motherboard Fan ports.
+
+#### MEASure:Read?
+This command returns all measurements for all FAN and MBFAN, ans SENSOR ports.
+(This is same as: Read?)
+
+Response format:
+```
+mbfan<n>,"<name>",<output rpm>,<output tacho frequency>,<input pwm duty cycle>
+...
+fan<n>,"<name>",<input rpm>,<input tacho frequency>,<output pwm duty cycle>
+...
+sensor<n>,"<name>",<temperature>
+```
+
+Example:
+```
+MEAS:READ?
+mbfan1,"mbfan1",1032,34.40,49.0
+mbfan2,"mbfan2",0,0.00,0.0
+mbfan3,"mbfan3",0,0.00,0.0
+mbfan4,"mbfan4",0,0.00,0.0
+fan1,"fan1",1032,34.40,42.4
+fan2,"fan2",0,0.00,0.0
+fan3,"fan3",0,0.00,0.0
+fan4,"fan4",0,0.00,0.0
+fan5,"fan5",0,0.00,0.0
+fan6,"fan6",0,0.00,0.0
+fan7,"fan7",0,0.00,0.0
+fan8,"fan8",0,0.00,0.0
+sensor1,"sensor1",25.0
+sensor2,"sensor2",26.5
+sensor3,"pico_temp",26.0
+```
+
+### MEASure:FANx Commands
+
+#### MEASure:FANx?
+Return current fan speed (RPM), tacho meter frequency (Hz), and output PWM signal duty cycle (%) for a fan.
+
+Response format:
+```
+<duty_cycle>,<frequency>,<rpm>
+```
+
+Example:
+```
+MEAS:FAN1?
+42,34.4,1032
+```
+
+#### MEASure:FANx:Read?
+Return current fan speed (RPM), tacho meter frequency (Hz), and output PWM signal duty cycle (%) for a fan.
+
+This is same as: MEASure:FANx?
+
+Response format:
+```
+<duty_cycle>,<frequency>,<rpm>
+```
+
+Example:
+```
+MEAS:FAN1:R?
+42,34.4,1032
+```
+
+#### MEASure:FANx:RPM?
+Return current fan speed (RPM).
+
+Example:
+```
+MEAS:FAN1:RPM?
+1032
+```
+
+#### MEASure:FANx:PWM?
+Return current fan (output) PWM signal duty cycle (%).
+
+Example:
+```
+MEAS:FAN1:PWM?
+42
+```
+
+#### MEASure:FANx:TACHo?
+Return current fan tachometer (speed) signal frequency (Hz).
+
+Example:
+```
+MEAS:FAN1:TACH?
+34.4
+```
+
+### MEASure:MBFANx Commands
+
+#### MEASure:MBFANx?
+Return current motherboard fan connector signals. Output fan speed speed (RPM), output tacho meter frequency (Hz), and input PWM signal duty cycle (%) for a mbfan.
+
+Response format:
+```
+<duty_cycle>,<frequency>,<rpm>
+```
+
+Example:
+```
+MEAS:MBFAN1?
+49,34.4,1032
+```
+
+#### MEASure:MBFANx:Read?
+Return current fan speed (RPM), tacho meter frequency (Hz), and output PWM signal duty cycle (%) for a fan.
+
+This is same as: MEASure:MBFANx?
+
+Response format:
+```
+<duty_cycle>,<frequency>,<rpm>
+```
+
+Example:
+```
+MEAS:MBFAN1:R?
+49,34.4,1032
+```
+
+#### MEASure:MBFANx:RPM?
+Return current fan speed (RPM) reported out to motherboard.
+
+Example:
+```
+MEAS:MBFAN1:RPM?
+1032
+```
+
+#### MEASure:MBFANx:PWM?
+Return current fan (input) PWM signal duty cycle (%) received from motherboard.
+
+Example:
+```
+MEAS:MBFAN1:PWM?
+49
+```
+
+#### MEASure:MBFANx:TACHo?
+Return current fan tachometer (speed) signal frequency (Hz) reported out to motherboard.
+
+Example:
+```
+MEAS:MBFAN1:TACH?
+34.4
+```
+
+### MEASure:SENSORx Commands
+
+#### MEASure:SENSORx?
+Return current temperature (C) measured by the sensor.
+
+Example:
+```
+MEAS:SENSOR1?
+25
+```
+
+#### MEASure:SENSORx:Read?
+Return current temperature (C) measured by the sensor.
+
+This is same as: MEASure:SENSORx?
+
+Example:
+```
+MEAS:SENSOR1:R?
+25
+```
+
+#### MEASure:SENSORx:TEMP?
+Return current fan speed (RPM) reported out to motherboard.
+
+This is same as: MEASure:SENSORx?
+
+Example:
+```
+MEAS:SENSOR1:TEMP?
+25
+```
+
+### Read Commands
+
+#### Read?
+This command returns all measurements for all FAN and MBFAN, ans SENSOR ports.
+(This is same as: MEASure:Read?)
+
+Response format:
+```
+mbfan<n>,"<name>",<output rpm>,<output tacho frequency>,<input pwm duty cycle>
+...
+fan<n>,"<name>",<input rpm>,<input tacho frequency>,<output pwm duty cycle>
+...
+sensor<n>,"<name>",<temperature>
+```
+
+Example:
+```
+MEAS:READ?
+mbfan1,"mbfan1",1032,34.40,49.0
+mbfan2,"mbfan2",0,0.00,0.0
+mbfan3,"mbfan3",0,0.00,0.0
+mbfan4,"mbfan4",0,0.00,0.0
+fan1,"fan1",1032,34.40,42.4
+fan2,"fan2",0,0.00,0.0
+fan3,"fan3",0,0.00,0.0
+fan4,"fan4",0,0.00,0.0
+fan5,"fan5",0,0.00,0.0
+fan6,"fan6",0,0.00,0.0
+fan7,"fan7",0,0.00,0.0
+fan8,"fan8",0,0.00,0.0
+sensor1,"sensor1",25.0
+sensor2,"sensor2",26.5
+sensor3,"pico_temp",26.0
+```
+
+### SYStem Commands
+
+#### SYStem:DEBug
+Set the system debug level. This controls the logging to the console.
+
+Default: 0   (do not log any debug messages)
+
+Example: Enable verbose debug output
+```
+SYS:DEBUG 2
+```
+
+#### SYStem:DEBug?
+Display current system debug level.
+
+Example: 
+```
+SYS:DEBUG?
+```
+
+#### SYStem:ECHO
+Enable or disaple local echo on the console.
+This can be useful if interactively programming Fanpico.
+
+Value|Status
+-----|------
+0|Local Echo disabled.
+1|Local Echo enabled.
+
+Default: 0 
+
+Example: enable local echo
+```
+SYS:ECHO 1
+```
+
+Example: disable local echo
+```
+SYS:ECHO 0
+```
+
+#### SYStem:ECHO?
+Display local echo status:
+
+Example:
+```
+SYS:ECHO?
+0
+```
+
 
