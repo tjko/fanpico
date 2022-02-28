@@ -20,6 +20,7 @@ Initially Fanpico will be only a DIY project, but if there is succifient interes
 Additional models with different combinations of fan inputs/outputs could be easily designed (takining into account limitations of Raspberry Pi Pico I/O limits). New and improved PCB models/designs are most welcome.
 
 Photo of the first prototype:
+
 ![Fanpico Prototype PCB](images/fanpico-prototype.jpg)
 
 ### Hardware Design
@@ -33,7 +34,7 @@ Fanpico (reference design) utilizes all available I/O pins on a Raspberry Pi Pic
 * There is a jumper to select wheter power the Fanpico itself from MBFAN1 or AUX connector.
 
 ### Models (PCB designs)
-* [FANPICO-0804](boards/0804/)
+* [FANPICO-0804](boards/fanpico-0804/)
 
 Reference PCB was designed with KiCad.
 ![FANPICO-0804 PCB](images/fanpico-0804.png)
