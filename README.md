@@ -10,7 +10,7 @@ Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP204
 * Control fans from any motherboard PWM signal or from temperature sensors.
 * OS Independent, no drivers or software needed.
 * Configuration stored on the device itself (in the flash memory).
-* SCPI "like" programming interface.
+* SCPI "like" programming interface (see [Command Reference](commands.md))
 * Monitor each fan and motherboard output signals as well as temperatures.
 
 ## Hardware
