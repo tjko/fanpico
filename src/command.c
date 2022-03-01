@@ -27,7 +27,8 @@
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
 #include "hardware/watchdog.h"
-
+#include "cJSON.h"
+#include "lfs.h"
 #include "fanpico.h"
 
 
@@ -48,7 +49,7 @@ int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 	pico_unique_board_id_t board_id;
 
 	if (!query)
-		return 0;
+		return 1;
 
 	printf("TJKO Industries,FANPICO-%s,", FANPICO_MODEL);
 	pico_get_unique_board_id(&board_id);
@@ -56,6 +57,68 @@ int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 		printf("%02x", board_id.id[i]);
 	printf(",%s\n", FANPICO_VERSION);
 
+	return 0;
+}
+
+int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (cmd && !query)
+		return 1;
+
+	printf("FanPico v%s ", FANPICO_VERSION);
+	printf("(Build date: %s)\n", __DATE__);
+	printf("Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>\n");
+	printf("https://github.com/tjko/fanpico\n");
+	printf("License GPLv3+: GNU GPL version 3 or later "
+		"<https://gnu.org/licenses/gpl.html>\n"
+		"This is free software: you are free to change and "
+                "redistribute it.\n"
+		"There is NO WARRANTY, to the extent permitted by law.\n\n");
+
+	if (!query)
+		return 1;
+
+	/* cJSON */
+	printf("cJSON v%s\n", cJSON_Version());
+	printf("Copyright (c) 2009-2017 Dave Gamble and cJSON contributors\n");
+	printf("https://github.com/DaveGamble/cJSON\n\n");
+
+	/* pico-littlefs */
+	printf("pico-littlefs\n");
+	printf("Copyright (c) 2021, lurk101\n");
+	printf("https://github.com/lurk101/pico-littlefs\n\n");
+
+	/* lfs */
+	printf("The little filesystem v%d.%d\n", LFS_VERSION_MAJOR, LFS_VERSION_MINOR);
+	printf("Copyright (c) 2017, Arm Limited. All rights reserved.\n");
+	printf("https://github.com/littlefs-project/little\n\n");
+	return 0;
+}
+
+int cmd_fans(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	printf("%d\n", FAN_MAX_COUNT);
+	return 0;
+}
+
+int cmd_mbfans(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	printf("%d\n", MBFAN_MAX_COUNT);
+	return 0;
+}
+
+int cmd_sensors(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	printf("%d\n", SENSOR_MAX_COUNT);
 	return 0;
 }
 
@@ -855,6 +918,10 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd
 struct cmd_t system_commands[] = {
 	{ "DEBug",     5, NULL,              cmd_debug },
 	{ "ECHO",      4, NULL,              cmd_echo },
+	{ "FANS",      4, NULL,              cmd_fans },
+	{ "MBFANS",    6, NULL,              cmd_mbfans },
+	{ "SENSORS",   7, NULL,              cmd_sensors },
+	{ "VERsion",   3, NULL,              cmd_version },
 	{ 0, 0, 0, 0 }
 };
 

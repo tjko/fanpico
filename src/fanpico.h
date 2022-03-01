@@ -153,6 +153,8 @@ void print_mallinfo();
 
 /* command.c */
 void process_command(struct fanpico_state *state, struct fanpico_config *config, char *command);
+int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd);
+
 
 /* config.c */
 extern struct fanpico_config *cfg;

@@ -67,7 +67,10 @@ Fanpico supports following commands:
 * [SYStem:DEBug?](#systemdebug)
 * [SYStem:ECHO](#systemecho)
 * [SYStem:ECHO?](#systemecho)
-
+* [SYStem:FANS?](#systemfans)
+* [SYStem:MBFANS?](#systemmbfans)
+* [SYStem:SENSORS?](#systemsensors)
+* [SYStem:VERsion?](#systemversion)
 
 Additionally unit will respond to following standard SCPI commands to provide compatiblity in case some program
 unconditionally will send these:
@@ -908,4 +911,44 @@ SYS:ECHO?
 0
 ```
 
+
+#### SYStem:FANS?
+Display number of FAN ouput ports available.
+
+Example:
+```
+SYS:FANS?
+8
+```
+
+
+#### SYStem:MBFANS?
+Display number of MBFAN input ports available.
+
+Example:
+```
+SYS:MBFANS?
+4
+```
+
+
+#### SYStem:SENSORS?
+Display number of (temperature) sensors available.
+Last temperature sensor is the internal temperature sensor on the
+RP2040.
+
+Example:
+```
+SYS:SENSORS?
+3
+```
+
+
+#### SYStem:VERsion?
+Display software version and copyright information.
+
+Example:
+```
+SYS:VER?
+```
 

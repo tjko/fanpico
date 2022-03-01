@@ -84,23 +84,21 @@ void setup()
 	int i;
 
 	set_binary_info();
-	stdio_init_all();
-	sleep_ms(100);
+	stdio_usb_init();
+	i = 0;
+	while (i < 10) {
+		if (stdio_usb_connected())
+			break;
+		sleep_ms(250);
+	}
 
 	printf("\n\n\n");
 	if (watchdog_enable_caused_reboot()) {
 		printf("[Rebooted by watchdog]\n\n");
 	}
 
-	printf("FanPico v%s ", FANPICO_VERSION);
-	printf("(Build date: %s)\n", __DATE__);
-	printf("Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>\n");
-	printf("License GPLv3+: GNU GPL version 3 or later "
-		"<https://gnu.org/licenses/gpl.html>\n"
-		"This is free software: you are free to change and "
-                "redistribute it.\n"
-		"There is NO WARRANTY, to the extent permitted by law.\n\n");
-
+	/* Run "SYStem:VERsion" command... */
+	cmd_version(NULL, NULL, 0, NULL);
 	printf("Board: " PICO_BOARD "\n");
 	printf("Serial Number: ");
 	pico_get_unique_board_id(&board_id);
