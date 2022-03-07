@@ -98,7 +98,7 @@ double get_temperature(uint8_t input)
 		t = 27.0 - ((volt - 0.706) / 0.001721);
 		t = t * sensor->temp_coefficient + sensor->temp_offset;
 	} else {
-		if (volt > 0.1) {
+		if (volt > 0.1 && volt < ADC_REF_VOLTAGE - 0.1) {
 			r = SENSOR_SERIES_RESISTANCE / (((double)ADC_MAX_VALUE / raw) - 1);
 			t = log(r / sensor->thermistor_nominal);
 			t /= sensor->beta_coefficient;
