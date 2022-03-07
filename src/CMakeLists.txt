@@ -24,7 +24,7 @@ pico_generate_pio_header(fanpico ${CMAKE_CURRENT_LIST_DIR}/square_wave_gen.pio)
 
 
 pico_enable_stdio_usb(fanpico 1)
-pico_enable_stdio_uart(fanpico 1)
+pico_enable_stdio_uart(fanpico 0)
 pico_add_extra_outputs(fanpico)
 target_link_libraries(fanpico
   pico_stdlib

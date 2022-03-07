@@ -27,7 +27,13 @@
 
 #define FAN_MAX_COUNT     8   /* Number of Fan outputs on the board */
 #define MBFAN_MAX_COUNT   4   /* Number of (Motherboard) Fan inputs on the board */
-#define SENSOR_MAX_COUNT  1   /* Number of sensor inputs on the board */
+#define SENSOR_MAX_COUNT  3   /* Number of sensor inputs on the board */
+
+#define SENSOR_SERIES_RESISTANCE 10000.0
+
+#define ADC_REF_VOLTAGE 3.0
+#define ADC_MAX_VALUE   (1 << 12)
+#define ADC_AVG_WINDOW  10
 
 #define MAX_NAME_LEN   64
 #define MAX_MAP_POINTS 32
@@ -43,8 +49,8 @@
 #define FAN4_TACHO_READ_PIN 21
 #define FAN5_TACHO_READ_PIN 22
 #define FAN6_TACHO_READ_PIN 26
-#define FAN7_TACHO_READ_PIN 27
-#define FAN8_TACHO_READ_PIN 27
+#define FAN7_TACHO_READ_PIN 1
+#define FAN8_TACHO_READ_PIN 0
 
 #define FAN1_PWM_GEN_PIN 4  /* PWM2A */
 #define FAN2_PWM_GEN_PIN 5  /* PWM2B */
@@ -68,6 +74,14 @@
 #define MBFAN3_PWM_READ_PIN 17 /* PWM0B */
 #define MBFAN4_PWM_READ_PIN 19 /* PWM1B */
 
+
+/* Pins for temperature sensors */
+
+#define SENSOR1_READ_PIN  1  /* ADC1 / GPIO27 */
+#define SENSOR2_READ_PIN  2  /* ADC2 / GPIO28 */
+#define SENSOR3_READ_PIN  4  /* ADC4 / Internal Temperature sensor */
+
+
 enum pwm_source_types {
 	PWM_FIXED   = 0,     /* fixed speed set by s_id */
 	PWM_MB      = 1,     /* mb pwm signal */
@@ -78,6 +92,11 @@ enum pwm_source_types {
 enum tacho_source_types {
 	TACHO_FIXED  = 0,     /* fixed speed set by s_id */
 	TACHO_FAN    = 1,     /* fan tacho signal */
+};
+
+enum temp_sensor_types {
+	TEMP_INTERNAL = 0,
+	TEMP_EXTERNAL = 1,
 };
 
 struct pwm_map {
@@ -124,7 +143,11 @@ struct mb_input {
 };
 
 struct sensor_input {
+	enum temp_sensor_types type;
 	char name[MAX_NAME_LEN];
+	float thermistor_nominal;
+	float temp_nominal;
+	float beta_coefficient;
 	float temp_offset;
 	float temp_coefficient;
 	struct temp_map map;
@@ -181,8 +204,7 @@ double pwm_map(struct pwm_map *map, double val);
 double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *config, int i);
 
 /* sensors.c */
-float get_pico_temp();
-double sensor_get_temp(struct sensor_input *sensor, double temp);
+double get_temperature(uint8_t input);
 double sensor_get_duty(struct sensor_input *sensor, double temp);
 
 /* tacho.c */

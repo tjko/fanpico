@@ -29,7 +29,15 @@
 #include "fanpico.h"
 
 
+/* Map of temperature sensor ADC inputs
+ */
+uint8_t sensor_adc_map[SENSOR_MAX_COUNT] = {
+	SENSOR1_READ_PIN,
+	SENSOR2_READ_PIN,
+	SENSOR3_READ_PIN,
+};
 
+#if 0
 float get_pico_temp()
 {
 	uint16_t raw;
@@ -63,14 +71,51 @@ float get_thermistor_temp(uint8_t input)
 	printf("get_thermistor_temp(): raw=%u, volt=%f, r=%f temp=%f\n", raw, volt, r,  temp);
 	return roundf(temp);
 }
+#endif
 
-double sensor_get_temp(struct sensor_input *sensor, double temp)
+double get_temperature(uint8_t input)
 {
-	double newval;
+	uint8_t pin;
+	uint32_t raw = 0;
+	double t, r, volt;
+	int i;
+	struct sensor_input *sensor;
 
-	newval = (temp * sensor->temp_coefficient) + sensor->temp_offset;
+	if (input >= SENSOR_MAX_COUNT)
+		return 0.0;
 
-	return newval;
+	sensor = &cfg->sensors[input];
+
+	pin = sensor_adc_map[input];
+	adc_select_input(pin);
+	for (i = 0; i < ADC_AVG_WINDOW; i++) {
+		raw += adc_read();
+	}
+	raw /= ADC_AVG_WINDOW;
+	volt = raw * (ADC_REF_VOLTAGE / ADC_MAX_VALUE);
+
+	if (sensor->type == TEMP_INTERNAL) {
+		t = 27.0 - ((volt - 0.706) / 0.001721);
+		t = t * sensor->temp_coefficient + sensor->temp_offset;
+	} else {
+		if (volt > 0.1) {
+			r = SENSOR_SERIES_RESISTANCE / (((double)ADC_MAX_VALUE / raw) - 1);
+			t = log(r / sensor->thermistor_nominal);
+			t /= sensor->beta_coefficient;
+			t += 1.0 / (sensor->temp_nominal + 273.15);
+			t = 1.0 / t;
+			t -= 273.15;
+			t = t * sensor->temp_coefficient + sensor->temp_offset;
+		} else {
+			t = 0.0;
+		}
+	}
+
+
+	debug(2, "get_temperature(%d): sensor_type=%u, raw=%u,  volt=%lf, temp=%lf\n",
+		input, sensor->type, raw, volt, t);
+
+	return t;
 }
 
 
@@ -80,7 +125,7 @@ double sensor_get_duty(struct sensor_input *sensor, double temp)
 	double a, t;
 	struct temp_map *map;
 
-	t = sensor_get_temp(sensor, temp);
+	t = temp;
 	map = &sensor->map;
 
 	if (t <= map->temp[0][0])

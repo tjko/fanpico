@@ -5,7 +5,38 @@
     "sensors": [
 	{
 	    "id": 0,
+	    "name": "sensor1",
+	    "sensor_type": 1,
+	    "series_resistance": 10000,
+	    "thermistor_nominal": 10000,
+	    "temperature_nominal": 25.0,
+	    "beta_coefficient": 3950,
+	    "temp_offset": 0.0,
+	    "temp_coefficient": 1.0,
+	    "temp_map": [
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id": 1,
+	    "name": "sensor2",
+	    "sensor_type": 1,
+	    "series_resistance": 10000,
+	    "thermistor_nominal": 10000,
+	    "temperature_nominal": 25.0,
+	    "beta_coefficient": 3950,
+	    "temp_offset": 0.0,
+	    "temp_coefficient": 1.0,
+	    "temp_map": [
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id": 2,
 	    "name": "pico_temp",
+	    "sensor_type": 0,
 	    "temp_offset": 0.0,
 	    "temp_coefficient": 1.0,
 	    "temp_map": [

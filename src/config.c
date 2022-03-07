@@ -242,6 +242,10 @@ void clear_config(struct fanpico_config *cfg)
 		s=&cfg->sensors[i];
 
 		s->name[0]=0;
+		s->type = TEMP_INTERNAL;
+		s->thermistor_nominal = 0.0;
+		s->beta_coefficient = 0.0;
+		s->temp_nominal = 0.0;
 		s->temp_offset=0.0;
 		s->temp_coefficient=0.0;
 		s->map.points=0;
@@ -348,9 +352,18 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 			goto panic;
 		cJSON_AddItemToObject(o, "id", cJSON_CreateNumber(i));
 		cJSON_AddItemToObject(o, "name", cJSON_CreateString(s->name));
+		cJSON_AddItemToObject(o, "sensor_type", cJSON_CreateNumber(s->type));
 		cJSON_AddItemToObject(o, "temp_offset", cJSON_CreateNumber(s->temp_offset));
 		cJSON_AddItemToObject(o, "temp_coefficient", cJSON_CreateNumber(s->temp_coefficient));
 		cJSON_AddItemToObject(o, "temp_map", temp_map2json(&s->map));
+		if (s->type == TEMP_EXTERNAL) {
+			cJSON_AddItemToObject(o, "temperature_nominal",
+					cJSON_CreateNumber(s->temp_nominal));
+			cJSON_AddItemToObject(o, "thermistor_nominal",
+					cJSON_CreateNumber(s->thermistor_nominal));
+			cJSON_AddItemToObject(o, "beta_coefficient",
+					cJSON_CreateNumber(s->beta_coefficient));
+		}
 		cJSON_AddItemToArray(sensors, o);
 	}
 	cJSON_AddItemToObject(config, "sensors", sensors);
@@ -394,8 +407,10 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 
 			f->min_pwm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "min_pwm"));
 			f->max_pwm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "max_pwm"));
-			f->pwm_coefficient = cJSON_GetNumberValue(cJSON_GetObjectItem(item,"pwm_coefficient"));
-			f->s_type = str2pwm_source(cJSON_GetStringValue(cJSON_GetObjectItem(item, "source_type")));
+			f->pwm_coefficient = cJSON_GetNumberValue(
+				cJSON_GetObjectItem(item,"pwm_coefficient"));
+			f->s_type = str2pwm_source(cJSON_GetStringValue(
+							cJSON_GetObjectItem(item, "source_type")));
 			f->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));
 			if ((r = cJSON_GetObjectItem(item, "pwm_map")))
 				json2pwm_map(r, &f->map);
@@ -415,9 +430,11 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 
 			m->min_rpm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "min_rpm"));
 			m->max_rpm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "max_rpm"));
-			m->rpm_coefficient = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "rpm_coefficient"));
+			m->rpm_coefficient = cJSON_GetNumberValue(
+				cJSON_GetObjectItem(item, "rpm_coefficient"));
 			m->rpm_factor = cJSON_GetNumberValue(cJSON_GetObjectItem(item,"rpm_factor"));
-			m->s_type = str2tacho_source(cJSON_GetStringValue(cJSON_GetObjectItem(item, "source_type")));
+			m->s_type = str2tacho_source(cJSON_GetStringValue(
+							cJSON_GetObjectItem(item, "source_type")));
 			m->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));
 			if ((r = cJSON_GetObjectItem(item, "rpm_map")))
 				json2tacho_map(r, &m->map);
@@ -434,8 +451,19 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
 			if (name) strncpy(s->name, name ,sizeof(s->name));
 
-			s->temp_offset = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "temp_offset"));
-			s->temp_coefficient = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "temp_coefficient"));
+			s->type = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "sensor_type"));
+			if (s->type == TEMP_EXTERNAL) {
+				s->temp_nominal = cJSON_GetNumberValue(
+					cJSON_GetObjectItem(item, "temperature_nominal"));
+				s->thermistor_nominal = cJSON_GetNumberValue(
+					cJSON_GetObjectItem(item, "thermistor_nominal"));
+				s->beta_coefficient = cJSON_GetNumberValue(
+					cJSON_GetObjectItem(item, "beta_coefficient"));
+			}
+			s->temp_offset = cJSON_GetNumberValue(
+				cJSON_GetObjectItem(item, "temp_offset"));
+			s->temp_coefficient = cJSON_GetNumberValue(
+				cJSON_GetObjectItem(item, "temp_coefficient"));
 			if ((r = cJSON_GetObjectItem(item, "temp_map")))
 				json2temp_map(r, &s->map);
 		}

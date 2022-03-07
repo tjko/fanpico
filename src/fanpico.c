@@ -234,7 +234,7 @@ int main()
 	uint8_t led_state = 0;
 	int64_t delta;
 	int64_t max_delta = 0;
-	int c;
+	int c, change;
 	char input_buf[1024];
 	int i_ptr = 0;
 
@@ -251,6 +251,7 @@ int main()
 	t_last = get_absolute_time();
 
 	while (1) {
+		change = 0;
 		t_now = get_absolute_time();
 		delta = absolute_time_diff_us(t_last, t_now);
 		t_last = t_now;
@@ -282,21 +283,29 @@ int main()
 						new_duty);
 					st->mbfan_duty[i] = new_duty;
 					t_set_outputs = 0;
+					change++;
 				}
 			}
 		}
 
 		/* Read temperature sensors periodically */
 		if (time_passed(&t_temp, 10000)) {
-			double temp = get_pico_temp() * cfg->sensors[0].temp_coefficient
-				+ cfg->sensors[0].temp_offset;
-
+			int i;
+			float temp;
+#if 0
+			float t1 = get_pico_temp();
 			float t2 = get_thermistor_temp(2);
-			if (check_for_change(st->temp[0], temp, 0.5)) {
-				debug(1, "Temperature change %.1fC --> %.1fC\n",
-					st->temp[0],
-					temp);
-				st->temp[0] = temp;
+#endif
+			for (i = 0; i < SENSOR_MAX_COUNT; i++) {
+				temp = get_temperature(i);
+				if (check_for_change(st->temp[i], temp, 0.5)) {
+					debug(1, "sensor%d: Temperature change %.1fC --> %.1fC\n",
+						i+1,
+						st->temp[i],
+						temp);
+					st->temp[i] = temp;
+					change++;
+				}
 			}
 		}
 
@@ -319,7 +328,7 @@ int main()
 			}
 		}
 
-		if (time_passed(&t_set_outputs, 5000)) {
+		if (time_passed(&t_set_outputs, 5000) || change) {
 			update_outputs(st, cfg);
 		}
 
