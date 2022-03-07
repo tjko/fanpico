@@ -32,9 +32,9 @@
 /* Map of temperature sensor ADC inputs
  */
 uint8_t sensor_adc_map[SENSOR_MAX_COUNT] = {
-	SENSOR1_READ_PIN,
-	SENSOR2_READ_PIN,
-	SENSOR3_READ_PIN,
+	SENSOR1_READ_ADC,
+	SENSOR2_READ_ADC,
+	SENSOR3_READ_ADC,
 };
 
 #if 0

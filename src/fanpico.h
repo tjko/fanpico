@@ -77,9 +77,12 @@
 
 /* Pins for temperature sensors */
 
-#define SENSOR1_READ_PIN  1  /* ADC1 / GPIO27 */
-#define SENSOR2_READ_PIN  2  /* ADC2 / GPIO28 */
-#define SENSOR3_READ_PIN  4  /* ADC4 / Internal Temperature sensor */
+#define SENSOR1_READ_PIN  27  /* ADC1 / GPIO27 */
+#define SENSOR2_READ_PIN  28  /* ADC2 / GPIO28 */
+
+#define SENSOR1_READ_ADC  1  /* ADC1 / GPIO27 */
+#define SENSOR2_READ_ADC  2  /* ADC2 / GPIO28 */
+#define SENSOR3_READ_ADC  4  /* ADC4 / Internal Temperature sensor */
 
 
 enum pwm_source_types {

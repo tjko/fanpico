@@ -75,6 +75,9 @@ void set_binary_info()
 	bi_decl(bi_1pin_with_name(MBFAN2_PWM_READ_PIN, "MB Fan2 PWM signal (input)"));
 	bi_decl(bi_1pin_with_name(MBFAN3_PWM_READ_PIN, "MB Fan3 PWM signal (input)"));
 	bi_decl(bi_1pin_with_name(MBFAN4_PWM_READ_PIN, "MB Fan4 PWM signal (input)"));
+
+	bi_decl(bi_1pin_with_name(SENSOR1_READ_PIN, "Temperature Sensor1 (input)"));
+	bi_decl(bi_1pin_with_name(SENSOR2_READ_PIN, "Temperature Sensor2 (input)"));
 }
 
 
@@ -114,10 +117,8 @@ void setup()
 	printf("Initialize ADC...\n");
 	adc_init();
 	adc_set_temp_sensor_enabled(true);
-	gpio_set_function(28, GPIO_FUNC_SIO);
-	gpio_disable_pulls(28);
-	gpio_set_input_enabled(28, true);
-	adc_select_input(4);
+	adc_gpio_init(SENSOR1_READ_PIN);
+	adc_gpio_init(SENSOR2_READ_PIN);
 
 	/* Setup GPIO pins... */
 	printf("Initialize GPIO...\n");
