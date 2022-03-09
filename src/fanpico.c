@@ -264,7 +264,16 @@ int main()
 
 		/* Toggle LED every 1000ms */
 		if (time_passed(&t_led, 1000)) {
-			led_state = (led_state > 0 ? 0 : 1);
+			if (cfg->led_mode == 0) {
+				/* Slow blinking */
+				led_state = (led_state > 0 ? 0 : 1);
+			} else if (cfg->led_mode == 1) {
+				/* Always on */
+				led_state = 1;
+			} else {
+				/* Always off */
+				led_state = 0;
+			}
 			gpio_put(LED_PIN, led_state);
 		}
 

@@ -104,6 +104,22 @@ int cmd_fans(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_led(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int mode;
+
+	if (query) {
+		printf("%d\n", cfg->led_mode);
+	} else {
+		mode = atoi(args);
+		if (mode >= 0 && mode <= 2) {
+			debug(1, "Set system LED mode: %d -> %d\n", cfg->led_mode, mode);
+			cfg->led_mode = mode;
+		}
+	}
+	return 0;
+}
+
 int cmd_mbfans(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (!query)
@@ -919,6 +935,7 @@ struct cmd_t system_commands[] = {
 	{ "DEBug",     5, NULL,              cmd_debug },
 	{ "ECHO",      4, NULL,              cmd_echo },
 	{ "FANS",      4, NULL,              cmd_fans },
+	{ "LED",       3, NULL,              cmd_led },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "VERsion",   3, NULL,              cmd_version },

@@ -278,6 +278,7 @@ void clear_config(struct fanpico_config *cfg)
 	}
 
 	cfg->local_echo = false;
+	cfg->led_mode = 0;
 }
 
 
@@ -293,6 +294,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	cJSON_AddItemToObject(config, "id", cJSON_CreateString("fanpico-config-v1"));
 	cJSON_AddItemToObject(config, "debug", cJSON_CreateNumber(get_debug_level()));
 	cJSON_AddItemToObject(config, "local_echo", cJSON_CreateBool(cfg->local_echo));
+	cJSON_AddItemToObject(config, "led_mode", cJSON_CreateNumber(cfg->led_mode));
 
 	/* Fan outputs */
 	fans = cJSON_CreateArray();
@@ -394,6 +396,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		set_debug_level(cJSON_GetNumberValue(ref));
 	if ((ref = cJSON_GetObjectItem(config, "local_echo")))
 		cfg->local_echo = (cJSON_IsTrue(ref) ? true : false);
+	if ((ref = cJSON_GetObjectItem(config, "led_mode")))
+		cfg->led_mode = cJSON_GetNumberValue(ref);
 
 	/* Fan output configurations */
 	ref = cJSON_GetObjectItem(config, "fans");

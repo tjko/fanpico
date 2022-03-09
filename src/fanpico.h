@@ -161,6 +161,7 @@ struct fanpico_config {
 	struct fan_output fans[FAN_MAX_COUNT];
 	struct mb_input mbfans[MBFAN_MAX_COUNT];
 	bool local_echo;
+	uint8_t led_mode;
 };
 
 struct fanpico_state {

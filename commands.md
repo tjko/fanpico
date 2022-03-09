@@ -68,6 +68,8 @@ Fanpico supports following commands:
 * [SYStem:ECHO](#systemecho)
 * [SYStem:ECHO?](#systemecho)
 * [SYStem:FANS?](#systemfans)
+* [SYStem:LED](#systemled)
+* [SYStem:LED?](#systemled-1)
 * [SYStem:MBFANS?](#systemmbfans)
 * [SYStem:SENSORS?](#systemsensors)
 * [SYStem:VERsion?](#systemversion)
@@ -919,6 +921,35 @@ Example:
 ```
 SYS:FANS?
 8
+```
+
+
+#### SYStem:LED
+Set system indicator LED operating mode.
+
+Supported modes:
+
+mode|description
+----|-----------
+0   | LED blinking slowly  [default]
+1   | LED on (continuously)
+2   | LED off
+
+
+Default: 0
+
+Example to set LED to be on continuously:
+```
+SYS:LED 1
+```
+
+#### SYStem:LED?
+Query current system LED operating mode.
+
+Example:
+```
+SYS:LED?
+0
 ```
 
 
