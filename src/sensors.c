@@ -37,41 +37,6 @@ uint8_t sensor_adc_map[SENSOR_MAX_COUNT] = {
 	SENSOR3_READ_ADC,
 };
 
-#if 0
-float get_pico_temp()
-{
-	uint16_t raw;
-	float temp, volt;
-	float cal_value = 0.0;
-
-	adc_select_input(4);
-	raw = adc_read();
-	volt = raw * (3.0 / (1 << 12));
-	temp = 27 - ((volt - 0.706) / 0.001721) + cal_value;
-
-	printf("get_pico_temp(): raw=%u, volt=%f, temp=%f\n", raw, volt, temp);
-	return roundf(temp);
-}
-
-float get_thermistor_temp(uint8_t input)
-{
-	uint16_t raw;
-	float r, temp, volt;
-
-	adc_select_input(input);
-	raw = adc_read();
-	volt = raw * (3.0 / (1 << 12));
-	r = 10000.0 / ( ((float)(1<<12) / raw ) - 1);
-	temp = log(r / 10000.0);
-	temp /= 3950.0;
-	temp += 1.0 / (25.0 + 273.15);
-	temp = 1.0 / temp;
-	temp -= 273.15;
-
-	printf("get_thermistor_temp(): raw=%u, volt=%f, r=%f temp=%f\n", raw, volt, r,  temp);
-	return roundf(temp);
-}
-#endif
 
 double get_temperature(uint8_t input)
 {

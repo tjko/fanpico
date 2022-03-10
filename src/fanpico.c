@@ -89,7 +89,7 @@ void setup()
 	set_binary_info();
 	stdio_usb_init();
 	i = 0;
-	while (i < 10) {
+	while (i++ < 10) {
 		if (stdio_usb_connected())
 			break;
 		sleep_ms(250);
@@ -125,14 +125,13 @@ void setup()
 
 	gpio_init(LED_PIN);
 	gpio_set_dir(LED_PIN, GPIO_OUT);
-	gpio_put(LED_PIN, 1);
+	gpio_put(LED_PIN, 0);
 
 	/* Configure PWM pins... */
 	setup_pwm_outputs();
 	setup_pwm_inputs();
 
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
-		//set_pwm_duty_cycle(i, 10 + i * 10);
 		set_pwm_duty_cycle(i, 0);
 	}
 
@@ -302,10 +301,7 @@ int main()
 		if (time_passed(&t_temp, 10000)) {
 			int i;
 			float temp;
-#if 0
-			float t1 = get_pico_temp();
-			float t2 = get_thermistor_temp(2);
-#endif
+
 			for (i = 0; i < SENSOR_MAX_COUNT; i++) {
 				temp = get_temperature(i);
 				if (check_for_change(st->temp[i], temp, 0.5)) {
