@@ -5,10 +5,10 @@
   (paper "A4")
 
   (title_block
-    (title "FanPico-0804")
-    (date "2022-02-26")
+    (title "FanPico-0804 v1.2")
+    (date "2022-03-11")
     (company "Timo Kokkonen <tjko@iki.fi>")
-    (comment 3 "Fanpico firmware reference/prototype PCB.")
+    (comment 3 "Fanpico firmware reference PCB.")
   )
 
   (lib_symbols
