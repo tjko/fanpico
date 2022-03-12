@@ -453,12 +453,12 @@
       "Fan2"
     ],
     [
-      "8ed5c73d-1abe-4a73-919d-90efbbef00b1",
-      "Fan4"
-    ],
-    [
       "53d29c07-1f93-4af9-9f7c-0766d5b9c268",
       "Fan3"
+    ],
+    [
+      "8ed5c73d-1abe-4a73-919d-90efbbef00b1",
+      "Fan4"
     ],
     [
       "d911133f-dd4d-432b-a685-8d9b5b84e35e",
@@ -475,6 +475,10 @@
     [
       "c48058d0-f979-4ada-9996-5cab1ec255f6",
       "Fan8"
+    ],
+    [
+      "4e9d9bbb-bb4b-4f71-a57a-a915249deb73",
+      "Sensors"
     ]
   ],
   "text_variables": {}

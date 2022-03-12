@@ -5,10 +5,10 @@
   (paper "A4")
 
   (title_block
-    (title "FanPico-0804")
-    (date "2022-02-26")
+    (title "FanPico-0804 v1.2")
+    (date "2022-03-11")
     (company "Timo Kokkonen <tjko@iki.fi>")
-    (comment 3 "Fanpico firmware reference/prototype PCB.")
+    (comment 3 "Fanpico firmware reference PCB.")
   )
 
   (lib_symbols
@@ -301,7 +301,7 @@
           (name "A" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
         )
-        (pin input line (at 0 -3.81 90) (length 2.54)
+        (pin passive line (at 0 -3.81 90) (length 2.54)
           (name "C" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27))))
         )
