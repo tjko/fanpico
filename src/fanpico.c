@@ -330,11 +330,13 @@ int main()
 						new_freq,
 						fan_tacho_freq[i]);
 					st->fan_freq[i] = new_freq;
+					change++;
 				}
 			}
 		}
 
-		if (time_passed(&t_set_outputs, 5000) || change) {
+		if (change || time_passed(&t_set_outputs, 5000)) {
+			debug(2, "Updating output signals.\n");
 			update_outputs(st, cfg);
 		}
 
