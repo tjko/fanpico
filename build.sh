@@ -30,14 +30,10 @@ cd "${BUILD_DIR}" || fatal "cannot access: $BUILD_DIR"
 make -j4 
 if [ $? -eq 0 ]; then
 	echo "Build successful."
-	picotool info -a src/fanpico.elf
+	picotool info -a src/fanpico.uf2
 else
 	echo "Build failed."
 	exit 1
 fi
 
-
-
-
-
-
+# eof :-)
