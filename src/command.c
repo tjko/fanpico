@@ -864,6 +864,81 @@ int cmd_sensor_temp_coef(const char *cmd, const char *args, int query, char *pre
 	return 0;
 }
 
+int cmd_sensor_temp_nominal(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor;
+	float val;
+
+	sensor = atoi(&prev_cmd[6]) - 1;
+	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+		if (query) {
+			printf("%.1f\n", conf->sensors[sensor].temp_nominal);
+		} else {
+			val = atof(args);
+			if (val >= -50.0 && val <= 100.0) {
+				debug(1, "sensor%d: change temp nominal %.1fC --> %.1fC\n",
+					sensor + 1, conf->sensors[sensor].temp_nominal,
+					val);
+				conf->sensors[sensor].temp_nominal = val;
+			} else {
+				debug(1, "sensor%d: invalid temp nominal: %f\n",
+					sensor + 1, val);
+			}
+		}
+	}
+	return 0;
+}
+
+int cmd_sensor_ther_nominal(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor;
+	float val;
+
+	sensor = atoi(&prev_cmd[6]) - 1;
+	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+		if (query) {
+			printf("%.0f\n", conf->sensors[sensor].thermistor_nominal);
+		} else {
+			val = atof(args);
+			if (val > 0.0) {
+				debug(1, "sensor%d: change thermistor nominal %.0f ohm --> %.0f ohm\n",
+					sensor + 1, conf->sensors[sensor].thermistor_nominal,
+					val);
+				conf->sensors[sensor].thermistor_nominal = val;
+			} else {
+				debug(1, "sensor%d: invalid thermistor nominal: %f\n",
+					sensor + 1, val);
+			}
+		}
+	}
+	return 0;
+}
+
+int cmd_sensor_beta_coef(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor;
+	float val;
+
+	sensor = atoi(&prev_cmd[6]) - 1;
+	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+		if (query) {
+			printf("%.0f\n", conf->sensors[sensor].beta_coefficient);
+		} else {
+			val = atof(args);
+			if (val > 0.0) {
+				debug(1, "sensor%d: change thermistor beta coefficient %.0f --> %.0f\n",
+					sensor + 1, conf->sensors[sensor].beta_coefficient,
+					val);
+				conf->sensors[sensor].beta_coefficient = val;
+			} else {
+				debug(1, "sensor%d: invalid thermistor beta coefficient: %f\n",
+					sensor + 1, val);
+			}
+		}
+	}
+	return 0;
+}
+
 int cmd_sensor_temp_map(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int sensor, i, count;
@@ -965,10 +1040,13 @@ struct cmd_t mbfan_c_commands[] = {
 };
 
 struct cmd_t sensor_c_commands[] = {
-	{ "NAME",       4, NULL,             cmd_sensor_name },
-	{ "TEMPOffset", 5, NULL,             cmd_sensor_temp_offset },
-	{ "TEMPCoeff",  5, NULL,             cmd_sensor_temp_coef },
-	{ "TEMPMap",    5, NULL,             cmd_sensor_temp_map },
+	{ "NAME",        4, NULL,             cmd_sensor_name },
+	{ "TEMPOffset",  5, NULL,             cmd_sensor_temp_offset },
+	{ "TEMPCoeff",   5, NULL,             cmd_sensor_temp_coef },
+	{ "TEMPMap",     5, NULL,             cmd_sensor_temp_map },
+	{ "TEMPNominal", 5, NULL,             cmd_sensor_temp_nominal },
+	{ "THERmistor",  4, NULL,             cmd_sensor_ther_nominal },
+	{ "BETAcoeff",   4, NULL,             cmd_sensor_beta_coef },
 	{ 0, 0, 0, 0 }
 };
 

@@ -48,6 +48,12 @@ Fanpico supports following commands:
 * [CONFigure:SENSORx:TEMPCoeff?](#configuresensorxtempcoeff-1)
 * [CONFigure:SENSORx:TEMPMap](#configuresensorxtempmap)
 * [CONFigure:SENSORx:TEMPMap?](#configuresensorxtempmap-1)
+* [CONFigure:SENSORx:BETAcoeff](#configuresensorxbetacoeff)
+* [CONFigure:SENSORx:BETAcoeff?](#configuresensorxbetacoeff-1)
+* [CONFigure:SENSORx:THERmistor](#configuresensorxthermistor)
+* [CONFigure:SENSORx:THERmistor?](#configuresensorxthermistor-1)
+* [CONFigure:SENSORx:TEMPNominal](#configuresensorxtempnominal)
+* [CONFigure:SENSORx:TEMPNominal?](#configuresensorxtempnominal-1)
 * [MEASure:Read?](#measureread)
 * [MEASure:FANx?](#measurefanx)
 * [MEASure:FANx:Read?](#measurefanxread)
@@ -640,6 +646,68 @@ For example:
 CONF:SENSOR1:TEMPMAP?
 20,0,50,10000
 ```
+
+#### CONFigure:SENSORx:BETAcoeff
+Set beta coefficient of thermistor used to measure temperatur.
+Typically thermistor beta coefficient is in the range 3000-4000.
+
+Default: 3950
+
+For example:
+```
+CONF:SENSOR1:BETA 3950
+```
+
+#### CONFigure:SENSORx:BETAcoeff?
+Get the configured beta coefficient of the thermistor used to measure temperature.
+
+For example:
+```
+CONF:SENSOR1:BETA?
+3950
+```
+
+#### CONFigure:SENSORx:THERmistor
+Set thermistor nominal resistance at nominal (room) temperature.
+Typically this is either 10000 (for 10k thermistors) or 100000 (for 100k thermistors).
+
+Default: 10000
+
+For example: configure 100k thermistor
+```
+CONF:SENSOR1:THER 100000
+```
+
+#### CONFigure:SENSORx:THERmistor?
+Get the thermistor nominal resistance at nominal (room) temperature.
+
+For example:
+```
+CONF:SENSOR1:THER?
+100000
+```
+
+#### CONFigure:SENSORx:TEMPNominal
+Set nominal temperature of the thermistor (in C).
+Typically nominal temperature is around room temperature.
+
+Default: 25.0
+
+For example:
+```
+CONF:SENSOR1:TEMPN 25.0
+```
+
+#### CONFigure:SENSORx:TEMPNominal?
+Get nominal temperature of the thermistor (in C).
+
+For example:
+```
+CONF:SENSOR1:TEMPN?
+25.0
+```
+
+
 
 ### MEASure Commands
 These commands are for reading (measuring) the current input/output values on Fan and Motherboard Fan ports.
