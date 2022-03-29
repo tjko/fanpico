@@ -1,6 +1,7 @@
-# Fanpico: Smart PWM Fan Controller
+# Fanpico: Smart PWM (PC) Fan Controller
 
-Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP2040 MCU).
+Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP2040 MCU). Fanpico operates as standalone controller that can be configured and left running. It does not require any drivers and doesn't care what OS is being used.
+
 * Controls up to 8 fans. 
 * Connect up to 4 motherboard fan outputs.
 * Connect up to 2 remote temperature probes (plus onboard "ambient" temperature sensor).
@@ -27,7 +28,7 @@ Fanpico (reference design) utilizes all available I/O pins on a Raspberry Pi Pic
 * Motherboard Fan PWM inputs are read using Pico's PWM hardware.
 * Tacho signal output (for motherboard connectors) is generated using Pico's PIO hardware, providing extremely stable tachometer signal.
 * Tacho signal inputs (from fans) is read using GPIO interrupts (counting number of pulses received over a period of time)
-* Temperature readings are done using ADC, with help of a accurrate 3V voltage reference (LM4040)
+* Temperature readings are done using ADC, with help of a accurrate 3V voltage reference (LM4040). Any NTC (10k or 100k) thermistors can be used as themperature sensors.
 * Each FAN output has jumper to select whether fan gets its power from associated MBFAN connector or from the AUX connector
 * There is a jumper to select wheter power the Fanpico itself from MBFAN1 or AUX connector.
 
