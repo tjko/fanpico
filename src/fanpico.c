@@ -362,7 +362,6 @@ int main()
 			if (cfg->local_echo) printf("%c", c);
 		}
 
-		//sleep_ms(1);
 	}
 }
 
