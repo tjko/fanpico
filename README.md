@@ -40,7 +40,7 @@ Reference PCB was designed with KiCad.
 ## Firmware
 Firmware is developed in C using the Pico SDK. Pre-compiled firmware is released when there is new major features or bug fixes.
 
-Latest pre-compiled firmware image can be found here: [Latest Release](/releases/latest)
+Latest pre-compiled firmware image can be found here: [Releases](https://github.com/tjko/fanpico/releases)
 
 To get latest firmware with latest updates/fixes you must compile the firmware from the sources.
 
