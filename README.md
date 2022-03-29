@@ -41,6 +41,14 @@ Reference PCB was designed with KiCad.
 Firmware is developed in C using the Pico SDK.
 Plan is to release firmware files (.u2f) after Fanpico is ready for 'release', currently one must compile the firmware from the sources.
 
+### Installing firmware image
+Firmware can be installed via the built-in UF2 bootloader on the Raspberry Pi Pico or using the debug header with Picoprobe, etc...
+
+Firmware upgrade steps:
+* Boot Pico into UF2 bootloader:  press and hold "bootsel" button and then press and release "reset" button.
+* Copy firmware file (.uf2) to the USB mass storage device that appears.
+* As soon as firmware copy is complete, Pico will reboot and run the fanpico firmware.
+
 ### Building Firmware Images
 
 Raspberry Pi Pico C/C++ SDK is required for compiling the firmware: 
