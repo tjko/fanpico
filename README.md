@@ -50,7 +50,7 @@ Firmware can be installed via the built-in UF2 bootloader on the Raspberry Pi Pi
 
 Firmware upgrade steps:
 * Boot Pico into UF2 bootloader:  press and hold "bootsel" button and then press and release "reset" button.
-* Copy firmware file (.uf2) to the USB mass storage device that appears.
+* Copy firmware file (fanpico.uf2) to the USB mass storage device that appears.
 * As soon as firmware copy is complete, Pico will reboot and run the fanpico firmware.
 
 ### Building Firmware Images
