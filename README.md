@@ -38,8 +38,12 @@ Reference PCB was designed with KiCad.
 ![FANPICO-0804 PCB](images/fanpico-0804.png)
 
 ## Firmware
-Firmware is developed in C using the Pico SDK.
-Plan is to release firmware files (.u2f) after Fanpico is ready for 'release', currently one must compile the firmware from the sources.
+Firmware is developed in C using the Pico SDK. Pre-compiled firmware is released when there is new major features or bug fixes.
+
+Latest pre-compiled firmware image can be found here: [Latest Release](/releases/latest)
+
+To get latest firmware with latest updates/fixes you must compile the firmware from the sources.
+
 
 ### Installing firmware image
 Firmware can be installed via the built-in UF2 bootloader on the Raspberry Pi Pico or using the debug header with Picoprobe, etc...
