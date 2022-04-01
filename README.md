@@ -61,11 +61,100 @@ Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 #### Requirements
 * [Raspberry Pi Pico C/C++ SDK](https://www.raspberrypi.com/documentation/microcontrollers/c_sdk.html)
 * [cJSON](https://github.com/DaveGamble/cJSON)
-* [pico-littlefs](https://github.com/lurk101/pico-littlefs)
+* [littlefs-lib](https://github.com/lurk101/littlefs-lib)
 
 (When building fanpico firmware libraries are expected to be in following locations: ../cJSON/ and ../pico-littlefs/)
 
+##### Install Pico SDK
+Pico SDK must be installed working before you can compile fanpico.
 
+Instructions on installing Pico SDK see: [Getting started with Raspberry Pi Pico](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)
+
+(Make sure PICO_SDK_PATH environment variable is set)
+
+##### Downloading sources
+
+Create some directory for building fanpico ('src' used in this example):
+```
+$ mkdir src
+$ cd src
+$ git clone https://github.com/tjko/fanpico.git
+$ git clone https://github.com/DaveGamble/cJSON.git
+$ git clone https://github.com/lurk101/littlefs-lib.git
+```
+
+##### Building fanpico firmware
+
+To build fanpico firmware, first create a build directory:
+```
+$ cd fanpico
+$ mkdir build
+```
+
+Then compile fanpico:
+```
+$ cd build
+$ cmake ..
+$ make
+```
+
+After successfull compile you should see firmare binaries under src/
+subdirectory:
+
+```
+$ ls src/*.uf2
+src/fanpico.uf2
+```
+
+If you have picotool installed you can check the firmare image information:
+```
+$ picotool info -a src/fanpico.uf2
+File src/fanpico.uf2:
+
+Program Information
+ name:          fanpico
+ version:       1.0 (Mar 28 2022)
+ web site:      https://github.com/tjko/fanpico/
+ description:   FanPico - Smart PWM Fan Controller
+ features:      USB stdin / stdout
+ binary start:  0x10000000
+ binary end:    0x10023520
+
+Fixed Pin Information
+ 0:   Fan8 tacho signal (input)
+ 1:   Fan7 tacho signal (input)
+ 2:   Fan1 tacho signal (input)
+ 3:   Fan2 tacho signal (input)
+ 4:   Fan1 PWM signal (output)
+ 5:   Fan2 PWM signal (output)
+ 6:   Fan3 PWM signal (output)
+ 7:   Fan4 PWM signal (output)
+ 8:   Fan5 PWM signal (output)
+ 9:   Fan6 PWM signal (output)
+ 10:  Fan7 PWM signal (output)
+ 11:  Fan8 PWM signal (output)
+ 12:  MB Fan1 tacho signal (output)
+ 13:  MB Fan1 PWM signal (input)
+ 14:  MB Fan2 tacho signal (output)
+ 15:  MB Fan2 PWM signal (input)
+ 16:  MB Fan3 tacho signal (output)
+ 17:  MB Fan3 PWM signal (input)
+ 18:  MB Fan4 tacho signal (output)
+ 19:  MB Fan4 PWM signal (input)
+ 20:  Fan3 tacho signal (input)
+ 21:  Fan4 tacho signal (input)
+ 22:  Fan5 tacho signal (input)
+ 25:  On-board LED
+ 26:  Fan6 tacho signal (input)
+ 27:  Temperature Sensor1 (input)
+ 28:  Temperature Sensor2 (input)
+
+Build Information
+ sdk version:       1.3.0
+ pico_board:        pico
+ build date:        Mar  1 2022
+ build attributes:  Release
+```
 
 
 

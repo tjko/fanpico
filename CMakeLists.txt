@@ -18,11 +18,9 @@ message("Build type: ${CMAKE_BUILD_TYPE}")
 pico_sdk_init()
 
 
-add_subdirectory(../pico-littlefs/lfs lfs)
-#add_library(lfs STATIC ../pico-littlefs/lfs/*.h ../pico-littlefs/lfs/*.c)
+add_subdirectory(../littlefs-lib littlefs-lib)
 
 #add_subdirectory(../cJSON/ cJSON)
-#add_library(cJSON STATIC ../cJSON/cJSON.h ../cJSON/cJSON.c)
 add_library(cJSON INTERFACE)
 target_include_directories(cJSON INTERFACE ../cJSON)
 target_sources(cJSON INTERFACE ../cJSON/cJSON.h ../cJSON/cJSON.c)

@@ -31,7 +31,7 @@ target_link_libraries(fanpico
   hardware_pwm
   hardware_pio
   hardware_adc
-  lfs
+  littlefs-lib
   cJSON
   )
 
