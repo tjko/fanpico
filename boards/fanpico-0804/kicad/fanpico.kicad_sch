@@ -5,8 +5,8 @@
   (paper "A4")
 
   (title_block
-    (title "FanPico-0804 v1.2")
-    (date "2022-03-11")
+    (title "FanPico-0804 v1.3")
+    (date "2022-04-10")
     (company "Timo Kokkonen <tjko@iki.fi>")
     (comment 3 "Fanpico firmware reference PCB.")
   )
@@ -2533,7 +2533,7 @@
     (uuid 21c2b408-da95-4394-b5b2-e408611b3d07)
     (property "Reference" "SW1" (id 0) (at 271.78 54.61 0))
     (property "Value" "SW_Push" (id 1) (at 271.78 57.15 0))
-    (property "Footprint" "Button_Switch_THT:SW_PUSH_6mm" (id 2) (at 271.78 57.15 0)
+    (property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_SMD_2" (id 2) (at 271.78 57.15 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 271.78 57.15 0)
@@ -4013,7 +4013,7 @@
       (reference "R53") (unit 1) (value "100k") (footprint "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder")
     )
     (path "/21c2b408-da95-4394-b5b2-e408611b3d07"
-      (reference "SW1") (unit 1) (value "SW_Push") (footprint "Button_Switch_THT:SW_PUSH_6mm")
+      (reference "SW1") (unit 1) (value "SW_Push") (footprint "Button_Switch_THT:SW_PUSH_6mm_SMD_2")
     )
     (path "/20cc4b05-e726-4b05-ab1c-64b5db072e26/146a1d06-dd1a-482f-b91e-93cbb733b8f4"
       (reference "TP1") (unit 1) (value "TestPoint") (footprint "TestPoint:TestPoint_Pad_D1.5mm")
