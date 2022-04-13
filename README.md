@@ -98,18 +98,18 @@ $ cmake ..
 $ make
 ```
 
-After successfull compile you should see firmare binaries under src/
+After successfull compile you should see firmare binaries under firmware/
 subdirectory:
 
 ```
-$ ls src/*.uf2
-src/fanpico.uf2
+$ ls firmware/*.uf2
+firmware/fanpico.uf2
 ```
 
 If you have picotool installed you can check the firmare image information:
 ```
-$ picotool info -a src/fanpico.uf2
-File src/fanpico.uf2:
+$ picotool info -a firmware/fanpico.uf2
+File firmware/fanpico.uf2:
 
 Program Information
  name:          fanpico

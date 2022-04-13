@@ -11,12 +11,13 @@ project(fanpico_project C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-
 #set(CMAKE_BUILD_TYPE Debug)
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
 pico_sdk_init()
 
+
+# External libaries
 
 add_subdirectory(../littlefs-lib littlefs-lib)
 
@@ -26,6 +27,7 @@ target_include_directories(cJSON INTERFACE ../cJSON)
 target_sources(cJSON INTERFACE ../cJSON/cJSON.h ../cJSON/cJSON.c)
 
 
-add_subdirectory(src)
+# Fanpico firmware sources
 
+add_subdirectory(src firmware)
 

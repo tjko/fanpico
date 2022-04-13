@@ -25,12 +25,12 @@ done
 
 cd "${BUILD_DIR}" || fatal "cannot access: $BUILD_DIR"
 
-[ -s Makefile ] || cmake .. || fatal "cmake failed"
+cmake .. || fatal "cmake failed"
 
 make -j4 
 if [ $? -eq 0 ]; then
 	echo "Build successful."
-	picotool info -a src/fanpico.uf2
+	picotool info -a firmware/fanpico.uf2
 else
 	echo "Build failed."
 	exit 1
