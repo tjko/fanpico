@@ -5,7 +5,7 @@
 
 openocd -f interface/picoprobe.cfg \
 	-f target/rp2040.cfg \
-	-c "program build/firmware/fanpico.elf verify reset exit"
+	-c "program build/fanpico.elf verify reset exit"
 
 
 # eof :-)
