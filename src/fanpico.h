@@ -22,7 +22,7 @@
 #ifndef FANPICO_H
 #define FANPICO_H 1
 
-#define FANPICO_VERSION   "1.0"
+#define FANPICO_VERSION   "1.1beta"
 #define FANPICO_MODEL     "0804"
 
 #define FAN_MAX_COUNT     8   /* Number of Fan outputs on the board */

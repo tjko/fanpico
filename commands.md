@@ -78,6 +78,7 @@ Fanpico supports following commands:
 * [SYStem:LED?](#systemled-1)
 * [SYStem:MBFANS?](#systemmbfans)
 * [SYStem:SENSORS?](#systemsensors)
+* [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
 
 Additionally unit will respond to following standard SCPI commands to provide compatiblity in case some program
@@ -1040,6 +1041,19 @@ Example:
 ```
 SYS:SENSORS?
 3
+```
+
+
+#### SYStem:UPGRADE
+Reboot unit to USB (BOOTSEL) mode for firmware upgrade.
+This command triggers fanpico to reboot and enter USB "mode", where
+new firmware can simply be copied to the USB drive that appears.
+After file has been copied, fanpico will automatically reboot to new
+firmware image.
+
+Example:
+```
+SYS:VER?
 ```
 
 

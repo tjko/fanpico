@@ -26,6 +26,7 @@
 #include <assert.h>
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
+#include "pico/bootrom.h"
 #include "hardware/watchdog.h"
 #include "cJSON.h"
 #include "lfs.h"
@@ -58,6 +59,14 @@ int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 	printf(",%s\n", FANPICO_VERSION);
 
 	return 0;
+}
+
+int cmd_usb_boot(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (!query)
+		reset_usb_boot(0, 0);
+
+	return 1;
 }
 
 int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1013,6 +1022,7 @@ struct cmd_t system_commands[] = {
 	{ "LED",       3, NULL,              cmd_led },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
+	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "VERsion",   3, NULL,              cmd_version },
 	{ 0, 0, 0, 0 }
 };
