@@ -278,23 +278,23 @@ Source types:
 Defaults:
 FAN|SOURCE
 ---|------
-1|MBFAN 1
-2|MBFAN 2
-3|MBFAN 3
-4|MBFAN 4
-5|MBFAN 1
-6|MBFAN 2
-7|MBFAN 3
-8|MBFAN 4
+1|MBFAN,1
+2|MBFAN,2
+3|MBFAN,3
+4|MBFAN,4
+5|MBFAN,1
+6|MBFAN,2
+7|MBFAN,3
+8|MBFAN,4
  
 Example: Set FAN 5 to follow temperature sensor 2
 ```
-CONF:FAN5:SOURCE SENSOR 2
+CONF:FAN5:SOURCE SENSOR,2
 ```
 
 Example: Set FAN 6 to run always at fixed 50% duty cycle (speed)
 ```
-CONF:FAN6:SOURCE FIXED 50
+CONF:FAN6:SOURCE FIXED,50
 ```
 
 #### CONFigure:FANx:SOUrce?
@@ -474,19 +474,19 @@ Source types:
 Defaults:
 MBFAN|SOURCE
 ---|------
-1|FAN 1
-2|FAN 2
-3|FAN 3
-4|FAN 4
+1|FAN,1
+2|FAN,2
+3|FAN,3
+4|FAN,4
  
 Example: Set MBFAN 2 to follow Tachometer signal from FAN8
 ```
-CONF:MBFAN2:SOURCE FAN 8
+CONF:MBFAN2:SOURCE FAN,8
 ```
 
 Example: Set MBFAN 4 to see fixed 1500 RPM tachometer signal
 ```
-CONF:MBFAN4:SOURCE FIXED 1500
+CONF:MBFAN4:SOURCE FIXED,1500
 ```
 
 #### CONFigure:MBFANx:SOUrce?
