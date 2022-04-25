@@ -50,7 +50,9 @@ To get latest firmware with latest updates/fixes you must compile the firmware f
 Firmware can be installed via the built-in UF2 bootloader on the Raspberry Pi Pico or using the debug header with Picoprobe, etc...
 
 Firmware upgrade steps:
-* Boot Pico into UF2 bootloader:  press and hold "bootsel" button and then press and release "reset" button.
+* Boot Pico into UF2 bootloader. This can be done in two ways:
+  1)  Press and hold "bootsel" button and then press and release "reset" button.
+  2)  Issue command: SYS:UPGRADE
 * Copy firmware file (fanpico.uf2) to the USB mass storage device that appears.
 * As soon as firmware copy is complete, Pico will reboot and run the fanpico firmware.
 
