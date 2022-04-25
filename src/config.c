@@ -39,13 +39,13 @@ int str2pwm_source(const char *s)
 {
 	int ret = 0;
 
-	if (!strncmp(s, "fixed", 5))
+	if (!strncasecmp(s, "fixed", 5))
 		ret = PWM_FIXED;
-	else if (!strncmp(s, "mbfan", 5))
+	else if (!strncasecmp(s, "mbfan", 5))
 		ret = PWM_MB;
-	else if (!strncmp(s, "sensor", 6))
+	else if (!strncasecmp(s, "sensor", 6))
 		ret = PWM_SENSOR;
-	else if (!strncmp(s, "fan", 3))
+	else if (!strncasecmp(s, "fan", 3))
 		ret = PWM_FAN;
 
 	return ret;
@@ -93,9 +93,9 @@ int str2tacho_source(const char *s)
 {
 	int ret = 0;
 
-	if (!strncmp(s, "fixed", 5))
+	if (!strncasecmp(s, "fixed", 5))
 		ret = TACHO_FIXED;
-	else if (!strncmp(s, "fan", 2))
+	else if (!strncasecmp(s, "fan", 2))
 		ret = TACHO_FAN;
 
 	return ret;
