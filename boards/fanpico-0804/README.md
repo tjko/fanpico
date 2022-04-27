@@ -10,6 +10,8 @@ v1.3
 v1.2
 - Change sensor connectors to JST XH (2.5mm)
 - Add jumper to select between 10k / 100k NTC thermistor
+- Errata:
+  - JP11 (SENSOR2 Thermistor type jumper) silk screen wrong. Workaround is to swap R51 and R53 during assembly.
 
 v1.1
 - Add two connectors for Temperature Sensors
