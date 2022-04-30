@@ -226,6 +226,7 @@ void set_debug_level(int level);
 void debug(int debug_level, const char *fmt, ...);
 void print_mallinfo();
 char *trim_str(char *s);
+const char *rp2040_model_str();
 
 
 /* crc32.c */

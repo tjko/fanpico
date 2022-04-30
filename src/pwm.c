@@ -157,11 +157,9 @@ void setup_pwm_outputs()
 	int i;
 
 	printf("Initializing PWM outputs...\n");
-	printf("System Clock Speed: %0.2f MHz\n", sys_clock / 1000000.0);
 
 	printf("PWM Frequency: %0.2f kHz\n", pwm_freq / 1000.0);
 	pwm_out_top = (sys_clock / pwm_freq / 2) - 1;  /* for phase-correct PWM signal */
-	printf("PWM Top: %u\n", pwm_out_top);
 
 	pwm_config_set_clkdiv(&config, 1);
 	pwm_config_set_phase_correct(&config, 1);

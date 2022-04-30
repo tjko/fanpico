@@ -85,4 +85,25 @@ char *trim_str(char *s)
 }
 
 
+const char *rp2040_model_str()
+{
+	static char buf[32];
+	uint8_t version = 0;
+	uint8_t known_chip = 0;
+	uint8_t chip_version = rp2040_chip_version();
+	uint8_t rom_version = rp2040_rom_version();
+
+
+	if (chip_version <= 2 && rom_version <= 3)
+		known_chip = 1;
+
+	version = rom_version - 1;
+
+	snprintf(buf, sizeof(buf), "RP2040-B%d%s",
+		version,
+		(known_chip ? "" : " (?)"));
+
+	return buf;
+}
+
 

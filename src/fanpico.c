@@ -102,14 +102,16 @@ void setup()
 
 	/* Run "SYStem:VERsion" command... */
 	cmd_version(NULL, NULL, 0, NULL);
-	printf("Board: " PICO_BOARD "\n");
-	printf("Serial Number: ");
+	printf("Hardware Model: FANPICO-%s\n", FANPICO_MODEL);
+	printf("         Board: %s\n", PICO_BOARD);
+	printf("           MCU: %s @ %0.0fMHz\n",
+		rp2040_model_str(),
+		clock_get_hz(clk_sys) / 1000000.0);
+	printf(" Serial Number: ");
 	pico_get_unique_board_id(&board_id);
 	for (i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
 		printf("%02x", board_id.id[i]);
-	printf("\n");
-	printf("RP2040 Chip Version: %d\n", rp2040_chip_version());
-	printf("RP2040 ROM Version: %d\n", rp2040_rom_version());
+	printf("\n\n");
 
 	read_config();
 
