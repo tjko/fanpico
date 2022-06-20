@@ -100,27 +100,27 @@ $ cmake ..
 $ make
 ```
 
-After successfull compile you should see firmare binaries under firmware/
+After successfull compile you should see firmare binary in the build directory:
 subdirectory:
 
 ```
-$ ls firmware/*.uf2
-firmware/fanpico.uf2
+$ ls *.uf2
+fanpico.uf2
 ```
 
 If you have picotool installed you can check the firmare image information:
 ```
-$ picotool info -a firmware/fanpico.uf2
-File firmware/fanpico.uf2:
+$ picotool info -a fanpico.uf2
+File fanpico.uf2:
 
 Program Information
  name:          fanpico
- version:       1.0 (Mar 28 2022)
+ version:       1.1 (Jun 20 2022)
  web site:      https://github.com/tjko/fanpico/
  description:   FanPico - Smart PWM Fan Controller
  features:      USB stdin / stdout
  binary start:  0x10000000
- binary end:    0x10023520
+ binary end:    0x10023828
 
 Fixed Pin Information
  0:   Fan8 tacho signal (input)
@@ -154,7 +154,7 @@ Fixed Pin Information
 Build Information
  sdk version:       1.3.0
  pico_board:        pico
- build date:        Mar  1 2022
+ build date:        Jun 20 2022
  build attributes:  Release
 ```
 
