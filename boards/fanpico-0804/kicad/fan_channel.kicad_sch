@@ -6,7 +6,7 @@
 
   (title_block
     (title "FanPico-0804 v1.3")
-    (date "2022-04-10")
+    (date "2022-08-18")
     (company "Timo Kokkonen <tjko@iki.fi>")
     (comment 3 "Fanpico firmware reference PCB.")
   )
@@ -541,7 +541,7 @@
       )
       (symbol "+3.3V_1_1"
         (pin power_in line (at 0 0 90) (length 0) hide
-          (name "+3V3" (effects (font (size 1.27 1.27))))
+          (name "+3.3V" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
         )
       )
@@ -881,6 +881,10 @@
   (text "To Motherboard Fan connector" (at 36.83 35.56 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 5dcb9b55-2fc8-428e-994d-d22aed72cae7)
+  )
+  (text "Fan Channel: ${SHEETNAME}" (at 20.32 17.78 0)
+    (effects (font (size 2 2)) (justify left bottom))
+    (uuid 6cd836a6-fb76-413b-b3b7-901783f4e949)
   )
   (text "To Fan" (at 243.84 35.56 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))

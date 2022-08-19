@@ -6,7 +6,7 @@
 
   (title_block
     (title "FanPico-0804 v1.3")
-    (date "2022-04-10")
+    (date "2022-08-18")
     (company "Timo Kokkonen <tjko@iki.fi>")
     (comment 3 "Fanpico firmware reference PCB.")
   )
@@ -289,8 +289,8 @@
     (uuid e63f4856-db36-46c6-9c02-2a6c34cdff98)
   )
 
-  (text "Temperature Sensors" (at 66.04 30.48 0)
-    (effects (font (size 1.27 1.27)) (justify left bottom))
+  (text "Temperature Sensors" (at 19.05 17.78 0)
+    (effects (font (size 2 2)) (justify left bottom))
     (uuid 490ff861-9b1a-489c-8371-d793232cccff)
   )
 
