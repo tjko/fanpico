@@ -32,6 +32,10 @@ Fanpico (reference design) utilizes all available I/O pins on a Raspberry Pi Pic
 * Each FAN output has jumper to select whether fan gets its power from associated MBFAN connector or from the AUX connector
 * There is a jumper to select wheter power the Fanpico itself from MBFAN1 or AUX connector.
 
+To help design and test Fanpico couple other projects were born:
+* [Tiny PicoProbe](https://github.com/tjko/tiny-picoprobe/) - tiny PicoProbe implementation.
+* [Fan Test Adapter](https://github.com/tjko/fan-test-adapter/) - adapter to help simulate motherboard fan outputs.
+
 ### Models (PCB designs)
 * [FANPICO-0804](boards/fanpico-0804/)
 
