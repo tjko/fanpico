@@ -46,7 +46,7 @@ double get_temperature(uint8_t input)
 	int i;
 	struct sensor_input *sensor;
 
-	if (input >= SENSOR_MAX_COUNT)
+	if (input >= SENSOR_COUNT)
 		return 0.0;
 
 	sensor = &cfg->sensors[input];

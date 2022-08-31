@@ -42,39 +42,69 @@ struct fanpico_state system_state;
 
 void set_binary_info()
 {
-	bi_decl(bi_program_description("FanPico - Smart PWM Fan Controller"));
+	bi_decl(bi_program_description("FanPico-" FANPICO_MODEL " - Smart PWM Fan Controller"));
 	bi_decl(bi_program_version_string(FANPICO_VERSION " ("__DATE__")"));
 	bi_decl(bi_program_url("https://github.com/tjko/fanpico/"));
 
+#if LED_PIN > 0
 	bi_decl(bi_1pin_with_name(LED_PIN, "On-board LED"));
+#endif
 
 	bi_decl(bi_1pin_with_name(FAN1_TACHO_READ_PIN, "Fan1 tacho signal (input)"));
 	bi_decl(bi_1pin_with_name(FAN2_TACHO_READ_PIN, "Fan2 tacho signal (input)"));
 	bi_decl(bi_1pin_with_name(FAN3_TACHO_READ_PIN, "Fan3 tacho signal (input)"));
 	bi_decl(bi_1pin_with_name(FAN4_TACHO_READ_PIN, "Fan4 tacho signal (input)"));
+#if FAN5_TACHO_READ_PIN > 0
 	bi_decl(bi_1pin_with_name(FAN5_TACHO_READ_PIN, "Fan5 tacho signal (input)"));
+#endif
+#if FAN6_TACHO_READ_PIN > 0
 	bi_decl(bi_1pin_with_name(FAN6_TACHO_READ_PIN, "Fan6 tacho signal (input)"));
+#endif
+#if FAN7_TACHO_READ_PIN > 0
 	bi_decl(bi_1pin_with_name(FAN7_TACHO_READ_PIN, "Fan7 tacho signal (input)"));
+#endif
+#if FAN8_TACHO_READ_PIN > 0
 	bi_decl(bi_1pin_with_name(FAN8_TACHO_READ_PIN, "Fan8 tacho signal (input)"));
+#endif
 
 	bi_decl(bi_1pin_with_name(FAN1_PWM_GEN_PIN, "Fan1 PWM signal (output)"));
 	bi_decl(bi_1pin_with_name(FAN2_PWM_GEN_PIN, "Fan2 PWM signal (output)"));
 	bi_decl(bi_1pin_with_name(FAN3_PWM_GEN_PIN, "Fan3 PWM signal (output)"));
 	bi_decl(bi_1pin_with_name(FAN4_PWM_GEN_PIN, "Fan4 PWM signal (output)"));
+#if FAN5_PWM_GEN_PIN > 0
 	bi_decl(bi_1pin_with_name(FAN5_PWM_GEN_PIN, "Fan5 PWM signal (output)"));
+#endif
+#if FAN6_PWM_GEN_PIN > 0
 	bi_decl(bi_1pin_with_name(FAN6_PWM_GEN_PIN, "Fan6 PWM signal (output)"));
+#endif
+#if FAN7_PWM_GEN_PIN > 0
 	bi_decl(bi_1pin_with_name(FAN7_PWM_GEN_PIN, "Fan7 PWM signal (output)"));
+#endif
+#if FAN8_PWM_GEN_PIN > 0
 	bi_decl(bi_1pin_with_name(FAN8_PWM_GEN_PIN, "Fan8 PWM signal (output)"));
+#endif
 
 	bi_decl(bi_1pin_with_name(MBFAN1_TACHO_GEN_PIN, "MB Fan1 tacho signal (output)"));
+#if MBFAN2_TACHO_GEN_PIN > 0
 	bi_decl(bi_1pin_with_name(MBFAN2_TACHO_GEN_PIN, "MB Fan2 tacho signal (output)"));
+#endif
+#if MBFAN3_TACHO_GEN_PIN > 0
 	bi_decl(bi_1pin_with_name(MBFAN3_TACHO_GEN_PIN, "MB Fan3 tacho signal (output)"));
+#endif
+#if MBFAN4_TACHO_GEN_PIN > 0
 	bi_decl(bi_1pin_with_name(MBFAN4_TACHO_GEN_PIN, "MB Fan4 tacho signal (output)"));
+#endif
 
 	bi_decl(bi_1pin_with_name(MBFAN1_PWM_READ_PIN, "MB Fan1 PWM signal (input)"));
+#if MBFAN2_PWM_READ_PIN > 0
 	bi_decl(bi_1pin_with_name(MBFAN2_PWM_READ_PIN, "MB Fan2 PWM signal (input)"));
+#endif
+#if MBFAN3_PWM_READ_PIN > 0
 	bi_decl(bi_1pin_with_name(MBFAN3_PWM_READ_PIN, "MB Fan3 PWM signal (input)"));
+#endif
+#if MBFAN4_PWM_READ_PIN > 0
 	bi_decl(bi_1pin_with_name(MBFAN4_PWM_READ_PIN, "MB Fan4 PWM signal (input)"));
+#endif
 
 	bi_decl(bi_1pin_with_name(SENSOR1_READ_PIN, "Temperature Sensor1 (input)"));
 	bi_decl(bi_1pin_with_name(SENSOR2_READ_PIN, "Temperature Sensor2 (input)"));
@@ -88,6 +118,9 @@ void setup()
 
 	set_binary_info();
 	stdio_usb_init();
+	display_init();
+
+	// Wait a while for USB Serial to connect...
 	i = 0;
 	while (i++ < 10) {
 		if (stdio_usb_connected())
@@ -99,6 +132,7 @@ void setup()
 	if (watchdog_enable_caused_reboot()) {
 		printf("[Rebooted by watchdog]\n\n");
 	}
+
 
 	/* Run "SYStem:VERsion" command... */
 	cmd_version(NULL, NULL, 0, NULL);
@@ -133,7 +167,7 @@ void setup()
 	setup_pwm_outputs();
 	setup_pwm_inputs();
 
-	for (i = 0; i < FAN_MAX_COUNT; i++) {
+	for (i = 0; i < FAN_COUNT; i++) {
 		set_pwm_duty_cycle(i, 0);
 	}
 
@@ -141,6 +175,7 @@ void setup()
 	setup_tacho_outputs();
 	setup_tacho_inputs();
 
+	sleep_ms(1000);
 	printf("Initialization complete.\n\n");
 }
 
@@ -180,7 +215,7 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 	float new;
 
 	/* update fan PWM signals */
-	for (i = 0; i < FAN_MAX_COUNT; i++) {
+	for (i = 0; i < FAN_COUNT; i++) {
 		new = calculate_pwm_duty(state, config, i);
 		if (check_for_change(state->fan_duty[i], new, 0.1)) {
 			debug(1, "fan%d: Set output PWM %.1f%% --> %.1f%%\n",
@@ -193,7 +228,7 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 	}
 
 	/* update mb tacho signals */
-	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+	for (i = 0; i < MBFAN_COUNT; i++) {
 		new = calculate_tacho_freq(state, config, i);
 		if (check_for_change(state->mbfan_freq[i], new, 0.1)) {
 			debug(1, "mbfan%d: Set output Tacho %.2fHz --> %.2fHz\n",
@@ -233,6 +268,7 @@ int main()
 	absolute_time_t t_led = 0;
 	absolute_time_t t_temp = 0;
 	absolute_time_t t_set_outputs = 0;
+	absolute_time_t t_display = 0;
 	uint8_t led_state = 0;
 	int64_t delta;
 	int64_t max_delta = 0;
@@ -278,6 +314,10 @@ int main()
 			gpio_put(LED_PIN, led_state);
 		}
 
+		/* Update display every 2000ms */
+		if (time_passed(&t_display, 2000)) {
+			display_status(st);
+		}
 
 		/* Read PWM input signals (duty cycle) periodically */
 		if (time_passed(&t_poll_pwm, 1500)) {
@@ -285,7 +325,7 @@ int main()
 			float new_duty;
 
 			get_pwm_duty_cycles();
-			for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+			for (i = 0; i < MBFAN_COUNT; i++) {
 				new_duty = roundf(mbfan_pwm_duty[i]);
 				if (check_for_change(st->mbfan_duty[i], new_duty, 0.5)) {
 					debug(1, "mbfan%d: duty cycle change %.1f --> %.1f\n",
@@ -304,7 +344,7 @@ int main()
 			int i;
 			float temp;
 
-			for (i = 0; i < SENSOR_MAX_COUNT; i++) {
+			for (i = 0; i < SENSOR_COUNT; i++) {
 				temp = get_temperature(i);
 				if (check_for_change(st->temp[i], temp, 0.5)) {
 					debug(1, "sensor%d: Temperature change %.1fC --> %.1fC\n",
@@ -323,7 +363,7 @@ int main()
 			float new_freq;
 
 			update_tacho_input_freq();
-			for (i = 0; i < FAN_MAX_COUNT; i++) {
+			for (i = 0; i < FAN_COUNT; i++) {
 				new_freq = roundf(fan_tacho_freq[i]*10)/10.0;
 				if (check_for_change(st->fan_freq[i], new_freq, 1.0)) {
 					debug(1, "fan%d: tacho freq change %.1f --> %.1f (%f)\n",

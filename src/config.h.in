@@ -1,0 +1,12 @@
+
+#ifndef FANPICO_CONFIG_H
+#define FANPICO_CONFIG_H 1
+
+#define FANPICO_VERSION         "@fanpico_VERSION@"
+#define FANPICO_VERSION_MAJOR   "@fanpico_VERSION_MAJOR@"
+#define FANPICO_VERSION_MINOR   "@fanpico_VERSION_MINOR@"
+
+#include "boards/@FANPICO_BOARD@.h"
+#define FANPICO_BOARD "@FANPICO_BOARD@"
+
+#endif /* FANPICO_CONFIG_H */

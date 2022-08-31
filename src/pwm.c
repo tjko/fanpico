@@ -75,7 +75,7 @@ void set_pwm_duty_cycle(uint fan, float duty)
 {
 	uint level, pin;
 
-	assert(fan < FAN_MAX_COUNT);
+	assert(fan < FAN_COUNT);
 	pin = fan_gpio_pwm_map[fan];
 	if (duty >= 100.0) {
 		level = pwm_out_top + 1;
@@ -95,7 +95,7 @@ float get_pwm_duty_cycle(uint fan)
 	uint16_t counter;
 	uint slice_num, pin;
 
-	assert(fan < MBFAN_MAX_COUNT);
+	assert(fan < MBFAN_COUNT);
 	pin = mbfan_gpio_pwm_map[fan];
 	slice_num = pwm_gpio_to_slice_num(pin);
 
@@ -120,27 +120,27 @@ float get_pwm_duty_cycle(uint fan)
  */
 void get_pwm_duty_cycles()
 {
-	uint slices[MBFAN_MAX_COUNT];
+	uint slices[MBFAN_COUNT];
 	int i;
 
 	/* Reset counters on all PWM slices. */
-	for (i=0; i < MBFAN_MAX_COUNT; i++) {
+	for (i=0; i < MBFAN_COUNT; i++) {
 		slices[i] = pwm_gpio_to_slice_num(mbfan_gpio_pwm_map[i]);
 		pwm_set_enabled(slices[i], false);
 		pwm_set_counter(slices[i], 0);
 	}
 
 	/* Turn on all PWM slices for short period of time... */
-	for (i=0; i < MBFAN_MAX_COUNT; i++) {
+	for (i=0; i < MBFAN_COUNT; i++) {
 		pwm_set_enabled(slices[i], true);
 	}
 	sleep_ms(PWM_IN_SAMPLE_INTERVAL);
-	for (i=0; i < MBFAN_MAX_COUNT; i++) {
+	for (i=0; i < MBFAN_COUNT; i++) {
 		pwm_set_enabled(slices[i], false);
 	}
 
 	/* Calculate duty cycles based on measurements. */
-	for (i=0; i < MBFAN_MAX_COUNT; i++) {
+	for (i=0; i < MBFAN_COUNT; i++) {
 		mbfan_pwm_duty[i] = pwm_get_counter(slices[i]) * 100 / pwm_in_max_count;
 	}
 }
@@ -167,7 +167,7 @@ void setup_pwm_outputs()
 
 	/* Configure PWM outputs */
 
-	for (i = 0; i < FAN_MAX_COUNT; i=i+2) {
+	for (i = 0; i < FAN_COUNT; i=i+2) {
 		uint pin1 = fan_gpio_pwm_map[i];
 		uint pin2 = fan_gpio_pwm_map[i + 1];
 
@@ -198,7 +198,7 @@ void setup_pwm_inputs()
 	float counting_rate = clock_get_hz(clk_sys) / PWM_IN_CLOCK_DIVIDER;
 	pwm_in_max_count = counting_rate * (PWM_IN_SAMPLE_INTERVAL / 1000.0);
 
-	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+	for (i = 0; i < MBFAN_COUNT; i++) {
 		uint pin = mbfan_gpio_pwm_map[i];
 		mbfan_pwm_duty[i] = 0.0;
 

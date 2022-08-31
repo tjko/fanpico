@@ -22,12 +22,15 @@
 #ifndef FANPICO_H
 #define FANPICO_H 1
 
-#define FANPICO_VERSION   "1.1"
-#define FANPICO_MODEL     "0804"
+#include "config.h"
 
-#define FAN_MAX_COUNT     8   /* Number of Fan outputs on the board */
-#define MBFAN_MAX_COUNT   4   /* Number of (Motherboard) Fan inputs on the board */
-#define SENSOR_MAX_COUNT  3   /* Number of sensor inputs on the board */
+#ifndef FANPICO_MODEL
+#error unknown board model
+#endif
+
+#define FAN_MAX_COUNT     8   /* Max Number of Fan outputs on the board */
+#define MBFAN_MAX_COUNT   4   /* Max Number of (Motherboard) Fan inputs on the board */
+#define SENSOR_MAX_COUNT  3   /* Max Number of sensor inputs on the board */
 
 #define SENSOR_SERIES_RESISTANCE 10000.0
 
@@ -38,51 +41,6 @@
 #define MAX_NAME_LEN   64
 #define MAX_MAP_POINTS 32
 
-#define LED_PIN 25
-
-
-/* Pins for Fan Signals */
-
-#define FAN1_TACHO_READ_PIN 2
-#define FAN2_TACHO_READ_PIN 3
-#define FAN3_TACHO_READ_PIN 20
-#define FAN4_TACHO_READ_PIN 21
-#define FAN5_TACHO_READ_PIN 22
-#define FAN6_TACHO_READ_PIN 26
-#define FAN7_TACHO_READ_PIN 1
-#define FAN8_TACHO_READ_PIN 0
-
-#define FAN1_PWM_GEN_PIN 4  /* PWM2A */
-#define FAN2_PWM_GEN_PIN 5  /* PWM2B */
-#define FAN3_PWM_GEN_PIN 6  /* PWM3A */
-#define FAN4_PWM_GEN_PIN 7  /* PWM3B */
-#define FAN5_PWM_GEN_PIN 8  /* PWM4A */
-#define FAN6_PWM_GEN_PIN 9  /* PWM4B */
-#define FAN7_PWM_GEN_PIN 10 /* PWM5A */
-#define FAN8_PWM_GEN_PIN 11 /* PWM5B */
-
-
-/* Pins for Motherboar Fan Connector Signals */
-
-#define MBFAN1_TACHO_GEN_PIN 12
-#define MBFAN2_TACHO_GEN_PIN 14
-#define MBFAN3_TACHO_GEN_PIN 16
-#define MBFAN4_TACHO_GEN_PIN 18
-
-#define MBFAN1_PWM_READ_PIN 13 /* PWM6B */
-#define MBFAN2_PWM_READ_PIN 15 /* PWM7B */
-#define MBFAN3_PWM_READ_PIN 17 /* PWM0B */
-#define MBFAN4_PWM_READ_PIN 19 /* PWM1B */
-
-
-/* Pins for temperature sensors */
-
-#define SENSOR1_READ_PIN  27  /* ADC1 / GPIO27 */
-#define SENSOR2_READ_PIN  28  /* ADC2 / GPIO28 */
-
-#define SENSOR1_READ_ADC  1  /* ADC1 / GPIO27 */
-#define SENSOR2_READ_ADC  2  /* ADC2 / GPIO28 */
-#define SENSOR3_READ_ADC  4  /* ADC4 / Internal Temperature sensor */
 
 
 enum pwm_source_types {
@@ -182,7 +140,6 @@ void print_mallinfo();
 void process_command(struct fanpico_state *state, struct fanpico_config *config, char *command);
 int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd);
 
-
 /* config.c */
 extern struct fanpico_config *cfg;
 int str2pwm_source(const char *s);
@@ -196,6 +153,10 @@ void save_config();
 void delete_config();
 void print_config();
 
+/* display.c */
+void display_init();
+void clear_display();
+void display_status(const struct fanpico_state *state);
 
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];

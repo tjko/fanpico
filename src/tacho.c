@@ -92,7 +92,7 @@ void __time_critical_func(fan_tacho_read_callback)(uint gpio, uint32_t events)
  */
 void update_tacho_input_freq()
 {
-	uint counters[FAN_MAX_COUNT];
+	uint counters[FAN_COUNT];
 	int64_t delta;
 	double s;
 	uint pulses;
@@ -100,7 +100,7 @@ void update_tacho_input_freq()
 	int i;
 
 	/* Read current counter values. */
-	for (i = 0; i < FAN_MAX_COUNT; i++) {
+	for (i = 0; i < FAN_COUNT; i++) {
 		counters[i] = fan_tacho_counters[i];
 	}
 	absolute_time_t read_time = get_absolute_time();
@@ -111,14 +111,14 @@ void update_tacho_input_freq()
 		return;
 
 	s = delta / 1000000.0;
-	for (i = 0; i < FAN_MAX_COUNT; i++) {
+	for (i = 0; i < FAN_COUNT; i++) {
 		pulses = counters[i] - fan_tacho_counters_last[i];
 		f = pulses / s;
 		fan_tacho_freq[i] = f;
 	}
 
 	/* Save counter values for next time... */
-	for (i = 0; i < FAN_MAX_COUNT; i++) {
+	for (i = 0; i < FAN_COUNT; i++) {
 		fan_tacho_counters_last[i] = counters[i];
 	}
 	fan_tacho_last_read = read_time;
@@ -136,7 +136,7 @@ void setup_tacho_inputs()
 	/* Configure pins and build GPIO to FAN mapping */
 	memset(gpio_fan_tacho_map, 0, sizeof(gpio_fan_tacho_map));
 
-	for (i = 0; i < FAN_MAX_COUNT; i++) {
+	for (i = 0; i < FAN_COUNT; i++) {
 		pin = fan_gpio_tacho_map[i];
 
 		gpio_fan_tacho_map[pin] = 1 + i;
@@ -151,7 +151,7 @@ void setup_tacho_inputs()
 	/* Enable interrupts on Fan Tacho input pins */
 	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_RISE,
 					true, &fan_tacho_read_callback);
-	for (i = 1; i < FAN_MAX_COUNT; i++) {
+	for (i = 1; i < FAN_COUNT; i++) {
 		gpio_set_irq_enabled(fan_gpio_tacho_map[i], GPIO_IRQ_EDGE_RISE, true);
 	}
 	fan_tacho_last_read = get_absolute_time();
@@ -162,7 +162,7 @@ void setup_tacho_inputs()
  */
 void set_tacho_output_freq(uint fan, double frequency)
 {
-	assert(fan < MBFAN_MAX_COUNT);
+	assert(fan < MBFAN_COUNT);
 	square_wave_gen_set_freq(pio, fan, frequency);
 }
 
@@ -179,7 +179,7 @@ void setup_tacho_outputs()
 	uint pio_program_addr = square_wave_gen_load_program(pio);
 
 	/* Initialize PIO State machines for each tachometer output pin. */
-	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+	for (i = 0; i < MBFAN_COUNT; i++) {
 		uint pin = mbfan_gpio_tacho_map[i];
 		uint sm = i;
 		square_wave_gen_program_init(pio, sm, pio_program_addr, pin);

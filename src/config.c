@@ -300,7 +300,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	fans = cJSON_CreateArray();
 	if (!fans)
 		goto panic;
-	for (i = 0; i < FAN_MAX_COUNT; i++) {
+	for (i = 0; i < FAN_COUNT; i++) {
 		struct fan_output *f = &cfg->fans[i];
 
 		o = cJSON_CreateObject();
@@ -323,7 +323,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	mbfans = cJSON_CreateArray();
 	if (!mbfans)
 		goto panic;
-	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+	for (i = 0; i < MBFAN_COUNT; i++) {
 		struct mb_input *m = &cfg->mbfans[i];
 
 		o = cJSON_CreateObject();
@@ -346,7 +346,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	sensors = cJSON_CreateArray();
 	if (!sensors)
 		goto panic;
-	for (i = 0; i < SENSOR_MAX_COUNT; i++) {
+	for (i = 0; i < SENSOR_COUNT; i++) {
 		struct sensor_input *s = &cfg->sensors[i];
 
 		o = cJSON_CreateObject();
@@ -403,7 +403,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	ref = cJSON_GetObjectItem(config, "fans");
 	cJSON_ArrayForEach(item, ref) {
 		id = (int)cJSON_GetNumberValue(cJSON_GetObjectItem(item, "id"));
-		if (id >= 0 && id < FAN_MAX_COUNT) {
+		if (id >= 0 && id < FAN_COUNT) {
 			struct fan_output *f = &cfg->fans[id];
 
 			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
@@ -426,7 +426,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	ref = cJSON_GetObjectItem(config, "mbfans");
 	cJSON_ArrayForEach(item, ref) {
 		id = (int)cJSON_GetNumberValue(cJSON_GetObjectItem(item, "id"));
-		if (id >= 0 && id < MBFAN_MAX_COUNT) {
+		if (id >= 0 && id < MBFAN_COUNT) {
 			struct mb_input *m = &cfg->mbfans[id];
 
 			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
@@ -449,7 +449,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	ref = cJSON_GetObjectItem(config, "sensors");
 	cJSON_ArrayForEach(item, ref) {
 		id = (int)cJSON_GetNumberValue(cJSON_GetObjectItem(item, "id"));
-		if (id >= 0 && id < SENSOR_MAX_COUNT) {
+		if (id >= 0 && id < SENSOR_COUNT) {
 			struct sensor_input *s = &cfg->sensors[id];
 
 			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));

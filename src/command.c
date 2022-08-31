@@ -109,7 +109,7 @@ int cmd_fans(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 1;
 
-	printf("%d\n", FAN_MAX_COUNT);
+	printf("%d\n", FAN_COUNT);
 	return 0;
 }
 
@@ -134,7 +134,7 @@ int cmd_mbfans(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 1;
 
-	printf("%d\n", MBFAN_MAX_COUNT);
+	printf("%d\n", MBFAN_COUNT);
 	return 0;
 }
 
@@ -143,7 +143,7 @@ int cmd_sensors(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 1;
 
-	printf("%d\n", SENSOR_MAX_COUNT);
+	printf("%d\n", SENSOR_COUNT);
 	return 0;
 }
 
@@ -230,7 +230,7 @@ int cmd_read(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 0;
 
-	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
+	for (i = 0; i < MBFAN_COUNT; i++) {
 		rpm = st->mbfan_freq[i] * 60 / conf->mbfans[i].rpm_factor;
 		printf("mbfan%d,\"%s\",%.0lf,%.2f,%.1f\n", i+1,
 			conf->mbfans[i].name,
@@ -239,7 +239,7 @@ int cmd_read(const char *cmd, const char *args, int query, char *prev_cmd)
 			st->mbfan_duty[i]);
 	}
 
-	for (i = 0; i < FAN_MAX_COUNT; i++) {
+	for (i = 0; i < FAN_COUNT; i++) {
 		rpm = st->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
 		printf("fan%d,\"%s\",%.0lf,%.2f,%.1f\n", i+1,
 			conf->fans[i].name,
@@ -248,7 +248,7 @@ int cmd_read(const char *cmd, const char *args, int query, char *prev_cmd)
 			st->fan_duty[i]);
 	}
 
-	for (i = 0; i < SENSOR_MAX_COUNT; i++) {
+	for (i = 0; i < SENSOR_COUNT; i++) {
 		printf("sensor%d,\"%s\",%.1lf\n", i+1,
 			conf->sensors[i].name,
 			st->temp[i]);
@@ -262,7 +262,7 @@ int cmd_fan_name(const char *cmd, const char *args, int query, char *prev_cmd)
 	int fan;
 
 	fan = atoi(&prev_cmd[3]) - 1;
-	if (fan >= 0 && fan < FAN_MAX_COUNT) {
+	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%s\n", conf->fans[fan].name);
 		} else {
@@ -279,7 +279,7 @@ int cmd_fan_min_pwm(const char *cmd, const char *args, int query, char *prev_cmd
 	int fan, val;
 
 	fan = atoi(&prev_cmd[3]) - 1;
-	if (fan >= 0 && fan < FAN_MAX_COUNT) {
+	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->fans[fan].min_pwm);
 		} else {
@@ -302,7 +302,7 @@ int cmd_fan_max_pwm(const char *cmd, const char *args, int query, char *prev_cmd
 	int fan, val;
 
 	fan = atoi(&prev_cmd[3]) - 1;
-	if (fan >= 0 && fan < FAN_MAX_COUNT) {
+	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->fans[fan].max_pwm);
 		} else {
@@ -326,7 +326,7 @@ int cmd_fan_pwm_coef(const char *cmd, const char *args, int query, char *prev_cm
 	float val;
 
 	fan = atoi(&prev_cmd[3]) - 1;
-	if (fan >= 0 && fan < FAN_MAX_COUNT) {
+	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%f\n", conf->fans[fan].pwm_coefficient);
 		} else {
@@ -353,7 +353,7 @@ int cmd_fan_pwm_map(const char *cmd, const char *args, int query, char *prev_cmd
 	struct pwm_map new_map;
 
 	fan = atoi(&prev_cmd[3]) - 1;
-	if (fan < 0 || fan >= FAN_MAX_COUNT)
+	if (fan < 0 || fan >= FAN_COUNT)
 		return 0;
 	map = &conf->fans[fan].map;
 	new_map.points = 0;
@@ -393,7 +393,7 @@ int cmd_fan_rpm_factor(const char *cmd, const char *args, int query, char *prev_
 	int val;
 
 	fan = atoi(&prev_cmd[3]) - 1;
-	if (fan >= 0 && fan < FAN_MAX_COUNT) {
+	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%u\n", conf->fans[fan].rpm_factor);
 		} else {
@@ -419,7 +419,7 @@ int cmd_fan_source(const char *cmd, const char *args, int query, char *prev_cmd)
 
 
 	fan = atoi(&prev_cmd[3]) - 1;
-	if (fan < 0 || fan >= FAN_MAX_COUNT)
+	if (fan < 0 || fan >= FAN_COUNT)
 		return 0;
 
 	if (query) {
@@ -465,7 +465,7 @@ int cmd_fan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
 
 	if (query) {
 		fan = atoi(&prev_cmd[3]) - 1;
-		if (fan >= 0 && fan < FAN_MAX_COUNT) {
+		if (fan >= 0 && fan < FAN_COUNT) {
 			rpm = st->fan_freq[fan] * 60.0 / conf->fans[fan].rpm_factor;
 			debug(2,"fan%d (tacho = %fHz) rpm = %.1lf\n", fan + 1,
 				st->fan_freq[fan], rpm);
@@ -482,7 +482,7 @@ int cmd_fan_tacho(const char *cmd, const char *args, int query, char *prev_cmd)
 
 	if (query) {
 		fan = atoi(&prev_cmd[3]) - 1;
-		if (fan >= 0 && fan < FAN_MAX_COUNT) {
+		if (fan >= 0 && fan < FAN_COUNT) {
 			f = st->fan_freq[fan];
 			debug(2,"fan%d tacho = %fHz\n", fan + 1, f);
 			printf("%.1f\n", f);
@@ -498,7 +498,7 @@ int cmd_fan_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
 
 	if (query) {
 		fan = atoi(&prev_cmd[3]) - 1;
-		if (fan >= 0 && fan < FAN_MAX_COUNT) {
+		if (fan >= 0 && fan < FAN_COUNT) {
 			d = st->fan_duty[fan];
 			debug(2,"fan%d duty = %f%%\n", fan + 1, d);
 			printf("%.0f\n", d);
@@ -522,7 +522,7 @@ int cmd_fan_read(const char *cmd, const char *args, int query, char *prev_cmd)
 		fan = atoi(&cmd[3]) - 1;
 	}
 
-	if (fan >= 0 && fan < FAN_MAX_COUNT) {
+	if (fan >= 0 && fan < FAN_COUNT) {
 		d = st->fan_duty[fan];
 		f = st->fan_freq[fan];
 		rpm = f * 60.0 / conf->fans[fan].rpm_factor;
@@ -539,7 +539,7 @@ int cmd_mbfan_name(const char *cmd, const char *args, int query, char *prev_cmd)
 	int mbfan;
 
 	mbfan = atoi(&prev_cmd[5]) - 1;
-	if (mbfan >= 0 && mbfan < MBFAN_MAX_COUNT) {
+	if (mbfan >= 0 && mbfan < MBFAN_COUNT) {
 		if (query) {
 			printf("%s\n", conf->mbfans[mbfan].name);
 		} else {
@@ -556,7 +556,7 @@ int cmd_mbfan_min_rpm(const char *cmd, const char *args, int query, char *prev_c
 	int fan, val;
 
 	fan = atoi(&prev_cmd[5]) - 1;
-	if (fan >= 0 && fan < MBFAN_MAX_COUNT) {
+	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->mbfans[fan].min_rpm);
 		} else {
@@ -579,7 +579,7 @@ int cmd_mbfan_max_rpm(const char *cmd, const char *args, int query, char *prev_c
 	int fan, val;
 
 	fan = atoi(&prev_cmd[5]) - 1;
-	if (fan >= 0 && fan < MBFAN_MAX_COUNT) {
+	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->mbfans[fan].max_rpm);
 		} else {
@@ -603,7 +603,7 @@ int cmd_mbfan_rpm_coef(const char *cmd, const char *args, int query, char *prev_
 	float val;
 
 	fan = atoi(&prev_cmd[5]) - 1;
-	if (fan >= 0 && fan < MBFAN_MAX_COUNT) {
+	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%f\n", conf->mbfans[fan].rpm_coefficient);
 		} else {
@@ -627,7 +627,7 @@ int cmd_mbfan_rpm_factor(const char *cmd, const char *args, int query, char *pre
 	int val;
 
 	fan = atoi(&prev_cmd[5]) - 1;
-	if (fan >= 0 && fan < MBFAN_MAX_COUNT) {
+	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%u\n", conf->mbfans[fan].rpm_factor);
 		} else {
@@ -654,7 +654,7 @@ int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, char *prev_c
 	struct tacho_map new_map;
 
 	fan = atoi(&prev_cmd[5]) - 1;
-	if (fan < 0 || fan >= MBFAN_MAX_COUNT)
+	if (fan < 0 || fan >= MBFAN_COUNT)
 		return 0;
 	map = &conf->mbfans[fan].map;
 	new_map.points = 0;
@@ -696,7 +696,7 @@ int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cm
 
 
 	fan = atoi(&prev_cmd[5]) - 1;
-	if (fan < 0 || fan >= MBFAN_MAX_COUNT)
+	if (fan < 0 || fan >= MBFAN_COUNT)
 		return 0;
 
 	if (query) {
@@ -742,7 +742,7 @@ int cmd_mbfan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
 
 	if (query) {
 		fan = atoi(&prev_cmd[5]) - 1;
-		if (fan >= 0 && fan < MBFAN_MAX_COUNT) {
+		if (fan >= 0 && fan < MBFAN_COUNT) {
 			rpm = st->mbfan_freq[fan] * 60.0 / conf->mbfans[fan].rpm_factor;
 			debug(2,"mbfan%d (tacho = %fHz) rpm = %.1lf\n", fan+1,
 				st->mbfan_freq[fan], rpm);
@@ -759,7 +759,7 @@ int cmd_mbfan_tacho(const char *cmd, const char *args, int query, char *prev_cmd
 
 	if (query) {
 		fan = atoi(&prev_cmd[5]) - 1;
-		if (fan >= 0 && fan < MBFAN_MAX_COUNT) {
+		if (fan >= 0 && fan < MBFAN_COUNT) {
 			f = st->mbfan_freq[fan];
 			debug(2,"mbfan%d tacho = %fHz\n", fan + 1, f);
 			printf("%.1f\n", f);
@@ -775,7 +775,7 @@ int cmd_mbfan_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
 
 	if (query) {
 		fan = atoi(&prev_cmd[5]) - 1;
-		if (fan >= 0 && fan < MBFAN_MAX_COUNT) {
+		if (fan >= 0 && fan < MBFAN_COUNT) {
 			d = st->mbfan_duty[fan];
 			debug(2,"mbfan%d duty = %f%%\n", fan + 1, d);
 			printf("%.0f\n", d);
@@ -799,7 +799,7 @@ int cmd_mbfan_read(const char *cmd, const char *args, int query, char *prev_cmd)
 		fan = atoi(&cmd[5]) - 1;
 	}
 
-	if (fan >= 0 && fan < MBFAN_MAX_COUNT) {
+	if (fan >= 0 && fan < MBFAN_COUNT) {
 		d = st->mbfan_duty[fan];
 		f = st->mbfan_freq[fan];
 		rpm = f * 60.0 / conf->mbfans[fan].rpm_factor;
@@ -816,7 +816,7 @@ int cmd_sensor_name(const char *cmd, const char *args, int query, char *prev_cmd
 	int sensor;
 
 	sensor = atoi(&prev_cmd[6]) - 1;
-	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%s\n", conf->sensors[sensor].name);
 		} else {
@@ -835,7 +835,7 @@ int cmd_sensor_temp_offset(const char *cmd, const char *args, int query, char *p
 	float val;
 
 	sensor = atoi(&prev_cmd[6]) - 1;
-	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%f\n", conf->sensors[sensor].temp_offset);
 		} else {
@@ -854,7 +854,7 @@ int cmd_sensor_temp_coef(const char *cmd, const char *args, int query, char *pre
 	float val;
 
 	sensor = atoi(&prev_cmd[6]) - 1;
-	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%f\n", conf->sensors[sensor].temp_coefficient);
 		} else {
@@ -879,7 +879,7 @@ int cmd_sensor_temp_nominal(const char *cmd, const char *args, int query, char *
 	float val;
 
 	sensor = atoi(&prev_cmd[6]) - 1;
-	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%.1f\n", conf->sensors[sensor].temp_nominal);
 		} else {
@@ -904,7 +904,7 @@ int cmd_sensor_ther_nominal(const char *cmd, const char *args, int query, char *
 	float val;
 
 	sensor = atoi(&prev_cmd[6]) - 1;
-	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%.0f\n", conf->sensors[sensor].thermistor_nominal);
 		} else {
@@ -929,7 +929,7 @@ int cmd_sensor_beta_coef(const char *cmd, const char *args, int query, char *pre
 	float val;
 
 	sensor = atoi(&prev_cmd[6]) - 1;
-	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%.0f\n", conf->sensors[sensor].beta_coefficient);
 		} else {
@@ -957,7 +957,7 @@ int cmd_sensor_temp_map(const char *cmd, const char *args, int query, char *prev
 	struct temp_map new_map;
 
 	sensor = atoi(&prev_cmd[6]) - 1;
-	if (sensor < 0 || sensor >= SENSOR_MAX_COUNT)
+	if (sensor < 0 || sensor >= SENSOR_COUNT)
 		return 0;
 	map = &conf->sensors[sensor].map;
 	new_map.points = 0;
@@ -1005,7 +1005,7 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd
 		sensor = atoi(&cmd[6]) - 1;
 	}
 
-	if (sensor >= 0 && sensor < SENSOR_MAX_COUNT) {
+	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		d = st->temp[sensor];
 		debug(2,"sensor%d temperature = %fC\n", sensor + 1, d);
 		printf("%.0f\n", d);
