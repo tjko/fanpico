@@ -156,7 +156,7 @@ void print_config();
 /* display.c */
 void display_init();
 void clear_display();
-void display_status(const struct fanpico_state *state);
+void display_status(const struct fanpico_state *state, const struct fanpico_config *config);
 
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];

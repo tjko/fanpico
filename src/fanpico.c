@@ -316,7 +316,7 @@ int main()
 
 		/* Update display every 2000ms */
 		if (time_passed(&t_display, 2000)) {
-			display_status(st);
+			display_status(st, cfg);
 		}
 
 		/* Read PWM input signals (duty cycle) periodically */

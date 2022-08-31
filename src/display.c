@@ -64,25 +64,55 @@ void oled_clear_display()
 	oledFill(&oled, 0, 1);
 }
 
-void oled_display_status(const struct fanpico_state *state)
+void oled_display_status(const struct fanpico_state *state,
+	const struct fanpico_config *conf)
 {
-	absolute_time_t t_now;
-	char buf[255];
+	char buf[255], l[32], r[32];
+	int i, idx;
+	double rpm, pwm, temp;
+	static uint32_t counter = 0;
 
 	if (!oled_found || !state)
 		return;
 
-	t_now = get_absolute_time();
-	snprintf(buf, sizeof(buf), "Ticks: %llu", t_now);
 
-	oledWriteString(&oled, 0, 0, 0, "abcdefghijlkmnopqrstuvwxyz", FONT_6x8, 0, 1);
-	oledWriteString(&oled, 0, 0, 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", FONT_6x8, 0, 1);
-	oledWriteString(&oled, 0, 0, 2, "123456789012345678901234567890", FONT_6x8, 0, 1);
-	oledWriteString(&oled, 0, 0, 3, "---------|---------|---------|", FONT_6x8, 0, 1);
-	oledWriteString(&oled, 0, 0, 4, "---------|---------|---------|", FONT_6x8, 0, 1);
-	oledWriteString(&oled, 0, 0, 5, "---------|---------|---------|", FONT_6x8, 0, 1);
-	oledWriteString(&oled, 0, 0, 6, "---------|---------|---------|", FONT_6x8, 0, 1);
-	oledWriteString(&oled, 0, 0, 7, buf , FONT_6x8, 0, 1);
+	for (i = 0; i < 8; i++) {
+		if (i < FAN_COUNT) {
+			rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
+			pwm = state->fan_duty[i];
+			snprintf(l,sizeof(l),"%d:%4.0lf %3.0lf%% ", i + 1, rpm, pwm);
+		} else {
+			snprintf(l,sizeof(l),"          ");
+		}
+
+		if (i == 0) {
+			snprintf(r, sizeof(r), "Inputs   ");
+		} else if (i > 0 && i < 4) {
+			idx = i - 1;
+			pwm = state->mbfan_duty[idx];
+			snprintf(r, sizeof(r), " %d:%3.0lf%%  ", idx + 1, pwm);
+		} else if (i == 4) {
+			snprintf(r, sizeof(r), "Temps    ");
+		} else if (i > 4 && i < 8) {
+			idx = i - 5;
+			temp = state->temp[idx];
+			snprintf(r, sizeof(r), " %d:%4.1lfC ", idx + 1, temp);
+		} else {
+			snprintf(r,sizeof(r),"        ");
+		}
+
+		memcpy(&buf[0], l, 12);
+		memcpy(&buf[12], r, 10);
+		buf[22] = 0;
+
+		if (i == 0) {
+			buf[20] = (counter % 2 == 0 ? '*' : ' ');
+		}
+
+		oledWriteString(&oled, 0, 0, i, buf, FONT_6x8, 0, 1);
+	}
+
+	counter++;
 }
 
 #endif /* OLED_DISPLAY */
@@ -102,10 +132,11 @@ void clear_display()
 #endif
 }
 
-void display_status(const struct fanpico_state *state)
+void display_status(const struct fanpico_state *state,
+	const struct fanpico_config *config)
 {
 #ifdef OLED_DISPLAY
-	oled_display_status(state);
+	oled_display_status(state, config);
 #endif
 }
 
