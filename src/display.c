@@ -32,8 +32,12 @@
 #ifdef OLED_DISPLAY
 #include "ss_oled.h"
 
-SSOLED oled;
-uint8_t oled_found = 0;
+#define OLED_WIDTH   128
+#define OLED_HEIGHT  64
+
+static SSOLED oled;
+static uint8_t oled_found = 0;
+static uint8_t ucBuffer[(OLED_WIDTH*OLED_HEIGHT)/8];
 
 void oled_display_init()
 {
@@ -47,6 +51,7 @@ void oled_display_init()
 	}
 	oled_found = 1;
 
+	oledSetBackBuffer(&oled, ucBuffer);
 	oledFill(&oled, 0, 1);
 	oledSetContrast(&oled, 127);
 	oledWriteString(&oled, 0, 15, 1, "FanPico-" FANPICO_MODEL, FONT_8x8, 0, 1);
@@ -67,14 +72,14 @@ void oled_clear_display()
 void oled_display_status(const struct fanpico_state *state,
 	const struct fanpico_config *conf)
 {
-	char buf[255], l[32], r[32];
+	char buf[64], l[32], r[32];
 	int i, idx;
 	double rpm, pwm, temp;
 	static uint32_t counter = 0;
 
+
 	if (!oled_found || !state)
 		return;
-
 
 	for (i = 0; i < 8; i++) {
 		if (i < FAN_COUNT) {
@@ -86,13 +91,13 @@ void oled_display_status(const struct fanpico_state *state,
 		}
 
 		if (i == 0) {
-			snprintf(r, sizeof(r), "Inputs   ");
+			snprintf(r, sizeof(r), "mb inputs   ");
 		} else if (i > 0 && i < 4) {
 			idx = i - 1;
 			pwm = state->mbfan_duty[idx];
-			snprintf(r, sizeof(r), " %d:%3.0lf%%  ", idx + 1, pwm);
+			snprintf(r, sizeof(r), " %d: %3.0lf%%  ", idx + 1, pwm);
 		} else if (i == 4) {
-			snprintf(r, sizeof(r), "Temps    ");
+			snprintf(r, sizeof(r), "temps    ");
 		} else if (i > 4 && i < 8) {
 			idx = i - 5;
 			temp = state->temp[idx];
@@ -105,14 +110,15 @@ void oled_display_status(const struct fanpico_state *state,
 		memcpy(&buf[12], r, 10);
 		buf[22] = 0;
 
-		if (i == 0) {
-			buf[20] = (counter % 2 == 0 ? '*' : ' ');
+		if (i == 7) {
+			buf[20] = (counter++ % 2 == 0 ? '*' : ' ');
 		}
 
 		oledWriteString(&oled, 0, 0, i, buf, FONT_6x8, 0, 1);
 	}
 
-	counter++;
+	oledDrawLine(&oled, 69, 0, 69, OLED_HEIGHT - 1, 1);
+	oledDrawLine(&oled, 69, 32, OLED_WIDTH - 1, 32, 1);
 }
 
 #endif /* OLED_DISPLAY */
