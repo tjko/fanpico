@@ -110,10 +110,14 @@ $ cd fanpico
 $ mkdir build
 ```
 
-Then compile fanpico:
+Select which board to build firmware for (default is "0804"):
 ```
 $ cd build
-$ cmake ..
+$ cmake -DFANPICO_BOARD=0804 ..
+```
+
+Then compile fanpico:
+```
 $ make
 ```
 
