@@ -28,12 +28,15 @@ pico_sdk_init()
 # External libaries
 
 # littlefs-lib
-add_subdirectory(../littlefs-lib littlefs-lib)
+add_subdirectory(libs/littlefs-lib)
 
 # cJSON
 add_library(cJSON INTERFACE)
-target_include_directories(cJSON INTERFACE ../cJSON)
-target_sources(cJSON INTERFACE ../cJSON/cJSON.h ../cJSON/cJSON.c)
+target_include_directories(cJSON INTERFACE libs/cJSON)
+target_sources(cJSON INTERFACE
+  libs/cJSON/cJSON.h
+  libs/cJSON/cJSON.c
+  )
 
 # ss_oled
 add_library(ss_oled INTERFACE)

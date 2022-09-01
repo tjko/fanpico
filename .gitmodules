@@ -1,0 +1,6 @@
+[submodule "libs/littlefs-lib"]
+	path = libs/littlefs-lib
+	url = https://github.com/lurk101/littlefs-lib.git
+[submodule "libs/cJSON"]
+	path = libs/cJSON
+	url = https://github.com/DaveGamble/cJSON.git

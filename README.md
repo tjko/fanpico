@@ -64,12 +64,11 @@ Firmware upgrade steps:
 
 Raspberry Pi Pico C/C++ SDK is required for compiling the firmware: 
 
-#### Requirements
+#### Requirements / Dependencies
 * [Raspberry Pi Pico C/C++ SDK](https://www.raspberrypi.com/documentation/microcontrollers/c_sdk.html)
 * [cJSON](https://github.com/DaveGamble/cJSON)
 * [littlefs-lib](https://github.com/lurk101/littlefs-lib)
 
-(When building fanpico firmware libraries are expected to be in following locations: ../cJSON/ and ../pico-littlefs/)
 
 ##### Install Pico SDK
 Pico SDK must be installed working before you can compile fanpico.
@@ -85,8 +84,7 @@ Create some directory for building fanpico ('src' used in this example):
 $ mkdir src
 $ cd src
 $ git clone https://github.com/tjko/fanpico.git
-$ git clone https://github.com/DaveGamble/cJSON.git
-$ git clone https://github.com/lurk101/littlefs-lib.git
+$ git submodule update --init --recursive
 ```
 
 ##### Building fanpico firmware
