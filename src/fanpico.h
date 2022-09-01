@@ -120,6 +120,7 @@ struct fanpico_config {
 	struct mb_input mbfans[MBFAN_MAX_COUNT];
 	bool local_echo;
 	uint8_t led_mode;
+	char display_type[64];
 };
 
 struct fanpico_state {
@@ -158,7 +159,6 @@ void print_config();
 
 /* display.c */
 void display_init();
-void display_info();
 void clear_display();
 void display_status(const struct fanpico_state *state, const struct fanpico_config *config);
 

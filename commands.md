@@ -71,6 +71,8 @@ Fanpico supports following commands:
 * [Read?](#read)
 * [SYStem:DEBug](#systemdebug)
 * [SYStem:DEBug?](#systemdebug)
+* [SYStem:DISPlay](#systemdisplay)
+* [SYStem:DISPlay?](#systemdisplay)
 * [SYStem:ECHO](#systemecho)
 * [SYStem:ECHO?](#systemecho)
 * [SYStem:FANS?](#systemfans)
@@ -950,6 +952,34 @@ Display current system debug level.
 Example: 
 ```
 SYS:DEBUG?
+```
+
+#### SYStem:DISPlay
+Set display (module) type. Can be used if display module type
+cannot be automatically detected. Like with some OLED modules.
+
+Default: default
+
+Currently supported values:
+
+Value|Description
+-----|-----------
+default|Use default settings (auto-detect).
+128x64|OLED 128x64 module installed.
+132x64|OLED 132x64 installed (some 1.3" 128x64 modules need this setting!)
+
+Example: 1.3" (SH1106) module installed that doesn't get detected correctly
+```
+SYS:DISP 132x64
+```
+
+#### SYStem:DISPlay?
+Display current display module setting.
+
+Example:
+```
+SYS:DISP?
+default
 ```
 
 #### SYStem:ECHO

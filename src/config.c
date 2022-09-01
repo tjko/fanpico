@@ -279,6 +279,7 @@ void clear_config(struct fanpico_config *cfg)
 
 	cfg->local_echo = false;
 	cfg->led_mode = 0;
+	strncpy(cfg->display_type, "default", sizeof(cfg->display_type));
 }
 
 
@@ -295,6 +296,8 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	cJSON_AddItemToObject(config, "debug", cJSON_CreateNumber(get_debug_level()));
 	cJSON_AddItemToObject(config, "local_echo", cJSON_CreateBool(cfg->local_echo));
 	cJSON_AddItemToObject(config, "led_mode", cJSON_CreateNumber(cfg->led_mode));
+	if (strlen(cfg->display_type) > 0)
+		cJSON_AddItemToObject(config, "display_type", cJSON_CreateString(cfg->display_type));
 
 	/* Fan outputs */
 	fans = cJSON_CreateArray();
@@ -382,7 +385,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 {
 	cJSON *ref, *item, *r;
 	int id;
-	const char *name;
+	const char *name, *val;
 
 	if (!config || !cfg)
 		return -1;
@@ -398,6 +401,10 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		cfg->local_echo = (cJSON_IsTrue(ref) ? true : false);
 	if ((ref = cJSON_GetObjectItem(config, "led_mode")))
 		cfg->led_mode = cJSON_GetNumberValue(ref);
+	if ((ref = cJSON_GetObjectItem(config, "display_type"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncpy(cfg->display_type, val, sizeof(cfg->display_type));
+	}
 
 	/* Fan output configurations */
 	ref = cJSON_GetObjectItem(config, "fans");

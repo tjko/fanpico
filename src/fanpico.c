@@ -42,7 +42,6 @@ void setup()
 	pico_unique_board_id_t board_id;
 	int i;
 
-	display_init();
 	stdio_usb_init();
 
 	// Wait a while for USB Serial to connect...
@@ -69,12 +68,10 @@ void setup()
 	pico_get_unique_board_id(&board_id);
 	for (i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
 		printf("%02x", board_id.id[i]);
-	printf("\n");
-
-	display_info();
-	printf("\n");
+	printf("\n\n");
 
 	read_config();
+	display_init();
 
 	/* Enable ADC */
 	printf("Initialize ADC...\n");
@@ -86,9 +83,11 @@ void setup()
 	/* Setup GPIO pins... */
 	printf("Initialize GPIO...\n");
 
-	gpio_init(LED_PIN);
-	gpio_set_dir(LED_PIN, GPIO_OUT);
-	gpio_put(LED_PIN, 0);
+	if (LED_PIN > 0) {
+		gpio_init(LED_PIN);
+		gpio_set_dir(LED_PIN, GPIO_OUT);
+		gpio_put(LED_PIN, 0);
+	}
 
 	/* Configure PWM pins... */
 	setup_pwm_outputs();

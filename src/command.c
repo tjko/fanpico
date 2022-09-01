@@ -177,6 +177,17 @@ int cmd_echo(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+
+int cmd_display_type(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", cfg->display_type);
+	} else {
+		strncpy(cfg->display_type, args, sizeof(cfg->display_type));
+	}
+	return 0;
+}
+
 int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (!query) {
@@ -1024,6 +1035,7 @@ struct cmd_t system_commands[] = {
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "VERsion",   3, NULL,              cmd_version },
+	{ "DISPlay",   4, NULL,              cmd_display_type },
 	{ 0, 0, 0, 0 }
 };
 

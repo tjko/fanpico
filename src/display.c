@@ -32,43 +32,39 @@
 #ifdef OLED_DISPLAY
 #include "ss_oled.h"
 
-#define OLED_WIDTH   128
-#define OLED_HEIGHT  64
-
 static SSOLED oled;
-static int oled_info;
+static uint8_t ucBuffer[(128*128)/8];
+static uint8_t oled_width = 128;
+static uint8_t oled_height = 64;
 static uint8_t oled_found = 0;
-static uint8_t ucBuffer[(OLED_WIDTH*OLED_HEIGHT)/8];
+
 
 void oled_display_init()
 {
 	int res;
+	int retries = 10;
+	int dtype = OLED_128x64;
 
-	res = oledInit(&oled, OLED_128x64, -1, 0, 0, 1, SDA_PIN, SCL_PIN, -1, 1000000L);
-	if (res == OLED_NOT_FOUND)
-		return;
+	/* Check if display type is configured using SYS:DISP command... */
+	if (cfg) {
+		if (cfg->display_type) {
+			if (strncmp(cfg->display_type, "132x64", 6) == 0)
+				dtype = OLED_132x64;
+		}
+	}
 
-	oled_found = 1;
-	oled_info = res;
+	do {
+		sleep_ms(50);
+		res = oledInit(&oled, dtype, -1, 0, 0, 1, SDA_PIN, SCL_PIN, -1, 1000000L);
+	} while (res == OLED_NOT_FOUND && retries-- > 0);
 
-	oledSetBackBuffer(&oled, ucBuffer);
-	oledFill(&oled, 0, 1);
-	oledSetContrast(&oled, 127);
-	oledWriteString(&oled, 0, 15, 1, "FanPico-" FANPICO_MODEL, FONT_8x8, 0, 1);
-	oledWriteString(&oled, 0, 40, 3, "v" FANPICO_VERSION, FONT_8x8, 0, 1);
-
-	oledWriteString(&oled, 0, 20, 6, "Initializing...", FONT_6x8, 0, 1);
-}
-
-void oled_display_info()
-{
-	printf("  OLED display: ");
-	if (!oled_found) {
+	printf("OLED display: ");
+	if (res == OLED_NOT_FOUND) {
 		printf("No Display Connected\n");
 		return;
 	}
 
-	switch (oled_info) {
+	switch (res) {
 	case OLED_SSD1306_3C:
 		printf("SSD1306 (at 0x3c)");
 		break;
@@ -91,6 +87,16 @@ void oled_display_info()
 		printf("Unknown");
 	}
 	printf("\n");
+
+	oled_found = 1;
+
+	oledSetBackBuffer(&oled, ucBuffer);
+	oledFill(&oled, 0, 1);
+	oledSetContrast(&oled, 127);
+	oledWriteString(&oled, 0, 15, 1, "FanPico-" FANPICO_MODEL, FONT_8x8, 0, 1);
+	oledWriteString(&oled, 0, 40, 3, "v" FANPICO_VERSION, FONT_8x8, 0, 1);
+
+	oledWriteString(&oled, 0, 20, 6, "Initializing...", FONT_6x8, 0, 1);
 }
 
 void oled_clear_display()
@@ -149,8 +155,8 @@ void oled_display_status(const struct fanpico_state *state,
 		oledWriteString(&oled, 0, 0, i, buf, FONT_6x8, 0, 1);
 	}
 
-	oledDrawLine(&oled, 69, 0, 69, OLED_HEIGHT - 1, 1);
-	oledDrawLine(&oled, 69, 32, OLED_WIDTH - 1, 32, 1);
+	oledDrawLine(&oled, 69, 0, 69, oled_height - 1, 1);
+	oledDrawLine(&oled, 69, 32, oled_width - 1, 32, 1);
 }
 
 #endif /* OLED_DISPLAY */
@@ -160,13 +166,6 @@ void display_init()
 {
 #ifdef OLED_DISPLAY
 	oled_display_init();
-#endif
-}
-
-void display_info()
-{
-#ifdef OLED_DISPLAY
-	oled_display_info();
 #endif
 }
 
