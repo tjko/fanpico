@@ -77,8 +77,10 @@ void setup()
 	printf("Initialize ADC...\n");
 	adc_init();
 	adc_set_temp_sensor_enabled(true);
-	adc_gpio_init(SENSOR1_READ_PIN);
-	adc_gpio_init(SENSOR2_READ_PIN);
+	if (SENSOR1_READ_PIN > 0)
+		adc_gpio_init(SENSOR1_READ_PIN);
+	if (SENSOR2_READ_PIN > 0)
+		adc_gpio_init(SENSOR2_READ_PIN);
 
 	/* Setup GPIO pins... */
 	printf("Initialize GPIO...\n");
