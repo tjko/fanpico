@@ -158,6 +158,7 @@ void print_config();
 
 /* display.c */
 void display_init();
+void display_info();
 void clear_display();
 void display_status(const struct fanpico_state *state, const struct fanpico_config *config);
 

@@ -36,6 +36,7 @@
 #define OLED_HEIGHT  64
 
 static SSOLED oled;
+static int oled_info;
 static uint8_t oled_found = 0;
 static uint8_t ucBuffer[(OLED_WIDTH*OLED_HEIGHT)/8];
 
@@ -44,12 +45,11 @@ void oled_display_init()
 	int res;
 
 	res = oledInit(&oled, OLED_128x64, -1, 0, 0, 1, SDA_PIN, SCL_PIN, -1, 1000000L);
-
-	if (res == OLED_NOT_FOUND) {
-		printf("Display not found\n");
+	if (res == OLED_NOT_FOUND)
 		return;
-	}
+
 	oled_found = 1;
+	oled_info = res;
 
 	oledSetBackBuffer(&oled, ucBuffer);
 	oledFill(&oled, 0, 1);
@@ -60,6 +60,38 @@ void oled_display_init()
 	oledWriteString(&oled, 0, 20, 6, "Initializing...", FONT_6x8, 0, 1);
 }
 
+void oled_display_info()
+{
+	printf("  OLED display: ");
+	if (!oled_found) {
+		printf("No Display Connected\n");
+		return;
+	}
+
+	switch (oled_info) {
+	case OLED_SSD1306_3C:
+		printf("SSD1306 (at 0x3c)");
+		break;
+	case OLED_SSD1306_3D:
+		printf("SSD1306 (at 0x3d)");
+		break;
+	case OLED_SH1106_3C:
+		printf("SH1106 (at 0x3c)");
+		break;
+	case OLED_SH1106_3D:
+		printf("SH1106 (at 0x3d)");
+		break;
+	case OLED_SH1107_3C:
+		printf("SH1107 (at 0x3c)");
+		break;
+	case OLED_SH1107_3D:
+		printf("SH1107 (at 0x3d)");
+		break;
+	default:
+		printf("Unknown");
+	}
+	printf("\n");
+}
 
 void oled_clear_display()
 {
@@ -128,6 +160,13 @@ void display_init()
 {
 #ifdef OLED_DISPLAY
 	oled_display_init();
+#endif
+}
+
+void display_info()
+{
+#ifdef OLED_DISPLAY
+	oled_display_info();
 #endif
 }
 

@@ -42,8 +42,8 @@ void setup()
 	pico_unique_board_id_t board_id;
 	int i;
 
-	stdio_usb_init();
 	display_init();
+	stdio_usb_init();
 
 	// Wait a while for USB Serial to connect...
 	i = 0;
@@ -58,7 +58,6 @@ void setup()
 		printf("[Rebooted by watchdog]\n\n");
 	}
 
-
 	/* Run "SYStem:VERsion" command... */
 	cmd_version(NULL, NULL, 0, NULL);
 	printf("Hardware Model: FANPICO-%s\n", FANPICO_MODEL);
@@ -70,7 +69,10 @@ void setup()
 	pico_get_unique_board_id(&board_id);
 	for (i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
 		printf("%02x", board_id.id[i]);
-	printf("\n\n");
+	printf("\n");
+
+	display_info();
+	printf("\n");
 
 	read_config();
 
