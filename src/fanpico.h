@@ -136,6 +136,9 @@ struct fanpico_state {
 /* fanpico.c */
 void print_mallinfo();
 
+/* bi_decl.c */
+void set_binary_info();
+
 /* command.c */
 void process_command(struct fanpico_state *state, struct fanpico_config *config, char *command);
 int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd);
