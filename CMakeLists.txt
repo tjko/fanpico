@@ -30,6 +30,9 @@ pico_sdk_init()
 # littlefs-lib
 add_subdirectory(libs/littlefs-lib)
 
+# ss_oled
+add_subdirectory(libs/ss_oled-lib)
+
 # cJSON
 add_library(cJSON INTERFACE)
 target_include_directories(cJSON INTERFACE libs/cJSON)
@@ -38,15 +41,6 @@ target_sources(cJSON INTERFACE
   libs/cJSON/cJSON.c
   )
 
-# ss_oled
-add_library(ss_oled INTERFACE)
-target_include_directories(ss_oled INTERFACE ../Pi_Pico_C_Projects/ss_oled)
-target_sources(ss_oled INTERFACE
-  ../Pi_Pico_C_Projects/ss_oled/ss_oled.h
-  ../Pi_Pico_C_Projects/ss_oled/ss_oled.c
-  ../Pi_Pico_C_Projects/ss_oled/BitBang_I2C.h
-  ../Pi_Pico_C_Projects/ss_oled/BitBang_I2C.c
-)
 
 
 # fanpico firmware
@@ -88,7 +82,7 @@ target_link_libraries(fanpico PRIVATE
   hardware_i2c
   littlefs-lib
   cJSON
-  ss_oled
+  ss_oled-lib
   )
 
 target_compile_options(fanpico PRIVATE -Wall)

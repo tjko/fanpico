@@ -4,3 +4,6 @@
 [submodule "libs/cJSON"]
 	path = libs/cJSON
 	url = https://github.com/DaveGamble/cJSON.git
+[submodule "libs/ss_oled-lib"]
+	path = libs/ss_oled-lib
+	url = https://github.com/tjko/ss_oled-lib.git
