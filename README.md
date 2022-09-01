@@ -68,6 +68,7 @@ Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 * [Raspberry Pi Pico C/C++ SDK](https://www.raspberrypi.com/documentation/microcontrollers/c_sdk.html)
 * [cJSON](https://github.com/DaveGamble/cJSON)
 * [littlefs-lib](https://github.com/lurk101/littlefs-lib)
+* [ss_oled-lib](https://github.com/tjko/ss_oled-lib)
 
 
 ##### Install Pico SDK
