@@ -43,6 +43,9 @@ struct cmd_t {
 struct fanpico_state *st = NULL;
 struct fanpico_config *conf = NULL;
 
+/* credits.s */
+extern const char fanpico_credits_text[];
+
 
 int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 {
@@ -71,36 +74,15 @@ int cmd_usb_boot(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd)
 {
+	const char* credits = fanpico_credits_text;
+
 	if (cmd && !query)
 		return 1;
 
 	printf("FanPico v%s ", FANPICO_VERSION);
-	printf("(Build date: %s)\n", __DATE__);
-	printf("Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>\n");
-	printf("https://github.com/tjko/fanpico\n");
-	printf("License GPLv3+: GNU GPL version 3 or later "
-		"<https://gnu.org/licenses/gpl.html>\n"
-		"This is free software: you are free to change and "
-                "redistribute it.\n"
-		"There is NO WARRANTY, to the extent permitted by law.\n\n");
+	printf("(Build date: %s)\n\n", __DATE__);
 
-	if (!query)
-		return 1;
-
-	/* cJSON */
-	printf("cJSON v%s\n", cJSON_Version());
-	printf("Copyright (c) 2009-2017 Dave Gamble and cJSON contributors\n");
-	printf("https://github.com/DaveGamble/cJSON\n\n");
-
-	/* pico-littlefs */
-	printf("pico-littlefs\n");
-	printf("Copyright (c) 2021, lurk101\n");
-	printf("https://github.com/lurk101/pico-littlefs\n\n");
-
-	/* lfs */
-	printf("The little filesystem v%d.%d\n", LFS_VERSION_MAJOR, LFS_VERSION_MINOR);
-	printf("Copyright (c) 2017, Arm Limited. All rights reserved.\n");
-	printf("https://github.com/littlefs-project/little\n\n");
+	printf("%s\n", credits);
 	return 0;
 }
 

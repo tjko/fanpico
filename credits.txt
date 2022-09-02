@@ -1,0 +1,26 @@
+FanPico: Smart PWM (PC) Fan Controller 
+Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+https://github.com/tjko/fanpico
+
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Libraries used in FanPico:
+
+cJSON
+Copyright (c) 2009-2017 Dave Gamble and cJSON contributors
+https://github.com/DaveGamble/cJSON
+
+pico-littlefs
+Copyright (c) 2021, lurk101
+https://github.com/lurk101/pico-littlefs
+
+The little filesystem
+Copyright (c) 2017, Arm Limited. All rights reserved.
+https://github.com/littlefs-project/littlefs
+
+ss_oled (Small, Simple OLED library)
+Copyright (c) 2017-2019 BitBank Software, Inc.
+Written by Larry Bank (bitbank@pobox.com)
+https://github.com/tjko/ss_oled-lib
