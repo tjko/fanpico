@@ -12,6 +12,14 @@
 
 /* Pins for Fan Signals */
 
+#define TACHO_READ_MULTIPLEX 0
+
+/* pins for multiplexed read */
+#define FAN_TACHO_READ_PIN    -1
+#define FAN_TACHO_READ_S0_PIN -1
+#define FAN_TACHO_READ_S1_PIN -1
+#define FAN_TACHO_READ_S2_PIN -1
+/* pins for direct read */
 #define FAN1_TACHO_READ_PIN 2
 #define FAN2_TACHO_READ_PIN 3
 #define FAN3_TACHO_READ_PIN 20
@@ -54,8 +62,19 @@
 #define SENSOR3_READ_ADC  4  /* ADC4 / Internal Temperature sensor */
 
 
-/* Pins for Display */
+/* Interface Pins */
 
+/* I2C */
+#define I2C_HW    1  /* 1=i2c0, 2=i2c1, 0=bitbang... */
 #define SDA_PIN  -1
 #define SCL_PIN  -1
 
+/* Serial */
+#define TX_PIN   -1
+#define RX_PIN   -1
+
+/* SPI */
+#define SCK_PIN  -1
+#define MOSI_PIN -1
+#define MISO_PIN -1
+#define CS_PIN   -1

@@ -1,10 +1,10 @@
-/* boards/0803D.h */
+/* boards/0804D.h */
 
 
-#define FANPICO_MODEL     "0803D"
+#define FANPICO_MODEL     "0804D"
 
 #define FAN_COUNT     8   /* Number of Fan outputs on the board */
-#define MBFAN_COUNT   3   /* Number of (Motherboard) Fan inputs on the board */
+#define MBFAN_COUNT   4   /* Number of (Motherboard) Fan inputs on the board */
 #define SENSOR_COUNT  3   /* Number of sensor inputs on the board */
 
 #define LED_PIN 25
@@ -12,14 +12,22 @@
 
 /* Pins for Fan Signals */
 
-#define FAN1_TACHO_READ_PIN 2
-#define FAN2_TACHO_READ_PIN 3
-#define FAN3_TACHO_READ_PIN 20
-#define FAN4_TACHO_READ_PIN 21
-#define FAN5_TACHO_READ_PIN 22
-#define FAN6_TACHO_READ_PIN 26
-#define FAN7_TACHO_READ_PIN 1
-#define FAN8_TACHO_READ_PIN 0
+#define TACHO_READ_MULTIPLEX 1
+
+/* pins for multiplexed read */
+#define FAN_TACHO_READ_PIN    26
+#define FAN_TACHO_READ_S0_PIN 22
+#define FAN_TACHO_READ_S1_PIN 21
+#define FAN_TACHO_READ_S2_PIN 20
+/* pins for direct read */
+#define FAN1_TACHO_READ_PIN -1
+#define FAN2_TACHO_READ_PIN -1
+#define FAN3_TACHO_READ_PIN -1
+#define FAN4_TACHO_READ_PIN -1
+#define FAN5_TACHO_READ_PIN -1
+#define FAN6_TACHO_READ_PIN -1
+#define FAN7_TACHO_READ_PIN -1
+#define FAN8_TACHO_READ_PIN -1
 
 #define FAN1_PWM_GEN_PIN 4  /* PWM2A */
 #define FAN2_PWM_GEN_PIN 5  /* PWM2B */
@@ -35,13 +43,13 @@
 
 #define MBFAN1_TACHO_GEN_PIN 12
 #define MBFAN2_TACHO_GEN_PIN 14
-#define MBFAN3_TACHO_GEN_PIN 18
-#define MBFAN4_TACHO_GEN_PIN -1 /* N/A */
+#define MBFAN3_TACHO_GEN_PIN 16
+#define MBFAN4_TACHO_GEN_PIN 18
 
 #define MBFAN1_PWM_READ_PIN 13 /* PWM6B */
 #define MBFAN2_PWM_READ_PIN 15 /* PWM7B */
-#define MBFAN3_PWM_READ_PIN 19 /* PWM1B */
-#define MBFAN4_PWM_READ_PIN -1 /* N/A */
+#define MBFAN3_PWM_READ_PIN 17 /* PWM0B */
+#define MBFAN4_PWM_READ_PIN 19 /* PWM1B */
 
 
 /* Pins for temperature sensors */
@@ -54,10 +62,22 @@
 #define SENSOR3_READ_ADC  4  /* ADC4 / Internal Temperature sensor */
 
 
-/* Pins for Display */
+/* Interface Pins */
 
-#define SDA_PIN  16
-#define SCL_PIN  17
+/* I2C */
+#define I2C_HW    2  /* 1=i2c0, 2=i2c1, 0=bitbang... */
+#define SDA_PIN   2
+#define SCL_PIN   3
+
+/* Serial */
+#define TX_PIN    0
+#define RX_PIN    1
+
+/* SPI */
+#define SCK_PIN   2
+#define MOSI_PIN  3
+#define MISO_PIN  0
+#define CS_PIN    1
 
 #define OLED_DISPLAY 1
 

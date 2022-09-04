@@ -129,7 +129,7 @@ void update_tacho_input_freq()
  */
 void setup_tacho_inputs()
 {
-	int i, pin;
+	int i;
 
 	printf("Setting up Tacho Input pins...\n");
 
@@ -137,23 +137,39 @@ void setup_tacho_inputs()
 	memset(gpio_fan_tacho_map, 0, sizeof(gpio_fan_tacho_map));
 
 	for (i = 0; i < FAN_COUNT; i++) {
-		pin = fan_gpio_tacho_map[i];
-
-		gpio_fan_tacho_map[pin] = 1 + i;
 		fan_tacho_counters[i] = 0;
 		fan_tacho_counters_last[i] = 0;
 		fan_tacho_freq[i] = 0.0;
-
+#if TACHO_READ_MULTIPLEX == 0
+		int pin = fan_gpio_tacho_map[i];
+		gpio_fan_tacho_map[pin] = 1 + i;
 		gpio_init(pin);
 		gpio_set_dir(pin, GPIO_IN);
+#endif
 	}
 
 	/* Enable interrupts on Fan Tacho input pins */
+#if TACHO_READ_MULTIPLEX
+	// FIXME....
+	gpio_init(FAN_TACHO_READ_S0_PIN);
+	gpio_init(FAN_TACHO_READ_S1_PIN);
+	gpio_init(FAN_TACHO_READ_S2_PIN);
+	gpio_set_dir(FAN_TACHO_READ_S0_PIN, GPIO_OUT);
+	gpio_set_dir(FAN_TACHO_READ_S1_PIN, GPIO_OUT);
+	gpio_set_dir(FAN_TACHO_READ_S1_PIN, GPIO_OUT);
+	gpio_put(FAN_TACHO_READ_S0_PIN, 0);
+	gpio_put(FAN_TACHO_READ_S1_PIN, 0);
+	gpio_put(FAN_TACHO_READ_S2_PIN, 0);
+
+	gpio_init(FAN_TACHO_READ_PIN);
+	gpio_set_dir(FAN_TACHO_READ_PIN, GPIO_IN);
+#else
 	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_RISE,
 					true, &fan_tacho_read_callback);
 	for (i = 1; i < FAN_COUNT; i++) {
 		gpio_set_irq_enabled(fan_gpio_tacho_map[i], GPIO_IRQ_EDGE_RISE, true);
 	}
+#endif
 	fan_tacho_last_read = get_absolute_time();
 }
 

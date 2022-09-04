@@ -42,7 +42,7 @@ static uint8_t oled_found = 0;
 void oled_display_init()
 {
 	int res;
-	int retries = 10;
+	int retries = 0;
 	int dtype = OLED_128x64;
 
 	/* Check if display type is configured using SYS:DISP command... */
@@ -53,10 +53,12 @@ void oled_display_init()
 		}
 	}
 
+	printf("Initializing OLED Display...\n");
 	do {
 		sleep_ms(50);
-		res = oledInit(&oled, dtype, -1, 0, 0, 1, SDA_PIN, SCL_PIN, -1, 1000000L);
-	} while (res == OLED_NOT_FOUND && retries-- > 0);
+		res = oledInit(&oled, dtype, -1, 0, 0, I2C_HW, SDA_PIN, SCL_PIN, -1,
+			1000000L);
+	} while (res == OLED_NOT_FOUND && retries++ < 10);
 
 	printf("OLED display: ");
 	if (res == OLED_NOT_FOUND) {
