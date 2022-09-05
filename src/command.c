@@ -82,7 +82,9 @@ int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd)
 	printf("FanPico v%s ", FANPICO_VERSION);
 	printf("(Build date: %s)\n\n", __DATE__);
 
-	printf("%s\n", credits);
+	if (query)
+		printf("%s\n", credits);
+
 	return 0;
 }
 

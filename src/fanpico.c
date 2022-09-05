@@ -42,6 +42,9 @@ void setup()
 	pico_unique_board_id_t board_id;
 	int i;
 
+#if TTL_SERIAL
+	stdio_uart_init_full(uart0, 115200, TX_PIN, RX_PIN);
+#endif
 	stdio_usb_init();
 
 	// Wait a while for USB Serial to connect...
@@ -51,6 +54,7 @@ void setup()
 			break;
 		sleep_ms(250);
 	}
+
 
 	printf("\n\n\n");
 	if (watchdog_enable_caused_reboot()) {
@@ -313,7 +317,7 @@ int main()
 
 		/* Process any (user) input */
 		while ((c = getchar_timeout_us(0)) != PICO_ERROR_TIMEOUT) {
-			if (c == 0xff)
+			if (c == 0xff || c == 0x00)
 				continue;
 			if (c == 0x7f || c == 0x08) {
 				if (i_ptr > 0) i_ptr--;

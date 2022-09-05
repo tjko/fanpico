@@ -80,4 +80,4 @@
 #define CS_PIN    1
 
 #define OLED_DISPLAY 1
-
+#define TTL_SERIAL   1

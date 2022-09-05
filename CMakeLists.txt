@@ -78,6 +78,7 @@ configure_file(src/config.h.in config.h)
 
 target_link_libraries(fanpico PRIVATE
   pico_stdlib
+  pico_stdio_uart
   hardware_pwm
   hardware_pio
   hardware_adc
