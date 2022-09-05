@@ -19,7 +19,7 @@
 #define FAN_TACHO_READ_S0_PIN -1
 #define FAN_TACHO_READ_S1_PIN -1
 #define FAN_TACHO_READ_S2_PIN -1
-/* pins for direct read */
+/* pins for direct read / multiplexer ports (if multiplexer in use) */
 #define FAN1_TACHO_READ_PIN 2
 #define FAN2_TACHO_READ_PIN 3
 #define FAN3_TACHO_READ_PIN 20

@@ -43,7 +43,8 @@ void setup()
 	int i;
 
 #if TTL_SERIAL
-	stdio_uart_init_full(uart0, 115200, TX_PIN, RX_PIN);
+	stdio_uart_init_full(TTL_SERIAL_UART,
+			TTL_SERIAL_SPEED, TX_PIN, RX_PIN);
 #endif
 	stdio_usb_init();
 

@@ -19,15 +19,15 @@
 #define FAN_TACHO_READ_S0_PIN 22
 #define FAN_TACHO_READ_S1_PIN 21
 #define FAN_TACHO_READ_S2_PIN 20
-/* pins for direct read */
-#define FAN1_TACHO_READ_PIN -1
-#define FAN2_TACHO_READ_PIN -1
-#define FAN3_TACHO_READ_PIN -1
-#define FAN4_TACHO_READ_PIN -1
-#define FAN5_TACHO_READ_PIN -1
-#define FAN6_TACHO_READ_PIN -1
-#define FAN7_TACHO_READ_PIN -1
-#define FAN8_TACHO_READ_PIN -1
+/* pins for direct read / multiplexer ports (if multiplexer in use) */
+#define FAN1_TACHO_READ_PIN 7
+#define FAN2_TACHO_READ_PIN 5
+#define FAN3_TACHO_READ_PIN 3
+#define FAN4_TACHO_READ_PIN 0
+#define FAN5_TACHO_READ_PIN 1
+#define FAN6_TACHO_READ_PIN 2
+#define FAN7_TACHO_READ_PIN 6
+#define FAN8_TACHO_READ_PIN 4
 
 #define FAN1_PWM_GEN_PIN 4  /* PWM2A */
 #define FAN2_PWM_GEN_PIN 5  /* PWM2B */
@@ -80,4 +80,7 @@
 #define CS_PIN    1
 
 #define OLED_DISPLAY 1
+
 #define TTL_SERIAL   1
+#define TTL_SERIAL_UART uart0
+#define TTL_SERIAL_SPEED 115200

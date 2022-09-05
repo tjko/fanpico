@@ -129,7 +129,7 @@ void update_tacho_input_freq()
  */
 void setup_tacho_inputs()
 {
-	int i;
+	int i, pin;
 
 	printf("Setting up Tacho Input pins...\n");
 
@@ -140,16 +140,16 @@ void setup_tacho_inputs()
 		fan_tacho_counters[i] = 0;
 		fan_tacho_counters_last[i] = 0;
 		fan_tacho_freq[i] = 0.0;
-#if TACHO_READ_MULTIPLEX == 0
-		int pin = fan_gpio_tacho_map[i];
+		pin = fan_gpio_tacho_map[i];
 		gpio_fan_tacho_map[pin] = 1 + i;
+#if TACHO_READ_MULTIPLEX == 0
 		gpio_init(pin);
 		gpio_set_dir(pin, GPIO_IN);
 #endif
 	}
 
 	/* Enable interrupts on Fan Tacho input pins */
-#if TACHO_READ_MULTIPLEX
+#if TACHO_READ_MULTIPLEX > 0
 	// FIXME....
 	gpio_init(FAN_TACHO_READ_S0_PIN);
 	gpio_init(FAN_TACHO_READ_S1_PIN);

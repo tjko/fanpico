@@ -44,14 +44,12 @@ void set_binary_info()
 	bi_decl(bi_1pin_with_name(SCL_PIN, "SCL (I2C) / MOSI (SPI)"));
 #endif
 
-#if FAN_TACHO_READ_PIN >= 0
+#if TACHO_READ_MULTIPLEX > 0
 	bi_decl(bi_1pin_with_name(FAN_TACHO_READ_PIN, "Multiplexer A [tacho signal] (input)"));
 	bi_decl(bi_1pin_with_name(FAN_TACHO_READ_S0_PIN, "Multiplexer S0 (output)"));
 	bi_decl(bi_1pin_with_name(FAN_TACHO_READ_S1_PIN, "Multiplexer S1 (output)"));
 	bi_decl(bi_1pin_with_name(FAN_TACHO_READ_S2_PIN, "Multiplexer S2 (output)"));
-#endif
-
-
+#else
 #if FAN1_TACHO_READ_PIN >= 0
 	bi_decl(bi_1pin_with_name(FAN1_TACHO_READ_PIN, "Fan1 tacho signal (input)"));
 #endif
@@ -76,6 +74,7 @@ void set_binary_info()
 #if FAN8_TACHO_READ_PIN >= 0
 	bi_decl(bi_1pin_with_name(FAN8_TACHO_READ_PIN, "Fan8 tacho signal (input)"));
 #endif
+#endif /* TACHO_READ_MULTIPLER > 0 */
 
 	bi_decl(bi_1pin_with_name(FAN1_PWM_GEN_PIN, "Fan1 PWM signal (output)"));
 	bi_decl(bi_1pin_with_name(FAN2_PWM_GEN_PIN, "Fan2 PWM signal (output)"));
