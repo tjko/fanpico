@@ -139,12 +139,12 @@ File fanpico.uf2:
 
 Program Information
  name:          fanpico
- version:       1.1 (Jun 20 2022)
+ version:       1.2.0 (Sep  4 2022)
  web site:      https://github.com/tjko/fanpico/
- description:   FanPico - Smart PWM Fan Controller
+ description:   FanPico-0804 - Smart PWM Fan Controller
  features:      USB stdin / stdout
  binary start:  0x10000000
- binary end:    0x10023828
+ binary end:    0x10022914
 
 Fixed Pin Information
  0:   Fan8 tacho signal (input)
@@ -170,15 +170,15 @@ Fixed Pin Information
  20:  Fan3 tacho signal (input)
  21:  Fan4 tacho signal (input)
  22:  Fan5 tacho signal (input)
- 25:  On-board LED
+ 25:  On-board LED (output)
  26:  Fan6 tacho signal (input)
  27:  Temperature Sensor1 (input)
  28:  Temperature Sensor2 (input)
 
 Build Information
- sdk version:       1.3.0
+ sdk version:       1.4.0
  pico_board:        pico
- build date:        Jun 20 2022
+ build date:        Sep  4 2022
  build attributes:  Release
 ```
 
