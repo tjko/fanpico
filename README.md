@@ -49,7 +49,7 @@ Currently following models are available:
 |Model|Fans (Outputs)|MB Fan (Inputs)|External Temperature Sensors|Display|Notes|
 |-----|--------------|---------------|-------------------|--------|-----|
 |[FANPICO-0804](boards/fanpico-0804/)|8|4|2|N|First publicly available board (reference design).|
-|FANPICO-0804D|8|4|2|Y|Support for OLED (128x64) displays. PCB Under development.|
+|[FANPICO-0804D](boards/fanpico-0804D/)|8|4|2|Y|Support for OLED (128x64) displays. PCB Under development.|
 
 (all boards have one additional 'on-board' temperature sensor on the RP2040 MCU itself)
 
