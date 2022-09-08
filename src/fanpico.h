@@ -40,7 +40,7 @@
 
 #define MAX_NAME_LEN   64
 #define MAX_MAP_POINTS 32
-
+#define MAX_GPIO_PINS  32
 
 
 enum pwm_source_types {

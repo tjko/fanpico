@@ -26,7 +26,7 @@
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "square_wave_gen.h"
-
+#include "pulse_len.h"
 #include "fanpico.h"
 
 /*
@@ -51,7 +51,7 @@ uint8_t fan_gpio_tacho_map[FAN_MAX_COUNT] = {
 
 /* Reverse map of input pin numbers to fan numbers.
  */
-uint8_t gpio_fan_tacho_map[32];
+uint8_t gpio_fan_tacho_map[MAX_GPIO_PINS];
 
 
 /* Map of output pins that output/generate tachometer signal using PIO.
@@ -76,6 +76,14 @@ float fan_tacho_freq[FAN_MAX_COUNT];
 PIO pio = pio0;
 
 
+/* Function to select active multiplexer port. */
+void multiplexer_select(uint8_t port)
+{
+	gpio_put(FAN_TACHO_READ_S0_PIN, port & 0x01);
+	gpio_put(FAN_TACHO_READ_S1_PIN, port & 0x02);
+	gpio_put(FAN_TACHO_READ_S2_PIN, port & 0x04);
+}
+
 
 /* Interrupt handler to keep count on pulses received on fan tachometer pins...
  */
@@ -91,6 +99,7 @@ void __time_critical_func(fan_tacho_read_callback)(uint gpio, uint32_t events)
 /* Function to update tachometer frequencies in fan_tacho_freq[]
  */
 void update_tacho_input_freq()
+#if TACHO_READ_MULTIPLEX == 0
 {
 	uint counters[FAN_COUNT];
 	int64_t delta;
@@ -123,6 +132,31 @@ void update_tacho_input_freq()
 	}
 	fan_tacho_last_read = read_time;
 }
+#else
+{
+	static int i = 0;
+	uint64_t t = 0;
+
+	printf("%d: measure pulse length\n", i);
+
+	multiplexer_select(fan_gpio_tacho_map[i]);
+	sleep_us(100);
+
+//	t = pulse_interval();
+//	printf("pulse len1=%llu\n", t);
+//	printf("measure pulse length2\n");
+
+	t = pulse_measure(FAN_TACHO_READ_PIN, 1, 0, 3000);
+	printf("pulse len2=%llu\n", t);
+
+	fan_tacho_freq[i] = 1 / (t / 1000000.0);
+
+	if (i < FAN_COUNT)
+		i++;
+	else
+		i=0;
+}
+#endif
 
 
 /* Function to initialize inputs for reading tachometer signals.
@@ -148,22 +182,20 @@ void setup_tacho_inputs()
 #endif
 	}
 
-	/* Enable interrupts on Fan Tacho input pins */
 #if TACHO_READ_MULTIPLEX > 0
-	// FIXME....
+	// Setup multiplexer pins */
+	gpio_init(FAN_TACHO_READ_PIN);
+	gpio_set_dir(FAN_TACHO_READ_PIN, GPIO_IN);
 	gpio_init(FAN_TACHO_READ_S0_PIN);
 	gpio_init(FAN_TACHO_READ_S1_PIN);
 	gpio_init(FAN_TACHO_READ_S2_PIN);
 	gpio_set_dir(FAN_TACHO_READ_S0_PIN, GPIO_OUT);
 	gpio_set_dir(FAN_TACHO_READ_S1_PIN, GPIO_OUT);
 	gpio_set_dir(FAN_TACHO_READ_S1_PIN, GPIO_OUT);
-	gpio_put(FAN_TACHO_READ_S0_PIN, 0);
-	gpio_put(FAN_TACHO_READ_S1_PIN, 0);
-	gpio_put(FAN_TACHO_READ_S2_PIN, 0);
-
-	gpio_init(FAN_TACHO_READ_PIN);
-	gpio_set_dir(FAN_TACHO_READ_PIN, GPIO_IN);
+	multiplexer_select(0);
+//	pulse_setup_interrupt(FAN_TACHO_READ_PIN, GPIO_IRQ_EDGE_RISE);
 #else
+	/* Enable interrupts on Fan Tacho input pins */
 	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_RISE,
 					true, &fan_tacho_read_callback);
 	for (i = 1; i < FAN_COUNT; i++) {

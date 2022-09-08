@@ -338,6 +338,9 @@ int main()
 			if (cfg->local_echo) printf("%c", c);
 		}
 
+#if TACHO_READ_MULTIPLEX > 0
+		update_tacho_input_freq();
+#endif
 	}
 }
 
