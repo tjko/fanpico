@@ -55,6 +55,7 @@ add_executable(fanpico
   src/tacho.c
   src/sensors.c
   src/square_wave_gen.c
+  src/pulse_len.c
   src/util.c
   src/crc32.c
   src/default_config.s
