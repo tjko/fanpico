@@ -152,7 +152,7 @@ int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id);
 int str2tacho_source(const char *s);
 const char* tacho_source2str(enum tacho_source_types source);
 int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id);
-void read_config();
+void read_config(bool multicore);
 void save_config();
 void delete_config();
 void print_config();
@@ -177,10 +177,10 @@ double get_temperature(uint8_t input);
 double sensor_get_duty(struct sensor_input *sensor, double temp);
 
 /* tacho.c */
-extern float fan_tacho_freq[FAN_MAX_COUNT];
 void setup_tacho_inputs();
 void setup_tacho_outputs();
-void update_tacho_input_freq();
+void read_tacho_inputs();
+void update_tacho_input_freq(struct fanpico_state *state);
 void set_tacho_output_freq(uint fan, double frequency);
 double tacho_map(struct tacho_map *map, double val);
 double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i);
@@ -192,6 +192,8 @@ void debug(int debug_level, const char *fmt, ...);
 void print_mallinfo();
 char *trim_str(char *s);
 const char *rp2040_model_str();
+int check_for_change(double oldval, double newval, double treshold);
+int time_passed(absolute_time_t *t, uint32_t us);
 
 
 /* crc32.c */

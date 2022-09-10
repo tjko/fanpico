@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include "pico/stdlib.h"
+#include "pico/multicore.h"
 #include "cJSON.h"
 #include "pico_hal.h"
 
@@ -484,7 +485,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 }
 
 
-void read_config()
+void read_config(bool multicore)
 {
 	const char *default_config = fanpico_default_config;
 	uint32_t default_config_size = strlen(default_config);
@@ -494,6 +495,9 @@ void read_config()
 
 
 	printf("Reading configuration...\n");
+
+	if (multicore)
+		multicore_lockout_start_blocking();
 
 	/* Mount flash filesystem... */
 	if ((res = pico_mount(false)) < 0) {
@@ -542,6 +546,8 @@ void read_config()
 		pico_unmount();
 	}
 
+	if (multicore)
+		multicore_lockout_end_blocking();
 
 	if (!config) {
 		printf("Using default configuration...\n");
@@ -585,7 +591,7 @@ void save_config()
 	} else {
 		uint32_t config_size = strlen(str) + 1;
 
-		//printf("---saved config---\n%s\n---\n", str);
+		multicore_lockout_start_blocking();
 
 		/* Mount flash filesystem... */
 		if ((res = pico_mount(false)) < 0) {
@@ -606,6 +612,7 @@ void save_config()
 			pico_unmount();
 		}
 
+		multicore_lockout_end_blocking();
 		free(str);
 	}
 
@@ -640,21 +647,24 @@ void delete_config()
 	int res;
 	struct lfs_info stat;
 
+	multicore_lockout_start_blocking();
 
 	/* Mount flash filesystem... */
 	if ((res = pico_mount(false)) < 0) {
 		printf("Mount failed: %d (%s)\n", res, pico_errmsg(res));
-		return;
-	}
-
-	if ((res = pico_stat("fanpico.cfg", &stat)) < 0) {
-		printf("Configuration file not found: %d (%s)\n", res, pico_errmsg(res));
 	} else {
-		printf("Removing configuration file (%lu bytes)\n", stat.size);
-		if ((res = pico_remove("fanpico.cfg")) < 0) {
-			printf("Failed to remove file: %d (%s)\n", res, pico_errmsg(res));
+		/* Check configuration file exists... */
+		if ((res = pico_stat("fanpico.cfg", &stat)) < 0) {
+			printf("Configuration file not found: %d (%s)\n", res, pico_errmsg(res));
+		} else {
+			/* Remove configuration file...*/
+			printf("Removing configuration file (%lu bytes)\n", stat.size);
+			if ((res = pico_remove("fanpico.cfg")) < 0) {
+				printf("Failed to remove file: %d (%s)\n", res, pico_errmsg(res));
+			}
 		}
+		pico_unmount();
 	}
 
-	pico_unmount();
+	multicore_lockout_end_blocking();
 }

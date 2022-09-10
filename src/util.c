@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <math.h>
 #include <wctype.h>
 #include <assert.h>
 #include <malloc.h>
@@ -104,6 +105,33 @@ const char *rp2040_model_str()
 		(known_chip ? "" : " (?)"));
 
 	return buf;
+}
+
+
+int check_for_change(double oldval, double newval, double treshold)
+{
+	double delta = fabs(oldval - newval);
+
+	if (delta >= treshold || newval < oldval)
+		return 1;
+
+	return 0;
+}
+
+
+int time_passed(absolute_time_t *t, uint32_t us)
+{
+	absolute_time_t t_now = get_absolute_time();
+
+	if (t == NULL)
+		return -1;
+
+	if (*t == 0 || delayed_by_ms(*t, us) < t_now) {
+		*t = t_now;
+		return 1;
+	}
+
+	return 0;
 }
 
 

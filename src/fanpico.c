@@ -24,6 +24,8 @@
 #include <math.h>
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
+#include "pico/mutex.h"
+#include "pico/multicore.h"
 #include "hardware/adc.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
@@ -75,7 +77,7 @@ void setup()
 		printf("%02x", board_id.id[i]);
 	printf("\n\n");
 
-	read_config();
+	read_config(false);
 	display_init();
 
 	/* Enable ADC */
@@ -131,17 +133,6 @@ void clear_state(struct fanpico_state *s)
 }
 
 
-int check_for_change(double oldval, double newval, double treshold)
-{
-	double delta = fabs(oldval - newval);
-
-	if (delta >= treshold || newval < oldval)
-		return 1;
-
-	return 0;
-}
-
-
 void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 {
 	int i;
@@ -175,21 +166,23 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 }
 
 
-int time_passed(absolute_time_t *t, uint32_t us)
+void core1_main()
 {
-	absolute_time_t t_now = get_absolute_time();
+	absolute_time_t t_led = 0;
 
-	if (t == NULL)
-		return -1;
+	/* Allow core0 to pause this core... */
+	multicore_lockout_victim_init();
+	if (get_debug_level())
+		printf("core1: started...\n");
 
-	if (*t == 0 || delayed_by_ms(*t, us) < t_now) {
-		*t = t_now;
-		return 1;
+	while (1) {
+		read_tacho_inputs();
+
+		if (time_passed(&t_led, 2000)) {
+			printf("core2: tick\n");
+		}
 	}
-
-	return 0;
 }
-
 
 int main()
 {
@@ -219,6 +212,8 @@ int main()
 	setup();
 	if (get_debug_level() >= 2)
 		print_mallinfo();
+
+	multicore_launch_core1(core1_main);
 
 	t_last = get_absolute_time();
 
@@ -293,22 +288,8 @@ int main()
 
 		/* Calculate frequencies from input tachometer signals peridocially */
 		if (time_passed(&t_poll_tacho, 2000)) {
-			int i;
-			float new_freq;
-
-			update_tacho_input_freq();
-			for (i = 0; i < FAN_COUNT; i++) {
-				new_freq = roundf(fan_tacho_freq[i]*10)/10.0;
-				if (check_for_change(st->fan_freq[i], new_freq, 1.0)) {
-					debug(1, "fan%d: tacho freq change %.1f --> %.1f (%f)\n",
-						i+1,
-						st->fan_freq[i],
-						new_freq,
-						fan_tacho_freq[i]);
-					st->fan_freq[i] = new_freq;
-					change++;
-				}
-			}
+			debug(2, "Updating tacho input signals.\n");
+			update_tacho_input_freq(st);
 		}
 
 		if (change || time_passed(&t_set_outputs, 5000)) {
@@ -338,9 +319,6 @@ int main()
 			if (cfg->local_echo) printf("%c", c);
 		}
 
-#if TACHO_READ_MULTIPLEX > 0
-		update_tacho_input_freq();
-#endif
 	}
 }
 

@@ -20,9 +20,11 @@
 */
 
 #include <stdio.h>
+#include <math.h>
 #include <string.h>
 #include <assert.h>
 #include "pico/stdlib.h"
+#include "pico/mutex.h"
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "square_wave_gen.h"
@@ -75,6 +77,8 @@ float fan_tacho_freq[FAN_MAX_COUNT];
 
 PIO pio = pio0;
 
+auto_init_mutex(tacho_mutex);
+
 
 /* Function to select active multiplexer port. */
 void multiplexer_select(uint8_t port)
@@ -98,7 +102,7 @@ void __time_critical_func(fan_tacho_read_callback)(uint gpio, uint32_t events)
 
 /* Function to update tachometer frequencies in fan_tacho_freq[]
  */
-void update_tacho_input_freq()
+void read_tacho_inputs()
 #if TACHO_READ_MULTIPLEX == 0
 {
 	uint counters[FAN_COUNT];
@@ -120,11 +124,13 @@ void update_tacho_input_freq()
 		return;
 
 	s = delta / 1000000.0;
+	mutex_enter_blocking(&tacho_mutex);
 	for (i = 0; i < FAN_COUNT; i++) {
 		pulses = counters[i] - fan_tacho_counters_last[i];
 		f = pulses / s;
 		fan_tacho_freq[i] = f;
 	}
+	mutex(exit(&tacho_mutex);
 
 	/* Save counter values for next time... */
 	for (i = 0; i < FAN_COUNT; i++) {
@@ -136,20 +142,20 @@ void update_tacho_input_freq()
 {
 	static int i = 0;
 	uint64_t t = 0;
+	double f;
 
-	printf("%d: measure pulse length\n", i);
+//	printf("%d: measure pulse length\n", i);
 
 	multiplexer_select(fan_gpio_tacho_map[i]);
 	sleep_us(100);
 
-//	t = pulse_interval();
-//	printf("pulse len1=%llu\n", t);
-//	printf("measure pulse length2\n");
-
 	t = pulse_measure(FAN_TACHO_READ_PIN, 1, 0, 3000);
-	printf("pulse len2=%llu\n", t);
+	f = 1 / (t / 1000000.0);
+//	printf("pulse len2=%llu\n", t);
 
-	fan_tacho_freq[i] = 1 / (t / 1000000.0);
+	mutex_enter_blocking(&tacho_mutex);
+	fan_tacho_freq[i] = f;
+	mutex_exit(&tacho_mutex);
 
 	if (i < FAN_COUNT)
 		i++;
@@ -157,6 +163,33 @@ void update_tacho_input_freq()
 		i=0;
 }
 #endif
+
+
+/* Function to calculate tachometer frequencies.
+ */
+void update_tacho_input_freq(struct fanpico_state *st)
+{
+	int i;
+	float new_freq;
+	float freq[FAN_COUNT];
+
+	mutex_enter_blocking(&tacho_mutex);
+	for (i = 0; i < FAN_COUNT; i++) {
+		freq[i] = fan_tacho_freq[i];
+	}
+	mutex_exit(&tacho_mutex);
+
+	for (i = 0; i < FAN_COUNT; i++) {
+		new_freq = roundf(freq[i]*10)/10.0;
+		if (check_for_change(st->fan_freq[i], new_freq, 1.0)) {
+			debug(1, "fan%d: tacho freq change %.1f --> %.1f\n",
+				i+1,
+				st->fan_freq[i],
+				new_freq);
+			st->fan_freq[i] = new_freq;
+		}
+	}
+}
 
 
 /* Function to initialize inputs for reading tachometer signals.
