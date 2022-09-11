@@ -196,6 +196,7 @@ int check_for_change(double oldval, double newval, double treshold);
 int time_passed(absolute_time_t *t, uint32_t us);
 char* base64encode(const char *input);
 char* base64decode(const char *input);
+char *strncopy(char *dst, const char *src, size_t len);
 
 
 /* crc32.c */

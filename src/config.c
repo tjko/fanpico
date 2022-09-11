@@ -280,7 +280,7 @@ void clear_config(struct fanpico_config *cfg)
 
 	cfg->local_echo = false;
 	cfg->led_mode = 0;
-	strncpy(cfg->display_type, "default", sizeof(cfg->display_type));
+	strncopy(cfg->display_type, "default", sizeof(cfg->display_type));
 }
 
 
@@ -404,7 +404,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		cfg->led_mode = cJSON_GetNumberValue(ref);
 	if ((ref = cJSON_GetObjectItem(config, "display_type"))) {
 		if ((val = cJSON_GetStringValue(ref)))
-			strncpy(cfg->display_type, val, sizeof(cfg->display_type));
+			strncopy(cfg->display_type, val, sizeof(cfg->display_type));
 	}
 
 	/* Fan output configurations */
@@ -415,7 +415,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			struct fan_output *f = &cfg->fans[id];
 
 			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
-			if (name) strncpy(f->name, name ,sizeof(f->name));
+			if (name) strncopy(f->name, name ,sizeof(f->name));
 
 			f->min_pwm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "min_pwm"));
 			f->max_pwm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "max_pwm"));
@@ -438,7 +438,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			struct mb_input *m = &cfg->mbfans[id];
 
 			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
-			if (name) strncpy(m->name, name ,sizeof(m->name));
+			if (name) strncopy(m->name, name ,sizeof(m->name));
 
 			m->min_rpm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "min_rpm"));
 			m->max_rpm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "max_rpm"));
@@ -461,7 +461,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			struct sensor_input *s = &cfg->sensors[id];
 
 			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
-			if (name) strncpy(s->name, name ,sizeof(s->name));
+			if (name) strncopy(s->name, name ,sizeof(s->name));
 
 			s->type = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "sensor_type"));
 			if (s->type == TEMP_EXTERNAL) {

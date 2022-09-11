@@ -187,3 +187,15 @@ char* base64decode(const char *input)
 
 	return buf;
 }
+
+
+char *strncopy(char *dst, const char *src, size_t len)
+{
+	if (!dst || !src || len < 1)
+		return NULL;
+
+	strncpy(dst, src, len - 1);
+	dst[len - 1] = 0;
+
+	return dst;
+}

@@ -167,7 +167,7 @@ int cmd_display_type(const char *cmd, const char *args, int query, char *prev_cm
 	if (query) {
 		printf("%s\n", cfg->display_type);
 	} else {
-		strncpy(cfg->display_type, args, sizeof(cfg->display_type));
+		strncopy(cfg->display_type, args, sizeof(cfg->display_type));
 	}
 	return 0;
 }
@@ -263,7 +263,7 @@ int cmd_fan_name(const char *cmd, const char *args, int query, char *prev_cmd)
 		} else {
 			debug(1, "fan%d: change name '%s' --> '%s'\n", fan + 1,
 				conf->fans[fan].name, args);
-			strncpy(conf->fans[fan].name, args, sizeof(conf->fans[fan].name));
+			strncopy(conf->fans[fan].name, args, sizeof(conf->fans[fan].name));
 		}
 	}
 	return 0;
@@ -540,7 +540,7 @@ int cmd_mbfan_name(const char *cmd, const char *args, int query, char *prev_cmd)
 		} else {
 			debug(1, "mbfan%d: change name '%s' --> '%s'\n", mbfan + 1,
 				conf->mbfans[mbfan].name, args);
-			strncpy(conf->mbfans[mbfan].name, args, sizeof(conf->mbfans[mbfan].name));
+			strncopy(conf->mbfans[mbfan].name, args, sizeof(conf->mbfans[mbfan].name));
 		}
 	}
 	return 0;
@@ -817,7 +817,7 @@ int cmd_sensor_name(const char *cmd, const char *args, int query, char *prev_cmd
 		} else {
 			debug(1, "sensor%d: change name '%s' --> '%s'\n", sensor + 1,
 				conf->sensors[sensor].name, args);
-			strncpy(conf->sensors[sensor].name, args,
+			strncopy(conf->sensors[sensor].name, args,
 				sizeof(conf->sensors[sensor].name));
 		}
 	}
