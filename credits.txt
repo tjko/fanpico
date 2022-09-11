@@ -24,3 +24,8 @@ ss_oled (Small, Simple OLED library)
 Copyright (c) 2017-2019 BitBank Software, Inc.
 Written by Larry Bank (bitbank@pobox.com)
 https://github.com/tjko/ss_oled-lib
+
+libb64
+Created by Chris Venter
+https://github.com/libb64/libb64
+
