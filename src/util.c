@@ -27,6 +27,8 @@
 #include <assert.h>
 #include <malloc.h>
 #include "pico/stdlib.h"
+#include "b64/cencode.h"
+#include "b64/cdecode.h"
 
 #include "fanpico.h"
 
@@ -135,3 +137,53 @@ int time_passed(absolute_time_t *t, uint32_t us)
 }
 
 
+char* base64encode(const char *input)
+{
+	base64_encodestate ctx;
+	size_t buf_len, input_len, count;
+	char *buf, *c;
+
+	if (!input)
+		return NULL;
+
+	base64_init_encodestate(&ctx);
+
+	input_len = strlen(input);
+	buf_len = base64_encode_length(input_len, &ctx);
+	if (!(buf = malloc(buf_len + 1)))
+		return NULL;
+
+	c = buf;
+	count = base64_encode_block(input, input_len, c, &ctx);
+	c += count;
+	count = base64_encode_blockend(c, &ctx);
+	c += count;
+	*c =  0;
+
+	return buf;
+}
+
+
+char* base64decode(const char *input)
+{
+	base64_decodestate ctx;
+	size_t buf_len, input_len, count;
+	char *buf, *c;
+
+	if (!input)
+		return NULL;
+
+	base64_init_decodestate(&ctx);
+
+	input_len = strlen(input);
+	buf_len = base64_decode_maxlength(input_len);
+	if (!(buf = malloc(buf_len + 1)))
+		return NULL;
+
+	c = buf;
+	count = base64_decode_block(input, input_len, c, &ctx);
+	c += count;
+	*c = 0;
+
+	return buf;
+}

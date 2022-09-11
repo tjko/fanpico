@@ -194,6 +194,8 @@ char *trim_str(char *s);
 const char *rp2040_model_str();
 int check_for_change(double oldval, double newval, double treshold);
 int time_passed(absolute_time_t *t, uint32_t us);
+char* base64encode(const char *input);
+char* base64decode(const char *input);
 
 
 /* crc32.c */

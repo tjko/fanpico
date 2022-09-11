@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <malloc.h>
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
 #include "pico/mutex.h"

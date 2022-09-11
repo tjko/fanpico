@@ -41,6 +41,13 @@ target_sources(cJSON INTERFACE
   libs/cJSON/cJSON.c
   )
 
+# libb64
+add_library(libb64 INTERFACE)
+target_include_directories(libb64 INTERFACE libs/libb64/include)
+target_sources(libb64 INTERFACE
+  libs/libb64/src/cdecode.c
+  libs/libb64/src/cencode.c
+  )
 
 
 # fanpico firmware
@@ -88,6 +95,7 @@ target_link_libraries(fanpico PRIVATE
   littlefs-lib
   cJSON
   ss_oled-lib
+  libb64
   )
 
 target_compile_options(fanpico PRIVATE -Wall)
