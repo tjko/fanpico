@@ -130,7 +130,7 @@ void read_tacho_inputs()
 		f = pulses / s;
 		fan_tacho_freq[i] = f;
 	}
-	mutex(exit(&tacho_mutex);
+	mutex_exit(&tacho_mutex);
 
 	/* Save counter values for next time... */
 	for (i = 0; i < FAN_COUNT; i++) {
