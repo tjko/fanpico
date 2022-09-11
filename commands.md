@@ -82,6 +82,12 @@ Fanpico supports following commands:
 * [SYStem:SENSORS?](#systemsensors)
 * [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
+* [SYStem:WIFI:COUntry](#systemwificountry)
+* [SYStem:WIFI:COUntry?](#systemwificountry-1)
+* [SYStem:WIFI:SSID](#systemwifissid)
+* [SYStem:WIFI:SSID?](#systemwifissid-1)
+* [SYStem:WIFI:PASSword](#systemwifipassword)
+* [SYStem:WIFI:PASSword?](#systemwifipassword-1)
 
 Additionally unit will respond to following standard SCPI commands to provide compatiblity in case some program
 unconditionally will send these:
@@ -1094,4 +1100,72 @@ Example:
 ```
 SYS:VER?
 ```
+
+
+#### SYStem:WIFI:COUntry
+Set Wi-Fi Country code. By default, the country setting for the wireless adapter is unset.
+This means driver will use default world-wide safe setting, which can mean that some channels
+are unavailable.
+
+Country codes are two letter (ISO 3166) codes. For example, Finland = FI, Great Britain = GB,
+United States of Americ = US, ...
+
+Example:
+```
+SYS:WIFI:COUNTRY US
+```
+
+
+#### SYStem:WIFI:COUntry?
+Return currently configured country code for the Wi-Fi interface.
+
+Codes used are the ISO 3166 standard two letter codes ('XX' means unset/worldwide setting).
+
+Example:
+
+```
+SYS:WIFI:COU?
+US
+```
+
+#### SYStem:WIFI:SSID
+Set Wi-Fi network SSID. FanPico will automatically try joining to this network.
+
+Example
+```
+SYS:WIFI:SSID mynetwork
+```
+
+
+#### SYStem:WIFI:SSID?
+Display currently configured Wi-Fi network SSID.
+
+Example:
+
+```
+SYS:WIFI:SSID?
+mynetwork
+```
+
+
+#### SYStem:WIFI:PASSword
+Set Wi-Fi (PSK) password/passrase.
+
+Example
+```
+SYS:WIFI:PASS mynetworkpassword
+```
+
+
+#### SYStem:WIFI:PASSword?
+Display currently configured Wi-Fi (PSK) password/passphrase.
+
+Example:
+
+```
+SYS:WIFI:PASS?
+mynetworkpassword
+```
+
+
 

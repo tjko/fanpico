@@ -42,6 +42,9 @@
 #define MAX_MAP_POINTS 32
 #define MAX_GPIO_PINS  32
 
+#define WIFI_SSID_MAX_LEN    32
+#define WIFI_PASSWD_MAX_LEN  64
+
 
 enum pwm_source_types {
 	PWM_FIXED   = 0,     /* fixed speed set by s_id */
@@ -121,6 +124,9 @@ struct fanpico_config {
 	bool local_echo;
 	uint8_t led_mode;
 	char display_type[64];
+	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
+	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];
+	char wifi_country[4];
 };
 
 struct fanpico_state {

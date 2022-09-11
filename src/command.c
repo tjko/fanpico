@@ -47,6 +47,28 @@ struct fanpico_config *conf = NULL;
 extern const char fanpico_credits_text[];
 
 
+int valid_wifi_country(const char *country)
+{
+	if (!country)
+		return 0;
+
+	if (strlen(country) < 2)
+		return 0;
+
+	if (!(country[0] >= 'A' && country[0] <= 'Z'))
+		return 0;
+	if (!(country[1] >= 'A' && country[1] <= 'Z'))
+		return 0;
+
+	if (strlen(country) == 2)
+		return 1;
+
+	if (country[2] >= '1' && country[2] <= '9')
+		return 1;
+
+	return 0;
+}
+
 int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int i;
@@ -1009,6 +1031,52 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd
 	return 0;
 }
 
+int cmd_wifi_ssid(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", conf->wifi_ssid);
+	} else {
+		debug(1, "Wi-Fi SSID change '%s' --> '%s'\n",
+			conf->wifi_ssid, args);
+		strncopy(conf->wifi_ssid, args, sizeof(conf->wifi_ssid));
+	}
+	return 0;
+}
+
+int cmd_wifi_country(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", conf->wifi_country);
+	} else {
+		if (valid_wifi_country(args)) {
+			debug(1, "Wi-Fi Country change '%s' --> '%s'\n",
+				conf->wifi_country, args);
+			strncopy(conf->wifi_country, args, sizeof(conf->wifi_country));
+		} else {
+			debug(1, "Invalid Wi-Fi country: %s\n", args);
+		}
+	}
+	return 0;
+}
+
+int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", conf->wifi_passwd);
+	} else {
+		debug(1, "Wi-Fi Password change '%s' --> '%s'\n",
+			conf->wifi_passwd, args);
+		strncopy(conf->wifi_passwd, args, sizeof(conf->wifi_passwd));
+	}
+	return 0;
+}
+
+struct cmd_t wifi_commands[] = {
+	{ "SSID",      4, NULL,              cmd_wifi_ssid },
+	{ "COUntry",   3, NULL,              cmd_wifi_country },
+	{ "PASSword",  4, NULL,              cmd_wifi_password },
+	{ 0, 0, 0, 0 }
+};
 
 struct cmd_t system_commands[] = {
 	{ "DEBug",     5, NULL,              cmd_debug },
@@ -1020,6 +1088,7 @@ struct cmd_t system_commands[] = {
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "VERsion",   3, NULL,              cmd_version },
 	{ "DISPlay",   4, NULL,              cmd_display_type },
+	{ "WIFI",      4, wifi_commands,     NULL },
 	{ 0, 0, 0, 0 }
 };
 

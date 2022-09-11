@@ -281,6 +281,9 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->local_echo = false;
 	cfg->led_mode = 0;
 	strncopy(cfg->display_type, "default", sizeof(cfg->display_type));
+	cfg->wifi_ssid[0] = 0;
+	cfg->wifi_passwd[0] = 0;
+	strncopy(cfg->wifi_country, "XX", sizeof(cfg->wifi_country));
 }
 
 
@@ -299,6 +302,12 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	cJSON_AddItemToObject(config, "led_mode", cJSON_CreateNumber(cfg->led_mode));
 	if (strlen(cfg->display_type) > 0)
 		cJSON_AddItemToObject(config, "display_type", cJSON_CreateString(cfg->display_type));
+	if (strlen(cfg->wifi_country) > 0)
+		cJSON_AddItemToObject(config, "wifi_country", cJSON_CreateString(cfg->wifi_country));
+	if (strlen(cfg->wifi_ssid) > 0)
+		cJSON_AddItemToObject(config, "wifi_ssid", cJSON_CreateString(cfg->wifi_ssid));
+	if (strlen(cfg->wifi_passwd) > 0)
+		cJSON_AddItemToObject(config, "wifi_passwd", cJSON_CreateString(cfg->wifi_passwd));
 
 	/* Fan outputs */
 	fans = cJSON_CreateArray();
@@ -405,6 +414,18 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "display_type"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->display_type, val, sizeof(cfg->display_type));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "wifi_country"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->wifi_country, val, sizeof(cfg->wifi_country));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "wifi_ssid"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->wifi_ssid, val, sizeof(cfg->wifi_ssid));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "wifi_passwd"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->wifi_passwd, val, sizeof(cfg->wifi_passwd));
 	}
 
 	/* Fan output configurations */
