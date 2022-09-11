@@ -7,3 +7,6 @@
 [submodule "libs/ss_oled-lib"]
 	path = libs/ss_oled-lib
 	url = https://github.com/tjko/ss_oled-lib.git
+[submodule "libs/libb64"]
+	path = libs/libb64
+	url = https://github.com/libb64/libb64.git
