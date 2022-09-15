@@ -86,7 +86,7 @@ Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 * [cJSON](https://github.com/DaveGamble/cJSON)
 * [littlefs-lib](https://github.com/lurk101/littlefs-lib)
 * [ss_oled-lib](https://github.com/tjko/ss_oled-lib)
-* [libb64])(https://github.com/libb64/libb64)
+* [libb64](https://github.com/libb64/libb64)
 
 ##### Install Pico SDK
 Pico SDK must be installed working before you can compile fanpico.
@@ -181,6 +181,18 @@ Build Information
  build date:        Sep  4 2022
  build attributes:  Release
 ```
+
+## How Can I help?
+* Build your own FanPico and provide feedback, suggestions (see discussion forums).
+* If you're into electronics new/improved board designs are most welcome.
+* If you're into programming, you can help improve the firmware or create cool (desktop) program that allows easily configuring FanPico boards (with ability to "draw" fan curves, etc..) and to monitor Fan statuses.
+* As this is Open (Source) Hardware Project, if you like to build (and sell) assembled boards or DIY kits, you'd be most welcome...
+* You can always donate (and get your name added to the Sponsors section, if you so wish).
+
+## Sponsors
+I would like to thank following sponsors, who have helped FanPico project:
+
+* PCBWay
 
 
 
