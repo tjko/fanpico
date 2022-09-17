@@ -149,13 +149,14 @@ void read_tacho_inputs()
 	multiplexer_select(fan_gpio_tacho_map[i]);
 	sleep_us(100);
 
-	t = pulse_measure(FAN_TACHO_READ_PIN, 1, 0, 3000);
+	// measure pulses up to 600ms (down to 50 RPM)...
+	t = pulse_measure(FAN_TACHO_READ_PIN, 1, 0, 600);
 	if (t > 0)
 		f = 1 / (t / 1000000.0);
 	else
 		f = 0;
 
-//	printf("pulse len2=%llu\n", t);
+//	printf("fan%d: pulse len=%llu\n", i+1, t);
 
 	mutex_enter_blocking(&tacho_mutex);
 	fan_tacho_freq[i] = f;
@@ -228,7 +229,7 @@ void setup_tacho_inputs()
 	gpio_init(FAN_TACHO_READ_S2_PIN);
 	gpio_set_dir(FAN_TACHO_READ_S0_PIN, GPIO_OUT);
 	gpio_set_dir(FAN_TACHO_READ_S1_PIN, GPIO_OUT);
-	gpio_set_dir(FAN_TACHO_READ_S1_PIN, GPIO_OUT);
+	gpio_set_dir(FAN_TACHO_READ_S2_PIN, GPIO_OUT);
 	multiplexer_select(0);
 //	pulse_setup_interrupt(FAN_TACHO_READ_PIN, GPIO_IRQ_EDGE_RISE);
 #else
