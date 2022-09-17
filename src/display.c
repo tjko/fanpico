@@ -132,16 +132,14 @@ void oled_display_status(const struct fanpico_state *state,
 
 		if (i == 0) {
 			snprintf(r, sizeof(r), "mb inputs   ");
-		} else if (i > 0 && i < 4) {
+		} else if (i > 0 && i <= 4) {
 			idx = i - 1;
 			pwm = state->mbfan_duty[idx];
-			snprintf(r, sizeof(r), " %d: %3.0lf%%  ", idx + 1, pwm);
-		} else if (i == 4) {
-			snprintf(r, sizeof(r), "temps    ");
+			snprintf(r, sizeof(r), "%d: %4.0lf%%  ", idx + 1, pwm);
 		} else if (i > 4 && i < 8) {
 			idx = i - 5;
 			temp = state->temp[idx];
-			snprintf(r, sizeof(r), " %d:%4.1lfC ", idx + 1, temp);
+			snprintf(r, sizeof(r), "%d:%5.1lfC ", idx + 1, temp);
 		} else {
 			snprintf(r,sizeof(r),"        ");
 		}
@@ -158,7 +156,7 @@ void oled_display_status(const struct fanpico_state *state,
 	}
 
 	oledDrawLine(&oled, 69, 0, 69, oled_height - 1, 1);
-	oledDrawLine(&oled, 69, 32, oled_width - 1, 32, 1);
+	oledDrawLine(&oled, 69, 40-1, oled_width - 1, 40-1, 1);
 }
 
 #endif /* OLED_DISPLAY */
