@@ -7,8 +7,11 @@
 #define MBFAN_COUNT   4   /* Number of (Motherboard) Fan inputs on the board */
 #define SENSOR_COUNT  3   /* Number of sensor inputs on the board */
 
+#ifdef LIB_PICO_CYW43_ARCH
+#define LED_PIN -1
+#else
 #define LED_PIN 25
-
+#endif
 
 /* Pins for Fan Signals */
 

@@ -202,7 +202,7 @@ void read_tacho_inputs()
 		f = 0;
 	}
 
-	debug(1, "fan%d: pulse len=%llu\n", i+1, t);
+	debug(2, "fan%d: pulse len=%llu\n", i+1, t);
 
 	mutex_enter_blocking(&tacho_mutex);
 	fan_tacho_freq[i] = f;

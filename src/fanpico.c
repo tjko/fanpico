@@ -27,6 +27,9 @@
 #include "pico/unique_id.h"
 #include "pico/mutex.h"
 #include "pico/multicore.h"
+#ifdef LIB_PICO_CYW43_ARCH
+#include "pico/cyw43_arch.h"
+#endif
 #include "hardware/adc.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
@@ -81,6 +84,29 @@ void setup()
 	read_config(false);
 	display_init();
 
+#ifdef LIB_PICO_CYW43_ARCH
+	if (cyw43_arch_init()) {
+		printf("WiFi not found\n");
+	} else {
+		uint8_t wifimac[6];
+
+		cyw43_arch_enable_sta_mode();
+		int res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, wifimac);
+		if (res == 0) {
+			printf("WiFi MAC: ");
+			for (i = 0; i < 6; i++) {
+				printf("%02x", wifimac[i]);
+				if (i < 5)
+					printf(":");
+			}
+			printf("\n");
+		} else {
+			printf("WiFi adapter not found!\n");
+		}
+		cyw43_arch_gpio_put(0, 0);
+	}
+#endif
+
 	/* Enable ADC */
 	printf("Initialize ADC...\n");
 	adc_init();
@@ -111,7 +137,7 @@ void setup()
 	setup_tacho_outputs();
 	setup_tacho_inputs();
 
-	sleep_ms(1000);
+	sleep_ms(2000);
 	printf("Initialization complete.\n\n");
 }
 
@@ -171,19 +197,20 @@ void core1_main()
 {
 	absolute_time_t t_led = 0;
 
+	debug(1, "core1: started...\n");
+
 	/* Allow core0 to pause this core... */
 	multicore_lockout_victim_init();
-	if (get_debug_level())
-		printf("core1: started...\n");
 
 	while (1) {
 		read_tacho_inputs();
 
 		if (time_passed(&t_led, 2000)) {
-			printf("core2: tick\n");
+			debug(2, "core1: tick\n");
 		}
 	}
 }
+
 
 int main()
 {
@@ -241,7 +268,12 @@ int main()
 				/* Always off */
 				led_state = 0;
 			}
+#if LED_PIN > 0
 			gpio_put(LED_PIN, led_state);
+#endif
+#ifdef LIB_PICO_CYW43_ARCH
+			cyw43_arch_gpio_put(0, led_state);
+#endif
 		}
 
 		/* Update display every 2000ms */
@@ -293,7 +325,7 @@ int main()
 			update_tacho_input_freq(st);
 		}
 
-		if (change || time_passed(&t_set_outputs, 5000)) {
+		if (change || time_passed(&t_set_outputs, 3000)) {
 			debug(2, "Updating output signals.\n");
 			update_outputs(st, cfg);
 		}

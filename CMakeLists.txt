@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(FANPICO_BOARD 0804 CACHE STRING "Fanpico Board Model")
 #set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0803D)
 
-message("Firmware target (FANPIC_BOARD): ${FANPICO_BOARD}")
+message("Firmware target (FANPICO_BOARD): ${FANPICO_BOARD}")
 #set(CMAKE_BUILD_TYPE Debug)
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
@@ -97,6 +97,13 @@ target_link_libraries(fanpico PRIVATE
   ss_oled-lib
   libb64
   )
+
+if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
+  message("Enabling WiFi stuff...")
+  target_link_libraries(fanpico PRIVATE
+    pico_cyw43_arch_lwip_poll
+    )
+endif()
 
 target_compile_options(fanpico PRIVATE -Wall)
 target_compile_definitions(fanpico PRIVATE PARAM_ASSERTIONS_ENABLE_ALL=1)
