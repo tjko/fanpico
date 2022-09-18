@@ -306,8 +306,13 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "wifi_country", cJSON_CreateString(cfg->wifi_country));
 	if (strlen(cfg->wifi_ssid) > 0)
 		cJSON_AddItemToObject(config, "wifi_ssid", cJSON_CreateString(cfg->wifi_ssid));
-	if (strlen(cfg->wifi_passwd) > 0)
-		cJSON_AddItemToObject(config, "wifi_passwd", cJSON_CreateString(cfg->wifi_passwd));
+	if (strlen(cfg->wifi_passwd) > 0) {
+		char *p = base64encode(cfg->wifi_passwd);
+		if (p) {
+			cJSON_AddItemToObject(config, "wifi_passwd", cJSON_CreateString(p));
+			free(p);
+		}
+	}
 
 	/* Fan outputs */
 	fans = cJSON_CreateArray();
@@ -424,8 +429,13 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			strncopy(cfg->wifi_ssid, val, sizeof(cfg->wifi_ssid));
 	}
 	if ((ref = cJSON_GetObjectItem(config, "wifi_passwd"))) {
-		if ((val = cJSON_GetStringValue(ref)))
-			strncopy(cfg->wifi_passwd, val, sizeof(cfg->wifi_passwd));
+		if ((val = cJSON_GetStringValue(ref))) {
+			char *p = base64decode(val);
+			if (p) {
+				strncopy(cfg->wifi_passwd, p, sizeof(cfg->wifi_passwd));
+				free(p);
+			}
+		}
 	}
 
 	/* Fan output configurations */
