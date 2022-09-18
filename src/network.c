@@ -40,7 +40,7 @@ void wifi_init()
 		if (strlen(country) > 1) {
 			uint rev = 0;
 			if (country[2] >= '0' && country[2] <= '9') {
-				rev = 1;
+				rev = country[2] - '0';
 			}
 			country_code = CYW43_COUNTRY(country[0], country[1], rev);
 			debug(2, "WiFi country code: %06x\n", country_code);
