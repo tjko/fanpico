@@ -47,7 +47,7 @@ void oled_display_init()
 
 	/* Check if display type is configured using SYS:DISP command... */
 	if (cfg) {
-		if (cfg->display_type) {
+		if (strlen(cfg->display_type) > 0) {
 			if (strncmp(cfg->display_type, "132x64", 6) == 0)
 				dtype = OLED_132x64;
 		}

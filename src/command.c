@@ -1031,6 +1031,18 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd
 	return 0;
 }
 
+int cmd_wifi(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+#ifdef WIFI_SUPPORT
+		printf("1\n");
+#else
+		printf("0\n");
+#endif
+	}
+	return 0;
+}
+
 int cmd_wifi_ssid(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (query) {
@@ -1088,7 +1100,7 @@ struct cmd_t system_commands[] = {
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "VERsion",   3, NULL,              cmd_version },
 	{ "DISPlay",   4, NULL,              cmd_display_type },
-	{ "WIFI",      4, wifi_commands,     NULL },
+	{ "WIFI",      4, wifi_commands,     cmd_wifi },
 	{ 0, 0, 0, 0 }
 };
 

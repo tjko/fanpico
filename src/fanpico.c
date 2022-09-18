@@ -83,29 +83,7 @@ void setup()
 
 	read_config(false);
 	display_init();
-
-#ifdef LIB_PICO_CYW43_ARCH
-	if (cyw43_arch_init()) {
-		printf("WiFi not found\n");
-	} else {
-		uint8_t wifimac[6];
-
-		cyw43_arch_enable_sta_mode();
-		int res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, wifimac);
-		if (res == 0) {
-			printf("WiFi MAC: ");
-			for (i = 0; i < 6; i++) {
-				printf("%02x", wifimac[i]);
-				if (i < 5)
-					printf(":");
-			}
-			printf("\n");
-		} else {
-			printf("WiFi adapter not found!\n");
-		}
-		cyw43_arch_gpio_put(0, 0);
-	}
-#endif
+	network_init();
 
 	/* Enable ADC */
 	printf("Initialize ADC...\n");
@@ -119,11 +97,16 @@ void setup()
 	/* Setup GPIO pins... */
 	printf("Initialize GPIO...\n");
 
+	/* Initialize status LED... */
 	if (LED_PIN > 0) {
 		gpio_init(LED_PIN);
 		gpio_set_dir(LED_PIN, GPIO_OUT);
 		gpio_put(LED_PIN, 0);
 	}
+#ifdef LIB_PICO_CYW43_ARCH
+	/* On Pico W, LED is connected to the radio GPIO0... */
+	cyw43_arch_gpio_put(0, 0);
+#endif
 
 	/* Configure PWM pins... */
 	setup_pwm_outputs();

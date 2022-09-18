@@ -45,6 +45,10 @@
 #define WIFI_SSID_MAX_LEN    32
 #define WIFI_PASSWD_MAX_LEN  64
 
+#ifdef LIB_PICO_CYW43_ARCH
+#define WIFI_SUPPORT 1
+#endif
+
 
 enum pwm_source_types {
 	PWM_FIXED   = 0,     /* fixed speed set by s_id */
@@ -167,6 +171,9 @@ void print_config();
 void display_init();
 void clear_display();
 void display_status(const struct fanpico_state *state, const struct fanpico_config *config);
+
+/* network.c */
+void network_init();
 
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];

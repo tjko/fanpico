@@ -82,6 +82,7 @@ Fanpico supports following commands:
 * [SYStem:SENSORS?](#systemsensors)
 * [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
+* [SYStem:WIFI?](#systemwifi-1)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
 * [SYStem:WIFI:SSID](#systemwifissid)
@@ -1101,6 +1102,19 @@ Example:
 SYS:VER?
 ```
 
+#### SYStem:WIFI?
+Check if the unit support WiFi networking.
+
+Return values:
+
+0 = No WiFi support (Pico).
+1 = WiFi supported (Pico W).
+
+Example:
+```
+SYS:WIFI?
+1
+```
 
 #### SYStem:WIFI:COUntry
 Set Wi-Fi Country code. By default, the country setting for the wireless adapter is unset.

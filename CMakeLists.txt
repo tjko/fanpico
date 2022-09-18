@@ -58,6 +58,7 @@ add_executable(fanpico
   src/command.c
   src/config.c
   src/display.c
+  src/network.c
   src/pwm.c
   src/tacho.c
   src/sensors.c
