@@ -72,12 +72,34 @@ volatile uint fan_tacho_counters[FAN_MAX_COUNT];
 uint fan_tacho_counters_last[FAN_MAX_COUNT];
 absolute_time_t fan_tacho_last_read;
 
+
+
 /* Array holding calculated fan tachometer (input) frequencies. */
 float fan_tacho_freq[FAN_MAX_COUNT];
 
 PIO pio = pio0;
 
 auto_init_mutex(tacho_mutex);
+
+static uint8_t queue[FAN_MAX_COUNT] = { 0, 0, 0, 0, 0, 0 , 0, 0 };
+static uint8_t queue_pos[2] = { 0, 0 };
+
+
+/* Get next fan in the given queue. */
+int next_in_queue(uint8_t q)
+{
+	assert(q < 2);
+
+	if (queue_pos[q] >= FAN_MAX_COUNT)
+		queue_pos[q] = 0;
+
+	while (queue[queue_pos[q]] != q) {
+		queue_pos[q]++;
+		if (queue_pos[q] >= FAN_MAX_COUNT)
+			return -1;
+	}
+	return queue_pos[q]++;
+}
 
 
 /* Function to select active multiplexer port. */
@@ -140,23 +162,47 @@ void read_tacho_inputs()
 }
 #else
 {
-	static int i = 0;
-	uint64_t t = 0;
+	static int q = 0;
+	int i;
+	uint64_t t;
 	double f;
 
-//	printf("%d: measure pulse length\n", i);
 
+	/* Pick next fan to 'measure' from queues... */
+	i = next_in_queue(q);
+	if (i < 0) {
+                /* End of queue reached, go to next queue. */
+		q++;
+		if (q >= 2)
+			q = 0;
+		return;
+	} else {
+		/* process only one entry from second queue at a time */
+		if (q == 1)
+			q = 0;
+	}
+
+	/* Switch multiplexer to the fan we want to measure from... */
 	multiplexer_select(fan_gpio_tacho_map[i]);
 	sleep_us(100);
 
-	// measure pulses up to 600ms (down to 50 RPM)...
+	// Measure pulse up to 600ms (down to 50 RPM)...
 	t = pulse_measure(FAN_TACHO_READ_PIN, 1, 0, 600);
-	if (t > 0)
-		f = 1 / (t / 1000000.0);
-	else
-		f = 0;
+	if (t > 0) {
+		/* Fan is spinning, make sure fan is in the first queue... */
+		if (queue[i] != 0)
+			queue[i] = 0;
 
-//	printf("fan%d: pulse len=%llu\n", i+1, t);
+		f = 1 / (t / 1000000.0);
+	}
+	else {
+		/* Fan not spinning, put this fan into second queue */
+		queue[i] = 1;
+
+		f = 0;
+	}
+
+	debug(1, "fan%d: pulse len=%llu\n", i+1, t);
 
 	mutex_enter_blocking(&tacho_mutex);
 	fan_tacho_freq[i] = f;
@@ -231,7 +277,6 @@ void setup_tacho_inputs()
 	gpio_set_dir(FAN_TACHO_READ_S1_PIN, GPIO_OUT);
 	gpio_set_dir(FAN_TACHO_READ_S2_PIN, GPIO_OUT);
 	multiplexer_select(0);
-//	pulse_setup_interrupt(FAN_TACHO_READ_PIN, GPIO_IRQ_EDGE_RISE);
 #else
 	/* Enable interrupts on Fan Tacho input pins */
 	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_RISE,
@@ -281,20 +326,20 @@ double tacho_map(struct tacho_map *map, double val)
 	int i;
 	double newval;
 
-	// value is equal or smaller than first map point
+	/* Value is equal or smaller than first map point */
 	if (val <= map->tacho[0][0])
 		return map->tacho[0][1];
 
-	// find the map points that the value falls in between of...
+	/* Find the map points that the value falls in between of... */
 	i = 1;
 	while(i < map->points && map->tacho[i][0] < val)
 		i++;
 
-	// value is larger or equal than last map point
+	/* Value is larger or equal than last map point */
 	if (val >= map->tacho[i][0])
 		return map->tacho[i][1];
 
-	// calculate mapping using the map points left (i-i) and right (i) of the value...
+	/* Calculate mapping using the map points left (i-i) and right (i) of the value... */
 	double a = (double)(map->tacho[i][1] - map->tacho[i-1][1]) / (double)(map->tacho[i][0] - map->tacho[i-1][0]);
 	newval = map->tacho[i-1][1] + a * (val - map->tacho[i-1][0]);
 
