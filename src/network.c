@@ -29,6 +29,7 @@
 #include "fanpico.h"
 
 #ifdef WIFI_SUPPORT
+
 void wifi_init()
 {
 	uint32_t country_code = CYW43_COUNTRY_WORLDWIDE;
@@ -53,6 +54,8 @@ void wifi_init()
 		uint8_t wifimac[6];
 
 		cyw43_arch_enable_sta_mode();
+
+		/* Display MAC Address */
 		res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, wifimac);
 		if (res == 0) {
 			printf("WiFi MAC: ");
@@ -62,12 +65,31 @@ void wifi_init()
 					printf(":");
 			}
 			printf("\n");
+
+			if (cfg) {
+				if (strlen(cfg->wifi_ssid) > 0 && strlen(cfg->wifi_passwd) > 0) {
+					printf("WiFi connecting to network: %s\n", cfg->wifi_ssid);
+					res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
+									cfg->wifi_passwd,
+									CYW43_AUTH_WPA2_AES_PSK);
+					if (res != 0) {
+						printf("WiFi connect failed: %d\n", res);
+					}
+				}
+			}
 		} else {
 			printf("WiFi adapter not found!\n");
 			cyw43_arch_deinit();
 		}
 	}
 }
+
+void wifi_status()
+{
+	int res = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+	printf("%d\n", res);
+}
+
 #endif /* WIFI_SUPPORT */
 
 
@@ -78,3 +100,9 @@ void network_init()
 #endif
 }
 
+void network_status()
+{
+#ifdef WIFI_SUPPORT
+	wifi_status();
+#endif
+}

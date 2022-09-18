@@ -174,6 +174,7 @@ void display_status(const struct fanpico_state *state, const struct fanpico_conf
 
 /* network.c */
 void network_init();
+void network_status();
 
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];
