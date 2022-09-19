@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "pico/stdlib.h"
+#include "pico/unique_id.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
 #include "lwip/pbuf.h"
@@ -30,9 +31,12 @@
 
 #include "fanpico.h"
 
+
 #ifdef WIFI_SUPPORT
 
+static bool wifi_initialized = false;
 static uint8_t cyw43_mac[6];
+static char wifi_hostname[32];
 
 void wifi_mac()
 {
@@ -49,6 +53,8 @@ void wifi_mac()
 void wifi_init()
 {
 	uint32_t country_code = CYW43_COUNTRY_WORLDWIDE;
+	struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
+	pico_unique_board_id_t b;
 	int res;
 
 	memset(cyw43_mac, 0, sizeof(cyw43_mac));
@@ -72,6 +78,16 @@ void wifi_init()
 	}
 
 	cyw43_arch_enable_sta_mode();
+
+	/* Set WiFi interface hostname... */
+	pico_get_unique_board_id(&b);
+	snprintf(wifi_hostname, sizeof(wifi_hostname),
+		"FanPico-%02x%02x%02x%02x%02x%02x%02x%02x",
+		b.id[0],b.id[1],b.id[2],b.id[3],
+		b.id[4],b.id[5],b.id[6],b.id[7]);
+	netif_set_hostname(n, wifi_hostname);
+	netif_set_up(n);
+	printf("WiFi hostname: %s\n", wifi_hostname);
 
 	/* Get adapter MAC address */
 	if ((res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, cyw43_mac))) {
@@ -98,21 +114,38 @@ void wifi_init()
 			}
 		}
 	}
+
+	wifi_initialized = true;
 }
 
 void wifi_status()
 {
-	int res = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+	int res;
+
+	if (!wifi_initialized) {
+		printf("0\n");
+		return;
+	}
+
+	res = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
 	printf("%d\n", res);
 }
 
 void wifi_ip()
 {
+	if (!wifi_initialized) {
+		printf("0.0.0.0\n");
+		return;
+	}
+
 	printf("%s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
 }
 
 void wifi_poll()
 {
+	if (!wifi_initialized)
+		return;
+
 	debug(3,"wifi_poll: start\n");
 	cyw43_arch_poll();
 	debug(3,"wifi_poll: end\n");

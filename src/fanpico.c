@@ -104,8 +104,8 @@ void setup()
 		gpio_put(LED_PIN, 0);
 	}
 #ifdef LIB_PICO_CYW43_ARCH
-	/* On Pico W, LED is connected to the radio GPIO0... */
-	cyw43_arch_gpio_put(0, 0);
+	/* On pico_w, LED is connected to the radio GPIO... */
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
 #endif
 
 	/* Configure PWM pins... */
@@ -120,7 +120,6 @@ void setup()
 	setup_tacho_outputs();
 	setup_tacho_inputs();
 
-	sleep_ms(2000);
 	printf("Initialization complete.\n\n");
 }
 
@@ -206,6 +205,7 @@ int main()
 	absolute_time_t t_temp = 0;
 	absolute_time_t t_set_outputs = 0;
 	absolute_time_t t_display = 0;
+	absolute_time_t t_network = 0;
 	uint8_t led_state = 0;
 	int64_t delta;
 	int64_t max_delta = 0;
@@ -227,6 +227,7 @@ int main()
 	multicore_launch_core1(core1_main);
 
 	t_last = get_absolute_time();
+	t_display = t_last;
 
 	while (1) {
 		change = 0;
@@ -237,6 +238,10 @@ int main()
 		if (delta > max_delta) {
 			max_delta = delta;
 			debug(2, "%llu: max_loop_time=%lld\n", t_now, max_delta);
+		}
+
+		if (time_passed(&t_network, 1)) {
+			network_poll();
 		}
 
 		/* Toggle LED every 1000ms */
@@ -255,7 +260,7 @@ int main()
 			gpio_put(LED_PIN, led_state);
 #endif
 #ifdef LIB_PICO_CYW43_ARCH
-			cyw43_arch_gpio_put(0, led_state);
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
 #endif
 		}
 
@@ -336,7 +341,6 @@ int main()
 		}
 
 
-		network_poll();
 	}
 }
 
