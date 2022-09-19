@@ -85,8 +85,11 @@ Fanpico supports following commands:
 * [SYStem:WIFI?](#systemwifi-1)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
+* [SYStem:WIFI:IPaddress?](#systemwifiipaddress-1)
+* [SYStem:WIFI:MAC?](#systemwifimac-1)
 * [SYStem:WIFI:SSID](#systemwifissid)
 * [SYStem:WIFI:SSID?](#systemwifissid-1)
+* [SYStem:WIFI:STATus?](#systemwifistatus-1)
 * [SYStem:WIFI:PASSword](#systemwifipassword)
 * [SYStem:WIFI:PASSword?](#systemwifipassword-1)
 
@@ -1142,6 +1145,28 @@ SYS:WIFI:COU?
 US
 ```
 
+#### SYStem:WIFI:IPaddress?
+Display current IP address of the WiFi adapter.
+
+Example:
+
+```
+SYS:WIFI:IP?
+172.16.100.42
+```
+
+
+#### SYStem:WIFI:MAC?
+Display WiFi adapter MAC (Ethernet) address.
+
+Example:
+
+```
+SYS:WIFI:MAC?
+28:cd:c1:01:02:03
+```
+
+
 #### SYStem:WIFI:SSID
 Set Wi-Fi network SSID. FanPico will automatically try joining to this network.
 
@@ -1161,6 +1186,25 @@ SYS:WIFI:SSID?
 mynetwork
 ```
 
+#### SYStem:WIFI:STATus?
+Display WiFi Link status.
+
+Value|Description
+-----|-----------
+0    |Link is down.
+1    |Connected to WiFi.
+2    |Connected to WiFi, but no IP address.
+3    |Connected to WiFi with and IP address.
+-1   |Connection failed.
+-2   |No matching SSID found(could be out of range, or down).
+-3   |Authentication failed (wrong password?)
+
+Example:
+
+```
+SYS:WIFI:STAT?
+1
+```
 
 #### SYStem:WIFI:PASSword
 Set Wi-Fi (PSK) password/passrase.

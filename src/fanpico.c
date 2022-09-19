@@ -335,6 +335,8 @@ int main()
 			if (cfg->local_echo) printf("%c", c);
 		}
 
+
+		network_poll();
 	}
 }
 

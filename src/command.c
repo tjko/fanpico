@@ -1043,6 +1043,22 @@ int cmd_wifi(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_wifi_ip(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		network_ip();
+	}
+	return 0;
+}
+
+int cmd_wifi_mac(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		network_mac();
+	}
+	return 0;
+}
+
 int cmd_wifi_ssid(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (query) {
@@ -1092,10 +1108,12 @@ int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_c
 }
 
 struct cmd_t wifi_commands[] = {
+	{ "COUntry",   3, NULL,              cmd_wifi_country },
+	{ "IPaddress", 2, NULL,              cmd_wifi_ip },
+	{ "MAC",       3, NULL,              cmd_wifi_mac },
+	{ "PASSword",  4, NULL,              cmd_wifi_password },
 	{ "SSID",      4, NULL,              cmd_wifi_ssid },
 	{ "STATus",    4, NULL,              cmd_wifi_status },
-	{ "COUntry",   3, NULL,              cmd_wifi_country },
-	{ "PASSword",  4, NULL,              cmd_wifi_password },
 	{ 0, 0, 0, 0 }
 };
 

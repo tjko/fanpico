@@ -174,6 +174,9 @@ void display_status(const struct fanpico_state *state, const struct fanpico_conf
 
 /* network.c */
 void network_init();
+void network_ip();
+void network_mac();
+void network_poll();
 void network_status();
 
 /* pwm.c */

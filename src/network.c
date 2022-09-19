@@ -24,16 +24,34 @@
 #include "pico/stdlib.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
+#include "lwip/pbuf.h"
+#include "lwip/tcp.h"
 #endif
 
 #include "fanpico.h"
 
 #ifdef WIFI_SUPPORT
 
+static uint8_t cyw43_mac[6];
+
+void wifi_mac()
+{
+	int i;
+
+	for (i = 0; i < 6; i++) {
+		printf("%02x", cyw43_mac[i]);
+		if (i < 5)
+			printf(":");
+	}
+	printf("\n");
+}
+
 void wifi_init()
 {
 	uint32_t country_code = CYW43_COUNTRY_WORLDWIDE;
 	int res;
+
+	memset(cyw43_mac, 0, sizeof(cyw43_mac));
 
 	/* If WiFi country is defined in configuratio, use it... */
 	if (cfg) {
@@ -50,36 +68,34 @@ void wifi_init()
 
 	if ((res = cyw43_arch_init_with_country(country_code))) {
 		printf("WiFi initialization failed: %d\n", res);
-	} else {
-		uint8_t wifimac[6];
+		return;
+	}
 
-		cyw43_arch_enable_sta_mode();
+	cyw43_arch_enable_sta_mode();
 
-		/* Display MAC Address */
-		res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, wifimac);
-		if (res == 0) {
-			printf("WiFi MAC: ");
-			for (int i = 0; i < 6; i++) {
-				printf("%02x", wifimac[i]);
-				if (i < 5)
-					printf(":");
+	/* Get adapter MAC address */
+	if ((res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, cyw43_mac))) {
+		printf("Cannot get WiFi MAC address: %d\n", res);
+		cyw43_arch_deinit();
+		return;
+	}
+
+	/* Display MAC address */
+	printf("WiFi MAC: ");
+	wifi_mac();
+
+	/* Attempt to connect to a WiFi network... */
+	if (cfg) {
+		if (strlen(cfg->wifi_ssid) > 0 && strlen(cfg->wifi_passwd) > 0) {
+			printf("WiFi connecting to network: %s\n", cfg->wifi_ssid);
+			res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
+							cfg->wifi_passwd,
+							CYW43_AUTH_WPA2_AES_PSK);
+			if (res != 0) {
+				printf("WiFi connect failed: %d\n", res);
+				cyw43_arch_deinit();
+				return;
 			}
-			printf("\n");
-
-			if (cfg) {
-				if (strlen(cfg->wifi_ssid) > 0 && strlen(cfg->wifi_passwd) > 0) {
-					printf("WiFi connecting to network: %s\n", cfg->wifi_ssid);
-					res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
-									cfg->wifi_passwd,
-									CYW43_AUTH_WPA2_AES_PSK);
-					if (res != 0) {
-						printf("WiFi connect failed: %d\n", res);
-					}
-				}
-			}
-		} else {
-			printf("WiFi adapter not found!\n");
-			cyw43_arch_deinit();
 		}
 	}
 }
@@ -90,7 +106,20 @@ void wifi_status()
 	printf("%d\n", res);
 }
 
+void wifi_ip()
+{
+	printf("%s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
+}
+
+void wifi_poll()
+{
+	debug(3,"wifi_poll: start\n");
+	cyw43_arch_poll();
+	debug(3,"wifi_poll: end\n");
+}
+
 #endif /* WIFI_SUPPORT */
+
 
 
 void network_init()
@@ -104,5 +133,27 @@ void network_status()
 {
 #ifdef WIFI_SUPPORT
 	wifi_status();
+#endif
+}
+
+
+void network_poll()
+{
+#ifdef WIFI_SUPPORT
+	wifi_poll();
+#endif
+}
+
+void network_mac()
+{
+#ifdef WIFI_SUPPORT
+	wifi_mac();
+#endif
+}
+
+void network_ip()
+{
+#ifdef WIFI_SUPPORT
+	wifi_ip();
 #endif
 }
