@@ -27,7 +27,9 @@
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
 #include "pico/bootrom.h"
+#include "pico/util/datetime.h"
 #include "hardware/watchdog.h"
+#include "hardware/rtc.h"
 #include "cJSON.h"
 #include "lfs.h"
 #include "fanpico.h"
@@ -1107,6 +1109,17 @@ int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_c
 	return 0;
 }
 
+int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	datetime_t t;
+
+	if (query && rtc_get_datetime(&t)) {
+		printf("%04d-%02d-%02d %02d:%02d:%02d\n",
+			t.year, t.month, t.day,	t.hour, t.min, t.sec);
+	}
+	return 0;
+}
+
 struct cmd_t wifi_commands[] = {
 	{ "COUntry",   3, NULL,              cmd_wifi_country },
 	{ "IPaddress", 2, NULL,              cmd_wifi_ip },
@@ -1128,6 +1141,7 @@ struct cmd_t system_commands[] = {
 	{ "VERsion",   3, NULL,              cmd_version },
 	{ "DISPlay",   4, NULL,              cmd_display_type },
 	{ "WIFI",      4, wifi_commands,     cmd_wifi },
+	{ "TIME",      4, NULL,              cmd_time },
 	{ 0, 0, 0, 0 }
 };
 

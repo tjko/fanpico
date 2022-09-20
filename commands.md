@@ -80,6 +80,7 @@ Fanpico supports following commands:
 * [SYStem:LED?](#systemled-1)
 * [SYStem:MBFANS?](#systemmbfans)
 * [SYStem:SENSORS?](#systemsensors)
+* [SYStem:TIME?](#systemtime)
 * [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
 * [SYStem:WIFI?](#systemwifi)
@@ -1081,6 +1082,23 @@ Example:
 ```
 SYS:SENSORS?
 3
+```
+
+
+#### SYStem:TIME?
+Return current Real-Time Clock (RTC) time.
+This is only available if usign Pico W and it has successfully
+gotten time from a NTP server.
+
+Currently FanPico will only use NTP server that is received from
+DHCP server.
+
+Command returns nothing if RTC has not been initialized.
+
+Example:
+```
+SYS:TIME?
+2022-09-19 18:55:42
 ```
 
 

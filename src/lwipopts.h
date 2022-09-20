@@ -51,6 +51,15 @@
 #define LWIP_NETIF_TX_SINGLE_PBUF   1
 #define DHCP_DOES_ARP_CHECK         0
 #define LWIP_DHCP_DOES_ACD_CHECK    0
+#define LWIP_DHCP_GET_NTP_SRV       1
+
+#define SNTP_GET_SERVERS_FROM_DHCP  1
+#define SNTP_STARTUP_DELAY          1
+#define SNTP_STARTUP_DELAY_FUNC     (5000 + LWIP_RAND() % 4000)
+//#define SNTP_MAX_SERVERS            2
+
+void set_pico_system_time(long unsigned int sec);
+#define SNTP_SET_SYSTEM_TIME(sec)   set_pico_system_time(sec)
 
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
@@ -85,6 +94,7 @@
 #define TCPIP_DEBUG                 LWIP_DBG_OFF
 #define PPP_DEBUG                   LWIP_DBG_OFF
 #define SLIP_DEBUG                  LWIP_DBG_OFF
-#define DHCP_DEBUG                  LWIP_DBG_OFF
+#define DHCP_DEBUG                  LWIP_DBG_ON
+#define SNTP_DEBUG                  LWIP_DBG_ON
 
 #endif /* __LWIPOPTS_H__ */

@@ -178,6 +178,7 @@ void network_ip();
 void network_mac();
 void network_poll();
 void network_status();
+void set_pico_system_time(long unsigned int sec);
 
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];

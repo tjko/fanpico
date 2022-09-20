@@ -20,13 +20,17 @@
 */
 
 #include <stdio.h>
+#include <time.h>
 #include <assert.h>
+#include "hardware/rtc.h"
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
+#include "pico/util/datetime.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
+#include "lwip/apps/sntp.h"
 #endif
 
 #include "fanpico.h"
@@ -116,6 +120,10 @@ void wifi_init()
 	}
 
 	wifi_initialized = true;
+
+	/* Enable SNTP client (using NTP server from DHCP...) */
+	sntp_init();
+	sntp_servermode_dhcp(1);
 }
 
 void wifi_status()
@@ -154,6 +162,31 @@ void wifi_poll()
 #endif /* WIFI_SUPPORT */
 
 
+/****************************************************************************/
+
+
+void set_pico_system_time(long unsigned int sec)
+{
+	datetime_t t;
+	struct tm *ntp;
+	time_t ntp_time = sec;
+
+	if (!(ntp = gmtime(&ntp_time)))
+		return;
+
+	t.year = ntp->tm_year + 1900;
+	t.month = ntp->tm_mon + 1;
+	t.day = ntp->tm_mday;
+	t.dotw = ntp->tm_wday;
+	t.hour = ntp->tm_hour;
+	t.min = ntp->tm_min;
+	t.sec = ntp->tm_sec;
+
+	rtc_set_datetime(&t);
+
+	debug(1, "SNTP Set System time: %04d-%02d-%02d %02d:%02d:%02d UTC\n",
+		t.year, t.month, t.day, t.hour, t.min, t.sec);
+}
 
 void network_init()
 {

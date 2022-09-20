@@ -27,12 +27,14 @@
 #include "pico/unique_id.h"
 #include "pico/mutex.h"
 #include "pico/multicore.h"
+#include "pico/util/datetime.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
 #endif
 #include "hardware/adc.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
+#include "hardware/rtc.h"
 #include "hardware/clocks.h"
 #include "hardware/watchdog.h"
 
@@ -47,6 +49,8 @@ void setup()
 {
 	pico_unique_board_id_t board_id;
 	int i;
+
+	rtc_init();
 
 #if TTL_SERIAL
 	stdio_uart_init_full(TTL_SERIAL_UART,
