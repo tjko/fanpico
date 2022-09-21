@@ -30,6 +30,7 @@
 #include "pico/cyw43_arch.h"
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
+#include "lwip/prot/dhcp.h"
 #include "lwip/apps/sntp.h"
 #endif
 
@@ -126,6 +127,7 @@ void wifi_init()
 	sntp_servermode_dhcp(1);
 }
 
+
 void wifi_status()
 {
 	int res;
@@ -139,6 +141,7 @@ void wifi_status()
 	printf("%d\n", res);
 }
 
+
 void wifi_ip()
 {
 	if (!wifi_initialized) {
@@ -148,6 +151,7 @@ void wifi_ip()
 
 	printf("%s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
 }
+
 
 void wifi_poll()
 {
@@ -159,13 +163,70 @@ void wifi_poll()
 	debug(3,"wifi_poll: end\n");
 }
 
+
+/* LwIP DHCP hook to customize option 55 (Parameter-Request) when DHCP
+ * client send DHCP_REQUEST message...
+ */
+void pico_dhcp_option_add_hook(struct netif *netif, struct dhcp *dhcp, u8_t state, struct dhcp_msg *msg,
+			u8_t msg_type, u16_t *options_len_ptr)
+{
+	u8_t new_parameters[3] = {
+		7,  /* LOG */
+		2,  /* Time-Zone */
+		100 /* POSIX-TZ */
+	};
+	u16_t extra_len = sizeof(new_parameters);
+	u16_t orig_len = *options_len_ptr;
+	u16_t old_ptr = 0;
+	u16_t new_ptr = 0;
+	struct dhcp_msg tmp;
+
+	if (msg_type != DHCP_REQUEST)
+		return;
+
+	LWIP_ASSERT("dhcp option overflow", *options_len_ptr + extra_len <= DHCP_OPTIONS_LEN);
+
+	/* Copy options to temporary buffer, so we can 'edit' option 55... */
+	memcpy(tmp.options, msg->options, sizeof(tmp.options));
+
+	/* Rebuild options... */
+	while (old_ptr < orig_len) {
+		u8_t code = tmp.options[old_ptr++];
+		u8_t len = tmp.options[old_ptr++];
+
+		msg->options[new_ptr++] = code;
+		msg->options[new_ptr++] = (code == 55 ? len + extra_len : len);
+		for (int i = 0; i < len; i++) {
+			msg->options[new_ptr++] = tmp.options[old_ptr++];
+		}
+		if (code == 55) {
+			for (int i = 0; i < extra_len; i++) {
+				msg->options[new_ptr++] = new_parameters[i];
+			}
+		}
+	}
+	*options_len_ptr = new_ptr;
+}
+
+
+/* LwIP DHCP hook to parse additonal DHCP options received.
+ */
+void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t state, struct dhcp_msg *msg,
+             u8_t msg_type, u8_t option, u8_t option_len, struct pbuf *pbuf, u16_t option_value_offset)
+{
+	if (msg_type != DHCP_ACK)
+		return;
+
+	printf("PARSE dhcp option (msg=%02x): %u (len=%u)\n", msg_type, option, option_len);
+}
+
 #endif /* WIFI_SUPPORT */
 
 
 /****************************************************************************/
 
 
-void set_pico_system_time(long unsigned int sec)
+void pico_set_system_time(long int sec)
 {
 	datetime_t t;
 	struct tm *ntp;

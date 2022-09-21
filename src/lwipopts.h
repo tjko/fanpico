@@ -57,9 +57,13 @@
 #define SNTP_STARTUP_DELAY          1
 #define SNTP_STARTUP_DELAY_FUNC     (5000 + LWIP_RAND() % 4000)
 //#define SNTP_MAX_SERVERS            2
+void pico_set_system_time(long int sec);
+#define SNTP_SET_SYSTEM_TIME(sec)          pico_set_system_time(sec)
 
-void set_pico_system_time(long unsigned int sec);
-#define SNTP_SET_SYSTEM_TIME(sec)   set_pico_system_time(sec)
+#define LWIP_HOOK_FILENAME            "lwip_hooks.h"
+#define LWIP_HOOK_DHCP_APPEND_OPTIONS pico_dhcp_option_add_hook
+#define LWIP_HOOK_DHCP_PARSE_OPTION   pico_dhcp_option_parse_hook
+
 
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
