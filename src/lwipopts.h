@@ -64,7 +64,7 @@ void pico_set_system_time(long int sec);
 #define LWIP_HOOK_DHCP_APPEND_OPTIONS pico_dhcp_option_add_hook
 #define LWIP_HOOK_DHCP_PARSE_OPTION   pico_dhcp_option_parse_hook
 
-
+#undef NDEBUG
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
 #define LWIP_STATS                  1

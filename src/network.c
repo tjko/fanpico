@@ -170,12 +170,12 @@ void wifi_poll()
 void pico_dhcp_option_add_hook(struct netif *netif, struct dhcp *dhcp, u8_t state, struct dhcp_msg *msg,
 			u8_t msg_type, u16_t *options_len_ptr)
 {
-	u8_t new_parameters[3] = {
-		7,  /* LOG */
-		2,  /* Time-Zone */
-		100 /* POSIX-TZ */
+	u8_t new_parameters[] = {
+		7,   /* LOG */
+		100, /* POSIX-TZ */
+		0
 	};
-	u16_t extra_len = sizeof(new_parameters);
+	u16_t extra_len = sizeof(new_parameters) - 1;
 	u16_t orig_len = *options_len_ptr;
 	u16_t old_ptr = 0;
 	u16_t new_ptr = 0;
@@ -214,10 +214,26 @@ void pico_dhcp_option_add_hook(struct netif *netif, struct dhcp *dhcp, u8_t stat
 void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t state, struct dhcp_msg *msg,
              u8_t msg_type, u8_t option, u8_t option_len, struct pbuf *pbuf, u16_t option_value_offset)
 {
+	static char timezone[64];
+	ip4_addr_t log_ip;
+
 	if (msg_type != DHCP_ACK)
 		return;
 
-	printf("PARSE dhcp option (msg=%02x): %u (len=%u)\n", msg_type, option, option_len);
+	debug(2, "PARSE dhcp option (msg=%02x): %u (len=%u,offset=%u)\n",
+		msg_type, option, option_len, option_value_offset);
+
+	if (option == 7 && option_len >= 4) {
+		memcpy(&log_ip.addr, pbuf->payload + option_value_offset, 4);
+		debug(1, "DHCP Log Server: %s\n", ip4addr_ntoa(&log_ip));
+	}
+	else if (option == 100 && option_len > 0) {
+		memcpy(timezone, pbuf->payload + option_value_offset, option_len);
+		timezone[option_len] = 0;
+		setenv("TZ", timezone, 1);
+		tzset();
+		debug(1, "DHCP POSIX Timezone: %s\n", timezone);
+	}
 }
 
 #endif /* WIFI_SUPPORT */
@@ -232,21 +248,12 @@ void pico_set_system_time(long int sec)
 	struct tm *ntp;
 	time_t ntp_time = sec;
 
-	if (!(ntp = gmtime(&ntp_time)))
+	if (!(ntp = localtime(&ntp_time)))
 		return;
 
-	t.year = ntp->tm_year + 1900;
-	t.month = ntp->tm_mon + 1;
-	t.day = ntp->tm_mday;
-	t.dotw = ntp->tm_wday;
-	t.hour = ntp->tm_hour;
-	t.min = ntp->tm_min;
-	t.sec = ntp->tm_sec;
+	rtc_set_datetime(tm_to_datetime(ntp, &t));
 
-	rtc_set_datetime(&t);
-
-	debug(1, "SNTP Set System time: %04d-%02d-%02d %02d:%02d:%02d UTC\n",
-		t.year, t.month, t.day, t.hour, t.min, t.sec);
+	debug(1, "SNTP Set System time: %s\n", asctime(ntp));
 }
 
 void network_init()

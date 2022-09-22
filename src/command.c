@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <string.h>
 #include <wctype.h>
 #include <assert.h>
@@ -1112,11 +1113,15 @@ int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_c
 int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	datetime_t t;
+	time_t tnow;
+	char buf[64];
 
 	if (query && rtc_get_datetime(&t)) {
-		printf("%04d-%02d-%02d %02d:%02d:%02d\n",
-			t.year, t.month, t.day,	t.hour, t.min, t.sec);
+		tnow = datetime_to_time(&t);
+		strftime(buf, sizeof(buf), "%a, %d %b %Y %T %z %Z", localtime(&tnow));
+		printf("%s\n", buf);
 	}
+
 	return 0;
 }
 

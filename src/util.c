@@ -26,7 +26,9 @@
 #include <wctype.h>
 #include <assert.h>
 #include <malloc.h>
+#include <time.h>
 #include "pico/stdlib.h"
+#include "pico/util/datetime.h"
 #include "b64/cencode.h"
 #include "b64/cdecode.h"
 
@@ -198,4 +200,47 @@ char *strncopy(char *dst, const char *src, size_t len)
 	dst[len - 1] = 0;
 
 	return dst;
+}
+
+
+datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t)
+{
+	if (!tm || !t)
+		return NULL;
+
+	t->year = tm->tm_year + 1900;
+	t->month = tm->tm_mon + 1;
+	t->day = tm->tm_mday;
+	t->dotw = tm->tm_wday;
+	t->hour = tm->tm_hour;
+	t->min = tm->tm_min;
+	t->sec = tm->tm_sec;
+
+	return t;
+}
+
+
+struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm)
+{
+	if (!t || !tm)
+		return NULL;
+
+	tm->tm_year = t->year - 1900;
+	tm->tm_mon = t->month -1;
+	tm->tm_mday = t->day;
+	tm->tm_wday = t->dotw;
+	tm->tm_hour = t->hour;
+	tm->tm_min = t->min;
+	tm->tm_sec = t->sec;
+	tm->tm_isdst = -1;
+
+	return tm;
+}
+
+time_t datetime_to_time(const datetime_t *datetime)
+{
+	struct tm tm;
+
+	datetime_to_tm(datetime, &tm);
+	return mktime(&tm);
 }

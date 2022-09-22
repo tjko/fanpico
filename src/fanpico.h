@@ -24,6 +24,8 @@
 
 #include "config.h"
 
+#include <time.h>
+
 #ifndef FANPICO_MODEL
 #error unknown board model
 #endif
@@ -215,7 +217,9 @@ int time_passed(absolute_time_t *t, uint32_t us);
 char* base64encode(const char *input);
 char* base64decode(const char *input);
 char *strncopy(char *dst, const char *src, size_t len);
-
+datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t);
+struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
+time_t datetime_to_time(const datetime_t *datetime);
 
 /* crc32.c */
 unsigned int xcrc32 (const unsigned char *buf, int len, unsigned int init);
