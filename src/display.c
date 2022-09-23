@@ -166,6 +166,8 @@ void display_init()
 {
 #ifdef OLED_DISPLAY
 	oled_display_init();
+#else
+	printf("No Display Support\n");
 #endif
 }
 

@@ -25,6 +25,10 @@
 #include "config.h"
 
 #include <time.h>
+#ifdef LIB_PICO_CYW43_ARCH
+#define WIFI_SUPPORT 1
+#include "lwip/ip_addr.h"
+#endif
 
 #ifndef FANPICO_MODEL
 #error unknown board model
@@ -47,9 +51,6 @@
 #define WIFI_SSID_MAX_LEN    32
 #define WIFI_PASSWD_MAX_LEN  64
 
-#ifdef LIB_PICO_CYW43_ARCH
-#define WIFI_SUPPORT 1
-#endif
 
 
 enum pwm_source_types {
@@ -130,9 +131,16 @@ struct fanpico_config {
 	bool local_echo;
 	uint8_t led_mode;
 	char display_type[64];
+#ifdef WIFI_SUPPORT
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
 	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];
 	char wifi_country[4];
+	ip_addr_t syslog_server;
+	ip_addr_t ntp_server;
+	ip_addr_t ip;
+	ip_addr_t netmask;
+	ip_addr_t gateway;
+#endif
 };
 
 struct fanpico_state {
@@ -176,7 +184,6 @@ void display_status(const struct fanpico_state *state, const struct fanpico_conf
 
 /* network.c */
 void network_init();
-void network_ip();
 void network_mac();
 void network_poll();
 void network_status();

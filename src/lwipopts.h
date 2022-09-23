@@ -1,8 +1,7 @@
 #ifndef _LWIPOPTS_H
 #define _LWIPOPTS_H
 
-
-// Common settings used in most of the pico_w examples
+// Settings for FanPico when usign Pico W...
 // (see https://www.nongnu.org/lwip/2_1_x/group__lwip__opts.html for details)
 
 // allow override in some examples
@@ -64,7 +63,7 @@ void pico_set_system_time(long int sec);
 #define LWIP_HOOK_DHCP_APPEND_OPTIONS pico_dhcp_option_add_hook
 #define LWIP_HOOK_DHCP_PARSE_OPTION   pico_dhcp_option_parse_hook
 
-#undef NDEBUG
+
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
 #define LWIP_STATS                  1

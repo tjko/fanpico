@@ -86,7 +86,16 @@ Fanpico supports following commands:
 * [SYStem:WIFI?](#systemwifi)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
-* [SYStem:WIFI:IPaddress?](#systemwifiipaddress)
+* [SYStem:WIFI:IPaddress](#systemwifiipaddress)
+* [SYStem:WIFI:IPaddress?](#systemwifiipaddress-1)
+* [SYStem:WIFI:NETMASK](#systemwifinetmask)
+* [SYStem:WIFI:NETMASK?](#systemwifinetmask-1)
+* [SYStem:WIFI:GATEWAY](#systemwifigateway)
+* [SYStem:WIFI:GATEWAY?](#systemwifigateway-1)
+* [SYStem:WIFI:NTP](#systemwifintp)
+* [SYStem:WIFI:NTP?](#systemwifintp-1)
+* [SYStem:WIFI:SYSLOG](#systemwifisyslog)
+* [SYStem:WIFI:SYSLOG?](#systemwifisyslog-1)
 * [SYStem:WIFI:MAC?](#systemwifimac)
 * [SYStem:WIFI:SSID](#systemwifissid)
 * [SYStem:WIFI:SSID?](#systemwifissid-1)
@@ -1125,6 +1134,8 @@ SYS:VER?
 
 #### SYStem:WIFI?
 Check if the unit support WiFi networking.
+This should be used to determine if any other "WIFI"
+commands will be available.
 
 Return values:
 
@@ -1163,14 +1174,119 @@ SYS:WIFI:COU?
 US
 ```
 
+#### SYStem:WIFI:IPaddress
+Set staticlly configured IP address.
+
+Set address to "0.0.0.0" to enable DHCP.
+
+Example:
+
+```
+SYS:WIFI:IP 192.168.1.42
+```
+
 #### SYStem:WIFI:IPaddress?
-Display current IP address of the WiFi adapter.
+Display currently configured (static) IP address.
+If no static address is configured, DHCP will be used.
+
+Set address to "0.0.0.0" to enable DHCP.
 
 Example:
 
 ```
 SYS:WIFI:IP?
-172.16.100.42
+0.0.0.0
+```
+
+
+#### SYStem:WIFI:NETMASK
+Set statically confiugred netmask.
+
+
+Example:
+
+```
+SYS:WIFI:NETMASK 255.255.255.0
+```
+
+#### SYStem:WIFI:NETMASK?
+Display currently configured (static) netmask.
+
+Example:
+
+```
+SYS:WIFI:NETMASK?
+255.255.255.0
+```
+
+
+#### SYStem:WIFI:GATEWAY
+Set statically confiugred default gateway (router).
+
+
+Example:
+
+```
+SYS:WIFI:GATEWAY 192.168.1.1
+```
+
+#### SYStem:WIFI:GATEWAY?
+Display currently configured default gateway (router).
+
+Example:
+
+```
+SYS:WIFI:GATEWAY?
+192.168.1.1
+```
+
+
+#### SYStem:WIFI:NTP
+Configure IP for NTP server to use.
+
+Set to "0.0.0.0" to use server provided by DHCP.
+
+Example:
+
+```
+SYS:WIFI:NTP 192.168.1.10
+```
+
+#### SYStem:WIFI:NTP?
+Display currently configure NTP server.
+
+Note, "0.0.0.0" means to use DHCP.
+
+Example:
+
+```
+SYS:WIFI:NTP?
+192.168.1.10
+```
+
+
+
+#### SYStem:WIFI:SYSLOG
+Configure IP for Syslog server to use.
+
+Set to "0.0.0.0" to use server provided by DHCP.
+
+Example:
+
+```
+SYS:WIFI:SYSLOG 192.168.1.20
+```
+
+#### SYStem:WIFI:SYSLOG?
+Display currently configured Syslog server.
+
+Note, "0.0.0.0" means to use DHCP.
+
+Example:
+
+```
+SYS:WIFI:SYSLOG?
+192.168.1.20
 ```
 
 
@@ -1207,6 +1323,10 @@ mynetwork
 #### SYStem:WIFI:STATus?
 Display WiFi Link status.
 
+Return value: <linkstatus>,<ipaddress>,<netmask>,<gateway>
+
+Link Status:
+
 Value|Description
 -----|-----------
 0    |Link is down.
@@ -1221,7 +1341,7 @@ Example:
 
 ```
 SYS:WIFI:STAT?
-1
+1,192.168.1.42,255.255.255.0,192.168.1.1
 ```
 
 #### SYStem:WIFI:PASSword

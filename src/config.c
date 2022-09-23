@@ -25,6 +25,9 @@
 #include "pico/multicore.h"
 #include "cJSON.h"
 #include "pico_hal.h"
+#ifdef WIFI_SUPPORT
+#include "lwip/ip_addr.h"
+#endif
 
 #include "fanpico.h"
 
@@ -281,9 +284,16 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->local_echo = false;
 	cfg->led_mode = 0;
 	strncopy(cfg->display_type, "default", sizeof(cfg->display_type));
+#ifdef WIFI_SUPPORT
 	cfg->wifi_ssid[0] = 0;
 	cfg->wifi_passwd[0] = 0;
 	strncopy(cfg->wifi_country, "XX", sizeof(cfg->wifi_country));
+	ip_addr_set_any(0, &cfg->syslog_server);
+	ip_addr_set_any(0, &cfg->ntp_server);
+	ip_addr_set_any(0, &cfg->ip);
+	ip_addr_set_any(0, &cfg->netmask);
+	ip_addr_set_any(0, &cfg->gateway);
+#endif
 }
 
 
@@ -302,6 +312,8 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	cJSON_AddItemToObject(config, "led_mode", cJSON_CreateNumber(cfg->led_mode));
 	if (strlen(cfg->display_type) > 0)
 		cJSON_AddItemToObject(config, "display_type", cJSON_CreateString(cfg->display_type));
+
+#ifdef WIFI_SUPPORT
 	if (strlen(cfg->wifi_country) > 0)
 		cJSON_AddItemToObject(config, "wifi_country", cJSON_CreateString(cfg->wifi_country));
 	if (strlen(cfg->wifi_ssid) > 0)
@@ -313,6 +325,17 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 			free(p);
 		}
 	}
+	if (!ip_addr_isany(&cfg->syslog_server))
+		cJSON_AddItemToObject(config, "syslog_server", cJSON_CreateString(ipaddr_ntoa(&cfg->syslog_server)));
+	if (!ip_addr_isany(&cfg->ntp_server))
+		cJSON_AddItemToObject(config, "ntp_server", cJSON_CreateString(ipaddr_ntoa(&cfg->ntp_server)));
+	if (!ip_addr_isany(&cfg->ip))
+		cJSON_AddItemToObject(config, "ip", cJSON_CreateString(ipaddr_ntoa(&cfg->ip)));
+	if (!ip_addr_isany(&cfg->netmask))
+		cJSON_AddItemToObject(config, "netmask", cJSON_CreateString(ipaddr_ntoa(&cfg->netmask)));
+	if (!ip_addr_isany(&cfg->gateway))
+		cJSON_AddItemToObject(config, "gateway", cJSON_CreateString(ipaddr_ntoa(&cfg->gateway)));
+#endif
 
 	/* Fan outputs */
 	fans = cJSON_CreateArray();
@@ -420,6 +443,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->display_type, val, sizeof(cfg->display_type));
 	}
+
+#ifdef WIFI_SUPPORT
 	if ((ref = cJSON_GetObjectItem(config, "wifi_country"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->wifi_country, val, sizeof(cfg->wifi_country));
@@ -437,6 +462,27 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			}
 		}
 	}
+	if ((ref = cJSON_GetObjectItem(config, "syslog_server"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			ipaddr_aton(val, &cfg->syslog_server);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ntp_server"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			ipaddr_aton(val, &cfg->ntp_server);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ip"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			ipaddr_aton(val, &cfg->ip);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "netmask"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			ipaddr_aton(val, &cfg->netmask);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "gateway"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			ipaddr_aton(val, &cfg->gateway);
+	}
+#endif
 
 	/* Fan output configurations */
 	ref = cJSON_GetObjectItem(config, "fans");

@@ -34,6 +34,9 @@
 #include "cJSON.h"
 #include "lfs.h"
 #include "fanpico.h"
+#ifdef WIFI_SUPPORT
+#include "lwip/ip_addr.h"
+#endif
 
 
 struct cmd_t {
@@ -1046,12 +1049,45 @@ int cmd_wifi(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_wifi_ip(const char *cmd, const char *args, int query, char *prev_cmd)
+#ifdef WIFI_SUPPORT
+int ip_change(const char *cmd, const char *args, int query, char *prev_cmd, const char *name, ip_addr_t *ip)
 {
+	ip_addr_t tmpip;
+
 	if (query) {
-		network_ip();
+		printf("%s\n", ipaddr_ntoa(ip));
+	} else {
+		if (!ipaddr_aton(args, &tmpip))
+			return 1;
+		debug(1,"%s change '%s' --> %s'\n", name, ipaddr_ntoa(ip), args);
+		ip_addr_copy(*ip, tmpip);
 	}
 	return 0;
+}
+
+int cmd_wifi_ip(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return ip_change(cmd, args, query, prev_cmd, "IP", &cfg->ip);
+}
+
+int cmd_wifi_netmask(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return ip_change(cmd, args, query, prev_cmd, "Netmask", &cfg->netmask);
+}
+
+int cmd_wifi_gateway(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return ip_change(cmd, args, query, prev_cmd, "Default Gateway", &cfg->gateway);
+}
+
+int cmd_wifi_syslog(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return ip_change(cmd, args, query, prev_cmd, "Syslog Server", &cfg->syslog_server);
+}
+
+int cmd_wifi_ntp(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return ip_change(cmd, args, query, prev_cmd, "NTP Server", &cfg->ntp_server);
 }
 
 int cmd_wifi_mac(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1109,6 +1145,7 @@ int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_c
 	}
 	return 0;
 }
+#endif
 
 int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 {
@@ -1126,12 +1163,18 @@ int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 
 struct cmd_t wifi_commands[] = {
-	{ "COUntry",   3, NULL,              cmd_wifi_country },
+#ifdef WIFI_SUPPORT
 	{ "IPaddress", 2, NULL,              cmd_wifi_ip },
+	{ "NETMask",   4, NULL,              cmd_wifi_netmask },
+	{ "GATEway",   4, NULL,              cmd_wifi_gateway },
+	{ "SYSLOG",    6, NULL,              cmd_wifi_syslog },
+	{ "NTP",       3, NULL,              cmd_wifi_ntp },
 	{ "MAC",       3, NULL,              cmd_wifi_mac },
+	{ "COUntry",   3, NULL,              cmd_wifi_country },
 	{ "PASSword",  4, NULL,              cmd_wifi_password },
 	{ "SSID",      4, NULL,              cmd_wifi_ssid },
 	{ "STATus",    4, NULL,              cmd_wifi_status },
+#endif
 	{ 0, 0, 0, 0 }
 };
 
