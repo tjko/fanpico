@@ -56,9 +56,8 @@
 	    "source_type": "mbfan",
 	    "source_id": 0,
 	    "pwm_map": [
-		[ 0, 20	],
-		[ 25, 20 ],
-		[ 100, 90 ]
+		[ 0, 0	],
+		[ 100, 100 ]
 	    ],
 	    "rpm_factor": 2
 	},
