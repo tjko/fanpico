@@ -79,6 +79,8 @@ Fanpico supports following commands:
 * [SYStem:LED](#systemled)
 * [SYStem:LED?](#systemled-1)
 * [SYStem:MBFANS?](#systemmbfans)
+* [SYStem:NAME](#systemname)
+* [SYStem:NAME?](#systemname-1)
 * [SYStem:SENSORS?](#systemsensors)
 * [SYStem:TIME?](#systemtime)
 * [SYStem:UPGRADE](#systemupgrade)
@@ -1079,6 +1081,25 @@ Example:
 ```
 SYS:MBFANS?
 4
+```
+
+
+#### SYStem:NAME
+Set name of the system. (Default: fanpico1)
+
+Example:
+```
+SYS:NAME HomeServer
+```
+
+
+#### SYStem:NAME?
+Get name of the system.
+
+Example:
+```
+SYS:NAME?
+HomeServer
 ```
 
 

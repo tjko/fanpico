@@ -1162,6 +1162,18 @@ int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", conf->name);
+	} else {
+		debug(1, "System name change '%s' --> '%s'\n", conf->name, args);
+		strncopy(conf->name, args, sizeof(conf->name));
+	}
+	return 0;
+}
+
+
 struct cmd_t wifi_commands[] = {
 #ifdef WIFI_SUPPORT
 	{ "IPaddress", 2, NULL,              cmd_wifi_ip },
@@ -1184,6 +1196,7 @@ struct cmd_t system_commands[] = {
 	{ "FANS",      4, NULL,              cmd_fans },
 	{ "LED",       3, NULL,              cmd_led },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
+	{ "NAME",      4, NULL,              cmd_name },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "VERsion",   3, NULL,              cmd_version },

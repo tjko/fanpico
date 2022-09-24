@@ -283,6 +283,7 @@ void clear_config(struct fanpico_config *cfg)
 
 	cfg->local_echo = false;
 	cfg->led_mode = 0;
+	strncopy(cfg->name, "fanpico1", sizeof(cfg->name));
 	strncopy(cfg->display_type, "default", sizeof(cfg->display_type));
 #ifdef WIFI_SUPPORT
 	cfg->wifi_ssid[0] = 0;
@@ -312,6 +313,8 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	cJSON_AddItemToObject(config, "led_mode", cJSON_CreateNumber(cfg->led_mode));
 	if (strlen(cfg->display_type) > 0)
 		cJSON_AddItemToObject(config, "display_type", cJSON_CreateString(cfg->display_type));
+	if (strlen(cfg->name) > 0)
+		cJSON_AddItemToObject(config, "name", cJSON_CreateString(cfg->name));
 
 #ifdef WIFI_SUPPORT
 	if (strlen(cfg->wifi_country) > 0)
@@ -442,6 +445,10 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "display_type"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->display_type, val, sizeof(cfg->display_type));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "name"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->name, val, sizeof(cfg->name));
 	}
 
 #ifdef WIFI_SUPPORT
