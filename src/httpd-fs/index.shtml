@@ -1,28 +1,89 @@
 <html>
-<head><title>FanPico: <!--#name--></title></head>
-<body bgcolor="white" text="black">
-  <table width="100%">
-    <tr valign="top">
-      <td width="80">	  
-	<a href="https://github.com/tjko/fanpico/"><img src="/img/fanpico.png"
-	   border="0" alt="FanPico logo" title="FanPico logo"></a>
-      </td>
-      <td colspan="2" width="500">	  
-	<h1>FanPico: <!--#name--></h1>
-	<p>
-	  FanPico status goes here...
+  <head>
+    <title>FanPico: <!--#name--></title>
+    <link rel="stylesheet" href="fanpico.css">
+  </head>
+  <body bgcolor="white" text="black">
+    <table id="b1">
+      <tr>
+	<td>
+	  <table border=0>
+	    <tr>
+	      <td>
+		<a href="https://github.com/tjko/fanpico/">
+		  <img src="img/fanpico.png" border="0" alt="FanPico logo" title="FanPico logo">
+		</a>
+	      </td>
+	      <td valign="bottom">
+		<h2><font color="#03a3aa">FanPico: <!--#name--></h2>
+	      </td>
+	    </tr>
+	  </table>
+	</td>
+      </tr>
+      <tr>
+	<td>
+	  <table width="100%">
+	    <tr>
+	      <td rowspan="2" valign="top">
+		Fans:<br>
+		<table width="100%">
+		  <tr><td id="l1">
+		      <table class="pretty">
+			<tr><th>#</th><th>Name</th><th>RPM</th><th>PWM</th></tr>
+			<tr><!--#fanrow1--></tr>
+			<tr><!--#fanrow2--></tr>
+			<tr><!--#fanrow3--></tr>
+			<tr><!--#fanrow4--></tr>
+			<tr><!--#fanrow5--></tr>
+			<tr><!--#fanrow6--></tr>
+			<tr><!--#fanrow7--></tr>
+			<tr><!--#fanrow8--></tr>
+		      </table>
+		  </td></tr></table>
+	      </td>
+	      <td>
+		MB Fans:<br>
+		<table width="100%">
+		  <tr><td id="l1">
+		      <table class="pretty">
+			<tr><th>#</th><th>Name</th><th>RPM</th><th>PWM</th></tr>
+			<tr><!--#mfanrow1--></tr>
+			<tr><!--#mfanrow2--></tr>
+			<tr><!--#mfanrow3--></tr>
+			<tr><!--#mfanrow4--></tr>
+		      </table>
+		</td></tr></table>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>
+		Sensors:<br>
+		<table width="100%">
+		  <tr><td id="l1">
+		      <table class="pretty">
+			<tr><th>#</th><th>Name</th><th>Temperature</th></tr>
+			<tr><!--#sensrow1--></tr>
+			<tr><!--#sensrow2--></tr>
+			<tr><!--#sensrow3--></tr>
+		      </table>
+		</td></tr></table>
+	      </td>
+	    </tr>
+	  </table>
 	  <br>
-	  <br>
-	  <br>
-	  <hl>
-	</p>
-      </td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td> 
-      <td><font size=-1>FanPico-<!--#model--> v<!--#version--></font></td>
-      <td><font size=-1><!--#datetime--></font></td>
-    </tr>
-  </table>
-</body>
+	</td>
+      </tr>
+      <tr>
+	<td>
+	  <table width="100%">
+	    <tr>
+	      <td><font size=-1>FanPico-<!--#model--> v<!--#version--></font></td>
+	      <td align="right"><font size=-1><!--#datetime--></font></td>
+	    </tr>
+	  </table>
+	</td>
+      </tr>
+    </table>
+  </body>
 </html>

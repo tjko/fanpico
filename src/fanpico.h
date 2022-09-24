@@ -157,6 +157,7 @@ struct fanpico_state {
 
 /* fanpico.c */
 void print_mallinfo();
+extern const struct fanpico_state *fanpico_state;
 
 /* bi_decl.c */
 void set_binary_info();

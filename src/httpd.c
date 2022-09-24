@@ -34,6 +34,7 @@
 
 u16_t ssi_handler(const char *tag, char *insert, int insertlen)
 {
+	const struct fanpico_state *st = fanpico_state;
 	size_t printed = 0;
 
 	/* printf("ssi_handler(\"%s\",%lx,%d)\n", tag, (uint32_t)insert, insertlen); */
@@ -53,6 +54,35 @@ u16_t ssi_handler(const char *tag, char *insert, int insertlen)
 	}
 	else if (!strncmp(tag, "name", 4)) {
 		printed = snprintf(insert, insertlen, "%s", cfg->name);
+	}
+	else if (!strncmp(tag, "fanrow", 6)) {
+		uint8_t i = tag[6] - '1';
+		if (i < FAN_COUNT) {
+			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td>%0.0f %%",
+					i + 1,
+					cfg->fans[i].name,
+					st->fan_freq[i],
+					st->fan_duty[i]);
+		}
+	}
+	else if (!strncmp(tag, "mfanrow", 7)) {
+		uint8_t i = tag[7] - '1';
+		if (i < MBFAN_COUNT) {
+			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td>%0.0f %%",
+					i + 1,
+					cfg->mbfans[i].name,
+					st->mbfan_freq[i],
+					st->mbfan_duty[i]);
+		}
+	}
+	else if (!strncmp(tag, "sensrow", 7)) {
+		uint8_t i = tag[7] - '1';
+		if (i < SENSOR_COUNT) {
+			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.1f C",
+					i + 1,
+					cfg->sensors[i].name,
+					st->temp[i]);
+		}
 	}
 
 	return printed;

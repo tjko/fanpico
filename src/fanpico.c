@@ -43,6 +43,7 @@
 
 static struct fanpico_state system_state;
 
+const struct fanpico_state *fanpico_state = &system_state;
 
 
 void setup()
@@ -87,7 +88,7 @@ void setup()
 
 	read_config(false);
 	display_init();
-	network_init();
+	network_init(&system_state);
 
 	/* Enable ADC */
 	printf("Initialize ADC...\n");
