@@ -1,0 +1,28 @@
+<html>
+<head><title>FanPico: <!--#name--></title></head>
+<body bgcolor="white" text="black">
+  <table width="100%">
+    <tr valign="top">
+      <td width="80">	  
+	<a href="https://github.com/tjko/fanpico/"><img src="/img/fanpico.png"
+	   border="0" alt="FanPico logo" title="FanPico logo"></a>
+      </td>
+      <td colspan="2" width="500">	  
+	<h1>FanPico: <!--#name--></h1>
+	<p>
+	  FanPico status goes here...
+	  <br>
+	  <br>
+	  <br>
+	  <hl>
+	</p>
+      </td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td> 
+      <td><font size=-1>FanPico-<!--#model--> v<!--#version--></font></td>
+      <td><font size=-1><!--#datetime--></font></td>
+    </tr>
+  </table>
+</body>
+</html>

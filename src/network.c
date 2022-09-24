@@ -32,6 +32,7 @@
 #include "lwip/tcp.h"
 #include "lwip/prot/dhcp.h"
 #include "lwip/apps/sntp.h"
+#include "lwip/apps/httpd.h"
 #endif
 
 #include "fanpico.h"
@@ -166,6 +167,9 @@ void wifi_init()
 	}
 
 	ip_addr_copy(syslog_server, cfg->syslog_server);
+
+	httpd_init();
+	http_set_ssi_handler(ssi_handler, NULL, 0);
 }
 
 

@@ -131,6 +131,7 @@ struct fanpico_config {
 	bool local_echo;
 	uint8_t led_mode;
 	char display_type[64];
+	char name[32];
 #ifdef WIFI_SUPPORT
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
 	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];
@@ -181,6 +182,9 @@ void print_config();
 void display_init();
 void clear_display();
 void display_status(const struct fanpico_state *state, const struct fanpico_config *config);
+
+/* httpd.c */
+u16_t ssi_handler(const char *tag, char *insert, int insertlen);
 
 /* network.c */
 void network_init();

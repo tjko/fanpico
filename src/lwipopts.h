@@ -52,18 +52,24 @@
 #define LWIP_DHCP_DOES_ACD_CHECK    0
 #define LWIP_DHCP_GET_NTP_SRV       1
 
-#define SNTP_GET_SERVERS_FROM_DHCP  1
-#define SNTP_STARTUP_DELAY          1
-#define SNTP_STARTUP_DELAY_FUNC     (5000 + LWIP_RAND() % 4000)
-//#define SNTP_MAX_SERVERS            2
+#define SNTP_GET_SERVERS_FROM_DHCP      1
+#define SNTP_STARTUP_DELAY              1
+#define SNTP_STARTUP_DELAY_FUNC         (5000 + LWIP_RAND() % 4000)
+//#define SNTP_MAX_SERVERS              2
 void pico_set_system_time(long int sec);
-#define SNTP_SET_SYSTEM_TIME(sec)          pico_set_system_time(sec)
+#define SNTP_SET_SYSTEM_TIME(sec)       pico_set_system_time(sec)
 
-#define LWIP_HOOK_FILENAME            "lwip_hooks.h"
-#define LWIP_HOOK_DHCP_APPEND_OPTIONS pico_dhcp_option_add_hook
-#define LWIP_HOOK_DHCP_PARSE_OPTION   pico_dhcp_option_parse_hook
+#define LWIP_HOOK_FILENAME              "lwip_hooks.h"
+#define LWIP_HOOK_DHCP_APPEND_OPTIONS   pico_dhcp_option_add_hook
+#define LWIP_HOOK_DHCP_PARSE_OPTION     pico_dhcp_option_parse_hook
+
+#define HTTPD_FSDATA_FILE               "fanpico_fsdata.c"
+#define HTTPD_USE_MEM_POOL              0
+#define LWIP_HTTPD_SSI                  1
+#define LWIP_HTTPD_SSI_RAW              1
 
 
+#undef NDEBUG
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
 #define LWIP_STATS                  1

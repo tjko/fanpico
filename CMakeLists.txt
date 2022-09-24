@@ -104,10 +104,12 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
   message("Enabling WiFi stuff...")
   target_sources(fanpico PRIVATE
     src/syslog.c
+    src/httpd.c
     )
   target_link_libraries(fanpico PRIVATE
     pico_cyw43_arch_lwip_poll
     pico_lwip_sntp
+    pico_lwip_http
     )
 endif()
 
