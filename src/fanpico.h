@@ -184,9 +184,6 @@ void display_init();
 void clear_display();
 void display_status(const struct fanpico_state *state, const struct fanpico_config *config);
 
-/* httpd.c */
-u16_t ssi_handler(const char *tag, char *insert, int insertlen);
-
 /* network.c */
 void network_init();
 void network_mac();

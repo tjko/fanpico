@@ -25,19 +25,187 @@
 #include <assert.h>
 #include "hardware/rtc.h"
 #include "pico/stdlib.h"
-#include "pico/unique_id.h"
-#include "pico/util/datetime.h"
+#include "cJSON.h"
 
 #include "fanpico.h"
 
 
 
-u16_t ssi_handler(const char *tag, char *insert, int insertlen)
+
+u16_t cvs_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part)
+{
+	const struct fanpico_state *st = fanpico_state;
+	static char buf[512];
+	static char *p;
+	static u16_t part;
+	static size_t buf_left;
+	char row[128];
+	double rpm;
+	int i;
+	size_t printed, count;
+
+	if (current_tag_part == 0) {
+		/* Generate 'output' into a buffer that then will be fed in chunks to LwIP... */
+		buf[0] = 0;
+
+		for (i = 0; i < FAN_COUNT; i++) {
+			rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
+			snprintf(row, sizeof(row), "fan%d,\"%s\",%.0lf,%.2f,%.1f\n",
+				i+1,
+				cfg->fans[i].name,
+				rpm,
+				st->fan_freq[i],
+				st->fan_duty[i]);
+			strncat(buf, row, sizeof(buf) - 1);
+		}
+		for (i = 0; i < MBFAN_COUNT; i++) {
+			rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
+			snprintf(row, sizeof(row), "mbfan%d,\"%s\",%.0lf,%.2f,%.1f\n",
+				i+1,
+				cfg->mbfans[i].name,
+				rpm,
+				st->mbfan_freq[i],
+				st->mbfan_duty[i]);
+			strncat(buf, row, sizeof(buf) - 1);
+		}
+		for (i = 0; i < SENSOR_COUNT; i++) {
+			snprintf(row, sizeof(row), "sensor%d,\"%s\",%.1lf\n",
+				i+1,
+				cfg->sensors[i].name,
+				st->temp[i]);
+			strncat(buf, row, sizeof(buf) - 1);
+		}
+
+		p = buf;
+		buf_left = strlen(buf);
+		part = 1;
+	}
+
+	/* Copy a part of the multi-part response into LwIP buffer ...*/
+	count = (buf_left < insertlen - 1 ? buf_left : insertlen - 1);
+	memcpy(insert, p, count);
+
+	p += count;
+	printed = count;
+	buf_left -= count;
+
+	if (buf_left > 0)
+		*next_tag_part = part++;
+
+	return printed;
+}
+
+
+u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part)
+{
+	const struct fanpico_state *st = fanpico_state;
+	cJSON *json = NULL;
+	static char *buf = NULL;
+	static char *p;
+	static u16_t part;
+	static size_t buf_left;
+	int i;
+	size_t printed, count;
+
+	if (current_tag_part == 0) {
+		/* Generate 'output' into a buffer that then will be fed in chunks to LwIP... */
+		cJSON *array, *o;
+
+		if (!(json = cJSON_CreateObject()))
+			goto panic;
+
+		/* Fans */
+		if (!(array = cJSON_CreateArray()))
+			goto panic;
+		for (i = 0; i < FAN_COUNT; i++) {
+			double rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
+
+			if (!(o = cJSON_CreateObject()))
+				goto panic;
+
+			cJSON_AddItemToObject(o, "fan", cJSON_CreateNumber(i+1));
+			cJSON_AddItemToObject(o, "name", cJSON_CreateString(cfg->fans[i].name));
+			cJSON_AddItemToObject(o, "rpm", cJSON_CreateNumber(rpm));
+			cJSON_AddItemToObject(o, "frequency", cJSON_CreateNumber(st->fan_freq[i]));
+			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(st->fan_duty[i]));
+			cJSON_AddItemToArray(array, o);
+		}
+		cJSON_AddItemToObject(json, "fans", array);
+
+		/* MB Fans */
+		if (!(array = cJSON_CreateArray()))
+			goto panic;
+		for (i = 0; i < MBFAN_COUNT; i++) {
+			double rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
+
+			if (!(o = cJSON_CreateObject()))
+				goto panic;
+
+			cJSON_AddItemToObject(o, "mbfan", cJSON_CreateNumber(i+1));
+			cJSON_AddItemToObject(o, "name", cJSON_CreateString(cfg->mbfans[i].name));
+			cJSON_AddItemToObject(o, "rpm", cJSON_CreateNumber(rpm));
+			cJSON_AddItemToObject(o, "frequency", cJSON_CreateNumber(st->mbfan_freq[i]));
+			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(st->mbfan_duty[i]));
+			cJSON_AddItemToArray(array, o);
+		}
+		cJSON_AddItemToObject(json, "mbfans", array);
+
+		/* MB Fans */
+		if (!(array = cJSON_CreateArray()))
+			goto panic;
+		for (i = 0; i < SENSOR_COUNT; i++) {
+			if (!(o = cJSON_CreateObject()))
+				goto panic;
+
+			cJSON_AddItemToObject(o, "sensor", cJSON_CreateNumber(i+1));
+			cJSON_AddItemToObject(o, "name", cJSON_CreateString(cfg->sensors[i].name));
+			cJSON_AddItemToObject(o, "temperature", cJSON_CreateNumber(st->temp[i]));
+			cJSON_AddItemToArray(array, o);
+		}
+		cJSON_AddItemToObject(json, "mbfans", array);
+
+
+		if (!(buf = cJSON_Print(json)))
+			goto panic;
+		cJSON_Delete(json);
+		json = NULL;
+
+		p = buf;
+		buf_left = strlen(buf);
+		part = 1;
+	}
+
+	/* Copy a part of the multi-part response into LwIP buffer ...*/
+	count = (buf_left < insertlen - 1 ? buf_left : insertlen - 1);
+	memcpy(insert, p, count);
+
+	p += count;
+	printed = count;
+	buf_left -= count;
+
+	if (buf_left > 0) {
+		*next_tag_part = part++;
+	} else {
+		free(buf);
+		buf = p = NULL;
+	}
+
+	return printed;
+
+panic:
+	if (json)
+		cJSON_Delete(json);
+	return 0;
+}
+
+
+u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
+			u16_t current_tag_part, u16_t *next_tag_part)
 {
 	const struct fanpico_state *st = fanpico_state;
 	size_t printed = 0;
 
-	/* printf("ssi_handler(\"%s\",%lx,%d)\n", tag, (uint32_t)insert, insertlen); */
+	/* printf("ssi_handler(\"%s\",%lx,%d,%u,%u)\n", tag, (uint32_t)insert, insertlen, current_tag_part, *next_tag_part); */
 
 	if (!strncmp(tag, "datetime", 8)) {
 		datetime_t t;
@@ -84,6 +252,17 @@ u16_t ssi_handler(const char *tag, char *insert, int insertlen)
 					st->temp[i]);
 		}
 	}
+	else if (!strncmp(tag, "csvstat", 7)) {
+		printed = cvs_stats(insert, insertlen, current_tag_part, next_tag_part);
+	}
+	else if (!strncmp(tag, "jsonstat", 8)) {
+		printed = json_stats(insert, insertlen, current_tag_part, next_tag_part);
+	}
+
+
+	/* Check if snprintf() output was truncated... */
+	printed = (printed >= insertlen ? insertlen - 1 : printed);
+	/* printf("printed=%u\n", printed); */
 
 	return printed;
 }

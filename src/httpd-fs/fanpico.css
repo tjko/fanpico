@@ -1,0 +1,72 @@
+/* FanPico CSS */
+
+#b1 {
+    background: #016567;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+#l1 {
+    background: #03a3aa;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.pretty tr:nth-child(even) td {
+    background: #019367;
+}
+
+.sc {
+    width:100%;
+}
+
+.s {
+    -webkit-appearance: none;
+    width: 82%;
+    height: 15px;
+    border-radius: 10px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+
+.s:hover {
+    opacity: 1;
+}
+
+.s::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+}
+
+.s::-moz-range-thumb {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #4caf50;
+    cursor: pointer;
+}
+
+.button {
+    border: none;
+    border-radius: 16px;
+    color: white;
+    padding: 8px 14px;
+    cursor: pointer;
+    background-color: #4caf50;
+}
+
+.button:hover {
+    background-color: #0b7dda;
+}
+
+.x1 {
+    margin-left: 10px;
+}

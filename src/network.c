@@ -42,6 +42,10 @@
 
 #include "syslog.h"
 
+u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
+			u16_t current_tag_part, u16_t *next_tag_part);
+
+
 static bool wifi_initialized = false;
 static bool network_initialized = false;
 static uint8_t cyw43_mac[6];
@@ -169,7 +173,7 @@ void wifi_init()
 	ip_addr_copy(syslog_server, cfg->syslog_server);
 
 	httpd_init();
-	http_set_ssi_handler(ssi_handler, NULL, 0);
+	http_set_ssi_handler(fanpico_ssi_handler, NULL, 0);
 }
 
 

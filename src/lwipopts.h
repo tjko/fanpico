@@ -67,7 +67,9 @@ void pico_set_system_time(long int sec);
 #define HTTPD_USE_MEM_POOL              0
 #define LWIP_HTTPD_SSI                  1
 #define LWIP_HTTPD_SSI_RAW              1
-
+#define LWIP_HTTPD_SSI_MULTIPART        1
+#define LWIP_HTTPD_SSI_INCLUDE_TAG      0
+#define LWIP_HTTPD_SSI_EXTENSIONS       ".shtml", ".xml", ".json", ".csv"
 
 #undef NDEBUG
 #ifndef NDEBUG
