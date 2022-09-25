@@ -2,6 +2,8 @@
   <head>
     <title>FanPico: <!--#name--></title>
     <link rel="stylesheet" href="fanpico.css">
+    <meta http-equiv="refresh" content="<!--#refresh-->">
+    <meta name="viewport" content="width=device-width,initial-scale=0.93,user-scaleable=yes">
   </head>
   <body bgcolor="white" text="black">
     <table id="b1">

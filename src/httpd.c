@@ -258,6 +258,10 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	else if (!strncmp(tag, "jsonstat", 8)) {
 		printed = json_stats(insert, insertlen, current_tag_part, next_tag_part);
 	}
+	else if (!strncmp(tag, "refresh", 8)) {
+		/* generate "random" refresh time for a page, to help spread out the load... */
+		printed = snprintf(insert, insertlen, "%u", (uint)(30 + ((double)rand() / RAND_MAX) * 30));
+	}
 
 
 	/* Check if snprintf() output was truncated... */
