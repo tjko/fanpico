@@ -32,7 +32,7 @@
 
 
 
-u16_t cvs_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part)
+u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part)
 {
 	const struct fanpico_state *st = fanpico_state;
 	static char buf[512];
@@ -253,7 +253,7 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 		}
 	}
 	else if (!strncmp(tag, "csvstat", 7)) {
-		printed = cvs_stats(insert, insertlen, current_tag_part, next_tag_part);
+		printed = csv_stats(insert, insertlen, current_tag_part, next_tag_part);
 	}
 	else if (!strncmp(tag, "jsonstat", 8)) {
 		printed = json_stats(insert, insertlen, current_tag_part, next_tag_part);
