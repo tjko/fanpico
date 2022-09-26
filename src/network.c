@@ -54,28 +54,21 @@ static ip_addr_t syslog_server;
 
 void wifi_mac()
 {
-	int i;
-
-	for (i = 0; i < 6; i++) {
-		printf("%02x", cyw43_mac[i]);
-		if (i < 5)
-			printf(":");
-	}
-	printf("\n");
+	printf("%s\n", mac_address_str(cyw43_mac));
 }
 
 void wifi_link_cb(struct netif *netif)
 {
-	debug(1, "WiFi Link: %s\n", (netif_is_link_up(netif) ? "UP" : "DOWN"));
+	log_msg(LOG_WARNING, "WiFi Link: %s", (netif_is_link_up(netif) ? "UP" : "DOWN"));
 }
 
 void wifi_status_cb(struct netif *netif)
 {
-	debug(1, "WiFi Status: %s\n", (netif_is_up(netif) ? "UP" : "DOWN"));
+	log_msg(LOG_WARNING, "WiFi Status: %s", (netif_is_up(netif) ? "UP" : "DOWN"));
 
 	if (netif_is_up(netif) && !network_initialized) {
-		debug(2, "Network initialization complete.\n");
 		syslog_open(&syslog_server, 0, LOG_USER, wifi_hostname);
+		log_msg(LOG_DEBUG, "Network initialization complete.");
 		network_initialized = true;
 	}
 }
@@ -99,12 +92,12 @@ void wifi_init()
 				rev = country[2] - '0';
 			}
 			country_code = CYW43_COUNTRY(country[0], country[1], rev);
-			debug(2, "WiFi country code: %06x\n", country_code);
+			log_msg(LOG_DEBUG, "WiFi country code: %06x", country_code);
 		}
 	}
 
 	if ((res = cyw43_arch_init_with_country(country_code))) {
-		printf("WiFi initialization failed: %d\n", res);
+		log_msg(LOG_ALERT, "WiFi initialization failed: %d", res);
 		return;
 	}
 
@@ -116,42 +109,39 @@ void wifi_init()
 		"FanPico-%02x%02x%02x%02x%02x%02x%02x%02x",
 		b.id[0],b.id[1],b.id[2],b.id[3],
 		b.id[4],b.id[5],b.id[6],b.id[7]);
-	printf("WiFi hostname: %s\n", wifi_hostname);
+	log_msg(LOG_INFO, "WiFi hostname: %s", wifi_hostname);
 	netif_set_hostname(n, wifi_hostname);
 
 	netif_set_link_callback(n, wifi_link_cb);
 	netif_set_status_callback(n, wifi_status_cb);
 	if (!ip_addr_isany(&cfg->ip)) {
 		dhcp_stop(n);
-		printf("     IP: %s\n", ipaddr_ntoa(&cfg->ip));
-		printf("Netmask: %s\n", ipaddr_ntoa(&cfg->netmask));
-		printf("Gateway: %s\n", ipaddr_ntoa(&cfg->gateway));
+		log_msg(LOG_INFO, "     IP: %s", ipaddr_ntoa(&cfg->ip));
+		log_msg(LOG_INFO, "Netmask: %s", ipaddr_ntoa(&cfg->netmask));
+		log_msg(LOG_INFO, "Gateway: %s", ipaddr_ntoa(&cfg->gateway));
 		netif_set_addr(n, &cfg->ip, &cfg->netmask, &cfg->gateway);
 	} else {
-		printf("IP: DHCP\n");
+		log_msg(LOG_INFO, "IP: DHCP");
 	}
 	netif_set_up(n);
 
 	/* Get adapter MAC address */
 	if ((res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, cyw43_mac))) {
-		printf("Cannot get WiFi MAC address: %d\n", res);
+		log_msg(LOG_ALERT, "Cannot get WiFi MAC address: %d", res);
 		cyw43_arch_deinit();
 		return;
 	}
-
-	/* Display MAC address */
-	printf("WiFi MAC: ");
-	wifi_mac();
+	log_msg(LOG_INFO, "WiFi MAC: %s", mac_address_str(cyw43_mac));
 
 	/* Attempt to connect to a WiFi network... */
 	if (cfg) {
 		if (strlen(cfg->wifi_ssid) > 0 && strlen(cfg->wifi_passwd) > 0) {
-			printf("WiFi connecting to network: %s\n", cfg->wifi_ssid);
+			log_msg(LOG_INFO, "WiFi connecting to network: %s", cfg->wifi_ssid);
 			res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
 							cfg->wifi_passwd,
 							CYW43_AUTH_WPA2_AES_PSK);
 			if (res != 0) {
-				printf("WiFi connect failed: %d\n", res);
+				log_msg(LOG_ERR, "WiFi connect failed: %d", res);
 				cyw43_arch_deinit();
 				return;
 			}
@@ -163,10 +153,10 @@ void wifi_init()
 	/* Enable SNTP client... */
 	sntp_init();
 	if (!ip_addr_isany(&cfg->ntp_server)) {
-		printf("NTP Server: %s\n", ipaddr_ntoa(&cfg->ntp_server));
+		log_msg(LOG_INFO, "NTP Server: %s", ipaddr_ntoa(&cfg->ntp_server));
 		sntp_setserver(0, &cfg->ntp_server);
 	} else {
-		printf("NTP Server: DHCP\n");
+		log_msg(LOG_INFO, "NTP Server: DHCP");
 		sntp_servermode_dhcp(1);
 	}
 
@@ -203,13 +193,11 @@ void wifi_poll()
 	if (!wifi_initialized)
 		return;
 
-	debug(3,"wifi_poll: start\n");
-	cyw43_arch_poll();
-	debug(3,"wifi_poll: end\n");
 
+	cyw43_arch_poll();
 
 	if (network_initialized) {
-		if (time_passed(&test_t, 5000)) {
+		if (time_passed(&test_t, 15000)) {
 			syslog_msg(LOG_INFO, "test message: %llu", get_absolute_time());
 		}
 	}
@@ -273,7 +261,7 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 	if (msg_type != DHCP_ACK)
 		return;
 
-	debug(2, "PARSE dhcp option (msg=%02x): %u (len=%u,offset=%u)\n",
+	log_msg(LOG_DEBUG, "Parse DHCP option (msg=%02x): %u (len=%u,offset=%u)",
 		msg_type, option, option_len, option_value_offset);
 
 	if (option == 7 && option_len >= 4) {
@@ -281,9 +269,9 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 		if (ip_addr_isany(&syslog_server)) {
 			/* no syslog server configured, use one from DHCP... */
 			ip_addr_copy(syslog_server, log_ip);
-			debug(1, "Using Log Server from DHCP: %s\n", ip4addr_ntoa(&log_ip));
+			log_msg(LOG_INFO, "Using Log Server from DHCP: %s", ip4addr_ntoa(&log_ip));
 		} else {
-			debug(1, "Ignoring Log Server from DHCP: %s\n", ip4addr_ntoa(&log_ip));
+			log_msg(LOG_INFO, "Ignoring Log Server from DHCP: %s", ip4addr_ntoa(&log_ip));
 		}
 	}
 	else if (option == 100 && option_len > 0) {
@@ -291,7 +279,7 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 		timezone[option_len] = 0;
 		setenv("TZ", timezone, 1);
 		tzset();
-		debug(1, "Set (POSIX) Timezone from DHCP: %s\n", timezone);
+		log_msg(LOG_INFO, "Set (POSIX) Timezone from DHCP: %s", timezone);
 	}
 }
 
@@ -312,7 +300,7 @@ void pico_set_system_time(long int sec)
 
 	rtc_set_datetime(tm_to_datetime(ntp, &t));
 
-	debug(1, "SNTP Set System time: %s\n", asctime(ntp));
+	log_msg(LOG_NOTICE, "SNTP Set System time: %s", asctime(ntp));
 }
 
 void network_init()

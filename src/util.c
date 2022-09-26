@@ -33,10 +33,23 @@
 #include "b64/cdecode.h"
 
 #include "fanpico.h"
-
+#ifdef WIFI_SUPPORT
+#include "syslog.h"
+#endif
 
 int global_debug_level = 0;
+int global_log_level = 4;
 
+
+int get_log_level()
+{
+	return global_log_level;
+}
+
+void set_log_level(int level)
+{
+	global_log_level = level;
+}
 
 int get_debug_level()
 {
@@ -49,6 +62,28 @@ void set_debug_level(int level)
 	global_debug_level = level;
 }
 
+
+void log_msg(int priority, const char *format, ...)
+{
+	va_list ap;
+	char buf[256];
+
+	if (priority > global_log_level)
+		return;
+
+	va_start(ap, format);
+	vsnprintf(buf, sizeof(buf), format, ap);
+	va_end(ap);
+
+	uint64_t t = get_absolute_time();
+	printf("[%6llu.%06llu] %s\n", (t / 1000000), (t % 1000000), buf);
+
+#ifdef WIFI_SUPPORT
+	if (priority <= global_log_level) {
+		syslog_msg(priority, "%s", buf);
+	}
+#endif
+}
 
 void debug(int debug_level, const char *fmt, ...)
 {
@@ -111,6 +146,16 @@ const char *rp2040_model_str()
 	return buf;
 }
 
+
+const char *mac_address_str(const uint8_t *mac)
+{
+	static char buf[32];
+
+	snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+		buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
+
+	return buf;
+}
 
 int check_for_change(double oldval, double newval, double treshold)
 {
@@ -237,6 +282,7 @@ struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm)
 	return tm;
 }
 
+
 time_t datetime_to_time(const datetime_t *datetime)
 {
 	struct tm tm;
@@ -244,3 +290,5 @@ time_t datetime_to_time(const datetime_t *datetime)
 	datetime_to_tm(datetime, &tm);
 	return mktime(&tm);
 }
+
+/* eof */

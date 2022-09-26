@@ -202,7 +202,7 @@ void read_tacho_inputs()
 		f = 0;
 	}
 
-	debug(2, "fan%d: pulse len=%llu\n", i+1, t);
+	log_msg(LOG_DEBUG, "fan%d: pulse len=%llu", i+1, t);
 
 	mutex_enter_blocking(&tacho_mutex);
 	fan_tacho_freq[i] = f;
@@ -233,7 +233,7 @@ void update_tacho_input_freq(struct fanpico_state *st)
 	for (i = 0; i < FAN_COUNT; i++) {
 		new_freq = roundf(freq[i]*10)/10.0;
 		if (check_for_change(st->fan_freq[i], new_freq, 1.0)) {
-			debug(1, "fan%d: tacho freq change %.1f --> %.1f\n",
+			log_msg(LOG_INFO, "fan%d: tacho freq change %.1f --> %.1f",
 				i+1,
 				st->fan_freq[i],
 				new_freq);

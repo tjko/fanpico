@@ -151,7 +151,8 @@ int syslog_msg(int severity, const char *format, ...)
 	/* build the syslog 'packet' */
 	snprintf(buf, sizeof(buf), "<%d>%s %s %s", pri, tstamp, syslog->hostname, msg);
 	msg_len = strlen(buf);
-	debug(3, "SYSLOG: '%s'\n", buf);
+
+	/* printf("SYSLOG: '%s'\n", buf); */
 
 	cyw43_arch_lwip_begin();
 	struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, msg_len, PBUF_RAM);

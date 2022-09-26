@@ -77,7 +77,7 @@ double get_temperature(uint8_t input)
 	}
 
 
-	debug(2, "get_temperature(%d): sensor_type=%u, raw=%u,  volt=%lf, temp=%lf\n",
+	log_msg(LOG_DEBUG, "get_temperature(%d): sensor_type=%u, raw=%u,  volt=%lf, temp=%lf",
 		input, sensor->type, raw, volt, t);
 
 	return t;

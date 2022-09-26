@@ -23,7 +23,7 @@
 #define FANPICO_H 1
 
 #include "config.h"
-
+#include "log.h"
 #include <time.h>
 #ifdef LIB_PICO_CYW43_ARCH
 #define WIFI_SUPPORT 1
@@ -215,12 +215,16 @@ double tacho_map(struct tacho_map *map, double val);
 double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i);
 
 /* util.c */
+void log_msg(int priority, const char *format, ...);
 int get_debug_level();
 void set_debug_level(int level);
+int get_log_level();
+void set_log_level(int level);
 void debug(int debug_level, const char *fmt, ...);
 void print_mallinfo();
 char *trim_str(char *s);
 const char *rp2040_model_str();
+const char *mac_address_str(const uint8_t *mac);
 int check_for_change(double oldval, double newval, double treshold);
 int time_passed(absolute_time_t *t, uint32_t us);
 char* base64encode(const char *input);

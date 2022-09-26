@@ -134,7 +134,7 @@ int cmd_led(const char *cmd, const char *args, int query, char *prev_cmd)
 	} else {
 		mode = atoi(args);
 		if (mode >= 0 && mode <= 2) {
-			debug(1, "Set system LED mode: %d -> %d\n", cfg->led_mode, mode);
+			log_msg(LOG_NOTICE, "Set system LED mode: %d -> %d", cfg->led_mode, mode);
 			cfg->led_mode = mode;
 		}
 	}
@@ -161,7 +161,7 @@ int cmd_sensors(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_null(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	debug(1, "null command: %s %s (query=%d)\n", cmd, args, query);
+	log_msg(LOG_INFO, "null command: %s %s (query=%d)", cmd, args, query);
 	return 0;
 }
 
@@ -203,7 +203,7 @@ int cmd_display_type(const char *cmd, const char *args, int query, char *prev_cm
 int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (!query) {
-		debug(1, "Initiating reboot...\n");
+		log_msg(LOG_ALERT, "Initiating reboot...");
 		watchdog_enable(10, 0);
 		while (1);
 	}
@@ -289,7 +289,7 @@ int cmd_fan_name(const char *cmd, const char *args, int query, char *prev_cmd)
 		if (query) {
 			printf("%s\n", conf->fans[fan].name);
 		} else {
-			debug(1, "fan%d: change name '%s' --> '%s'\n", fan + 1,
+			log_msg(LOG_NOTICE, "fan%d: change name '%s' --> '%s'", fan + 1,
 				conf->fans[fan].name, args);
 			strncopy(conf->fans[fan].name, args, sizeof(conf->fans[fan].name));
 		}
@@ -308,11 +308,11 @@ int cmd_fan_min_pwm(const char *cmd, const char *args, int query, char *prev_cmd
 		} else {
 			val = atoi(args);
 			if (val >= 0 && val <= 100) {
-				debug(1, "fan%d: change min PWM %d%% --> %d%%\n", fan + 1,
+				log_msg(LOG_NOTICE, "fan%d: change min PWM %d%% --> %d%%", fan + 1,
 					conf->fans[fan].min_pwm, val);
 				conf->fans[fan].min_pwm = val;
 			} else {
-				debug(1, "fan%d: invalid new value for min PWM: %d", fan + 1,
+				log_msg(LOG_WARNING, "fan%d: invalid new value for min PWM: %d", fan + 1,
 					val);
 			}
 		}
@@ -331,11 +331,11 @@ int cmd_fan_max_pwm(const char *cmd, const char *args, int query, char *prev_cmd
 		} else {
 			val = atoi(args);
 			if (val >= 0 && val <= 100) {
-				debug(1, "fan%d: change max PWM %d%% --> %d%%\n", fan + 1,
+				log_msg(LOG_NOTICE, "fan%d: change max PWM %d%% --> %d%%", fan + 1,
 					conf->fans[fan].max_pwm, val);
 				conf->fans[fan].max_pwm = val;
 			} else {
-				debug(1, "fan%d: invalid new value for max PWM: %d", fan + 1,
+				log_msg(LOG_WARNING, "fan%d: invalid new value for max PWM: %d", fan + 1,
 					val);
 			}
 		}
@@ -355,11 +355,11 @@ int cmd_fan_pwm_coef(const char *cmd, const char *args, int query, char *prev_cm
 		} else {
 			val = atof(args);
 			if (val >= 0.0) {
-				debug(1, "fan%d: change PWM coefficient %f --> %f\n",
+				log_msg(LOG_NOTICE, "fan%d: change PWM coefficient %f --> %f",
 					fan + 1, conf->fans[fan].pwm_coefficient, val);
 				conf->fans[fan].pwm_coefficient = val;
 			} else {
-				debug(1, "fan%d: invalid new value for PWM coefficient: %f",
+				log_msg(LOG_WARNING, "fan%d: invalid new value for PWM coefficient: %f",
 					fan + 1, val);
 			}
 		}
@@ -402,7 +402,7 @@ int cmd_fan_pwm_map(const char *cmd, const char *args, int query, char *prev_cmd
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
-			debug(1,"fan%d: invalid new map: %s\n", fan + 1, args);
+			log_msg(LOG_WARNING, "fan%d: invalid new map: %s", fan + 1, args);
 		}
 		free(arg);
 	}
@@ -422,11 +422,11 @@ int cmd_fan_rpm_factor(const char *cmd, const char *args, int query, char *prev_
 		} else {
 			val = atoi(args);
 			if (val >= 1 || val <= 8) {
-				debug(1, "fan%d: change RPM factor %u --> %d\n",
+				log_msg(LOG_NOTICE, "fan%d: change RPM factor %u --> %d",
 					fan + 1, conf->fans[fan].rpm_factor, val);
 				conf->fans[fan].rpm_factor = val;
 			} else {
-				debug(1, "fan%d: invalid new value for RPM factor: %d",
+				log_msg(LOG_WARNING, "fan%d: invalid new value for RPM factor: %d",
 					fan + 1, val);
 			}
 		}
@@ -461,7 +461,7 @@ int cmd_fan_source(const char *cmd, const char *args, int query, char *prev_cmd)
 				val = atoi(tok) - d_n;
 				if (valid_pwm_source_ref(type, val)) {
 					d_o = (conf->fans[fan].s_type != PWM_FIXED ? 1 : 0);
-					debug(1, "fan%d: change source %s,%u --> %s,%u\n",
+					log_msg(LOG_NOTICE, "fan%d: change source %s,%u --> %s,%u",
 						fan + 1,
 						pwm_source2str(conf->fans[fan].s_type),
 						conf->fans[fan].s_id + d_o,
@@ -470,7 +470,7 @@ int cmd_fan_source(const char *cmd, const char *args, int query, char *prev_cmd)
 					conf->fans[fan].s_type = type;
 					conf->fans[fan].s_id = val;
 				} else {
-					debug(1, "fan%d: invalid source: %s",
+					log_msg(LOG_WARNING, "fan%d: invalid source: %s",
 						fan + 1, args);
 				}
 			}
@@ -490,7 +490,7 @@ int cmd_fan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
 		fan = atoi(&prev_cmd[3]) - 1;
 		if (fan >= 0 && fan < FAN_COUNT) {
 			rpm = st->fan_freq[fan] * 60.0 / conf->fans[fan].rpm_factor;
-			debug(2,"fan%d (tacho = %fHz) rpm = %.1lf\n", fan + 1,
+			log_msg(LOG_DEBUG, "fan%d (tacho = %fHz) rpm = %.1lf", fan + 1,
 				st->fan_freq[fan], rpm);
 			printf("%.0lf\n", rpm);
 		}
@@ -507,7 +507,7 @@ int cmd_fan_tacho(const char *cmd, const char *args, int query, char *prev_cmd)
 		fan = atoi(&prev_cmd[3]) - 1;
 		if (fan >= 0 && fan < FAN_COUNT) {
 			f = st->fan_freq[fan];
-			debug(2,"fan%d tacho = %fHz\n", fan + 1, f);
+			log_msg(LOG_DEBUG, "fan%d tacho = %fHz", fan + 1, f);
 			printf("%.1f\n", f);
 		}
 	}
@@ -523,7 +523,7 @@ int cmd_fan_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
 		fan = atoi(&prev_cmd[3]) - 1;
 		if (fan >= 0 && fan < FAN_COUNT) {
 			d = st->fan_duty[fan];
-			debug(2,"fan%d duty = %f%%\n", fan + 1, d);
+			log_msg(LOG_DEBUG, "fan%d duty = %f%%", fan + 1, d);
 			printf("%.0f\n", d);
 		}
 	}
@@ -549,7 +549,7 @@ int cmd_fan_read(const char *cmd, const char *args, int query, char *prev_cmd)
 		d = st->fan_duty[fan];
 		f = st->fan_freq[fan];
 		rpm = f * 60.0 / conf->fans[fan].rpm_factor;
-		debug(2,"fan%d duty = %f%%, freq = %fHz, speed = %fRPM\n",
+		log_msg(LOG_DEBUG, "fan%d duty = %f%%, freq = %fHz, speed = %fRPM",
 			fan + 1, d, f, rpm);
 		printf("%.0f,%.1f,%.0f\n", d, f, rpm);
 	}
@@ -566,7 +566,7 @@ int cmd_mbfan_name(const char *cmd, const char *args, int query, char *prev_cmd)
 		if (query) {
 			printf("%s\n", conf->mbfans[mbfan].name);
 		} else {
-			debug(1, "mbfan%d: change name '%s' --> '%s'\n", mbfan + 1,
+			log_msg(LOG_NOTICE, "mbfan%d: change name '%s' --> '%s'", mbfan + 1,
 				conf->mbfans[mbfan].name, args);
 			strncopy(conf->mbfans[mbfan].name, args, sizeof(conf->mbfans[mbfan].name));
 		}
@@ -585,11 +585,11 @@ int cmd_mbfan_min_rpm(const char *cmd, const char *args, int query, char *prev_c
 		} else {
 			val = atoi(args);
 			if (val >= 0 && val <= 50000) {
-				debug(1, "mbfan%d: change min RPM %d --> %d\n", fan + 1,
+				log_msg(LOG_NOTICE, "mbfan%d: change min RPM %d --> %d", fan + 1,
 					conf->mbfans[fan].min_rpm, val);
 				conf->mbfans[fan].min_rpm = val;
 			} else {
-				debug(1, "mbfan%d: invalid new value for min RPM: %d", fan + 1,
+				log_msg(LOG_WARNING, "mbfan%d: invalid new value for min RPM: %d", fan + 1,
 					val);
 			}
 		}
@@ -608,11 +608,11 @@ int cmd_mbfan_max_rpm(const char *cmd, const char *args, int query, char *prev_c
 		} else {
 			val = atoi(args);
 			if (val >= 0 && val <= 50000) {
-				debug(1, "mbfan%d: change max RPM %d --> %d\n", fan + 1,
+				log_msg(LOG_NOTICE, "mbfan%d: change max RPM %d --> %d", fan + 1,
 					conf->mbfans[fan].max_rpm, val);
 				conf->mbfans[fan].max_rpm = val;
 			} else {
-				debug(1, "fan%d: invalid new value for max RPM: %d", fan + 1,
+				log_msg(LOG_WARNING, "fan%d: invalid new value for max RPM: %d", fan + 1,
 					val);
 			}
 		}
@@ -632,11 +632,11 @@ int cmd_mbfan_rpm_coef(const char *cmd, const char *args, int query, char *prev_
 		} else {
 			val = atof(args);
 			if (val > 0.0) {
-				debug(1, "mbfan%d: change RPM coefficient %f --> %f\n",
+				log_msg(LOG_NOTICE, "mbfan%d: change RPM coefficient %f --> %f",
 					fan + 1, conf->mbfans[fan].rpm_coefficient, val);
 				conf->mbfans[fan].rpm_coefficient = val;
 			} else {
-				debug(1, "mbfan%d: invalid new value for RPM coefficient: %f",
+				log_msg(LOG_WARNING, "mbfan%d: invalid new value for RPM coefficient: %f",
 					fan + 1, val);
 			}
 		}
@@ -656,11 +656,11 @@ int cmd_mbfan_rpm_factor(const char *cmd, const char *args, int query, char *pre
 		} else {
 			val = atoi(args);
 			if (val >= 1 || val <= 8) {
-				debug(1, "mbfan%d: change RPM factor %u --> %d\n",
+				log_msg(LOG_NOTICE, "mbfan%d: change RPM factor %u --> %d",
 					fan + 1, conf->mbfans[fan].rpm_factor, val);
 				conf->mbfans[fan].rpm_factor = val;
 			} else {
-				debug(1, "mbfan%d: invalid new value for RPM factor: %d",
+				log_msg(LOG_WARNING, "mbfan%d: invalid new value for RPM factor: %d",
 					fan + 1, val);
 			}
 		}
@@ -703,7 +703,7 @@ int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, char *prev_c
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
-			debug(1,"mbfan%d: invalid new map: %s\n", fan + 1, args);
+			log_msg(LOG_WARNING, "mbfan%d: invalid new map: %s", fan + 1, args);
 		}
 		free(arg);
 	}
@@ -738,7 +738,7 @@ int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cm
 				val = atoi(tok) - d_n;
 				if (valid_tacho_source_ref(type, val)) {
 					d_o = (conf->mbfans[fan].s_type != TACHO_FIXED ? 1 : 0);
-					debug(1, "mbfan%d: change source %s,%u --> %s,%u\n",
+					log_msg(LOG_NOTICE, "mbfan%d: change source %s,%u --> %s,%u",
 						fan + 1,
 						tacho_source2str(conf->mbfans[fan].s_type),
 						conf->mbfans[fan].s_id + d_o,
@@ -747,7 +747,7 @@ int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cm
 					conf->mbfans[fan].s_type = type;
 					conf->mbfans[fan].s_id = val;
 				} else {
-					debug(1, "mbfan%d: invalid source: %s",
+					log_msg(LOG_WARNING, "mbfan%d: invalid source: %s",
 						fan + 1, args);
 				}
 			}
@@ -767,7 +767,7 @@ int cmd_mbfan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
 		fan = atoi(&prev_cmd[5]) - 1;
 		if (fan >= 0 && fan < MBFAN_COUNT) {
 			rpm = st->mbfan_freq[fan] * 60.0 / conf->mbfans[fan].rpm_factor;
-			debug(2,"mbfan%d (tacho = %fHz) rpm = %.1lf\n", fan+1,
+			log_msg(LOG_DEBUG, "mbfan%d (tacho = %fHz) rpm = %.1lf", fan+1,
 				st->mbfan_freq[fan], rpm);
 			printf("%.0lf\n", rpm);
 		}
@@ -784,7 +784,7 @@ int cmd_mbfan_tacho(const char *cmd, const char *args, int query, char *prev_cmd
 		fan = atoi(&prev_cmd[5]) - 1;
 		if (fan >= 0 && fan < MBFAN_COUNT) {
 			f = st->mbfan_freq[fan];
-			debug(2,"mbfan%d tacho = %fHz\n", fan + 1, f);
+			log_msg(LOG_DEBUG, "mbfan%d tacho = %fHz", fan + 1, f);
 			printf("%.1f\n", f);
 		}
 	}
@@ -800,7 +800,7 @@ int cmd_mbfan_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
 		fan = atoi(&prev_cmd[5]) - 1;
 		if (fan >= 0 && fan < MBFAN_COUNT) {
 			d = st->mbfan_duty[fan];
-			debug(2,"mbfan%d duty = %f%%\n", fan + 1, d);
+			log_msg(LOG_DEBUG, "mbfan%d duty = %f%%", fan + 1, d);
 			printf("%.0f\n", d);
 		}
 	}
@@ -826,7 +826,7 @@ int cmd_mbfan_read(const char *cmd, const char *args, int query, char *prev_cmd)
 		d = st->mbfan_duty[fan];
 		f = st->mbfan_freq[fan];
 		rpm = f * 60.0 / conf->mbfans[fan].rpm_factor;
-		debug(2,"mbfan%d duty = %f%%, freq = %fHz, speed = %fRPM\n",
+		log_msg(LOG_DEBUG, "mbfan%d duty = %f%%, freq = %fHz, speed = %fRPM",
 			fan + 1, d, f, rpm);
 		printf("%.0f,%.1f,%.0f\n", d, f, rpm);
 	}
@@ -843,7 +843,7 @@ int cmd_sensor_name(const char *cmd, const char *args, int query, char *prev_cmd
 		if (query) {
 			printf("%s\n", conf->sensors[sensor].name);
 		} else {
-			debug(1, "sensor%d: change name '%s' --> '%s'\n", sensor + 1,
+			log_msg(LOG_NOTICE, "sensor%d: change name '%s' --> '%s'", sensor + 1,
 				conf->sensors[sensor].name, args);
 			strncopy(conf->sensors[sensor].name, args,
 				sizeof(conf->sensors[sensor].name));
@@ -863,7 +863,7 @@ int cmd_sensor_temp_offset(const char *cmd, const char *args, int query, char *p
 			printf("%f\n", conf->sensors[sensor].temp_offset);
 		} else {
 			val = atof(args);
-			debug(1, "sensor%d: change temp offset %f --> %f\n", sensor + 1,
+			log_msg(LOG_NOTICE, "sensor%d: change temp offset %f --> %f", sensor + 1,
 				conf->sensors[sensor].temp_offset, val);
 			conf->sensors[sensor].temp_offset = val;
 		}
@@ -883,12 +883,12 @@ int cmd_sensor_temp_coef(const char *cmd, const char *args, int query, char *pre
 		} else {
 			val = atof(args);
 			if (val > 0.0) {
-				debug(1, "sensor%d: change temp coefficient %f --> %f\n",
+				log_msg(LOG_NOTICE, "sensor%d: change temp coefficient %f --> %f",
 					sensor + 1, conf->sensors[sensor].temp_coefficient,
 					val);
 				conf->sensors[sensor].temp_coefficient = val;
 			} else {
-				debug(1, "sensor%d: invalid temp coefficient: %f\n",
+				log_msg(LOG_WARNING, "sensor%d: invalid temp coefficient: %f",
 					sensor + 1, val);
 			}
 		}
@@ -908,12 +908,12 @@ int cmd_sensor_temp_nominal(const char *cmd, const char *args, int query, char *
 		} else {
 			val = atof(args);
 			if (val >= -50.0 && val <= 100.0) {
-				debug(1, "sensor%d: change temp nominal %.1fC --> %.1fC\n",
+				log_msg(LOG_NOTICE, "sensor%d: change temp nominal %.1fC --> %.1fC",
 					sensor + 1, conf->sensors[sensor].temp_nominal,
 					val);
 				conf->sensors[sensor].temp_nominal = val;
 			} else {
-				debug(1, "sensor%d: invalid temp nominal: %f\n",
+				log_msg(LOG_WARNING, "sensor%d: invalid temp nominal: %f",
 					sensor + 1, val);
 			}
 		}
@@ -933,12 +933,12 @@ int cmd_sensor_ther_nominal(const char *cmd, const char *args, int query, char *
 		} else {
 			val = atof(args);
 			if (val > 0.0) {
-				debug(1, "sensor%d: change thermistor nominal %.0f ohm --> %.0f ohm\n",
+				log_msg(LOG_NOTICE, "sensor%d: change thermistor nominal %.0f ohm --> %.0f ohm",
 					sensor + 1, conf->sensors[sensor].thermistor_nominal,
 					val);
 				conf->sensors[sensor].thermistor_nominal = val;
 			} else {
-				debug(1, "sensor%d: invalid thermistor nominal: %f\n",
+				log_msg(LOG_WARNING, "sensor%d: invalid thermistor nominal: %f",
 					sensor + 1, val);
 			}
 		}
@@ -958,12 +958,12 @@ int cmd_sensor_beta_coef(const char *cmd, const char *args, int query, char *pre
 		} else {
 			val = atof(args);
 			if (val > 0.0) {
-				debug(1, "sensor%d: change thermistor beta coefficient %.0f --> %.0f\n",
+				log_msg(LOG_NOTICE, "sensor%d: change thermistor beta coefficient %.0f --> %.0f",
 					sensor + 1, conf->sensors[sensor].beta_coefficient,
 					val);
 				conf->sensors[sensor].beta_coefficient = val;
 			} else {
-				debug(1, "sensor%d: invalid thermistor beta coefficient: %f\n",
+				log_msg(LOG_WARNING, "sensor%d: invalid thermistor beta coefficient: %f",
 					sensor + 1, val);
 			}
 		}
@@ -1006,7 +1006,7 @@ int cmd_sensor_temp_map(const char *cmd, const char *args, int query, char *prev
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
-			debug(1,"sensor%d: invalid new map: %s\n", sensor + 1, args);
+			log_msg(LOG_WARNING, "sensor%d: invalid new map: %s", sensor + 1, args);
 		}
 		free(arg);
 	}
@@ -1030,7 +1030,7 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd
 
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		d = st->temp[sensor];
-		debug(2,"sensor%d temperature = %fC\n", sensor + 1, d);
+		log_msg(LOG_DEBUG, "sensor%d temperature = %fC", sensor + 1, d);
 		printf("%.0f\n", d);
 	}
 
@@ -1059,7 +1059,7 @@ int ip_change(const char *cmd, const char *args, int query, char *prev_cmd, cons
 	} else {
 		if (!ipaddr_aton(args, &tmpip))
 			return 1;
-		debug(1,"%s change '%s' --> %s'\n", name, ipaddr_ntoa(ip), args);
+		log_msg(LOG_NOTICE, "%s change '%s' --> %s'", name, ipaddr_ntoa(ip), args);
 		ip_addr_copy(*ip, tmpip);
 	}
 	return 0;
@@ -1103,7 +1103,7 @@ int cmd_wifi_ssid(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (query) {
 		printf("%s\n", conf->wifi_ssid);
 	} else {
-		debug(1, "Wi-Fi SSID change '%s' --> '%s'\n",
+		log_msg(LOG_NOTICE, "Wi-Fi SSID change '%s' --> '%s'",
 			conf->wifi_ssid, args);
 		strncopy(conf->wifi_ssid, args, sizeof(conf->wifi_ssid));
 	}
@@ -1124,11 +1124,11 @@ int cmd_wifi_country(const char *cmd, const char *args, int query, char *prev_cm
 		printf("%s\n", conf->wifi_country);
 	} else {
 		if (valid_wifi_country(args)) {
-			debug(1, "Wi-Fi Country change '%s' --> '%s'\n",
+			log_msg(LOG_NOTICE, "Wi-Fi Country change '%s' --> '%s'",
 				conf->wifi_country, args);
 			strncopy(conf->wifi_country, args, sizeof(conf->wifi_country));
 		} else {
-			debug(1, "Invalid Wi-Fi country: %s\n", args);
+			log_msg(LOG_WARNING, "Invalid Wi-Fi country: %s", args);
 		}
 	}
 	return 0;
@@ -1139,7 +1139,7 @@ int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_c
 	if (query) {
 		printf("%s\n", conf->wifi_passwd);
 	} else {
-		debug(1, "Wi-Fi Password change '%s' --> '%s'\n",
+		log_msg(LOG_NOTICE, "Wi-Fi Password change '%s' --> '%s'",
 			conf->wifi_passwd, args);
 		strncopy(conf->wifi_passwd, args, sizeof(conf->wifi_passwd));
 	}
@@ -1167,7 +1167,7 @@ int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (query) {
 		printf("%s\n", conf->name);
 	} else {
-		debug(1, "System name change '%s' --> '%s'\n", conf->name, args);
+		log_msg(LOG_NOTICE, "System name change '%s' --> '%s'", conf->name, args);
 		strncopy(conf->name, args, sizeof(conf->name));
 	}
 	return 0;
@@ -1344,7 +1344,7 @@ struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level, char **prev_subcmd)
 	}
 
 	if (res < 0)
-		debug(1,"Unknown command.\n");
+		log_msg(LOG_INFO, "Unknown command.");
 
 	return cmd_level;
 }
@@ -1365,7 +1365,7 @@ void process_command(struct fanpico_state *state, struct fanpico_config *config,
 	cmd = strtok_r(command, ";", &saveptr);
 	while (cmd) {
 		cmd = trim_str(cmd);
-		debug(1, "command: '%s'\n", cmd);
+		log_msg(LOG_DEBUG, "command: '%s'", cmd);
 		if (cmd && strlen(cmd) > 0) {
 			cmd_level = run_cmd(cmd, cmd_level, &prev_subcmd);
 		}

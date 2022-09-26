@@ -42,7 +42,6 @@
 
 
 static struct fanpico_state system_state;
-
 const struct fanpico_state *fanpico_state = &system_state;
 
 
@@ -51,6 +50,7 @@ void setup()
 	pico_unique_board_id_t board_id;
 	int i;
 
+	set_log_level(LOG_DEBUG);
 	rtc_init();
 
 #if TTL_SERIAL
@@ -125,7 +125,7 @@ void setup()
 	setup_tacho_outputs();
 	setup_tacho_inputs();
 
-	printf("Initialization complete.\n\n");
+	log_msg(LOG_NOTICE, "System initilization complete.");
 }
 
 
@@ -156,7 +156,7 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 	for (i = 0; i < FAN_COUNT; i++) {
 		new = calculate_pwm_duty(state, config, i);
 		if (check_for_change(state->fan_duty[i], new, 0.1)) {
-			debug(1, "fan%d: Set output PWM %.1f%% --> %.1f%%\n",
+			log_msg(LOG_INFO, "fan%d: Set output PWM %.1f%% --> %.1f%%",
 				i+1,
 				state->fan_duty[i],
 				new);
@@ -169,7 +169,7 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 	for (i = 0; i < MBFAN_COUNT; i++) {
 		new = calculate_tacho_freq(state, config, i);
 		if (check_for_change(state->mbfan_freq[i], new, 0.1)) {
-			debug(1, "mbfan%d: Set output Tacho %.2fHz --> %.2fHz\n",
+			log_msg(LOG_INFO, "mbfan%d: Set output Tacho %.2fHz --> %.2fHz",
 				i+1,
 				state->mbfan_freq[i],
 				new);
@@ -184,7 +184,7 @@ void core1_main()
 {
 	absolute_time_t t_led = 0;
 
-	debug(1, "core1: started...\n");
+	log_msg(LOG_INFO, "core1: started...");
 
 	/* Allow core0 to pause this core... */
 	multicore_lockout_victim_init();
@@ -193,7 +193,7 @@ void core1_main()
 		read_tacho_inputs();
 
 		if (time_passed(&t_led, 2000)) {
-			debug(2, "core1: tick\n");
+			log_msg(LOG_DEBUG, "core1: tick");
 		}
 	}
 }
@@ -242,7 +242,7 @@ int main()
 
 		if (delta > max_delta) {
 			max_delta = delta;
-			debug(2, "%llu: max_loop_time=%lld\n", t_now, max_delta);
+			log_msg(LOG_DEBUG, "core0: max_loop_time=%lld", max_delta);
 		}
 
 		if (time_passed(&t_network, 1)) {
@@ -283,7 +283,7 @@ int main()
 			for (i = 0; i < MBFAN_COUNT; i++) {
 				new_duty = roundf(mbfan_pwm_duty[i]);
 				if (check_for_change(st->mbfan_duty[i], new_duty, 0.5)) {
-					debug(1, "mbfan%d: duty cycle change %.1f --> %.1f\n",
+					log_msg(LOG_INFO, "mbfan%d: duty cycle change %.1f --> %.1f",
 						i+1,
 						st->mbfan_duty[i],
 						new_duty);
@@ -302,7 +302,7 @@ int main()
 			for (i = 0; i < SENSOR_COUNT; i++) {
 				temp = get_temperature(i);
 				if (check_for_change(st->temp[i], temp, 0.5)) {
-					debug(1, "sensor%d: Temperature change %.1fC --> %.1fC\n",
+					log_msg(LOG_INFO, "sensor%d: Temperature change %.1fC --> %.1fC",
 						i+1,
 						st->temp[i],
 						temp);
@@ -314,12 +314,12 @@ int main()
 
 		/* Calculate frequencies from input tachometer signals peridocially */
 		if (time_passed(&t_poll_tacho, 2000)) {
-			debug(2, "Updating tacho input signals.\n");
+			log_msg(LOG_DEBUG, "Updating tacho input signals.");
 			update_tacho_input_freq(st);
 		}
 
 		if (change || time_passed(&t_set_outputs, 3000)) {
-			debug(2, "Updating output signals.\n");
+			log_msg(LOG_DEBUG, "Updating output signals.");
 			update_outputs(st, cfg);
 		}
 
