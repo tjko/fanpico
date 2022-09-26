@@ -309,6 +309,8 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 
 	cJSON_AddItemToObject(config, "id", cJSON_CreateString("fanpico-config-v1"));
 	cJSON_AddItemToObject(config, "debug", cJSON_CreateNumber(get_debug_level()));
+	cJSON_AddItemToObject(config, "log_level", cJSON_CreateNumber(get_log_level()));
+	cJSON_AddItemToObject(config, "syslog_level", cJSON_CreateNumber(get_syslog_level()));
 	cJSON_AddItemToObject(config, "local_echo", cJSON_CreateBool(cfg->local_echo));
 	cJSON_AddItemToObject(config, "led_mode", cJSON_CreateNumber(cfg->led_mode));
 	if (strlen(cfg->display_type) > 0)
@@ -435,9 +437,13 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	/* Parse JSON configuration */
 
 	if ((ref = cJSON_GetObjectItem(config, "id")))
-		printf("Config version: %s\n", ref->valuestring);
+		log_msg(LOG_INFO, "Config version: %s", ref->valuestring);
 	if ((ref = cJSON_GetObjectItem(config, "debug")))
 		set_debug_level(cJSON_GetNumberValue(ref));
+	if ((ref = cJSON_GetObjectItem(config, "log_level")))
+		set_log_level(cJSON_GetNumberValue(ref));
+	if ((ref = cJSON_GetObjectItem(config, "syslog_level")))
+		set_syslog_level(cJSON_GetNumberValue(ref));
 	if ((ref = cJSON_GetObjectItem(config, "local_echo")))
 		cfg->local_echo = (cJSON_IsTrue(ref) ? true : false);
 	if ((ref = cJSON_GetObjectItem(config, "led_mode")))
@@ -578,47 +584,44 @@ void read_config(bool multicore)
 	int32_t file_size, bytes_read;
 
 
-	printf("Reading configuration...\n");
+	log_msg(LOG_INFO, "Reading configuration...");
 
 	if (multicore)
 		multicore_lockout_start_blocking();
 
 	/* Mount flash filesystem... */
 	if ((res = pico_mount(false)) < 0) {
-		printf("Mount failed: %d (%s)\n", res, pico_errmsg(res));
-		printf("Trying to initialize a new filesystem...\n");
+		log_msg(LOG_NOTICE, "pico_mount() failed: %d (%s)", res, pico_errmsg(res));
+		log_msg(LOG_NOTICE, "Trying to initialize a new filesystem...");
 		if ((res = pico_mount(true)) < 0) {
-			printf("Unable to initialize flash filesystem!\n");
+			log_msg(LOG_ERR, "Unable to initialize flash filesystem!");
 		} else {
-			printf("Filesystem successfully initialized. (%d)\n", res);
+			log_msg(LOG_NOTICE, "Filesystem successfully initialized. (%d)", res);
 		}
 	} else {
-		printf("Filesystem mounted OK\n");
+		log_msg(LOG_INFO, "Filesystem mounted OK");
 		/* Read configuration file... */
 		if ((fd = pico_open("fanpico.cfg", LFS_O_RDONLY)) < 0) {
-			printf("Cannot open fanpico.cfg: %d (%s)\n", fd, pico_errmsg(fd));
+			log_msg(LOG_NOTICE, "Cannot open fanpico.cfg: %d (%s)", fd, pico_errmsg(fd));
 		} else {
 			file_size = pico_size(fd);
-			printf("Configuration file opened ok: %li bytes\n", file_size);
+			log_msg(LOG_INFO, "Configuration file opened ok: %li bytes", file_size);
 			if (file_size > 0) {
 				char *buf = malloc(file_size);
 				if (!buf) {
-					printf("Not enough memory!\n");
+					log_msg(LOG_ALERT, "Not enough memory!");
 				} else {
-					// read saved config...
-					printf("Reading saved configuration...\n");
+					/* read saved config... */
+					log_msg(LOG_INFO, "Reading saved configuration...");
 					bytes_read = pico_read(fd, buf, file_size);
 					if (bytes_read < file_size) {
-						printf("Error reading configuration file: %li\n", bytes_read);
+						log_msg(LOG_ERR, "Error reading configuration file: %li", bytes_read);
 					} else {
-						//printf("bytes read: %li\n", bytes_read);
-						//printf("---\n%s\n---\n", buf);
-
-						// parse saved config...
+						/* parse saved config... */
 						config = cJSON_Parse(buf);
 						if (!config) {
 							const char *error_str = cJSON_GetErrorPtr();
-							printf("Failed to parse saved config: %s\n",
+							log_msg(LOG_ERR, "Failed to parse saved config: %s",
 								(error_str ? error_str : "") );
 						}
 					}
@@ -634,8 +637,8 @@ void read_config(bool multicore)
 		multicore_lockout_end_blocking();
 
 	if (!config) {
-		printf("Using default configuration...\n");
-		printf("config size = %lu\n", default_config_size);
+		log_msg(LOG_NOTICE, "Using default configuration...");
+		log_msg(LOG_DEBUG, "config size = %lu", default_config_size);
 		/* printf("default config:\n---\n%s\n---\n", default_config); */
 		config = cJSON_Parse(fanpico_default_config);
 		if (!config) {
@@ -649,7 +652,7 @@ void read_config(bool multicore)
         /* Parse JSON configuration */
 	clear_config(cfg);
 	if (json_to_config(config, cfg) < 0) {
-		printf("Error parsing JSON configuration\n");
+		log_msg(LOG_ERR, "Error parsing JSON configuration");
 	}
 
 	cJSON_Delete(config);
@@ -662,16 +665,16 @@ void save_config()
 	char *str;
 	int res, fd;
 
-	printf("Saving configuration...\n");
+	log_msg(LOG_NOTICE, "Saving configuration...");
 
 	config = config_to_json(cfg);
 	if (!config) {
-		printf("Out of memory?");
+		log_msg(LOG_ALERT, "Out of memory!");
 		return;
 	}
 
 	if ((str = cJSON_Print(config)) == NULL) {
-		printf("Failed to generate JSON output\n");
+		log_msg(LOG_ERR, "Failed to generate JSON output");
 	} else {
 		uint32_t config_size = strlen(str) + 1;
 
@@ -679,17 +682,17 @@ void save_config()
 
 		/* Mount flash filesystem... */
 		if ((res = pico_mount(false)) < 0) {
-			printf("Mount failed: %d (%s)\n", res, pico_errmsg(res));
+			log_msg(LOG_ERR, "Mount failed: %d (%s)", res, pico_errmsg(res));
 		} else {
 			if ((fd = pico_open("fanpico.cfg", LFS_O_WRONLY | LFS_O_CREAT)) < 0) {
-				printf("Failed to create configuration file: %d (%s)\n",
+				log_msg(LOG_ERR, "Failed to create configuration file: %d (%s)",
 					fd, pico_errmsg(fd));
 			} else {
 				lfs_size_t wrote = pico_write(fd, str, config_size);
 				if (wrote < config_size) {
-					printf("Failed to write configuration to file: %li\n", wrote);
+					log_msg(LOG_ERR, "Failed to write configuration to file: %li", wrote);
 				} else {
-					printf("Configuration successfully saved: %li bytes\n", wrote);
+					log_msg(LOG_NOTICE, "Configuration successfully saved: %li bytes", wrote);
 				}
 				pico_close(fd);
 			}
@@ -711,12 +714,12 @@ void print_config()
 
 	config = config_to_json(cfg);
 	if (!config) {
-		printf("Out of memory?");
+		log_msg(LOG_ALERT, "Out of memory");
 		return;
 	}
 
 	if ((str = cJSON_Print(config)) == NULL) {
-		printf("Failed to generate JSON output\n");
+		log_msg(LOG_ERR, "Failed to generate JSON output");
 	} else {
 		printf("Current Configuration:\n%s\n---\n", str);
 		free(str);
@@ -735,16 +738,16 @@ void delete_config()
 
 	/* Mount flash filesystem... */
 	if ((res = pico_mount(false)) < 0) {
-		printf("Mount failed: %d (%s)\n", res, pico_errmsg(res));
+		log_msg(LOG_ERR, "Mount failed: %d (%s)", res, pico_errmsg(res));
 	} else {
 		/* Check configuration file exists... */
 		if ((res = pico_stat("fanpico.cfg", &stat)) < 0) {
-			printf("Configuration file not found: %d (%s)\n", res, pico_errmsg(res));
+			log_msg(LOG_ERR, "Configuration file not found: %d (%s)", res, pico_errmsg(res));
 		} else {
 			/* Remove configuration file...*/
-			printf("Removing configuration file (%lu bytes)\n", stat.size);
+			log_msg(LOG_NOTICE, "Removing configuration file (%lu bytes)", stat.size);
 			if ((res = pico_remove("fanpico.cfg")) < 0) {
-				printf("Failed to remove file: %d (%s)\n", res, pico_errmsg(res));
+				log_msg(LOG_ERR, "Failed to remove file: %d (%s)", res, pico_errmsg(res));
 			}
 		}
 		pico_unmount();

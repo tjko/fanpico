@@ -177,6 +177,34 @@ int cmd_debug(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_log_level(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int level = atoi(args);
+
+	if (query) {
+		printf("%d\n", get_log_level());
+	} else {
+	        level = (level < 0 ? 0 : level);
+		log_msg(LOG_NOTICE, "Change log level: %d -> %d", get_log_level(), level);
+		set_log_level(level);
+	}
+	return 0;
+}
+
+int cmd_syslog_level(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int level = atoi(args);
+
+	if (query) {
+		printf("%d\n", get_syslog_level());
+	} else {
+	        level = (level < 0 ? 0 : level);
+		log_msg(LOG_NOTICE, "Change syslog level: %d -> %d", get_syslog_level(), level);
+		set_syslog_level(level);
+	}
+	return 0;
+}
+
 int cmd_echo(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int val = atoi(args);
@@ -1191,7 +1219,9 @@ struct cmd_t wifi_commands[] = {
 };
 
 struct cmd_t system_commands[] = {
-	{ "DEBug",     5, NULL,              cmd_debug },
+	{ "DEBug",     5, NULL,              cmd_debug }, /* Obsolete ? */
+	{ "LOG",       3, NULL,              cmd_log_level },
+	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
 	{ "ECHO",      4, NULL,              cmd_echo },
 	{ "FANS",      4, NULL,              cmd_fans },
 	{ "LED",       3, NULL,              cmd_led },

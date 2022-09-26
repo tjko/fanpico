@@ -53,42 +53,40 @@ void oled_display_init()
 		}
 	}
 
-	printf("Initializing OLED Display...\n");
+	log_msg(LOG_NOTICE, "Initializing OLED Display...");
 	do {
 		sleep_ms(50);
 		res = oledInit(&oled, dtype, -1, 0, 0, I2C_HW, SDA_PIN, SCL_PIN, -1,
 			1000000L);
 	} while (res == OLED_NOT_FOUND && retries++ < 10);
 
-	printf("OLED display: ");
 	if (res == OLED_NOT_FOUND) {
-		printf("No Display Connected\n");
+		log_msg(LOG_ERR, "No OLED Display Connected!");
 		return;
 	}
 
 	switch (res) {
 	case OLED_SSD1306_3C:
-		printf("SSD1306 (at 0x3c)");
+		log_msg(LOG_NOTICE, "OLED Display: SSD1306 (at 0x3c)");
 		break;
 	case OLED_SSD1306_3D:
-		printf("SSD1306 (at 0x3d)");
+		log_msg(LOG_NOTICE, "OLED Display: SSD1306 (at 0x3d)");
 		break;
 	case OLED_SH1106_3C:
-		printf("SH1106 (at 0x3c)");
+		log_msg(LOG_NOTICE, "OLED Display: SH1106 (at 0x3c)");
 		break;
 	case OLED_SH1106_3D:
-		printf("SH1106 (at 0x3d)");
+		log_msg(LOG_NOTICE, "OLED Display: SH1106 (at 0x3d)");
 		break;
 	case OLED_SH1107_3C:
-		printf("SH1107 (at 0x3c)");
+		log_msg(LOG_NOTICE, "OLED Display: SH1107 (at 0x3c)");
 		break;
 	case OLED_SH1107_3D:
-		printf("SH1107 (at 0x3d)");
+		log_msg(LOG_NOTICE, "OLED Display: SH1107 (at 0x3d)");
 		break;
 	default:
-		printf("Unknown");
+		log_msg(LOG_ERR, "Unknown OLED Display.");
 	}
-	printf("\n");
 
 	oled_found = 1;
 
@@ -167,7 +165,7 @@ void display_init()
 #ifdef OLED_DISPLAY
 	oled_display_init();
 #else
-	printf("No Display Support\n");
+	log_msg(LOG_NOTICE, "No Display Support");
 #endif
 }
 

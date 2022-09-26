@@ -83,6 +83,8 @@ void wifi_init()
 	memset(cyw43_mac, 0, sizeof(cyw43_mac));
 	ip_addr_set_zero(&syslog_server);
 
+	log_msg(LOG_NOTICE, "Initializing WiFi...");
+
 	/* If WiFi country is defined in configuratio, use it... */
 	if (cfg) {
 		char *country = cfg->wifi_country;
@@ -109,19 +111,19 @@ void wifi_init()
 		"FanPico-%02x%02x%02x%02x%02x%02x%02x%02x",
 		b.id[0],b.id[1],b.id[2],b.id[3],
 		b.id[4],b.id[5],b.id[6],b.id[7]);
-	log_msg(LOG_INFO, "WiFi hostname: %s", wifi_hostname);
+	log_msg(LOG_NOTICE, "WiFi hostname: %s", wifi_hostname);
 	netif_set_hostname(n, wifi_hostname);
 
 	netif_set_link_callback(n, wifi_link_cb);
 	netif_set_status_callback(n, wifi_status_cb);
 	if (!ip_addr_isany(&cfg->ip)) {
 		dhcp_stop(n);
-		log_msg(LOG_INFO, "     IP: %s", ipaddr_ntoa(&cfg->ip));
-		log_msg(LOG_INFO, "Netmask: %s", ipaddr_ntoa(&cfg->netmask));
-		log_msg(LOG_INFO, "Gateway: %s", ipaddr_ntoa(&cfg->gateway));
+		log_msg(LOG_NOTICE, "     IP: %s", ipaddr_ntoa(&cfg->ip));
+		log_msg(LOG_NOTICE, "Netmask: %s", ipaddr_ntoa(&cfg->netmask));
+		log_msg(LOG_NOTICE, "Gateway: %s", ipaddr_ntoa(&cfg->gateway));
 		netif_set_addr(n, &cfg->ip, &cfg->netmask, &cfg->gateway);
 	} else {
-		log_msg(LOG_INFO, "IP: DHCP");
+		log_msg(LOG_NOTICE, "IP: DHCP");
 	}
 	netif_set_up(n);
 
@@ -131,12 +133,12 @@ void wifi_init()
 		cyw43_arch_deinit();
 		return;
 	}
-	log_msg(LOG_INFO, "WiFi MAC: %s", mac_address_str(cyw43_mac));
+	log_msg(LOG_NOTICE, "WiFi MAC: %s", mac_address_str(cyw43_mac));
 
 	/* Attempt to connect to a WiFi network... */
 	if (cfg) {
 		if (strlen(cfg->wifi_ssid) > 0 && strlen(cfg->wifi_passwd) > 0) {
-			log_msg(LOG_INFO, "WiFi connecting to network: %s", cfg->wifi_ssid);
+			log_msg(LOG_NOTICE, "WiFi connecting to network: %s", cfg->wifi_ssid);
 			res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
 							cfg->wifi_passwd,
 							CYW43_AUTH_WPA2_AES_PSK);
@@ -153,10 +155,10 @@ void wifi_init()
 	/* Enable SNTP client... */
 	sntp_init();
 	if (!ip_addr_isany(&cfg->ntp_server)) {
-		log_msg(LOG_INFO, "NTP Server: %s", ipaddr_ntoa(&cfg->ntp_server));
+		log_msg(LOG_NOTICE, "NTP Server: %s", ipaddr_ntoa(&cfg->ntp_server));
 		sntp_setserver(0, &cfg->ntp_server);
 	} else {
-		log_msg(LOG_INFO, "NTP Server: DHCP");
+		log_msg(LOG_NOTICE, "NTP Server: DHCP");
 		sntp_servermode_dhcp(1);
 	}
 

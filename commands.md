@@ -70,7 +70,11 @@ Fanpico supports following commands:
 * [MEASure:SENSORx:TEMP?](#measuresensorxtemp)
 * [Read?](#read)
 * [SYStem:DEBug](#systemdebug)
-* [SYStem:DEBug?](#systemdebug)
+* [SYStem:DEBug?](#systemdebug-1)
+* [SYStem:LOG](#systemlog)
+* [SYStem:LOG?](#systemlog-1)
+* [SYStem:SYSLOG](#systemsyslog)
+* [SYStem:SYSLOG?](#systemsyslog-1)
 * [SYStem:DISPlay](#systemdisplay)
 * [SYStem:DISPlay?](#systemdisplay)
 * [SYStem:ECHO](#systemecho)
@@ -974,6 +978,72 @@ Display current system debug level.
 Example: 
 ```
 SYS:DEBUG?
+0
+```
+
+#### SYStem:LOG
+Set the system logging level. This controls the level of logging to the console.
+
+Default: 5  (NOTICE)
+
+Log Levels:
+
+Level|Name
+-----|----
+0|EMERG
+1|ALERT
+2|CRIT
+3|ERR
+4|WARNING
+5|NOTICE
+6|INFO
+7|DEBUG
+
+Example: Enable verbose debug output
+```
+SYS:LOG 7
+```
+
+#### SYStem:LOG?
+Display current system logging level.
+
+Example:
+```
+SYS:LOG?
+5
+```
+
+#### SYStem:SYSLOG
+Set the syslog logging level. This controls the level of logging to a remote
+syslog server.
+
+Default: 3  (ERR)
+
+Log Levels:
+
+Level|Name
+-----|----
+0|EMERG
+1|ALERT
+2|CRIT
+3|ERR
+4|WARNING
+5|NOTICE
+6|INFO
+7|DEBUG
+
+Example: Enable loggin of NOTICE (and lower level) message:
+```
+SYS:LOG 5
+```
+
+#### SYStem:SYSLOG?
+Display current syslog logging level.
+
+Example:
+```
+SYS:SYSLOG?
+3
 ```
 
 #### SYStem:DISPlay

@@ -50,7 +50,6 @@ void setup()
 	pico_unique_board_id_t board_id;
 	int i;
 
-	set_log_level(LOG_DEBUG);
 	rtc_init();
 
 #if TTL_SERIAL
@@ -91,7 +90,7 @@ void setup()
 	network_init(&system_state);
 
 	/* Enable ADC */
-	printf("Initialize ADC...\n");
+	log_msg(LOG_NOTICE, "Initialize ADC...");
 	adc_init();
 	adc_set_temp_sensor_enabled(true);
 	if (SENSOR1_READ_PIN > 0)
@@ -100,7 +99,7 @@ void setup()
 		adc_gpio_init(SENSOR2_READ_PIN);
 
 	/* Setup GPIO pins... */
-	printf("Initialize GPIO...\n");
+	log_msg(LOG_NOTICE, "Initialize GPIO...");
 
 	/* Initialize status LED... */
 	if (LED_PIN > 0) {

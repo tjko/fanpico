@@ -249,7 +249,7 @@ void setup_tacho_inputs()
 {
 	int i, pin;
 
-	printf("Setting up Tacho Input pins...\n");
+	log_msg(LOG_NOTICE, "Setting up Tacho Input pins...");
 
 	/* Configure pins and build GPIO to FAN mapping */
 	memset(gpio_fan_tacho_map, 0, sizeof(gpio_fan_tacho_map));
@@ -304,7 +304,7 @@ void setup_tacho_outputs()
 {
 	uint i;
 
-	printf("Setting up Tacho Output pins...\n");
+	log_msg(LOG_NOTICE, "Setting up Tacho Output pins...");
 
 	/* Load square wave generator program to PIO */
 	uint pio_program_addr = square_wave_gen_load_program(pio);

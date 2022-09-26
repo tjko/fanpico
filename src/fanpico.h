@@ -220,6 +220,8 @@ int get_debug_level();
 void set_debug_level(int level);
 int get_log_level();
 void set_log_level(int level);
+int get_syslog_level();
+void set_syslog_level(int level);
 void debug(int debug_level, const char *fmt, ...);
 void print_mallinfo();
 char *trim_str(char *s);

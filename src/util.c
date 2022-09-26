@@ -38,7 +38,8 @@
 #endif
 
 int global_debug_level = 0;
-int global_log_level = 4;
+int global_log_level = LOG_NOTICE;
+int global_syslog_level = LOG_ERR;
 
 
 int get_log_level()
@@ -51,11 +52,20 @@ void set_log_level(int level)
 	global_log_level = level;
 }
 
+int get_syslog_level()
+{
+	return global_syslog_level;
+}
+
+void set_syslog_level(int level)
+{
+	global_syslog_level = level;
+}
+
 int get_debug_level()
 {
 	return global_debug_level;
 }
-
 
 void set_debug_level(int level)
 {
@@ -68,18 +78,19 @@ void log_msg(int priority, const char *format, ...)
 	va_list ap;
 	char buf[256];
 
-	if (priority > global_log_level)
+	if ((priority > global_log_level) && (priority > global_syslog_level))
 		return;
 
 	va_start(ap, format);
 	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 
-	uint64_t t = get_absolute_time();
-	printf("[%6llu.%06llu] %s\n", (t / 1000000), (t % 1000000), buf);
-
-#ifdef WIFI_SUPPORT
 	if (priority <= global_log_level) {
+		uint64_t t = get_absolute_time();
+		printf("[%6llu.%06llu] %s\n", (t / 1000000), (t % 1000000), buf);
+	}
+#ifdef WIFI_SUPPORT
+	if (priority <= global_syslog_level) {
 		syslog_msg(priority, "%s", buf);
 	}
 #endif
@@ -152,7 +163,7 @@ const char *mac_address_str(const uint8_t *mac)
 	static char buf[32];
 
 	snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
-		buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
+		mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
 	return buf;
 }

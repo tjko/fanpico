@@ -156,9 +156,9 @@ void setup_pwm_outputs()
 	uint slice_num;
 	int i;
 
-	printf("Initializing PWM outputs...\n");
+	log_msg(LOG_NOTICE, "Initializing PWM outputs...");
+	log_msg(LOG_NOTICE, "PWM Frequency: %0.2f kHz", pwm_freq / 1000.0);
 
-	printf("PWM Frequency: %0.2f kHz\n", pwm_freq / 1000.0);
 	pwm_out_top = (sys_clock / pwm_freq / 2) - 1;  /* for phase-correct PWM signal */
 
 	pwm_config_set_clkdiv(&config, 1);
@@ -190,7 +190,7 @@ void setup_pwm_inputs()
 	uint slice_num;
 	int i;
 
-	printf("Initializing PWM Inputs...\n");
+	log_msg(LOG_NOTICE, "Initializing PWM Inputs...");
 
 	pwm_config_set_clkdiv_mode(&config, PWM_DIV_B_HIGH);
 	pwm_config_set_clkdiv(&config, PWM_IN_CLOCK_DIVIDER);
