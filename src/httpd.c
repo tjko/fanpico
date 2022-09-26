@@ -226,20 +226,22 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	else if (!strncmp(tag, "fanrow", 6)) {
 		uint8_t i = tag[6] - '1';
 		if (i < FAN_COUNT) {
+			double rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
 			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td>%0.0f %%",
 					i + 1,
 					cfg->fans[i].name,
-					st->fan_freq[i],
+					rpm,
 					st->fan_duty[i]);
 		}
 	}
 	else if (!strncmp(tag, "mfanrow", 7)) {
 		uint8_t i = tag[7] - '1';
 		if (i < MBFAN_COUNT) {
+			double rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
 			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td>%0.0f %%",
 					i + 1,
 					cfg->mbfans[i].name,
-					st->mbfan_freq[i],
+					rpm,
 					st->mbfan_duty[i]);
 		}
 	}
