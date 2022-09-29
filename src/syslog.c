@@ -124,40 +124,41 @@ void syslog_close()
 int syslog_msg(int severity, const char *format, ...)
 {
 	va_list args;
-
-	char msg[SYSLOG_MAX_MSG_LEN - 64];
 	char buf[SYSLOG_MAX_MSG_LEN];
-	char tstamp[16];
 	datetime_t t;
 	struct tm tm;
-	uint16_t msg_len;
-	int pri;
-
+	uint16_t len;
 
 	if (!format || !syslog)
 		return 1;
 	if (!rtc_get_datetime(&t))
 		return 2;
 
-	/* compute syslog priority */
-	pri = (syslog->facility << 3) | (severity & 0x07);
-	/* generate syslog timestamp */
+	/* Build syslog 'packet' ... */
+
+	/* priority */
+	snprintf(buf, 6, "<%u>",  (syslog->facility << 3) | (severity & 0x07));
+	len = strlen(buf);
+	/* timestamp */
 	datetime_to_tm(&t, &tm);
-	strftime(tstamp, sizeof(tstamp), "%b %e %T", &tm);
-	/* format the message */
+	strftime(&buf[len], 18, "%b %e %T ", &tm);
+	len = strlen(buf);
+	/* hostname */
+	snprintf(&buf[len], 34, "%s ", syslog->hostname);
+	len = strlen(buf);
+	/* message */
 	va_start(args, format);
-	vsnprintf(msg, sizeof(msg), format, args);
+	vsnprintf(&buf[len], sizeof(buf) - len - 1, format, args);
 	va_end(args);
-	/* build the syslog 'packet' */
-	snprintf(buf, sizeof(buf), "<%d>%s %s %s", pri, tstamp, syslog->hostname, msg);
-	msg_len = strlen(buf);
+	len = strlen(buf);
 
 	/* printf("SYSLOG: '%s'\n", buf); */
 
+	/* Send syslog (UDP) packet */
 	cyw43_arch_lwip_begin();
-	struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, msg_len, PBUF_RAM);
+	struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
 	if (p) {
-		memcpy(p->payload, buf, msg_len);
+		memcpy(p->payload, buf, len);
 		udp_send(syslog->pcb, p);
 		pbuf_free(p);
 	}
