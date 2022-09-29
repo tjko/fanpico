@@ -122,8 +122,8 @@ void pulse_disable_interrupt()
 uint64_t pulse_interval()
 {
 	uint32_t pulses;
-	absolute_time_t read_time, delta;
-	uint64_t i;
+	absolute_time_t read_time;
+	uint64_t delta, i;
 
 	/* Read current counter value. */
 	pulses = pulse_counter;

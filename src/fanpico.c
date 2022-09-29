@@ -181,7 +181,9 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 
 void core1_main()
 {
-	absolute_time_t t_led = 0;
+	absolute_time_t t_led;
+
+	update_us_since_boot(&t_led, 0);
 
 	log_msg(LOG_INFO, "core1: started...");
 
@@ -202,14 +204,14 @@ int main()
 {
 	struct fanpico_state *st = &system_state;
 	absolute_time_t t_now;
-	absolute_time_t t_last = 0;
-	absolute_time_t t_poll_pwm = 0;
-	absolute_time_t t_poll_tacho = 0;
-	absolute_time_t t_led = 0;
-	absolute_time_t t_temp = 0;
-	absolute_time_t t_set_outputs = 0;
-	absolute_time_t t_display = 0;
-	absolute_time_t t_network = 0;
+	absolute_time_t t_last;
+	absolute_time_t t_poll_pwm;
+	absolute_time_t t_poll_tacho;
+	absolute_time_t t_led;
+	absolute_time_t t_temp;
+	absolute_time_t t_set_outputs;
+	absolute_time_t t_display;
+	absolute_time_t t_network;
 	uint8_t led_state = 0;
 	int64_t delta;
 	int64_t max_delta = 0;
@@ -217,6 +219,14 @@ int main()
 	char input_buf[1024];
 	int i_ptr = 0;
 
+	update_us_since_boot(&t_last, 0);
+	update_us_since_boot(&t_poll_pwm, 0);
+	update_us_since_boot(&t_poll_tacho, 0);
+	update_us_since_boot(&t_led, 0);
+	update_us_since_boot(&t_temp, 0);
+	update_us_since_boot(&t_set_outputs, 0);
+	update_us_since_boot(&t_display, 0);
+	update_us_since_boot(&t_network, 0);
 
 	set_binary_info();
 	clear_state(st);
@@ -287,7 +297,7 @@ int main()
 						st->mbfan_duty[i],
 						new_duty);
 					st->mbfan_duty[i] = new_duty;
-					t_set_outputs = 0;
+					update_us_since_boot(&t_set_outputs, 0);
 					change++;
 				}
 			}

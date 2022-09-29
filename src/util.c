@@ -86,7 +86,7 @@ void log_msg(int priority, const char *format, ...)
 	va_end(ap);
 
 	if (priority <= global_log_level) {
-		uint64_t t = get_absolute_time();
+		uint64_t t = to_us_since_boot(get_absolute_time());
 		printf("[%6llu.%06llu] %s\n", (t / 1000000), (t % 1000000), buf);
 	}
 #ifdef WIFI_SUPPORT
@@ -186,7 +186,8 @@ int time_passed(absolute_time_t *t, uint32_t us)
 	if (t == NULL)
 		return -1;
 
-	if (*t == 0 || delayed_by_ms(*t, us) < t_now) {
+	if (to_us_since_boot(*t) == 0 ||
+	    to_us_since_boot(delayed_by_ms(*t, us)) < to_us_since_boot(t_now)) {
 		*t = t_now;
 		return 1;
 	}

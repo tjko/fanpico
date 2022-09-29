@@ -205,7 +205,9 @@ void wifi_status()
 
 void wifi_poll()
 {
-	static absolute_time_t test_t = 0;
+	static absolute_time_t test_t;
+
+	update_us_since_boot(&test_t, 0);
 
 	if (!wifi_initialized)
 		return;
