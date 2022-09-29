@@ -105,6 +105,8 @@ void wifi_init()
 
 	cyw43_arch_enable_sta_mode();
 
+	cyw43_arch_lwip_begin();
+
 	/* Set WiFi interface hostname... */
 	pico_get_unique_board_id(&b);
 	snprintf(wifi_hostname, sizeof(wifi_hostname),
@@ -114,18 +116,26 @@ void wifi_init()
 	log_msg(LOG_NOTICE, "WiFi hostname: %s", wifi_hostname);
 	netif_set_hostname(n, wifi_hostname);
 
+	/* Set callback for link/interface status changes */
 	netif_set_link_callback(n, wifi_link_cb);
 	netif_set_status_callback(n, wifi_status_cb);
+
+	/* Configure interface */
 	if (!ip_addr_isany(&cfg->ip)) {
+		/* Configure static IP */
 		dhcp_stop(n);
 		log_msg(LOG_NOTICE, "     IP: %s", ipaddr_ntoa(&cfg->ip));
 		log_msg(LOG_NOTICE, "Netmask: %s", ipaddr_ntoa(&cfg->netmask));
 		log_msg(LOG_NOTICE, "Gateway: %s", ipaddr_ntoa(&cfg->gateway));
 		netif_set_addr(n, &cfg->ip, &cfg->netmask, &cfg->gateway);
 	} else {
+		/* Use DHCP (default) */
 		log_msg(LOG_NOTICE, "IP: DHCP");
 	}
 	netif_set_up(n);
+
+	cyw43_arch_lwip_end();
+
 
 	/* Get adapter MAC address */
 	if ((res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, cyw43_mac))) {
@@ -152,6 +162,8 @@ void wifi_init()
 
 	wifi_initialized = true;
 
+	cyw43_arch_lwip_begin();
+
 	/* Enable SNTP client... */
 	sntp_init();
 	if (!ip_addr_isany(&cfg->ntp_server)) {
@@ -162,10 +174,13 @@ void wifi_init()
 		sntp_servermode_dhcp(1);
 	}
 
-	ip_addr_copy(syslog_server, cfg->syslog_server);
-
+	/* Enable HTTP server */
 	httpd_init();
 	http_set_ssi_handler(fanpico_ssi_handler, NULL, 0);
+
+	cyw43_arch_lwip_end();
+
+	ip_addr_copy(syslog_server, cfg->syslog_server);
 }
 
 
@@ -195,11 +210,12 @@ void wifi_poll()
 	if (!wifi_initialized)
 		return;
 
-
+#if PICO_CYW43_ARCH_POLL
 	cyw43_arch_poll();
+#endif
 
 	if (network_initialized) {
-		if (time_passed(&test_t, 15000)) {
+		if (time_passed(&test_t, 100)) {
 			syslog_msg(LOG_INFO, "test message: %llu", get_absolute_time());
 		}
 	}
