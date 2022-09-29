@@ -199,9 +199,8 @@ void wifi_status()
 
 void wifi_poll()
 {
-	static absolute_time_t test_t;
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(test_t, 0);
 
-	update_us_since_boot(&test_t, 0);
 
 	if (!wifi_initialized)
 		return;
@@ -211,8 +210,15 @@ void wifi_poll()
 #endif
 
 	if (network_initialized) {
-		if (time_passed(&test_t, 100)) {
-			syslog_msg(LOG_INFO, "test message: %llu", get_absolute_time());
+		if (time_passed(&test_t, 3600 * 1000)) {
+			uint64_t t_us = to_us_since_boot(get_absolute_time());
+			uint64_t t_sec = t_us / 1000000;
+			uint32_t secs = t_sec % 60;
+			uint32_t mins =  t_sec / 60;
+			uint32_t hours = mins / 60;
+			uint32_t days = hours / 24;
+
+			syslog_msg(LOG_INFO, "Uptime: %u days %02u:%02u:%02u", days, hours, mins, secs);
 		}
 	}
 

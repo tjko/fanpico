@@ -173,9 +173,8 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 
 void core1_main()
 {
-	absolute_time_t t_led;
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_tick, 0);
 
-	update_us_since_boot(&t_led, 0);
 
 	log_msg(LOG_INFO, "core1: started...");
 
@@ -185,7 +184,7 @@ void core1_main()
 	while (1) {
 		read_tacho_inputs();
 
-		if (time_passed(&t_led, 2000)) {
+		if (time_passed(&t_tick, 10000)) {
 			log_msg(LOG_DEBUG, "core1: tick");
 		}
 	}
@@ -196,14 +195,14 @@ int main()
 {
 	struct fanpico_state *st = &system_state;
 	absolute_time_t t_now;
-	absolute_time_t t_last;
-	absolute_time_t t_poll_pwm;
-	absolute_time_t t_poll_tacho;
-	absolute_time_t t_led;
-	absolute_time_t t_temp;
-	absolute_time_t t_set_outputs;
-	absolute_time_t t_display;
-	absolute_time_t t_network;
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_last, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_pwm, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_tacho, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_led, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_temp, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_set_outputs, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_display, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_network, 0);
 	uint8_t led_state = 0;
 	int64_t delta;
 	int64_t max_delta = 0;
@@ -211,14 +210,6 @@ int main()
 	char input_buf[1024];
 	int i_ptr = 0;
 
-	update_us_since_boot(&t_last, 0);
-	update_us_since_boot(&t_poll_pwm, 0);
-	update_us_since_boot(&t_poll_tacho, 0);
-	update_us_since_boot(&t_led, 0);
-	update_us_since_boot(&t_temp, 0);
-	update_us_since_boot(&t_set_outputs, 0);
-	update_us_since_boot(&t_display, 0);
-	update_us_since_boot(&t_network, 0);
 
 	set_binary_info();
 	clear_state(st);
