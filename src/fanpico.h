@@ -226,6 +226,7 @@ void debug(int debug_level, const char *fmt, ...);
 void print_mallinfo();
 char *trim_str(char *s);
 const char *rp2040_model_str();
+const char *pico_serial_str();
 const char *mac_address_str(const uint8_t *mac);
 int check_for_change(double oldval, double newval, double treshold);
 int time_passed(absolute_time_t *t, uint32_t us);

@@ -28,6 +28,7 @@
 #include <malloc.h>
 #include <time.h>
 #include "pico/stdlib.h"
+#include "pico/unique_id.h"
 #include "pico/util/datetime.h"
 #include "b64/cencode.h"
 #include "b64/cdecode.h"
@@ -153,6 +154,20 @@ const char *rp2040_model_str()
 	snprintf(buf, sizeof(buf), "RP2040-B%d%s",
 		version,
 		(known_chip ? "" : " (?)"));
+
+	return buf;
+}
+
+
+const char *pico_serial_str()
+{
+	static char buf[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
+	pico_unique_board_id_t board_id;
+
+	memset(&board_id, 0, sizeof(board_id));
+	pico_get_unique_board_id(&board_id);
+	for (int i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
+		snprintf(&buf[i*2], 3,"%02x", board_id.id[i]);
 
 	return buf;
 }

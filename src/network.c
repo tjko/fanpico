@@ -24,7 +24,6 @@
 #include <assert.h>
 #include "hardware/rtc.h"
 #include "pico/stdlib.h"
-#include "pico/unique_id.h"
 #include "pico/util/datetime.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
@@ -77,7 +76,6 @@ void wifi_init()
 {
 	uint32_t country_code = CYW43_COUNTRY_WORLDWIDE;
 	struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
-	pico_unique_board_id_t b;
 	int res;
 
 	memset(cyw43_mac, 0, sizeof(cyw43_mac));
@@ -108,11 +106,7 @@ void wifi_init()
 	cyw43_arch_lwip_begin();
 
 	/* Set WiFi interface hostname... */
-	pico_get_unique_board_id(&b);
-	snprintf(wifi_hostname, sizeof(wifi_hostname),
-		"FanPico-%02x%02x%02x%02x%02x%02x%02x%02x",
-		b.id[0],b.id[1],b.id[2],b.id[3],
-		b.id[4],b.id[5],b.id[6],b.id[7]);
+	snprintf(wifi_hostname, sizeof(wifi_hostname), "FanPico-%s", pico_serial_str());
 	log_msg(LOG_NOTICE, "WiFi hostname: %s", wifi_hostname);
 	netif_set_hostname(n, wifi_hostname);
 

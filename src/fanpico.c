@@ -24,7 +24,6 @@
 #include <math.h>
 #include <malloc.h>
 #include "pico/stdlib.h"
-#include "pico/unique_id.h"
 #include "pico/mutex.h"
 #include "pico/multicore.h"
 #include "pico/util/datetime.h"
@@ -47,9 +46,6 @@ const struct fanpico_state *fanpico_state = &system_state;
 
 void setup()
 {
-	pico_unique_board_id_t board_id;
-	int i;
-
 	rtc_init();
 
 #if TTL_SERIAL
@@ -58,8 +54,8 @@ void setup()
 #endif
 	stdio_usb_init();
 
-	// Wait a while for USB Serial to connect...
-	i = 0;
+	/* Wait a while for USB Serial to connect... */
+	int i = 0;
 	while (i++ < 10) {
 		if (stdio_usb_connected())
 			break;
@@ -79,11 +75,7 @@ void setup()
 	printf("           MCU: %s @ %0.0fMHz\n",
 		rp2040_model_str(),
 		clock_get_hz(clk_sys) / 1000000.0);
-	printf(" Serial Number: ");
-	pico_get_unique_board_id(&board_id);
-	for (i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
-		printf("%02x", board_id.id[i]);
-	printf("\n\n");
+	printf(" Serial Number: %s\n\n", pico_serial_str());
 
 	read_config(false);
 	display_init();
