@@ -20,6 +20,7 @@
 */
 
 #include <stdio.h>
+#include <math.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
@@ -66,8 +67,7 @@ uint8_t mbfan_gpio_pwm_map[MBFAN_MAX_COUNT] = {
 float mbfan_pwm_duty[MBFAN_MAX_COUNT];
 
 uint pwm_out_top = 0;
-float pwm_in_max_count = 0;
-
+float pwm_in_count_rate = 0;
 
 /* Set PMW output signal duty cycle.
  */
@@ -104,13 +104,17 @@ float get_pwm_duty_cycle(uint fan)
 	pwm_set_counter(slice_num, 0);
 
 	/* Turn PWM slice (counter) on for short time... */
+	absolute_time_t t_start = get_absolute_time();
 	pwm_set_enabled(slice_num, true);
 	sleep_ms(PWM_IN_SAMPLE_INTERVAL);
 	pwm_set_enabled(slice_num, false);
+	absolute_time_t t_end = get_absolute_time();
+
+	float max_count = pwm_in_count_rate * ((t_end - t_start) / 1000000.0);
 
 	/* Get counter value and calculate duty cycle. */
 	counter = pwm_get_counter(slice_num);
-	float duty = counter * 100 / pwm_in_max_count;
+	float duty = counter * 100 / max_count;
 
 	return duty;
 }
@@ -131,6 +135,7 @@ void get_pwm_duty_cycles()
 	}
 
 	/* Turn on all PWM slices for short period of time... */
+	absolute_time_t t_start = get_absolute_time();
 	for (i=0; i < MBFAN_COUNT; i++) {
 		pwm_set_enabled(slices[i], true);
 	}
@@ -138,10 +143,21 @@ void get_pwm_duty_cycles()
 	for (i=0; i < MBFAN_COUNT; i++) {
 		pwm_set_enabled(slices[i], false);
 	}
+	absolute_time_t t_end = get_absolute_time();
+
+	float max_count = pwm_in_count_rate * ((t_end - t_start) / 1000000.0);
+
+	if (max_count >= 65535) {
+		log_msg(LOG_WARNING, "get_pwm_duty_cycles(): counter overflow: %f (%llu)",
+			max_count, (t_end - t_start));
+		return;
+	}
 
 	/* Calculate duty cycles based on measurements. */
 	for (i=0; i < MBFAN_COUNT; i++) {
-		mbfan_pwm_duty[i] = pwm_get_counter(slices[i]) * 100 / pwm_in_max_count;
+		uint16_t counter = pwm_get_counter(slices[i]);
+		float duty = counter * 100 / max_count;
+		mbfan_pwm_duty[i] = duty;
 	}
 }
 
@@ -195,8 +211,7 @@ void setup_pwm_inputs()
 	pwm_config_set_clkdiv_mode(&config, PWM_DIV_B_HIGH);
 	pwm_config_set_clkdiv(&config, PWM_IN_CLOCK_DIVIDER);
 
-	float counting_rate = clock_get_hz(clk_sys) / PWM_IN_CLOCK_DIVIDER;
-	pwm_in_max_count = counting_rate * (PWM_IN_SAMPLE_INTERVAL / 1000.0);
+	pwm_in_count_rate = clock_get_hz(clk_sys) / PWM_IN_CLOCK_DIVIDER;
 
 	for (i = 0; i < MBFAN_COUNT; i++) {
 		uint pin = mbfan_gpio_pwm_map[i];
