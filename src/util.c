@@ -137,6 +137,32 @@ char *trim_str(char *s)
 }
 
 
+int str_to_int(const char *str, int *val, int base)
+{
+	char *endptr;
+
+	if (!str || !val)
+		return 0;
+
+	*val = strtol(str, &endptr, base);
+
+	return (str == endptr ? 0 : 1);
+}
+
+
+int str_to_float(const char *str, float *val)
+{
+	char *endptr;
+
+	if (!str || !val)
+		return 0;
+
+	*val = strtof(str, &endptr);
+
+	return (str == endptr ? 0 : 1);
+}
+
+
 const char *rp2040_model_str()
 {
 	static char buf[32];

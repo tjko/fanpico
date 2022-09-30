@@ -131,8 +131,7 @@ int cmd_led(const char *cmd, const char *args, int query, char *prev_cmd)
 
 	if (query) {
 		printf("%d\n", cfg->led_mode);
-	} else {
-		mode = atoi(args);
+	} else if (str_to_int(args, &mode, 10)) {
 		if (mode >= 0 && mode <= 2) {
 			log_msg(LOG_NOTICE, "Set system LED mode: %d -> %d", cfg->led_mode, mode);
 			cfg->led_mode = mode;
@@ -167,11 +166,11 @@ int cmd_null(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_debug(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int level = atoi(args);
+	int level;
 
 	if (query) {
 		printf("%d\n", get_debug_level());
-	} else {
+	} else if (str_to_int(args, &level, 10)) {
 		set_debug_level((level < 0 ? 0 : level));
 	}
 	return 0;
@@ -179,11 +178,11 @@ int cmd_debug(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_log_level(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int level = atoi(args);
+	int level;
 
 	if (query) {
 		printf("%d\n", get_log_level());
-	} else {
+	} else if (str_to_int(args, &level, 10)) {
 	        level = (level < 0 ? 0 : level);
 		log_msg(LOG_NOTICE, "Change log level: %d -> %d", get_log_level(), level);
 		set_log_level(level);
@@ -193,11 +192,11 @@ int cmd_log_level(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_syslog_level(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int level = atoi(args);
+	int level;
 
 	if (query) {
 		printf("%d\n", get_syslog_level());
-	} else {
+	} else if (str_to_int(args, &level, 10)) {
 	        level = (level < 0 ? 0 : level);
 		log_msg(LOG_NOTICE, "Change syslog level: %d -> %d", get_syslog_level(), level);
 		set_syslog_level(level);
@@ -207,11 +206,11 @@ int cmd_syslog_level(const char *cmd, const char *args, int query, char *prev_cm
 
 int cmd_echo(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int val = atoi(args);
+	int val;
 
 	if (query) {
 		printf("%u\n", cfg->local_echo);
-	} else {
+	} else if (str_to_int(args, &val, 10)) {
 		cfg->local_echo = (val > 0 ? true : false);
 	}
 	return 0;
@@ -333,8 +332,7 @@ int cmd_fan_min_pwm(const char *cmd, const char *args, int query, char *prev_cmd
 	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->fans[fan].min_pwm);
-		} else {
-			val = atoi(args);
+		} else if (str_to_int(args, &val, 10)) {
 			if (val >= 0 && val <= 100) {
 				log_msg(LOG_NOTICE, "fan%d: change min PWM %d%% --> %d%%", fan + 1,
 					conf->fans[fan].min_pwm, val);
@@ -356,8 +354,7 @@ int cmd_fan_max_pwm(const char *cmd, const char *args, int query, char *prev_cmd
 	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->fans[fan].max_pwm);
-		} else {
-			val = atoi(args);
+		} else if (str_to_int(args, &val, 10)) {
 			if (val >= 0 && val <= 100) {
 				log_msg(LOG_NOTICE, "fan%d: change max PWM %d%% --> %d%%", fan + 1,
 					conf->fans[fan].max_pwm, val);
@@ -380,8 +377,7 @@ int cmd_fan_pwm_coef(const char *cmd, const char *args, int query, char *prev_cm
 	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%f\n", conf->fans[fan].pwm_coefficient);
-		} else {
-			val = atof(args);
+		} else if (str_to_float(args, &val)) {
 			if (val >= 0.0) {
 				log_msg(LOG_NOTICE, "fan%d: change PWM coefficient %f --> %f",
 					fan + 1, conf->fans[fan].pwm_coefficient, val);
@@ -447,8 +443,7 @@ int cmd_fan_rpm_factor(const char *cmd, const char *args, int query, char *prev_
 	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%u\n", conf->fans[fan].rpm_factor);
-		} else {
-			val = atoi(args);
+		} else if (str_to_int(args, &val, 10)) {
 			if (val >= 1 || val <= 8) {
 				log_msg(LOG_NOTICE, "fan%d: change RPM factor %u --> %d",
 					fan + 1, conf->fans[fan].rpm_factor, val);
@@ -610,8 +605,7 @@ int cmd_mbfan_min_rpm(const char *cmd, const char *args, int query, char *prev_c
 	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->mbfans[fan].min_rpm);
-		} else {
-			val = atoi(args);
+		} else if (str_to_int(args, &val, 10)) {
 			if (val >= 0 && val <= 50000) {
 				log_msg(LOG_NOTICE, "mbfan%d: change min RPM %d --> %d", fan + 1,
 					conf->mbfans[fan].min_rpm, val);
@@ -633,8 +627,7 @@ int cmd_mbfan_max_rpm(const char *cmd, const char *args, int query, char *prev_c
 	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->mbfans[fan].max_rpm);
-		} else {
-			val = atoi(args);
+		} else if (str_to_int(args, &val, 10)) {
 			if (val >= 0 && val <= 50000) {
 				log_msg(LOG_NOTICE, "mbfan%d: change max RPM %d --> %d", fan + 1,
 					conf->mbfans[fan].max_rpm, val);
@@ -657,8 +650,7 @@ int cmd_mbfan_rpm_coef(const char *cmd, const char *args, int query, char *prev_
 	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%f\n", conf->mbfans[fan].rpm_coefficient);
-		} else {
-			val = atof(args);
+		} else if (str_to_float(args, &val)) {
 			if (val > 0.0) {
 				log_msg(LOG_NOTICE, "mbfan%d: change RPM coefficient %f --> %f",
 					fan + 1, conf->mbfans[fan].rpm_coefficient, val);
@@ -681,8 +673,7 @@ int cmd_mbfan_rpm_factor(const char *cmd, const char *args, int query, char *pre
 	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%u\n", conf->mbfans[fan].rpm_factor);
-		} else {
-			val = atoi(args);
+		} else if (str_to_int(args, &val, 10)) {
 			if (val >= 1 || val <= 8) {
 				log_msg(LOG_NOTICE, "mbfan%d: change RPM factor %u --> %d",
 					fan + 1, conf->mbfans[fan].rpm_factor, val);
@@ -889,8 +880,7 @@ int cmd_sensor_temp_offset(const char *cmd, const char *args, int query, char *p
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%f\n", conf->sensors[sensor].temp_offset);
-		} else {
-			val = atof(args);
+		} else if (str_to_float(args, &val)) {
 			log_msg(LOG_NOTICE, "sensor%d: change temp offset %f --> %f", sensor + 1,
 				conf->sensors[sensor].temp_offset, val);
 			conf->sensors[sensor].temp_offset = val;
@@ -908,8 +898,7 @@ int cmd_sensor_temp_coef(const char *cmd, const char *args, int query, char *pre
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%f\n", conf->sensors[sensor].temp_coefficient);
-		} else {
-			val = atof(args);
+		} else if (str_to_float(args, &val)) {
 			if (val > 0.0) {
 				log_msg(LOG_NOTICE, "sensor%d: change temp coefficient %f --> %f",
 					sensor + 1, conf->sensors[sensor].temp_coefficient,
@@ -933,8 +922,7 @@ int cmd_sensor_temp_nominal(const char *cmd, const char *args, int query, char *
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%.1f\n", conf->sensors[sensor].temp_nominal);
-		} else {
-			val = atof(args);
+		} else if (str_to_float(args, &val)) {
 			if (val >= -50.0 && val <= 100.0) {
 				log_msg(LOG_NOTICE, "sensor%d: change temp nominal %.1fC --> %.1fC",
 					sensor + 1, conf->sensors[sensor].temp_nominal,
@@ -958,8 +946,7 @@ int cmd_sensor_ther_nominal(const char *cmd, const char *args, int query, char *
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%.0f\n", conf->sensors[sensor].thermistor_nominal);
-		} else {
-			val = atof(args);
+		} else if (str_to_float(args, &val)) {
 			if (val > 0.0) {
 				log_msg(LOG_NOTICE, "sensor%d: change thermistor nominal %.0f ohm --> %.0f ohm",
 					sensor + 1, conf->sensors[sensor].thermistor_nominal,
@@ -983,8 +970,7 @@ int cmd_sensor_beta_coef(const char *cmd, const char *args, int query, char *pre
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%.0f\n", conf->sensors[sensor].beta_coefficient);
-		} else {
-			val = atof(args);
+		} else if (str_to_float(args, &val)) {
 			if (val > 0.0) {
 				log_msg(LOG_NOTICE, "sensor%d: change thermistor beta coefficient %.0f --> %.0f",
 					sensor + 1, conf->sensors[sensor].beta_coefficient,
