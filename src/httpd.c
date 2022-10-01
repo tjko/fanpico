@@ -214,6 +214,15 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 					t.year, t.month, t.day, t.hour, t.min, t.sec);
 		}
 	}
+	if (!strncmp(tag, "uptime", 6)) {
+		uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
+		uint32_t mins =  secs / 60;
+		uint32_t hours = mins / 60;
+		uint32_t days = hours / 24;
+
+		printed = snprintf(insert, insertlen, "%lu days %02lu:%02lu:%02lu",
+				days, hours % 24, mins % 60, secs % 60);
+	}
 	else if (!strncmp(tag, "model", 5)) {
 		printed = snprintf(insert, insertlen, "%s", FANPICO_MODEL);
 	}

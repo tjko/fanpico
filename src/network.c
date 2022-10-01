@@ -216,7 +216,7 @@ void wifi_poll()
 			uint32_t hours = mins / 60;
 			uint32_t days = hours / 24;
 
-			syslog_msg(LOG_INFO, "Uptime: %u days %02u:%02u:%02u",
+			syslog_msg(LOG_INFO, "Uptime: %lu days %02lu:%02lu:%02lu",
 				days, hours % 24, mins % 60, secs % 60);
 		}
 	}

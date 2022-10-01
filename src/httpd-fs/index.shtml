@@ -81,7 +81,7 @@
 	  <table width="100%">
 	    <tr>
 	      <td><font size=-1>FanPico-<!--#model--> v<!--#version--></font></td>
-	      <td align="right"><font size=-1><!--#datetime--></font></td>
+	      <td align="right"><font size=-1><!--#datetime--><br>Uptime: <!--#uptime--></font></td>
 	    </tr>
 	  </table>
 	</td>
