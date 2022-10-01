@@ -116,7 +116,7 @@ void setup()
 	setup_tacho_outputs();
 	setup_tacho_inputs();
 
-	log_msg(LOG_NOTICE, "System initilization complete.");
+	log_msg(LOG_NOTICE, "System initialization complete.");
 }
 
 
@@ -173,18 +173,30 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 
 void core1_main()
 {
-	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_tick, 0);
-
+	absolute_time_t t_tick, t_last, t_now;
+	int64_t max_delta = 0;
+	int64_t delta;
 
 	log_msg(LOG_INFO, "core1: started...");
 
 	/* Allow core0 to pause this core... */
 	multicore_lockout_victim_init();
 
+	t_tick = t_last = get_absolute_time();
+
 	while (1) {
+		t_now = get_absolute_time();
+		delta = absolute_time_diff_us(t_last, t_now);
+		t_last = t_now;
+
+		if (delta > max_delta) {
+			max_delta = delta;
+			log_msg(LOG_DEBUG, "core1: max_loop_time=%lld", max_delta);
+		}
+
 		read_tacho_inputs();
 
-		if (time_passed(&t_tick, 10000)) {
+		if (time_passed(&t_tick, 60000)) {
 			log_msg(LOG_DEBUG, "core1: tick");
 		}
 	}
@@ -194,18 +206,16 @@ void core1_main()
 int main()
 {
 	struct fanpico_state *st = &system_state;
-	absolute_time_t t_now;
-	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_last, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_pwm, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_tacho, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_led, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_temp, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_set_outputs, 0);
-	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_display, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_network, 0);
+	absolute_time_t t_now, t_last, t_display;
 	uint8_t led_state = 0;
-	int64_t delta;
 	int64_t max_delta = 0;
+	int64_t delta;
 	int c, change;
 	char input_buf[1024];
 	int i_ptr = 0;
@@ -263,6 +273,7 @@ int main()
 
 		/* Update display every 2000ms */
 		if (time_passed(&t_display, 2000)) {
+			log_msg(LOG_DEBUG, "Update display");
 			display_status(st, cfg);
 		}
 
@@ -271,6 +282,7 @@ int main()
 			int i;
 			float new_duty;
 
+			log_msg(LOG_DEBUG, "Read PWM inputs");
 			get_pwm_duty_cycles();
 			for (i = 0; i < MBFAN_COUNT; i++) {
 				new_duty = roundf(mbfan_pwm_duty[i]);
@@ -291,6 +303,7 @@ int main()
 			int i;
 			float temp;
 
+			log_msg(LOG_DEBUG, "Read temperature sensors");
 			for (i = 0; i < SENSOR_COUNT; i++) {
 				temp = get_temperature(i);
 				if (check_for_change(st->temp[i], temp, 0.5)) {
