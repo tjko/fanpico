@@ -42,7 +42,7 @@
 
 static struct fanpico_state system_state;
 const struct fanpico_state *fanpico_state = &system_state;
-
+bool rebooted_by_watchdog = false;
 
 void setup()
 {
@@ -66,6 +66,7 @@ void setup()
 	printf("\n\n\n");
 	if (watchdog_enable_caused_reboot()) {
 		printf("[Rebooted by watchdog]\n\n");
+		rebooted_by_watchdog = true;
 	}
 
 	/* Run "SYStem:VERsion" command... */
@@ -232,6 +233,7 @@ int main()
 		print_mallinfo();
 
 	multicore_launch_core1(core1_main);
+	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
 
 	t_last = get_absolute_time();
 	t_display = t_last;
@@ -350,7 +352,7 @@ int main()
 			if (cfg->local_echo) printf("%c", c);
 		}
 
-
+		watchdog_update();
 	}
 }
 

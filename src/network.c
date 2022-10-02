@@ -23,6 +23,7 @@
 #include <time.h>
 #include <assert.h>
 #include "hardware/rtc.h"
+#include "hardware/watchdog.h"
 #include "pico/stdlib.h"
 #include "pico/util/datetime.h"
 #ifdef LIB_PICO_CYW43_ARCH
@@ -45,6 +46,7 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 			u16_t current_tag_part, u16_t *next_tag_part);
 
 
+static absolute_time_t t_network_initialized;
 static bool wifi_initialized = false;
 static bool network_initialized = false;
 static uint8_t cyw43_mac[6];
@@ -66,9 +68,10 @@ void wifi_status_cb(struct netif *netif)
 	log_msg(LOG_WARNING, "WiFi Status: %s", (netif_is_up(netif) ? "UP" : "DOWN"));
 
 	if (netif_is_up(netif) && !network_initialized) {
+		/* Network interface came up, first time... */
 		syslog_open(&syslog_server, 0, LOG_USER, wifi_hostname);
-		log_msg(LOG_DEBUG, "Network initialization complete.");
 		network_initialized = true;
+		t_network_initialized = get_absolute_time();
 	}
 }
 
@@ -200,7 +203,7 @@ void wifi_status()
 void wifi_poll()
 {
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(test_t, 0);
-
+	static bool init_msg_sent = false;
 
 	if (!wifi_initialized)
 		return;
@@ -210,14 +213,22 @@ void wifi_poll()
 #endif
 
 	if (network_initialized) {
+		if (!init_msg_sent) {
+			if (time_passed(&t_network_initialized, 2000)) {
+				log_msg(LOG_INFO, "Network initialization complete.%s",
+					(rebooted_by_watchdog ? " [Rebooted by watchdog]" : ""));
+				init_msg_sent = true;
+			}
+		}
 		if (time_passed(&test_t, 3600 * 1000)) {
 			uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
 			uint32_t mins =  secs / 60;
 			uint32_t hours = mins / 60;
 			uint32_t days = hours / 24;
 
-			syslog_msg(LOG_INFO, "Uptime: %lu days %02lu:%02lu:%02lu",
-				days, hours % 24, mins % 60, secs % 60);
+			syslog_msg(LOG_INFO, "Uptime: %lu days %02lu:%02lu:%02lu%s",
+				days, hours % 24, mins % 60, secs % 60,
+				(rebooted_by_watchdog ? " [Rebooted by watchdog]" : ""));
 		}
 	}
 

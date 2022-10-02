@@ -51,6 +51,7 @@
 #define WIFI_SSID_MAX_LEN    32
 #define WIFI_PASSWD_MAX_LEN  64
 
+#define WATCHDOG_REBOOT_DELAY 1000
 
 
 enum pwm_source_types {
@@ -158,6 +159,7 @@ struct fanpico_state {
 /* fanpico.c */
 void print_mallinfo();
 extern const struct fanpico_state *fanpico_state;
+extern bool rebooted_by_watchdog;
 
 /* bi_decl.c */
 void set_binary_info();
