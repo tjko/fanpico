@@ -19,7 +19,9 @@
 #define MEM_LIBC_MALLOC             0
 #endif
 #define MEM_ALIGNMENT               4
-#define MEM_SIZE                    4000
+#define MEM_SIZE                    20000
+#define MEM_SANITY_CHECK            1
+#define MEM_OVERFLOW_CHECK          1
 #define MEMP_NUM_TCP_SEG            32
 #define MEMP_NUM_ARP_QUEUE          10
 #define PBUF_POOL_SIZE              24
@@ -35,8 +37,8 @@
 #define LWIP_NETIF_LINK_CALLBACK    1
 #define LWIP_NETIF_HOSTNAME         1
 #define LWIP_NETCONN                0
-#define MEM_STATS                   0
-#define SYS_STATS                   0
+#define MEM_STATS                   1
+#define SYS_STATS                   1
 #define MEMP_STATS                  0
 #define LINK_STATS                  0
 // #define ETH_PAD_SIZE                2
@@ -71,7 +73,7 @@ void pico_set_system_time(long int sec);
 #define LWIP_HTTPD_SSI_INCLUDE_TAG      0
 #define LWIP_HTTPD_SSI_EXTENSIONS       ".shtml", ".xml", ".json", ".csv"
 
-
+#undef NDEBUG
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
 #define LWIP_STATS                  1
@@ -89,9 +91,9 @@ void pico_set_system_time(long int sec);
 #define IP_DEBUG                    LWIP_DBG_OFF
 #define IP_REASS_DEBUG              LWIP_DBG_OFF
 #define RAW_DEBUG                   LWIP_DBG_OFF
-#define MEM_DEBUG                   LWIP_DBG_OFF
+#define MEM_DEBUG                   LWIP_DBG_ON
 #define MEMP_DEBUG                  LWIP_DBG_OFF
-#define SYS_DEBUG                   LWIP_DBG_OFF
+#define SYS_DEBUG                   LWIP_DBG_ON
 #define TCP_DEBUG                   LWIP_DBG_OFF
 #define TCP_INPUT_DEBUG             LWIP_DBG_OFF
 #define TCP_OUTPUT_DEBUG            LWIP_DBG_OFF
@@ -105,7 +107,7 @@ void pico_set_system_time(long int sec);
 #define TCPIP_DEBUG                 LWIP_DBG_OFF
 #define PPP_DEBUG                   LWIP_DBG_OFF
 #define SLIP_DEBUG                  LWIP_DBG_OFF
-#define DHCP_DEBUG                  LWIP_DBG_ON
-#define SNTP_DEBUG                  LWIP_DBG_ON
+#define DHCP_DEBUG                  LWIP_DBG_OFF
+#define SNTP_DEBUG                  LWIP_DBG_OFF
 
 #endif /* __LWIPOPTS_H__ */
