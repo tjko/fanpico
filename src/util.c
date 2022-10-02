@@ -78,6 +78,7 @@ void log_msg(int priority, const char *format, ...)
 {
 	va_list ap;
 	char buf[256];
+	int len;
 
 	if ((priority > global_log_level) && (priority > global_syslog_level))
 		return;
@@ -85,6 +86,12 @@ void log_msg(int priority, const char *format, ...)
 	va_start(ap, format);
 	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
+
+	if ((len = strlen(buf)) > 0) {
+		/* If string ends with \n, remove it. */
+		if (buf[len - 1] == '\n')
+			buf[len - 1] = 0;
+	}
 
 	if (priority <= global_log_level) {
 		uint64_t t = to_us_since_boot(get_absolute_time());
