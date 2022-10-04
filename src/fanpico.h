@@ -51,7 +51,8 @@
 #define WIFI_SSID_MAX_LEN    32
 #define WIFI_PASSWD_MAX_LEN  64
 
-#define WATCHDOG_REBOOT_DELAY 1000
+#define WATCHDOG_ENABLED      1
+#define WATCHDOG_REBOOT_DELAY 5000
 
 
 enum pwm_source_types {
@@ -240,6 +241,7 @@ char *strncopy(char *dst, const char *src, size_t len);
 datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t);
 struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
 time_t datetime_to_time(const datetime_t *datetime);
+void watchdog_disable();
 
 /* crc32.c */
 unsigned int xcrc32 (const unsigned char *buf, int len, unsigned int init);

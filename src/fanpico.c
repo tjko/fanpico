@@ -233,7 +233,9 @@ int main()
 		print_mallinfo();
 
 	multicore_launch_core1(core1_main);
+#if WATCHDOG_ENABLED
 	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
+#endif
 
 	t_last = get_absolute_time();
 	t_display = t_last;
@@ -351,8 +353,9 @@ int main()
 			input_buf[i_ptr++] = c;
 			if (cfg->local_echo) printf("%c", c);
 		}
-
+#if WATCHDOG_ENABLED
 		watchdog_update();
+#endif
 	}
 }
 

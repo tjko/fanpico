@@ -231,7 +231,9 @@ int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (!query) {
 		log_msg(LOG_ALERT, "Initiating reboot...");
-		watchdog_enable(10, 0);
+		watchdog_disable();
+		sleep_ms(500);
+		watchdog_reboot(0, SRAM_END, 1);
 		while (1);
 	}
 	return 0;

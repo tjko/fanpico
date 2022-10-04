@@ -30,8 +30,10 @@
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
 #include "pico/util/datetime.h"
+#include "hardware/watchdog.h"
 #include "b64/cencode.h"
 #include "b64/cdecode.h"
+
 
 #include "fanpico.h"
 #ifdef WIFI_SUPPORT
@@ -349,6 +351,11 @@ time_t datetime_to_time(const datetime_t *datetime)
 
 	datetime_to_tm(datetime, &tm);
 	return mktime(&tm);
+}
+
+void watchdog_disable()
+{
+	hw_clear_bits(&watchdog_hw->ctrl, WATCHDOG_CTRL_ENABLE_BITS);
 }
 
 /* eof */
