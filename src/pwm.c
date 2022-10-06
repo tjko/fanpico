@@ -104,11 +104,11 @@ float get_pwm_duty_cycle(uint fan)
 	pwm_set_counter(slice_num, 0);
 
 	/* Turn PWM slice (counter) on for short time... */
-	absolute_time_t t_start = get_absolute_time();
+	uint64_t t_start = to_us_since_boot(get_absolute_time());
 	pwm_set_enabled(slice_num, true);
 	sleep_ms(PWM_IN_SAMPLE_INTERVAL);
 	pwm_set_enabled(slice_num, false);
-	absolute_time_t t_end = get_absolute_time();
+	uint64_t t_end = to_us_since_boot(get_absolute_time());
 
 	float max_count = pwm_in_count_rate * ((t_end - t_start) / 1000000.0);
 
@@ -135,7 +135,7 @@ void get_pwm_duty_cycles()
 	}
 
 	/* Turn on all PWM slices for short period of time... */
-	absolute_time_t t_start = get_absolute_time();
+	uint64_t t_start = to_us_since_boot(get_absolute_time());
 	for (i=0; i < MBFAN_COUNT; i++) {
 		pwm_set_enabled(slices[i], true);
 	}
@@ -143,7 +143,7 @@ void get_pwm_duty_cycles()
 	for (i=0; i < MBFAN_COUNT; i++) {
 		pwm_set_enabled(slices[i], false);
 	}
-	absolute_time_t t_end = get_absolute_time();
+	uint64_t t_end = to_us_since_boot(get_absolute_time());
 
 	float max_count = pwm_in_count_rate * ((t_end - t_start) / 1000000.0);
 

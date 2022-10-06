@@ -51,9 +51,10 @@
 #define WIFI_SSID_MAX_LEN    32
 #define WIFI_PASSWD_MAX_LEN  64
 
+#ifdef NDEBUG
 #define WATCHDOG_ENABLED      1
 #define WATCHDOG_REBOOT_DELAY 5000
-
+#endif
 
 enum pwm_source_types {
 	PWM_FIXED   = 0,     /* fixed speed set by s_id */
