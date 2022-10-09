@@ -92,6 +92,8 @@ Fanpico supports following commands:
 * [SYStem:WIFI?](#systemwifi)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
+* [SYStem:WIFI:HOSTname](#systemwifihostname)
+* [SYStem:WIFI:HOSTname?](#systemwifihostname-1)
 * [SYStem:WIFI:IPaddress](#systemwifiipaddress)
 * [SYStem:WIFI:IPaddress?](#systemwifiipaddress-1)
 * [SYStem:WIFI:NETMASK](#systemwifinetmask)
@@ -1261,9 +1263,34 @@ Codes used are the ISO 3166 standard two letter codes ('XX' means unset/worldwid
 Example:
 
 ```
-SYS:WIFI:COU?
+SYS:WIFI:COUNTRY?
 US
 ```
+
+#### SYStem:WIFI:HOSTname
+Set system hostname. This will be used with DHCP and SYSLOG.
+If hostname is not defined then system will default to generating
+hostname as follows:
+  FanPico-xxxxxxxxxxxxxxxx
+
+(where "xxxxxxxxxxxxxxxx" is the FanPico serial number)
+
+Example:
+```
+SYS:WIFI:HOSTNAME fanpico1
+```
+
+
+#### SYStem:WIFI:HOSTname?
+Return currently configured system hostname.
+
+Example:
+
+```
+SYS:WIFI:HOSTNAME?
+fanpico1
+```
+
 
 #### SYStem:WIFI:IPaddress
 Set staticlly configured IP address.

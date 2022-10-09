@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <ctype.h>
 #include <wctype.h>
 #include <assert.h>
 #include "pico/stdlib.h"
@@ -1161,6 +1162,22 @@ int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_c
 	}
 	return 0;
 }
+
+int cmd_wifi_hostname(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", conf->hostname);
+	} else {
+		for (int i = 0; i < strlen(args); i++) {
+			if (!(isalpha(args[i]) || args[i] == '-')) {
+				return 1;
+			}
+		}
+		log_msg(LOG_NOTICE, "System hostname change '%s' --> '%s'", conf->hostname, args);
+		strncopy(conf->hostname, args, sizeof(conf->hostname));
+	}
+	return 0;
+}
 #endif
 
 int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1202,6 +1219,7 @@ struct cmd_t wifi_commands[] = {
 	{ "PASSword",  4, NULL,              cmd_wifi_password },
 	{ "SSID",      4, NULL,              cmd_wifi_ssid },
 	{ "STATus",    4, NULL,              cmd_wifi_status },
+	{ "HOSTname",  4, NULL,              cmd_wifi_hostname },
 #endif
 	{ 0, 0, 0, 0 }
 };

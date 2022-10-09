@@ -288,6 +288,7 @@ void clear_config(struct fanpico_config *cfg)
 #ifdef WIFI_SUPPORT
 	cfg->wifi_ssid[0] = 0;
 	cfg->wifi_passwd[0] = 0;
+	cfg->hostname[0] = 0;
 	strncopy(cfg->wifi_country, "XX", sizeof(cfg->wifi_country));
 	ip_addr_set_any(0, &cfg->syslog_server);
 	ip_addr_set_any(0, &cfg->ntp_server);
@@ -319,6 +320,8 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "name", cJSON_CreateString(cfg->name));
 
 #ifdef WIFI_SUPPORT
+	if (strlen(cfg->hostname) > 0)
+		cJSON_AddItemToObject(config, "hostname", cJSON_CreateString(cfg->hostname));
 	if (strlen(cfg->wifi_country) > 0)
 		cJSON_AddItemToObject(config, "wifi_country", cJSON_CreateString(cfg->wifi_country));
 	if (strlen(cfg->wifi_ssid) > 0)
@@ -458,6 +461,10 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	}
 
 #ifdef WIFI_SUPPORT
+	if ((ref = cJSON_GetObjectItem(config, "hostname"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->hostname, val, sizeof(cfg->hostname));
+	}
 	if ((ref = cJSON_GetObjectItem(config, "wifi_country"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->wifi_country, val, sizeof(cfg->wifi_country));

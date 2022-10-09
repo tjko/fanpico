@@ -139,6 +139,7 @@ struct fanpico_config {
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
 	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];
 	char wifi_country[4];
+	char hostname[32];
 	ip_addr_t syslog_server;
 	ip_addr_t ntp_server;
 	ip_addr_t ip;

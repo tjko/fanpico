@@ -109,7 +109,11 @@ void wifi_init()
 	cyw43_arch_lwip_begin();
 
 	/* Set WiFi interface hostname... */
-	snprintf(wifi_hostname, sizeof(wifi_hostname), "FanPico-%s", pico_serial_str());
+	if (strlen(cfg->hostname) > 0) {
+		strncpy(wifi_hostname, cfg->hostname, sizeof(wifi_hostname));
+	} else {
+		snprintf(wifi_hostname, sizeof(wifi_hostname), "FanPico-%s", pico_serial_str());
+	}
 	log_msg(LOG_NOTICE, "WiFi hostname: %s", wifi_hostname);
 	netif_set_hostname(n, wifi_hostname);
 
