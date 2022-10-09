@@ -9,3 +9,8 @@ v1.0
   - U7 pin 7 (VEE) should be grounded.
     Workaround: add solder bridge between pins 7 & 8.
 
+v1.1
+- Add support for direct mounting either Pico or Pico W
+- Remove unused footprints
+- Fix errata from v1.0
+
