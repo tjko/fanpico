@@ -1,0 +1,32 @@
+Ref,Qnty,Value,Cmp name,Footprint,Description,Vendor,Mouser P/N,LCSC P/N
+"C1, C2, C3, C4, C6, C11, C14, C17, C20, C22, C24, C26, C28, C29, C31, C32,",16,0.1uF,C_Small,Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,"Unpolarized capacitor, small symbol",,,C1591
+"C5,",1,10uF 20V,C Tantalum,Capacitor_Tantalum_SMD:CP_EIA-3216-18_Kemet-A_Pad1.58x1.35mm_HandSolder,"Polarized capacitor, small symbol",,,C117023
+"C7, C8, C30,",3,10uF 16V,C Tantalum,Capacitor_Tantalum_SMD:CP_EIA-3216-18_Kemet-A_Pad1.58x1.35mm_HandSolder,Polarized capacitor,,80­-T491A106K016,C2798061
+"C10, C13, C16, C19, C21, C23, C25, C27,",8,1nF,C,Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,Unpolarized capacitor,,,C1588
+"D1,",1,SM5819PL 1A 40V,D_Schottky,Diode_SMD:D_SMA,Schottky diode,,833-SM5819PL-TP,C669023
+"D2, D4, D5, D6, D7, D8, D11, D12, D15, D16, D19, D20, D23, D26, D29, D32,",16,LED 0805 (green),LED,LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder,Light emitting diode,,710-150080GS75000,C434432
+"D3, D10, D14, D18, D22, D25, D28, D31, D34,",9,ES1D 1A 200V,D,Diode_SMD:D_SMA_Handsoldering,Diode,,512-ES1D,C445494
+"D9, D13, D17, D21, D24, D27, D30, D33,",8,BAT54C,D,Diode_SMD:D_SOT-23_ANK,Diode,,241-BAT54C_R1_00001,
+"F1,",1,Polyfuse 3A,Polyfuse,Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCF0300BF2C,C20829
+"F2,",1,Polyfuse 0.5A,Polyfuse,Fuse:Fuse_1206_3216Metric_Pad1.42x1.75mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCJ0050AF2E,C70072
+"J1,",1,171826-4,Berg Connector,Connector_TE-Connectivity:TE 171826-4 Floppy 4-pin,Floppy Power Connector,TE,571-1718264,C590635
+J4 - J15,12,47053-1000,4-pin Fan Connector,Connector:FanPinHeader_1x04_P2.54mm_Vertical,PC 4-pin (PWM) fan connector,Molex,538-47053-1000,
+J16 - J17,2,JST-XH,2-pin JST XH 2.5mm,Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,2-pin connector,,,C158012
+JP1 - JP11,11,Jumper,Jumper_3_Bridged12,Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,Jumper 2.54mm,,,C5305
+"Q1, Q2, Q3, Q4,",4,2N7002K,2N7002K,Package_TO_SOT_SMD:SOT-23,"0.38A Id, 60V Vds, N-Channel MOSFET, SOT-23",,512-2N7002K,C85047
+"R1, R4, R8, R11, R15, R18, R22, R25, R29, R32,",10,1k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C22548
+"R2, R10, R12, R17, R19, R24, R26, R31, R33, R36, R39, R42, R45,",13,49.9k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C114624
+"R3, R48,",2,330,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C105881
+"R5, R7, R13, R20, R27, R34, R37, R40, R43, R46, R50, R51,",12,10k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C98220
+"R6,",1,4.99k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C114621
+"R9, R16, R23, R30,",4,30k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C100001
+"R14, R21, R28, R35, R38, R41, R44, R47,",8,680,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C115415
+"R49,",1,0,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C100044
+"R52, R53,",2,100k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C14675
+"SW1,",1,SW_Push,SW_Push,Button_Switch_THT:SW_PUSH_6mm_SMD_2,"Push button switch, generic, two pins",,,C221880
+"U1, U2,",2,SN74AHCT125QDRQ1,SN74AHCT125PW,Package_SO:SOIC-14_3.9x8.7mm_P1.27mm,Low (3.3V) to High (5V) TTL level converter,TI,,C155176
+"U3,",1,CD74HC4050NSR,CD74HC4050M,Package_SO:SOIC-16_3.9x9.9mm_P1.27mm,High (5-12V) to Low (3.3V) TTL level converter,TI,,C131932
+"U4,",1,Pico / Pico W,Pico,MCU_RaspberryPi_and_Boards:RPi_Pico_SMD_TH,Raspberry Pi Pico,RPi,474-DEV-17829,
+"U5,",1,SPX1117-ADJ,LM1117-ADJ,Package_TO_SOT_SMD:SOT-223,"800mA Low-Dropout Linear Regulator, adjustable output, TO-220/TO-252/TO-263/SOT-223",Maxim,701-SPX1117M3-L/TR,C67402
+"U6,",1,LM4040BIM3-3.0,LM4040 3.0V,Package_TO_SOT_SMD:SOT-23,"3.000V Precision Micropower Shunt Voltage Reference, SOT-23",,926-LM4040BIM330NOPB,C460726 ?
+"U7,",1,74HC4051,74HC4051,Package_SO:SOIC-16_3.9x9.9mm_P1.27mm,"8-channel analog multiplexer/demultiplexer, DIP-16/SOIC-16/TSSOP-16",,771-74HC4051D-T,C3986
