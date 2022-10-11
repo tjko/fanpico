@@ -62,9 +62,6 @@ Currently following models are available:
 
 (all boards have one additional 'on-board' temperature sensor on the RP2040 MCU itself)
 
-Reference PCB (FANPICO-0804 was designed with KiCad.
-![FANPICO-0804 PCB](images/fanpico-0804.png)
-
 Models ending with "D" support a display to see 'real-time' status of fans and temperatures.
 ![FanPico Display](images/oled-status-screen-1.jpg)
 
@@ -79,11 +76,24 @@ To get latest firmware with latest updates/fixes you must compile the firmware f
 ### Installing firmware image
 Firmware can be installed via the built-in UF2 bootloader on the Raspberry Pi Pico or using the debug header with Picoprobe, etc...
 
+#### Selecting Right Firmware to use
+Each release (zip file) contains multiple different firmware files.
+Make sure to select firmware for the board you're using and for the pico model ("pico_w" if using Pico W).
+
+Firmware file names have format: fanpico-<board_model>-<pico_model>.uf2
+```
+fanpico-0804-pico.uf2
+fanpico-0804-pico_w.uf2
+fanpico-0804D-pico.uf2
+fanpico-0804D-pico_w.uf2
+```
+
+#### Upgrading Firmware
 Firmware upgrade steps:
 * Boot Pico into UF2 bootloader. This can be done in two ways:
   1)  Press and hold "bootsel" button and then press and release "reset" button.
   2)  Issue command: SYS:UPGRADE
-* Copy firmware file (fanpico.uf2) to the USB mass storage device that appears.
+* Copy firmware file to the USB mass storage device that appears.
 * As soon as firmware copy is complete, Pico will reboot and run the fanpico firmware.
 
 ### Building Firmware Images
