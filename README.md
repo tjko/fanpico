@@ -1,6 +1,7 @@
 # Fanpico: Smart PWM (PC) Fan Controller
 
 Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP2040 MCU). Fanpico operates as standalone controller that can be configured and left running. It does not require any drivers and doesn't care what OS is being used.
+[![FanPico](images/fanpico-small.png)](images/fanpico-large.png)
 
 ## What is it for?
 * Fanpico is for customizing fan "curves" to fine tune how your motherboard controlled fans run.
@@ -22,19 +23,49 @@ Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP204
 * Monitor each fan and motherboard output signals as well as temperatures.
 * WiFi support if opting to mount Pico W on the board. This turns fanpico to "IoT" device with basic web interface.
 
+## Sponsors
+I would like to thank following sponsors, who have helped FanPico project:
+
+* PCBWay
+
+
+## Where can I get one?
+Currently Fanpico is available as a DIY project. 
+However, if there is sufficient interest, then ready-made units and/or DIY kits may be made available for sale. If you'd be interested in such, please check poll in discussion forums: [FanPico Forum](https://github.com/tjko/fanpico/discussions)
+
+### DIY Option
+You can upload the Kerber files (found under boards directory) to your favorite PCB maker website and get your boards produced in matter of days.
+Component list (BOM or bill of materials) is found under boards directory as well along with the electrical schematics.
+
+NOTE, check [discussions forum](discussions/) for giveaways for free PCBs.
+
+### Review Units
+If you are member of press (or YouTuber) and would like to review/test Fanpico. Please contact me via email.  
+
+
+
+## How Can I help?
+* Build your own FanPico and provide feedback, suggestions (see discussion forums).
+* If you're into electronics new/improved board designs are most welcome.
+* If you're into programming, you can help improve the firmware or create cool (desktop) program that allows easily configuring FanPico boards (with ability to "draw" fan curves, etc..) and to monitor Fan statuses.
+* As this is Open (Source) Hardware Project, if you like to build (and sell) assembled boards or DIY kits, you'd be most welcome...
+* You can always donate (and get your name added to the Sponsors section, if you so wish).
+
+
 ## Hardware
 Fanpico is Open Source Hardware, reference design is provided for the "0804" model (8 fan outpus and 4 motherboard fan inputs), and "0804D" model that adds OLED display support (hence the "D" suffix).
-Initially Fanpico will be only a DIY project, but if there is succifient interested then DIY kits may be made available. Since this is Open Hardware, we hope that there will be sellers that eventually offer pre-built units as well as kits....
+
 
 Additional models with different combinations of fan inputs/outputs could be easily designed (takining into account limitations of Raspberry Pi Pico I/O limits). New and improved PCB models/designs are most welcome.
+
+Model "0804" withouth display:
+
+![Fanpico-0804](images/fanpico-0804.jpg)
 
 Model "0840D" with 1.3" OLED display directly mounted:
 
 [![Fanpico-0804D](images/fanpico-0804D.jpg)](images/fanpico-0804D-large.jpg)
 
-Model "0804" withouth display:
-
-![Fanpico-0804](images/fanpico-0804.jpg)
 
 ### Hardware Design
 Fanpico (reference design) utilizes all available I/O pins on a Raspberry Pi Pico.
@@ -201,17 +232,6 @@ Build Information
  build attributes:  Release
 ```
 
-## How Can I help?
-* Build your own FanPico and provide feedback, suggestions (see discussion forums).
-* If you're into electronics new/improved board designs are most welcome.
-* If you're into programming, you can help improve the firmware or create cool (desktop) program that allows easily configuring FanPico boards (with ability to "draw" fan curves, etc..) and to monitor Fan statuses.
-* As this is Open (Source) Hardware Project, if you like to build (and sell) assembled boards or DIY kits, you'd be most welcome...
-* You can always donate (and get your name added to the Sponsors section, if you so wish).
-
-## Sponsors
-I would like to thank following sponsors, who have helped FanPico project:
-
-* PCBWay
 
 
 
