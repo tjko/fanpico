@@ -30,7 +30,7 @@ Additional models with different combinations of fan inputs/outputs could be eas
 
 Model "0840D" with 1.3" OLED display directly mounted:
 
-![Fanpico-0804D](images/fanpico-0804D.jpg)
+[![Fanpico-0804D](images/fanpico-0804D.jpg)](images/fanpico-0804D-large.jpg)
 
 Model "0804" withouth display:
 
