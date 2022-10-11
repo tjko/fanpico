@@ -2,7 +2,7 @@
 
 Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP2040 MCU). Fanpico operates as standalone controller that can be configured and left running. It does not require any drivers and doesn't care what OS is being used.
 
-[![FanPico](images/fanpico-small.png)](images/fanpico-large.png)
+[![FanPico](images/fanpico-small.png)](images/fanpico-0804D-large.png)
 
 ## What is it for?
 * Fanpico is for customizing fan "curves" to fine tune how your motherboard controlled fans run.
@@ -48,7 +48,12 @@ If you are member of press (or YouTuber) and would like to review/test Fanpico. 
 ## How Can I help?
 * Build your own FanPico and provide feedback, suggestions (see discussion forums).
 * If you're into electronics new/improved board designs are most welcome.
-* If you're into programming, you can help improve the firmware or create cool (desktop) program that allows easily configuring FanPico boards (with ability to "draw" fan curves, etc..) and to monitor Fan statuses.
+* If you're into programming:
+  - Create cool (desktop) program that allows easily configuring FanPico boards (with ability to "draw" fan curves, etc..) and to monitor Fan statuses.
+  - Help improve the firmware.
+* If you're into graphics (or web) design:
+  - Help create cool (but lightweight) web interface
+  - Create better logo for FanPico
 * As this is Open (Source) Hardware Project, if you like to build (and sell) assembled boards or DIY kits, you'd be most welcome...
 * You can always donate (and get your name added to the Sponsors section, if you so wish).
 
