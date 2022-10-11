@@ -1,5 +1,9 @@
 # FANPICO-0804D PCB
 
+PCB Size: 135mm x 81.5mm
+
+![PCB Render](board.png)
+
 ## Change Log
 
 v1.0 
