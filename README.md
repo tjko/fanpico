@@ -20,21 +20,30 @@ Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP204
 * Configuration stored on the device itself (in the flash memory).
 * SCPI "like" programming interface (see [Command Reference](commands.md))
 * Monitor each fan and motherboard output signals as well as temperatures.
+* WiFi support if opting to mount Pico W on the board. This turns fanpico to "IoT" device with basic web interface.
 
 ## Hardware
-Fanpico is Open Source Hardware, reference design is provided for the "0804" model (8 fan outpus and 4 motherboard fan inputs). 
+Fanpico is Open Source Hardware, reference design is provided for the "0804" model (8 fan outpus and 4 motherboard fan inputs), and "0804D" model that adds OLED display support (hence the "D" suffix).
 Initially Fanpico will be only a DIY project, but if there is succifient interested then DIY kits may be made available. Since this is Open Hardware, we hope that there will be sellers that eventually offer pre-built units as well as kits....
 
 Additional models with different combinations of fan inputs/outputs could be easily designed (takining into account limitations of Raspberry Pi Pico I/O limits). New and improved PCB models/designs are most welcome.
 
-![Fanpico-0804 PCB](images/fanpico-0804.jpg)
+Model "0840D" with 1.3" OLED display directly mounted:
+
+![Fanpico-0804D](images/fanpico-0804D.jpg)
+
+Model "0804" withouth display:
+
+![Fanpico-0804](images/fanpico-0804.jpg)
 
 ### Hardware Design
 Fanpico (reference design) utilizes all available I/O pins on a Raspberry Pi Pico.
 * Fan PWM outputs are driven by the Pico's PWM hardware.
 * Motherboard Fan PWM inputs are read using Pico's PWM hardware.
 * Tacho signal output (for motherboard connectors) is generated using Pico's PIO hardware, providing extremely stable tachometer signal.
-* Tacho signal inputs (from fans) is read using GPIO interrupts (counting number of pulses received over a period of time)
+* Tacho signal inputs (from fans) are read differently in model 0804 and 0804D:
+  - 0804: signals are read using GPIO interrupts, measuring all fans simultaneously by counting number of pulses received over a period of time.
+  - 0804D: signals are read through multiplexer measuring one fan at a time, by measuring pulse length.
 * Temperature readings are done using ADC, with help of a accurrate 3V voltage reference (LM4040). Any NTC (10k or 100k) thermistors can be used as themperature sensors.
 * Each FAN output has jumper to select whether fan gets its power from associated MBFAN connector or from the AUX connector
 * There is a jumper to select wheter power the Fanpico itself from MBFAN1 or AUX connector.
