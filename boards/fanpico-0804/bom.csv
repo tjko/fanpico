@@ -1,4 +1,4 @@
-Ref,Qty,Value,Cmp name,Footprint,Description,Vendor,Mouser P/N,LCSC P/N
+Ref,Qnty,Value,Cmp name,Footprint,Description,Vendor,Mouser P/N,LCSC P/N
 "C1, C2, C3, C4, C6, C11, C14, C17, C20, C22, C24, C26, C28, C29",14,0.1uF,C,Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,Unpolarized capacitor,,,C1591
 "C5,",1,10uF 20V,C Tantalum,Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder,"Polarized capacitor, small symbol",,,C117023
 "C7, C8, C30",3,10uF 16V,C Tantalum,Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder,"Polarized capacitor, small symbol",,80-T491A106K016,C2798061
@@ -11,7 +11,7 @@ Ref,Qty,Value,Cmp name,Footprint,Description,Vendor,Mouser P/N,LCSC P/N
 "F2,",1,Polyfuse 500mA / 350mA,Polyfuse,Fuse:Fuse_1206_3216Metric_Pad1.42x1.75mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCJ0050AF2E,C70072
 "J3,",1,171826-4,Berg Connector,Berg connector:TE_171826-4,Floppy Power Connector,TE,571-1718264,C590635
 J4 - J15,12,47053-1000,4-pin Fan Connector,Connector:FanPinHeader_1x04_P2.54mm_Vertical,PC 4-pin (PWM) fan connector,Molex,538-47053-1000,C240840
-"J16, J17",2,JST-XH,2-pin JST XH 2.5mm,Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,2-pin connector,,,C158012
+J16 - J17,2,JST-XH,2-pin JST XH 2.5mm,Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,2-pin connector,,,C158012
 "J2, JP1 - JP11",12,Header,Header,Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,Header 2.54mm,,,C124376
 JP1 - JP11,11,Jumper,Jumper_3_Bridged12,Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,Jumper 2.54mm,,,C5305
 "Q1, Q2, Q3, Q4,",4,2N7002K,MOSFET,Package_TO_SOT_SMD:SOT-23,"0.38A Id, 60V Vds, N-Channel MOSFET, SOT-23",,512-2N7002K,C85047
@@ -27,6 +27,6 @@ R49,1,0,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C1
 "SW1,",1,SW_Push,SW_Push,Button_Switch_THT:SW_PUSH_6mm,"Push button switch, generic, two pins",,,C221880
 "U1, U2,",2,SN74AHCT125QDRQ1,SN74AHCT125,Package_SO:SOIC-14_3.9x8.7mm_P1.27mm,Low (3.3V) to High (5V) TTL level converter,TI,,C155176
 "U3,",1,CD74HC4050NSR,CD74HC4050,Package_SO:SOIC-16_3.9x9.9mm_P1.27mm,High (5-12V) to Low (3.3V) TTL level converter,TI,,C131932
-"U4,",1,Pico,Pico,MCU_RaspberryPi_and_Boards:RPi_Pico_SMD_TH,Raspberry Pi Pico,RPi,474-DEV-17829,
+"U4,",1,Pico / Pico W,Pico,MCU_RaspberryPi_and_Boards:RPi_Pico_SMD_TH,Raspberry Pi Pico,RPi,474-DEV-17829,
 "U5,",1,SPX1117-ADJ,LM1117-ADJ,Package_TO_SOT_SMD:SOT-223,"800mA Low-Dropout Linear Regulator, adjustable output, TO-220/TO-252/TO-263/SOT-223",Maxim,701-SPX1117M3-L/TR,C67402
 "U6,",1,LM4040BIM3-3.0,LM4040 3.0V,Package_TO_SOT_SMD:SOT-23,"3.000V Precision Micropower Shunt Voltage Reference, SOT-23",,926-LM4040BIM330NOPB,C143326
