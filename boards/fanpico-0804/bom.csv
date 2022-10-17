@@ -10,7 +10,7 @@ Ref,Qty,Value,Cmp name,Footprint,Description,Vendor,Mouser P/N,LCSC P/N
 "F1,",1,Polyfuse 3A,Polyfuse,Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCF0300BF2C,C20829
 "F2,",1,Polyfuse 500mA / 350mA,Polyfuse,Fuse:Fuse_1206_3216Metric_Pad1.42x1.75mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCJ0050AF2E,C70072
 "J3,",1,171826-4,Berg Connector,Berg connector:TE_171826-4,Floppy Power Connector,TE,571-1718264,C590635
-J4 - J15,12,47053-1000,4-pin Fan Connector,Connector:FanPinHeader_1x04_P2.54mm_Vertical,PC 4-pin (PWM) fan connector,Molex,538-47053-1000,
+J4 - J15,12,47053-1000,4-pin Fan Connector,Connector:FanPinHeader_1x04_P2.54mm_Vertical,PC 4-pin (PWM) fan connector,Molex,538-47053-1000,C240840
 "J16, J17",2,JST-XH,2-pin JST XH 2.5mm,Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,2-pin connector,,,C158012
 JP1 - JP9,9,2.54mm jumper,Jumper,Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,Jumper 2.54mm,,,C5305
 "Q1, Q2, Q3, Q4,",4,2N7002K,MOSFET,Package_TO_SOT_SMD:SOT-23,"0.38A Id, 60V Vds, N-Channel MOSFET, SOT-23",,512-2N7002K,C85047
