@@ -15,7 +15,7 @@ J16 - J17,2,JST-XH,2-pin JST XH 2.5mm,Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm
 JP1 - JP11,11,Jumper,Jumper_3_Bridged12,Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,Jumper 2.54mm,,,C5305
 "Q1, Q2, Q3, Q4,",4,2N7002K,2N7002K,Package_TO_SOT_SMD:SOT-23,"0.38A Id, 60V Vds, N-Channel MOSFET, SOT-23",,512-2N7002K,C85047
 "R1, R4, R8, R11, R15, R18, R22, R25, R29, R32,",10,1k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C22548
-"R2, R10, R12, R17, R19, R24, R26, R31, R33, R36, R39, R42, R45,",13,49.9k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C114624
+"R2, R6, R10, R12, R17, R19, R24, R26, R31, R33, R36, R39, R42, R45,",13,49.9k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C114624
 "R3, R48,",2,330,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C105881
 "R5, R7, R13, R20, R27, R34, R37, R40, R43, R46, R50, R51,",12,10k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C98220
 "R6,",1,4.99k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C114621
