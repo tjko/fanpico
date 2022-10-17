@@ -19,11 +19,11 @@ JP1 - JP11,11,Jumper,Jumper_3_Bridged12,Connector_PinHeader_2.54mm:PinHeader_1x0
 "R2, R6, R10, R12, R17, R19, R24, R26, R31, R33, R36, R39, R42, R45,",13,49.9k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C114624
 "R3, R48",2,330,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C105881
 "R5, R7, R13, R20, R27, R34, R37, R40, R43, R46, R50, R51",12,10k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C98220
-"R52, R53",2,100k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C14675
 "R6,",1,4.99k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C114621
 "R9, R16, R23, R30,",4,30k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C100001
 "R14, R21, R28, R35, R38, R41, R44, R47,",8,680,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C115415
 R49,1,0,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C100044
+"R52, R53",2,100k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C14675
 "SW1,",1,SW_Push,SW_Push,Button_Switch_THT:SW_PUSH_6mm,"Push button switch, generic, two pins",,,C221880
 "U1, U2,",2,SN74AHCT125QDRQ1,SN74AHCT125,Package_SO:SOIC-14_3.9x8.7mm_P1.27mm,Low (3.3V) to High (5V) TTL level converter,TI,,C155176
 "U3,",1,CD74HC4050NSR,CD74HC4050,Package_SO:SOIC-16_3.9x9.9mm_P1.27mm,High (5-12V) to Low (3.3V) TTL level converter,TI,,C131932
