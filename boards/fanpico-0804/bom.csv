@@ -28,3 +28,4 @@ R49,1,0,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C1
 "U3,",1,CD74HC4050NSR,CD74HC4050,Package_SO:SOIC-16_3.9x9.9mm_P1.27mm,High (5-12V) to Low (3.3V) TTL level converter,TI,,C131932
 "U4,",1,Pico,Pico,MCU_RaspberryPi_and_Boards:RPi_Pico_SMD_TH,Raspberry Pi Pico,RPi,474-DEV-17829,
 "U5,",1,SPX1117-ADJ,LM1117-ADJ,Package_TO_SOT_SMD:SOT-223,"800mA Low-Dropout Linear Regulator, adjustable output, TO-220/TO-252/TO-263/SOT-223",Maxim,701-SPX1117M3-L/TR,C67402
+"U6,",1,LM4040BIM3-3.0,LM4040 3.0V,Package_TO_SOT_SMD:SOT-23,"3.000V Precision Micropower Shunt Voltage Reference, SOT-23",,926-LM4040BIM330NOPB,C143326
