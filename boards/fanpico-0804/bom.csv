@@ -6,7 +6,7 @@ Ref,Qty,Value,Cmp name,Footprint,Description,Vendor,Mouser P/N,LCSC P/N
 "D1,",1,SM5819PL,D_Schottky (1A 40V),Diode_SMD:D_SMA_Handsoldering,Schottky diode,,833-SM5819PL-TP,C669023
 "D2, D4, D5, D6, D7, D8, D11, D12, D15, D16, D19, D20, D23, D26, D29, D32,",16,SMD LED (green),LED 0805,LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder,Light emitting diode,,710-150080GS75000,C434432
 "D3, D10, D14, D18, D22, D25, D28, D31, D34,",9,ES1D,D 1A 200V,Diode_SMD:D_SMA_Handsoldering,Diode,,512-ES1D,C445494
-"D9, D13, D17, D21, D24, D27, D30, D33,",8,BAT54C,D_Schottky,Diode_SMD:D_SOT-23_ANK,Diode with low Vf (~ 200-300mV),,241-BAT54C_R1_00001,
+"D9, D13, D17, D21, D24, D27, D30, D33,",8,BAT54C,D,Diode_SMD:D_SOT-23_ANK,Diode,,241-BAT54C_R1_00001,C2992451
 "F1,",1,Polyfuse 3A,Polyfuse,Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCF0300BF2C,C20829
 "F2,",1,Polyfuse 500mA / 350mA,Polyfuse,Fuse:Fuse_1206_3216Metric_Pad1.42x1.75mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCJ0050AF2E,C70072
 "J3,",1,171826-4,Berg Connector,Berg connector:TE_171826-4,Floppy Power Connector,TE,571-1718264,C590635
