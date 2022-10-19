@@ -1,7 +1,7 @@
 Ref,Qnty,Value,Cmp name,Footprint,Description,Vendor,Mouser P/N,LCSC P/N
-"C1, C2, C3, C4, C6, C11, C14, C17, C20, C22, C24, C26, C28, C29, C31, C32,",16,0.1uF,C_Small,Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,"Unpolarized capacitor, small symbol",,,C1591
+"C1, C2, C3, C4, C6, C11, C14, C17, C20, C22, C24, C26, C28, C29, C31, C32",16,0.1uF,C_Small,Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,"Unpolarized capacitor, small symbol",,,C1591
 "C5,",1,10uF 20V,C Tantalum,Capacitor_Tantalum_SMD:CP_EIA-3216-18_Kemet-A_Pad1.58x1.35mm_HandSolder,"Polarized capacitor, small symbol",,,C117023
-"C7, C8, C30,",3,10uF 16V,C Tantalum,Capacitor_Tantalum_SMD:CP_EIA-3216-18_Kemet-A_Pad1.58x1.35mm_HandSolder,Polarized capacitor,,80­-T491A106K016,C7171
+"C7, C8, C30",3,10uF 16V,C Tantalum,Capacitor_Tantalum_SMD:CP_EIA-3216-18_Kemet-A_Pad1.58x1.35mm_HandSolder,Polarized capacitor,,80­-T491A106K016,C7171
 "C10, C13, C16, C19, C21, C23, C25, C27,",8,1nF,C,Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,Unpolarized capacitor,,,C1588
 "D1,",1,SM5819PL 1A 40V,D_Schottky,Diode_SMD:D_SMA,Schottky diode,,833-SM5819PL-TP,C669023
 "D2, D4, D5, D6, D7, D8, D11, D12, D15, D16, D19, D20, D23, D26, D29, D32,",16,LED 0805 (green),LED,LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder,Light emitting diode,,710-150080GS75000,C434432
@@ -10,8 +10,9 @@ Ref,Qnty,Value,Cmp name,Footprint,Description,Vendor,Mouser P/N,LCSC P/N
 "F1,",1,Polyfuse 3A,Polyfuse,Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCF0300BF2C,C20829
 "F2,",1,Polyfuse 0.5A,Polyfuse,Fuse:Fuse_1206_3216Metric_Pad1.42x1.75mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCJ0050AF2E,C70072
 "J1,",1,171826-4,Berg Connector,Connector_TE-Connectivity:TE 171826-4 Floppy 4-pin,Floppy Power Connector,TE,571-1718264,C590635
-J4 - J15,12,47053-1000,4-pin Fan Connector,Connector:FanPinHeader_1x04_P2.54mm_Vertical,PC 4-pin (PWM) fan connector,Molex,538-47053-1000,
+J4 - J15,12,47053-1000,4-pin Fan Connector,Connector:FanPinHeader_1x04_P2.54mm_Vertical,PC 4-pin (PWM) fan connector,Molex,538-47053-1000,C240840
 J16 - J17,2,JST-XH,2-pin JST XH 2.5mm,Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,2-pin connector,,,C158012
+JP1 - JP11,11,Header,Header,Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,Header 2.54mm,,,C124376
 JP1 - JP11,11,Jumper,Jumper_3_Bridged12,Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,Jumper 2.54mm,,,C5305
 "Q1, Q2, Q3, Q4,",4,2N7002K,2N7002K,Package_TO_SOT_SMD:SOT-23,"0.38A Id, 60V Vds, N-Channel MOSFET, SOT-23",,512-2N7002K,C85047
 "R1, R4, R8, R11, R15, R18, R22, R25, R29, R32,",10,1k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C22548
