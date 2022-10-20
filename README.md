@@ -32,7 +32,10 @@ I would like to thank following sponsors, who have helped FanPico project:
 
 ## Where can I get one?
 Currently Fanpico is available as a DIY project. 
-However, if there is sufficient interest, then ready-made units and/or DIY kits may be made available for sale. If you'd be interested in such, please check poll in discussion forums: [FanPico Forum](https://github.com/tjko/fanpico/discussions)
+Check discussion forums for places to purchase PCBs: [FanPico Forum](https://github.com/tjko/fanpico/discussions/12)
+
+However, if there is sufficient interest, then ready-made units and/or DIY kits may be made available for sale.
+If you'd be interested in purchasing FanPico pease indicate your interest here: [FanPico Forum](https://github.com/tjko/fanpico/discussions/9)
 
 ### DIY Option
 You can upload the Kerber files (found under boards directory) to your favorite PCB maker website and get your boards produced in matter of days.
