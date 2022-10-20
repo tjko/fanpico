@@ -41,7 +41,7 @@ If you'd be interested in purchasing FanPico pease indicate your interest here: 
 You can upload the Kerber files (found under boards directory) to your favorite PCB maker website and get your boards produced in matter of days.
 Component list (BOM or bill of materials) is found under boards directory as well along with the electrical schematics.
 
-NOTE, check [discussions forum](discussions/) for giveaways for free PCBs.
+NOTE, check [discussions forum](https://github.com/tjko/fanpico/discussions/) for giveaways for free PCBs.
 
 ### Review Units
 If you are member of press (or YouTuber) and would like to review/test Fanpico. Please contact me via email.  
