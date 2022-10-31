@@ -65,7 +65,11 @@ void wifi_link_cb(struct netif *netif)
 
 void wifi_status_cb(struct netif *netif)
 {
-	log_msg(LOG_WARNING, "WiFi Status: %s", (netif_is_up(netif) ? "UP" : "DOWN"));
+	if (netif_is_up(netif)) {
+		log_msg(LOG_WARNING, "WiFi Status: UP (%s)", ipaddr_ntoa(netif_ip_addr4(netif)));
+	} else {
+		log_msg(LOG_WARNING, "WiFi Status: DOWN");
+	}
 
 	if (netif_is_up(netif) && !network_initialized) {
 		/* Network interface came up, first time... */
