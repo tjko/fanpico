@@ -114,7 +114,7 @@ void wifi_init()
 
 	/* Set WiFi interface hostname... */
 	if (strlen(cfg->hostname) > 0) {
-		strncpy(wifi_hostname, cfg->hostname, sizeof(wifi_hostname));
+		strncopy(wifi_hostname, cfg->hostname, sizeof(wifi_hostname));
 	} else {
 		snprintf(wifi_hostname, sizeof(wifi_hostname), "FanPico-%s", pico_serial_str());
 	}

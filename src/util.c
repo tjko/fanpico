@@ -299,15 +299,32 @@ char* base64decode(const char *input)
 }
 
 
-char *strncopy(char *dst, const char *src, size_t len)
+char *strncopy(char *dst, const char *src, size_t size)
 {
-	if (!dst || !src || len < 1)
-		return NULL;
+	if (!dst || !src || size < 1)
+		return dst;
 
-	strncpy(dst, src, len - 1);
-	dst[len - 1] = 0;
+	if (size > 1)
+		strncpy(dst, src, size - 1);
+	dst[size - 1] = 0;
 
 	return dst;
+}
+
+
+char *strncatenate(char *dst, const char *src, size_t size)
+{
+	int used, free;
+
+	if (!dst || !src || size < 1)
+		return dst;
+
+	/* Check if dst string is already "full" ... */
+	used = strnlen(dst, size);
+	if ((free = size - used) <= 1)
+		return dst;
+
+	return strncat(dst + used, src, free - 1);
 }
 
 

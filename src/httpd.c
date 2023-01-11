@@ -56,7 +56,7 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				rpm,
 				st->fan_freq[i],
 				st->fan_duty[i]);
-			strncat(buf, row, sizeof(buf) - 1);
+			strncatenate(buf, row, sizeof(buf));
 		}
 		for (i = 0; i < MBFAN_COUNT; i++) {
 			rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
@@ -66,14 +66,14 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				rpm,
 				st->mbfan_freq[i],
 				st->mbfan_duty[i]);
-			strncat(buf, row, sizeof(buf) - 1);
+			strncatenate(buf, row, sizeof(buf));
 		}
 		for (i = 0; i < SENSOR_COUNT; i++) {
 			snprintf(row, sizeof(row), "sensor%d,\"%s\",%.1lf\n",
 				i+1,
 				cfg->sensors[i].name,
 				st->temp[i]);
-			strncat(buf, row, sizeof(buf) - 1);
+			strncatenate(buf, row, sizeof(buf));
 		}
 
 		p = buf;
