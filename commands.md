@@ -69,6 +69,7 @@ Fanpico supports following commands:
 * [MEASure:SENSORx:Read?](#measuresensorxread)
 * [MEASure:SENSORx:TEMP?](#measuresensorxtemp)
 * [Read?](#read)
+* [SYStem:ERRor](#systemerror)
 * [SYStem:DEBug](#systemdebug)
 * [SYStem:DEBug?](#systemdebug-1)
 * [SYStem:LOG](#systemlog)
@@ -962,7 +963,18 @@ sensor2,"sensor2",26.5
 sensor3,"pico_temp",26.0
 ```
 
+
 ### SYStem Commands
+
+
+#### SYStem:ERRor?
+Display status from last command.
+
+Example:
+```
+SYS:ERR?
+0,"No Error"
+```
 
 #### SYStem:DEBug
 Set the system debug level. This controls the logging to the console.
