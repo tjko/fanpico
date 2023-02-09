@@ -31,7 +31,7 @@ I would like to thank following sponsors, who have helped FanPico project:
 
 
 ## Where can I get one?
-Currently Fanpico is available as a DIY project.
+Currently Fanpico is available as a DIY project. Instructions for building the kit are in [FanPico Wiki](https://github.com/tjko/fanpico/wiki)
 
 Check discussion forums for places to purchase Kits or PCBs: [FanPico Forum](https://github.com/tjko/fanpico/discussions/12)
 
