@@ -69,7 +69,7 @@ Fanpico supports following commands:
 * [MEASure:SENSORx:Read?](#measuresensorxread)
 * [MEASure:SENSORx:TEMP?](#measuresensorxtemp)
 * [Read?](#read)
-* [SYStem:ERRor](#systemerror)
+* [SYStem:ERRor?](#systemerror)
 * [SYStem:DEBug](#systemdebug)
 * [SYStem:DEBug?](#systemdebug-1)
 * [SYStem:LOG](#systemlog)

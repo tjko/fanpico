@@ -90,13 +90,17 @@ int next_in_queue(uint8_t q)
 {
 	assert(q < 2);
 
-	if (queue_pos[q] >= FAN_MAX_COUNT)
+	if (queue_pos[q] >= FAN_MAX_COUNT) {
 		queue_pos[q] = 0;
+		return -1;
+	}
 
 	while (queue[queue_pos[q]] != q) {
 		queue_pos[q]++;
-		if (queue_pos[q] >= FAN_MAX_COUNT)
+		if (queue_pos[q] >= FAN_MAX_COUNT) {
+			queue_pos[q] = 0;
 			return -1;
+		}
 	}
 	return queue_pos[q]++;
 }
@@ -172,14 +176,15 @@ void read_tacho_inputs()
 	i = next_in_queue(q);
 	if (i < 0) {
                 /* End of queue reached, go to next queue. */
-		q++;
-		if (q >= 2)
+		if (++q >= 2)
 			q = 0;
 		return;
-	} else {
-		/* process only one entry from second queue at a time */
-		if (q == 1)
-			q = 0;
+	}
+
+	/* process only one entry from second queue at a time */
+	if (q == 1) {
+		log_msg(LOG_DEBUG, "queue2: fan%d: read", i+1);
+		q = 0;
 	}
 
 	/* Switch multiplexer to the fan we want to measure from... */
@@ -197,7 +202,8 @@ void read_tacho_inputs()
 	}
 	else {
 		/* Fan not spinning, put this fan into second queue */
-		queue[i] = 1;
+		if (queue[i] != 1)
+			queue[i] = 1;
 
 		f = 0;
 	}
@@ -207,11 +213,6 @@ void read_tacho_inputs()
 	mutex_enter_blocking(&tacho_mutex);
 	fan_tacho_freq[i] = f;
 	mutex_exit(&tacho_mutex);
-
-	if (i < FAN_COUNT)
-		i++;
-	else
-		i=0;
 }
 #endif
 
