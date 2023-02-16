@@ -1,6 +1,6 @@
 # Fanpico: Smart PWM (PC) Fan Controller
 
-Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP2040 MCU). Fanpico operates as standalone controller that can be configured and left running. It does not require any drivers and doesn't care what OS is being used.
+Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP2040 MCU). Fanpico operates as standalone controller that can be configured and left running. It does not require any drivers and doesn't care what OS is being used. FanPico is an Open-source hardware (OSHW) project.
 
 [![FanPico](images/fanpico-small.png)](images/fanpico-0804D-large.jpg?raw=true)
 
@@ -24,6 +24,12 @@ Fanpico is a smart PWM (PC) fan controller based around Raspberry Pi Pico (RP204
 * Monitor each fan and motherboard output signals as well as temperatures.
 * WiFi support if opting to mount Pico W on the board. This turns fanpico to "IoT" device with basic web interface.
 
+## Interfaces
+
+* Serial "Console". Primary method for configuring/monitoring FanPico units is via (USB) Serial console (some units also have 3.3V TTL Serial connection).
+* Desktop application (that polls FanPico using SCPI commands over the console connection): [FanPico Monitor](https://github.com/tjko/fanpico-monitor)
+* Web Interface (available when using _Pico W_) over WiFi
+
 ## Sponsors
 I would like to thank following sponsors, who have helped FanPico project:
 
@@ -46,7 +52,6 @@ NOTE, check [discussions forum](https://github.com/tjko/fanpico/discussions/) fo
 
 ### Review Units
 If you are member of press (or YouTuber) and would like to review/test Fanpico. Please contact me via email.  
-
 
 
 ## How Can I help?
