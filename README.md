@@ -104,7 +104,7 @@ Currently following models are available:
 (all boards have one additional 'on-board' temperature sensor on the RP2040 MCU itself)
 
 Models ending with "D" support a display to see 'real-time' status of fans and temperatures.
-![FanPico Display](images/oled-status-screen-1.jpg)
+![FanPico Display](images/oled-status-screen-2.jpg)
 
 ## Firmware
 Firmware is developed in C using the Pico SDK. Pre-compiled firmware is released when there is new major features or bug fixes.
