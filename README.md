@@ -6,8 +6,9 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 
 ## What is it for?
 * Fanpico is for customizing fan "curves" to fine tune how your motherboard controlled fans run.
+* Fine tuning fan speeds to easily balance airflow.
+* Controlling fan based on temperature sensor input.
 * Monitoring fan speeds and behaviour as well as monitoring what exactly motherboard is doing.
-* Customizing fan behaviour based on (motherboard) inputs and/or temperature from temperature sensors.
 
 ## Features
 * Controls up to 8 fans. 
@@ -29,6 +30,8 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * Serial "Console". Primary method for configuring/monitoring FanPico units is via (USB) Serial console (some units also have 3.3V TTL Serial connection).
 * Desktop application (that polls FanPico using SCPI commands over the console connection): [FanPico Monitor](https://github.com/tjko/fanpico-monitor)
 * Web Interface (available when using _Pico W_) over WiFi
+
+   [![FanPico](images/fanpico-web-small.png)](images/fanpico-web.png?raw=true)
 
 For more documenation check [FanPico Wiki](https://github.com/tjko/fanpico/wiki)
 
@@ -248,8 +251,5 @@ Build Information
  build date:        Sep  4 2022
  build attributes:  Release
 ```
-
-
-
 
 
