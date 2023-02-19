@@ -143,23 +143,23 @@ TJKO Industries,FANPICO-0804,e660c0d1c768a330,1.0
 
 #### *RST
   Reset unit. This triggers Fanpico to perform (warm) reboot.
-  
+
   ```
   *RST
   ```
-  
+
 ### CONFigure:
 Commands for configuring the device settings.
 
 #### CONFigure?
   Display current configuration in JSON format.
   Same as CONFigure:Read?
-  
+
   Example:
   ```
   CONF?
   ```
-  
+
 #### CONFigure:SAVe
 Save current configuration into flash memory.
 
@@ -204,7 +204,7 @@ CONF:FAN1:NAME CPU Fan 1
 
 #### CONFigure:FANx:NAME?
 Query name of a fan (output) port.
-  
+
 For example:
 ```
 CONF:FAN1:NAME?
@@ -217,7 +217,7 @@ This can be used to make sure that fan always sees a minimum
 duty cycle (overriding the normal fan signal).
 
 Default: 0 %
- 
+
 Example: Set minimum PWM duty cycle to 20% for FAN1
 ```
 CONF:FAN1:MIN 20
@@ -225,8 +225,8 @@ CONF:FAN1:MIN 20
 
 #### CONFigure:FANx:MINpwm?
 Query current minimum PWM duty cycle (%) configured on a fan port.
- 
-Example: 
+
+Example:
 ```
 CONF:FAN1:MIN?
 20
@@ -238,7 +238,7 @@ This can be used to make sure that fan never sees higher duty cycle
 than given value (overriding the normal fan signal).
 
 Default: 100 %
- 
+
 Example: Set maximum PWM duty cycle to 95% for FAN1
 ```
 CONF:FAN1:MAX 95
@@ -246,8 +246,8 @@ CONF:FAN1:MAX 95
 
 #### CONFigure:FANx:MAXpwm?
 Query current maximum PWM duty cycle (%) configured on a fan port.
- 
-Example: 
+
+Example:
 ```
 CONF:FAN1:MAX?
 95
@@ -258,7 +258,7 @@ Set scaling factor for the fan PWM (output) signal.
 This is applied to the PWM duty cycle before MAXpwm and MINpwm limits are applied.
 
 Default: 1.0
- 
+
 Example: Set FAN6 to run 20% slower than signal its configured to follow.
 ```
 CONF:FAN6:PWMC 0.8
@@ -266,8 +266,8 @@ CONF:FAN6:PWMC 0.8
 
 #### CONFigure:FANx:PWMCoeff?
 Query current PWM duty cycle (%) scaling factor configured on a fan port.
- 
-Example: 
+
+Example:
 ```
 CONF:FAN6:PWMC?
 0.8
@@ -281,7 +281,7 @@ signal from the fan.
 PC Fans typically send 2 pulses per revolution (per Intel specifications).
 
 Default: 2
- 
+
 Example: Adjust factor for a fan that produces 4 pulses per revolution
 ```
 CONF:FAN1:RPMF 4
@@ -289,8 +289,8 @@ CONF:FAN1:RPMF 4
 
 #### CONFigure:FANx:RPMFactor?
 Query current RPM conversion factor configured on a fan port.
- 
-Example: 
+
+Example:
 ```
 CONF:FAN1:RPMF?
 4
@@ -317,7 +317,7 @@ FAN|SOURCE
 6|MBFAN,2
 7|MBFAN,3
 8|MBFAN,4
- 
+
 Example: Set FAN 5 to follow temperature sensor 2
 ```
 CONF:FAN5:SOURCE SENSOR,2
@@ -335,8 +335,8 @@ Command returns response in following format:
 ```
 source_type,source_no
 ```
- 
-Example: 
+
+Example:
 ```
 CONF:FAN1:SOU?
 mbfan,1
@@ -404,7 +404,7 @@ CONF:MBFAN1:NAME CPU Fan
 
 #### CONFigure:MBFANx:NAME?
 Query name of a motherboard fan (input) port.
-  
+
 For example:
 ```
 CONF:MBFAN1:NAME?
@@ -417,7 +417,7 @@ This can be used to make sure motherboard never sees "fan"
 running slower than this value (even if fan is not running at all).
 
 Default: 0
- 
+
 Example: Set minimum RPM (sent to motheboard) to be at least 500
 ```
 CONF:MBFAN1:MIN 500
@@ -425,8 +425,8 @@ CONF:MBFAN1:MIN 500
 
 #### CONFigure:MBFANx:MINrpm?
 Query current minimum RPM value configured on a motherboard fan port.
- 
-Example: 
+
+Example:
 ```
 CONF:MBFAN1:MIN?
 500
@@ -438,7 +438,7 @@ This can be used to make sure motherboard never sees "fan"
 running ffaster than this value.
 
 Default: 10000
- 
+
 Example: Set maximum RPM value motheboard can see to 3000
 ```
 CONF:MBFAN1:MAX 3000
@@ -446,8 +446,8 @@ CONF:MBFAN1:MAX 3000
 
 #### CONFigure:MBFANx:MAXrpm?
 Query current maximum RPM value configured on a motherboard fan port.
- 
-Example: 
+
+Example:
 ```
 CONF:MBFAN1:MAX?
 3000
@@ -458,7 +458,7 @@ Set scaling factor for the motherboard fan Tachometer (output) signal.
 This is applied to adjust the output RPM (and tachometer signal frequency).
 
 Default: 1.0
- 
+
 Example: Scale the MBFAN4 port Tachometer (RPM) values to be 20% higher than input.
 ```
 CONF:MBFAN4:RPMC 1.2
@@ -466,8 +466,8 @@ CONF:MBFAN4:RPMC 1.2
 
 #### CONFigure:MBFANx:RPMCoeff?
 Query current TAchometer (RPM) scaling factor configured on a motherboard fan port.
- 
-Example: 
+
+Example:
 ```
 CONF:MBFAN6:RPMC?
 1.2
@@ -479,7 +479,7 @@ This is mainly only needed if using Fanpico with something else than PC motherbo
 to see tachometer signal from Fans that produce other than the default 2 pulses per revolution.
 
 Default: 2
- 
+
 Example: Adjust factor for (emulating fan that produces 4 pulses per revolution
 ```
 CONF:MBFAN1:RPMF 4
@@ -487,8 +487,8 @@ CONF:MBFAN1:RPMF 4
 
 #### CONFigure:MBFANx:RPMFactor?
 Query current RPM conversion factor configured on a motherboard fan port.
- 
-Example: 
+
+Example:
 ```
 CONF:MBFAN1:RPMF?
 4
@@ -509,7 +509,7 @@ MBFAN|SOURCE
 2|FAN,2
 3|FAN,3
 4|FAN,4
- 
+
 Example: Set MBFAN 2 to follow Tachometer signal from FAN8
 ```
 CONF:MBFAN2:SOURCE FAN,8
@@ -527,8 +527,8 @@ Command returns response in following format:
 ```
 source_type,source_no
 ```
- 
-Example: 
+
+Example:
 ```
 CONF:MBFAN1:SOU?
 fan,1
@@ -549,7 +549,7 @@ x|y
 0|0
 10000|10000
 
-Example: Assuming we have configured FAN1 to only run above 30% PWM signal, but our 
+Example: Assuming we have configured FAN1 to only run above 30% PWM signal, but our
 motherboard sets alarm when it doesnt detect fan running, we can provide 'fake' 500RPM
 speed to the motherboard until fan is actually running at least 500 RPM...
 ```
@@ -596,7 +596,7 @@ CONF:SENSOR1:NAME Air Intake
 
 #### CONFigure:SENSORx:NAME?
 Query name of a temperature sensor.
-  
+
 For example:
 ```
 CONF:SENSOR1:NAME?
@@ -605,7 +605,7 @@ Air Intake
 
 #### CONFigure:SENSORx:TEMPOffset
 Set offset that is applied to measured temperature.
-This can be used as a grude calibration method by setting offset to 
+This can be used as a grude calibration method by setting offset to
 the difference of actual temperature vs. what sensor is reporting.
 
 Default: 0.0
@@ -617,7 +617,7 @@ CONF:SENSOR1:TEMPO -2.5
 
 #### CONFigure:SENSORx:TEMPOffset?
 Get the current temperature offset configured for the sensor.
-  
+
 For example:
 ```
 CONF:SENSOR1:TEMPO?
@@ -637,7 +637,7 @@ CONF:SENSOR1:TEMPC 0.9
 
 #### CONFigure:SENSORx:TEMPCoeff?
 Get the current temperature coefficient configured for the sensor.
-  
+
 For example:
 ```
 CONF:SENSOR1:TEMPC?
@@ -989,7 +989,7 @@ SYS:DEBUG 2
 #### SYStem:DEBug?
 Display current system debug level.
 
-Example: 
+Example:
 ```
 SYS:DEBUG?
 0
@@ -1097,7 +1097,7 @@ Value|Status
 0|Local Echo disabled.
 1|Local Echo enabled.
 
-Default: 0 
+Default: 0
 
 Example: enable local echo
 ```
@@ -1453,7 +1453,7 @@ mynetwork
 #### SYStem:WIFI:STATus?
 Display WiFi Link status.
 
-Return value: <linkstatus>,<ipaddress>,<netmask>,<gateway>
+Return value: linkstatus,current_ip,current_netmask,current_gateway
 
 Link Status:
 
@@ -1492,6 +1492,3 @@ Example:
 SYS:WIFI:PASS?
 mynetworkpassword
 ```
-
-
-
