@@ -277,6 +277,15 @@ double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *co
 		break;
 	}
 
+	/* apply filter */
+	if (fan->filter != FILTER_NONE && fan->filter_ctx) {
+		double f_val = filter(fan->filter, fan->filter_ctx, val);
+		if (f_val != val) {
+			log_msg(LOG_DEBUG, "filter fan%d: %lf -> %lf\n", i+1, val, f_val);
+			val = f_val;
+		}
+	}
+
 	/* apply mapping */
 	val = pwm_map(&fan->map, val);
 

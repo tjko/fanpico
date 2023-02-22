@@ -29,6 +29,7 @@
 #include <malloc.h>
 #include <time.h>
 #include "pico/stdlib.h"
+#include "pico/mutex.h"
 #include "pico/unique_id.h"
 #include "pico/util/datetime.h"
 #include "hardware/watchdog.h"
@@ -44,6 +45,8 @@
 int global_debug_level = 0;
 int global_log_level = LOG_NOTICE;
 int global_syslog_level = LOG_ERR;
+
+auto_init_mutex(log_mutex);
 
 
 int get_log_level()
@@ -86,6 +89,7 @@ void log_msg(int priority, const char *format, ...)
 	if ((priority > global_log_level) && (priority > global_syslog_level))
 		return;
 
+
 	va_start(ap, format);
 	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
@@ -96,6 +100,7 @@ void log_msg(int priority, const char *format, ...)
 			buf[len - 1] = 0;
 	}
 
+	mutex_enter_blocking(&log_mutex);
 	if (priority <= global_log_level) {
 		uint64_t t = to_us_since_boot(get_absolute_time());
 		printf("[%6llu.%06llu] %s\n", (t / 1000000), (t % 1000000), buf);
@@ -105,6 +110,7 @@ void log_msg(int priority, const char *format, ...)
 		syslog_msg(priority, "%s", buf);
 	}
 #endif
+	mutex_exit(&log_mutex);
 }
 
 void debug(int debug_level, const char *fmt, ...)

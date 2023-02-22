@@ -26,6 +26,8 @@ Fanpico supports following commands:
 * [CONFigure:FANx:SOUrce?](#configurefanxsource-1)
 * [CONFigure:FANx:PWMMap](#configurefanxpwmmap)
 * [CONFigure:FANx:PWMMap?](#configurefanxpwmmap-1)
+* [CONFigure:FANx:FILTER](#configurefanxfilter)
+* [CONFigure:FANx:FILTER?](#configurefanxfilter-1)
 * [CONFigure:MBFANx:NAME](#configurembfanxname)
 * [CONFigure:MBFANx:NAME?](#configurembfanxname-1)
 * [CONFigure:MBFANx:MINrpm](#configurembfanxminrpm)
@@ -383,6 +385,32 @@ For example:
 CONF:FAN1:PWMMAP?
 0,0,100,100
 ```
+
+
+#### CONFigure:FANx:FILTER
+Configure filter to be applied for the PWM signal controlling the fan.
+
+Filter|Description|Argument 1|Argument 2|Argument 3
+------|-----------|----------|----------|----------
+none|No Filter|||
+lossypeak|Lossy Peak Detector|decay rate [points per second] (default: 0.1)|decay start delay [seconds] (default: 0)|
+
+For example:
+```
+CONF:FAN1:FILTER lossypeak,1.0,30
+```
+
+
+#### CONFigure:FANx:FILTER?
+Display currently active (PWM) filter fot the fan.
+
+Format: filter,arg_1,arg_2,...arg_n
+
+
+For example:
+```
+CONF:FAN1:FILTER?
+lossypeak,1.0,30.0
 
 
 ### CONFigure:MBFANx Commands

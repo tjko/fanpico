@@ -74,12 +74,18 @@ absolute_time_t fan_tacho_last_read;
 
 
 
-/* Array holding calculated fan tachometer (input) frequencies. */
+auto_init_mutex(tacho_mutex);
+
+/* Array holding calculated fan tachometer (input) frequencies.
+ *
+ * Note, access to this array must use tacho_mutex as core1
+ * writes to this array.
+ */
+
 float fan_tacho_freq[FAN_MAX_COUNT];
 
-PIO pio = pio0;
 
-auto_init_mutex(tacho_mutex);
+PIO pio = pio0;
 
 static uint8_t queue[FAN_MAX_COUNT] = { 0, 0, 0, 0, 0, 0 , 0, 0 };
 static uint8_t queue_pos[2] = { 0, 0 };
@@ -255,6 +261,7 @@ void setup_tacho_inputs()
 	/* Configure pins and build GPIO to FAN mapping */
 	memset(gpio_fan_tacho_map, 0, sizeof(gpio_fan_tacho_map));
 
+	mutex_enter_blocking(&tacho_mutex);
 	for (i = 0; i < FAN_COUNT; i++) {
 		fan_tacho_counters[i] = 0;
 		fan_tacho_counters_last[i] = 0;
@@ -266,6 +273,7 @@ void setup_tacho_inputs()
 		gpio_set_dir(pin, GPIO_IN);
 #endif
 	}
+	mutex_exit(&tacho_mutex);
 
 #if TACHO_READ_MULTIPLEX > 0
 	// Setup multiplexer pins */

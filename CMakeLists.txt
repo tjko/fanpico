@@ -8,7 +8,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.3.0b
+  VERSION 1.3.0
   LANGUAGES C CXX ASM
   )
 set(CMAKE_C_STANDARD 11)
@@ -62,6 +62,7 @@ add_executable(fanpico
   src/pwm.c
   src/tacho.c
   src/sensors.c
+  src/filters.c
   src/square_wave_gen.c
   src/pulse_len.c
   src/util.c

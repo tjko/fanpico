@@ -283,7 +283,7 @@ int main()
 		}
 
 		/* Read PWM input signals (duty cycle) periodically */
-		if (time_passed(&t_poll_pwm, 1500)) {
+		if (time_passed(&t_poll_pwm, 1000)) {
 			int i;
 			float new_duty;
 
@@ -304,7 +304,7 @@ int main()
 		}
 
 		/* Read temperature sensors periodically */
-		if (time_passed(&t_temp, 10000)) {
+		if (time_passed(&t_temp, 5000)) {
 			int i;
 			float temp;
 

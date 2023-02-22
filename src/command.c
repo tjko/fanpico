@@ -430,7 +430,7 @@ int cmd_fan_pwm_map(const char *cmd, const char *args, int query, char *prev_cmd
 
 	fan = atoi(&prev_cmd[3]) - 1;
 	if (fan < 0 || fan >= FAN_COUNT)
-		return 0;
+		return 1;
 	map = &conf->fans[fan].map;
 	new_map.points = 0;
 
@@ -459,6 +459,50 @@ int cmd_fan_pwm_map(const char *cmd, const char *args, int query, char *prev_cmd
 			ret = 2;
 		}
 		free(arg);
+	}
+
+	return ret;
+}
+
+int cmd_fan_filter(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int fan;
+	int ret = 0;
+	char *tok, *saveptr, *param;
+	struct fan_output *f;
+	enum pwm_filter_types new_filter;
+	void *new_ctx;
+
+	fan = atoi(&prev_cmd[3]) - 1;
+	if (fan < 0 || fan >= FAN_COUNT)
+		return 1;
+
+	f = &conf->fans[fan];
+	if (query) {
+		printf("%s", pwm_filter2str(f->filter));
+		tok = filter_print_args(f->filter, f->filter_ctx);
+		if (tok) {
+			printf(",%s\n", tok);
+			free(tok);
+		} else {
+			printf(",\n");
+		}
+	} else {
+		param = strdup(args);
+		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
+			new_filter = str2pwm_filter(tok);
+			tok += strlen(tok) + 1;
+			new_ctx = filter_parse_args(new_filter, tok);
+			if (new_filter == FILTER_NONE || new_ctx != NULL) {
+				f->filter = new_filter;
+				if (f->filter_ctx)
+					free(f->filter_ctx);
+				f->filter_ctx = new_ctx;
+			} else {
+				ret = 1;
+			}
+		}
+		free(param);
 	}
 
 	return ret;
@@ -1241,7 +1285,7 @@ int cmd_wifi_hostname(const char *cmd, const char *args, int query, char *prev_c
 		printf("%s\n", conf->hostname);
 	} else {
 		for (int i = 0; i < strlen(args); i++) {
-			if (!(isalpha(args[i]) || args[i] == '-')) {
+			if (!(isalpha((int)args[i]) || args[i] == '-')) {
 				return 1;
 			}
 		}
@@ -1342,6 +1386,7 @@ struct cmd_t fan_c_commands[] = {
 	{ "RPMFactor", 4, NULL,              cmd_fan_rpm_factor },
 	{ "SOUrce",    3, NULL,              cmd_fan_source },
 	{ "PWMMap",    4, NULL,              cmd_fan_pwm_map },
+	{ "FILTER",    6, NULL,              cmd_fan_filter },
 	{ 0, 0, 0, 0 }
 };
 
