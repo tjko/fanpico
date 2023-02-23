@@ -390,11 +390,11 @@ CONF:FAN1:PWMMAP?
 #### CONFigure:FANx:FILTER
 Configure filter to be applied for the PWM signal controlling the fan.
 
-Filter|Description|Argument 1|Argument 2|Argument 3
-------|-----------|----------|----------|----------
+Filter|Description|Arguments|Argument Descriptions|Example|Notes
+------|-----------|---------|---------------------|-------|-------
 none|No Filter|||
-lossypeak|Lossy Peak Detector|decay rate [points per second] (default: 1.0)|decay start delay [seconds] (default: 0)|
-sma|Simple Moving Average|window size [points] (default: 10, range: 2..32)|
+lossypeak|Lossy Peak Detector|decay_rate,decay_start_delay|* decay rate [points per second] (valid values: > 0.0)<br>* decay start delay [seconds] (valid values: >= 0.0)|CONF:FAN1:FILTER lossypeak,1.5,15|This can be useful for smoothing out erratic (CPU Fan) PWM signal from motherboard.
+sma|Simple Moving Average|window_size|* window size [points] (valid range: 2..32)<br>|CONF:FAN1:FILTER sma,10|This can be useful for filtering temperature sensor signal.
 
 For example:
 ```
