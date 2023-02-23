@@ -393,7 +393,7 @@ Configure filter to be applied for the PWM signal controlling the fan.
 Filter|Description|Argument 1|Argument 2|Argument 3
 ------|-----------|----------|----------|----------
 none|No Filter|||
-lossypeak|Lossy Peak Detector|decay rate [points per second] (default: 0.1)|decay start delay [seconds] (default: 0)|
+lossypeak|Lossy Peak Detector|decay rate [points per second] (default: 1.0)|decay start delay [seconds] (default: 0)|
 
 For example:
 ```
@@ -411,7 +411,7 @@ For example:
 ```
 CONF:FAN1:FILTER?
 lossypeak,1.0,30.0
-
+```
 
 ### CONFigure:MBFANx Commands
 MBFANx commands are used to configure specific motherboard fan input port.
