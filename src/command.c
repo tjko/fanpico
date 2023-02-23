@@ -479,7 +479,7 @@ int cmd_fan_filter(const char *cmd, const char *args, int query, char *prev_cmd)
 
 	f = &conf->fans[fan];
 	if (query) {
-		printf("%s", pwm_filter2str(f->filter));
+		printf("%s", filter2str(f->filter));
 		tok = filter_print_args(f->filter, f->filter_ctx);
 		if (tok) {
 			printf(",%s\n", tok);
@@ -490,7 +490,7 @@ int cmd_fan_filter(const char *cmd, const char *args, int query, char *prev_cmd)
 	} else {
 		param = strdup(args);
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
-			new_filter = str2pwm_filter(tok);
+			new_filter = str2filter(tok);
 			tok += strlen(tok) + 1;
 			new_ctx = filter_parse_args(new_filter, tok);
 			if (new_filter == FILTER_NONE || new_ctx != NULL) {

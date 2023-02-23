@@ -394,6 +394,7 @@ Filter|Description|Argument 1|Argument 2|Argument 3
 ------|-----------|----------|----------|----------
 none|No Filter|||
 lossypeak|Lossy Peak Detector|decay rate [points per second] (default: 1.0)|decay start delay [seconds] (default: 0)|
+sma|Simple Moving Average|window size [points] (default: 10, range: 2..32)|
 
 For example:
 ```

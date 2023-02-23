@@ -58,26 +58,31 @@
 
 
 enum pwm_source_types {
-	PWM_FIXED   = 0,     /* fixed speed set by s_id */
-	PWM_MB      = 1,     /* mb pwm signal */
-	PWM_SENSOR  = 2,     /* sensor signal */
-	PWM_FAN     = 3,     /* another fan */
+	PWM_FIXED   = 0,     /* Fixed speed set by s_id */
+	PWM_MB      = 1,     /* Mb pwm signal */
+	PWM_SENSOR  = 2,     /* Sensor signal */
+	PWM_FAN     = 3,     /* Another fan */
 };
+#define PWM_SOURCE_ENUM_MAX 3
 
 enum pwm_filter_types {
-	FILTER_NONE = 0,
-	FILTER_LOSSYPEAK = 1,
+	FILTER_NONE = 0,      /* No filtering */
+	FILTER_LOSSYPEAK = 1, /* "Lossy Peak Detector" with time decay */
+	FILTER_SMA = 2,       /* Simple moving average */
 };
+#define FILTER_ENUM_MAX 2
 
 enum tacho_source_types {
-	TACHO_FIXED  = 0,     /* fixed speed set by s_id */
-	TACHO_FAN    = 1,     /* fan tacho signal */
+	TACHO_FIXED  = 0,     /* Fixed speed set by s_id */
+	TACHO_FAN    = 1,     /* Fan tacho signal */
 };
+#define TACHO_ENUM_MAX 1
 
 enum temp_sensor_types {
 	TEMP_INTERNAL = 0,
 	TEMP_EXTERNAL = 1,
 };
+#define TEMP_ENUM_MAX 1
 
 struct pwm_map {
 	uint8_t points;
@@ -217,8 +222,8 @@ double pwm_map(struct pwm_map *map, double val);
 double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *config, int i);
 
 /* filters.c */
-int str2pwm_filter(const char *s);
-const char* pwm_filter2str(enum pwm_filter_types source);
+int str2filter(const char *s);
+const char* filter2str(enum pwm_filter_types source);
 void* filter_parse_args(enum pwm_filter_types filter, char *args);
 char* filter_print_args(enum pwm_filter_types filter, void *ctx);
 float filter(enum pwm_filter_types filter, void *ctx, float input);

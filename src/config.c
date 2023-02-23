@@ -173,7 +173,7 @@ void json2pwm_filter(cJSON *item, struct fan_output *f)
 {
 	cJSON *args;
 
-	f->filter = str2pwm_filter(cJSON_GetStringValue(cJSON_GetObjectItem(item, "name")));
+	f->filter = str2filter(cJSON_GetStringValue(cJSON_GetObjectItem(item, "name")));
 	if ((args = cJSON_GetObjectItem(item, "args")) && f->filter != FILTER_NONE) {
 		f->filter_ctx =  filter_parse_args(f->filter, cJSON_GetStringValue(args));
 		if (!f->filter_ctx)
@@ -189,7 +189,7 @@ cJSON* pwm_filter2json(struct fan_output *f)
 	if ((o = cJSON_CreateObject()) == NULL)
 		return NULL;
 
-	cJSON_AddItemToObject(o, "name", cJSON_CreateString(pwm_filter2str(f->filter)));
+	cJSON_AddItemToObject(o, "name", cJSON_CreateString(filter2str(f->filter)));
 	cJSON_AddItemToObject(o, "args", cJSON_CreateString(filter_print_args(f->filter, f->filter_ctx)));
 	return o;
 }

@@ -63,6 +63,8 @@ add_executable(fanpico
   src/tacho.c
   src/sensors.c
   src/filters.c
+  src/filter_lossypeak.c
+  src/filter_sma.c
   src/square_wave_gen.c
   src/pulse_len.c
   src/util.c
