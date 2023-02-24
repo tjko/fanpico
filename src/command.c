@@ -1402,6 +1402,21 @@ int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_uptime(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
+	uint32_t mins =  secs / 60;
+	uint32_t hours = mins / 60;
+	uint32_t days = hours / 24;
+
+	if (!query)
+		return 1;
+
+	printf("up %lu days, %lu hours, %lu minutes\n", days, hours % 24, mins % 60);
+
+	return 0;
+}
+
 int cmd_err(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (!query)
@@ -1432,112 +1447,113 @@ int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 
 struct cmd_t wifi_commands[] = {
 #ifdef WIFI_SUPPORT
-	{ "IPaddress", 2, NULL,              cmd_wifi_ip },
-	{ "NETMask",   4, NULL,              cmd_wifi_netmask },
-	{ "GATEway",   4, NULL,              cmd_wifi_gateway },
-	{ "SYSLOG",    6, NULL,              cmd_wifi_syslog },
-	{ "NTP",       3, NULL,              cmd_wifi_ntp },
-	{ "MAC",       3, NULL,              cmd_wifi_mac },
 	{ "COUntry",   3, NULL,              cmd_wifi_country },
+	{ "GATEway",   4, NULL,              cmd_wifi_gateway },
+	{ "HOSTname",  4, NULL,              cmd_wifi_hostname },
+	{ "IPaddress", 2, NULL,              cmd_wifi_ip },
+	{ "MAC",       3, NULL,              cmd_wifi_mac },
+	{ "NETMask",   4, NULL,              cmd_wifi_netmask },
+	{ "NTP",       3, NULL,              cmd_wifi_ntp },
 	{ "PASSword",  4, NULL,              cmd_wifi_password },
 	{ "SSID",      4, NULL,              cmd_wifi_ssid },
 	{ "STATus",    4, NULL,              cmd_wifi_status },
-	{ "HOSTname",  4, NULL,              cmd_wifi_hostname },
+	{ "SYSLOG",    6, NULL,              cmd_wifi_syslog },
 #endif
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
-	{ "LOG",       3, NULL,              cmd_log_level },
-	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
+	{ "DISPlay",   4, NULL,              cmd_display_type },
 	{ "ECHO",      4, NULL,              cmd_echo },
+	{ "ERRor",     3, NULL,              cmd_err },
 	{ "FANS",      4, NULL,              cmd_fans },
 	{ "LED",       3, NULL,              cmd_led },
+	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
 	{ "NAME",      4, NULL,              cmd_name },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
-	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
-	{ "VERsion",   3, NULL,              cmd_version },
-	{ "DISPlay",   4, NULL,              cmd_display_type },
-	{ "WIFI",      4, wifi_commands,     cmd_wifi },
+	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
 	{ "TIME",      4, NULL,              cmd_time },
-	{ "ERRor",     3, NULL,              cmd_err },
+	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
+	{ "UPTIme",    4, NULL,              cmd_uptime },
+	{ "VERsion",   3, NULL,              cmd_version },
+	{ "WIFI",      4, wifi_commands,     cmd_wifi },
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t fan_c_commands[] = {
-	{ "NAME",      4, NULL,              cmd_fan_name },
-	{ "MINpwm",    3, NULL,              cmd_fan_min_pwm },
+	{ "FILTER",    6, NULL,              cmd_fan_filter },
 	{ "MAXpwm",    3, NULL,              cmd_fan_max_pwm },
+	{ "MINpwm",    3, NULL,              cmd_fan_min_pwm },
+	{ "NAME",      4, NULL,              cmd_fan_name },
 	{ "PWMCoeff",  4, NULL,              cmd_fan_pwm_coef },
+	{ "PWMMap",    4, NULL,              cmd_fan_pwm_map },
 	{ "RPMFactor", 4, NULL,              cmd_fan_rpm_factor },
 	{ "SOUrce",    3, NULL,              cmd_fan_source },
-	{ "PWMMap",    4, NULL,              cmd_fan_pwm_map },
-	{ "FILTER",    6, NULL,              cmd_fan_filter },
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t mbfan_c_commands[] = {
-	{ "NAME",      4, NULL,              cmd_mbfan_name },
-	{ "MINrpm",    3, NULL,              cmd_mbfan_min_rpm },
+	{ "FILTER",    6, NULL,              cmd_mbfan_filter },
 	{ "MAXrpm",    3, NULL,              cmd_mbfan_max_rpm },
+	{ "MINrpm",    3, NULL,              cmd_mbfan_min_rpm },
+	{ "NAME",      4, NULL,              cmd_mbfan_name },
 	{ "RPMCoeff",  4, NULL,              cmd_mbfan_rpm_coef },
 	{ "RPMFactor", 4, NULL,              cmd_mbfan_rpm_factor },
-	{ "SOUrce",    3, NULL,              cmd_mbfan_source },
 	{ "RPMMap",    4, NULL,              cmd_mbfan_rpm_map },
-	{ "FILTER",    6, NULL,              cmd_mbfan_filter },
+	{ "SOUrce",    3, NULL,              cmd_mbfan_source },
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t sensor_c_commands[] = {
+	{ "BETAcoeff",   4, NULL,             cmd_sensor_beta_coef },
+	{ "FILTER",      6, NULL,             cmd_sensor_filter },
 	{ "NAME",        4, NULL,             cmd_sensor_name },
-	{ "TEMPOffset",  5, NULL,             cmd_sensor_temp_offset },
 	{ "TEMPCoeff",   5, NULL,             cmd_sensor_temp_coef },
 	{ "TEMPMap",     5, NULL,             cmd_sensor_temp_map },
 	{ "TEMPNominal", 5, NULL,             cmd_sensor_temp_nominal },
+	{ "TEMPOffset",  5, NULL,             cmd_sensor_temp_offset },
 	{ "THERmistor",  4, NULL,             cmd_sensor_ther_nominal },
-	{ "BETAcoeff",   4, NULL,             cmd_sensor_beta_coef },
-	{ "FILTER",      6, NULL,             cmd_sensor_filter },
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t config_commands[] = {
-	{ "SAVe",      3, NULL,              cmd_save_config },
-	{ "Read",      1, NULL,              cmd_print_config },
 	{ "DELete",    3, NULL,              cmd_delete_config },
 	{ "FAN",       3, fan_c_commands,    NULL },
 	{ "MBFAN",     5, mbfan_c_commands,  NULL },
+	{ "Read",      1, NULL,              cmd_print_config },
+	{ "SAVe",      3, NULL,              cmd_save_config },
 	{ "SENSOR",    6, sensor_c_commands, NULL },
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t fan_commands[] = {
-	{ "RPM",       3, NULL,              cmd_fan_rpm },
 	{ "PWM",       3, NULL,              cmd_fan_pwm },
-	{ "TACho",     3, NULL,              cmd_fan_tacho },
 	{ "Read",      1, NULL,              cmd_fan_read },
+	{ "RPM",       3, NULL,              cmd_fan_rpm },
+	{ "TACho",     3, NULL,              cmd_fan_tacho },
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t mbfan_commands[] = {
-	{ "RPM",       3, NULL,              cmd_mbfan_rpm },
 	{ "PWM",       3, NULL,              cmd_mbfan_pwm },
-	{ "TACho",     3, NULL,              cmd_mbfan_tacho },
 	{ "Read",      1, NULL,              cmd_mbfan_read },
+	{ "RPM",       3, NULL,              cmd_mbfan_rpm },
+	{ "TACho",     3, NULL,              cmd_mbfan_tacho },
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t sensor_commands[] = {
-	{ "TEMP",      4, NULL,              cmd_sensor_temp },
 	{ "Read",      1, NULL,              cmd_sensor_temp },
+	{ "TEMP",      4, NULL,              cmd_sensor_temp },
 	{ 0, 0, 0, 0 }
 };
 
 struct cmd_t measure_commands[] = {
-	{ "Read",      1, NULL,              cmd_read },
 	{ "FAN",       3, fan_commands,      cmd_fan_read },
 	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read },
+	{ "Read",      1, NULL,              cmd_read },
 	{ "SENSOR",    6, sensor_commands,   cmd_sensor_temp },
 	{ 0, 0, 0, 0 }
 };

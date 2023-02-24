@@ -94,6 +94,7 @@ Fanpico supports following commands:
 * [SYStem:NAME?](#systemname-1)
 * [SYStem:SENSORS?](#systemsensors)
 * [SYStem:TIME?](#systemtime)
+* [SYStem:UPTIme?](#systemuptime)
 * [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
 * [SYStem:WIFI?](#systemwifi)
@@ -1300,6 +1301,15 @@ Example:
 ```
 SYS:TIME?
 2022-09-19 18:55:42
+```
+
+#### SYStem:UPTIme?
+Return time elapsed since unit was last rebooted.
+
+Example:
+```
+SYS:UPTIME?
+up 4 days, 22 hours, 27 minutes
 ```
 
 
