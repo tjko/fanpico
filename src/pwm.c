@@ -122,7 +122,7 @@ float get_pwm_duty_cycle(uint fan)
 
 /* Read multiple PWM signals simultaneously using PWM hardware.
  */
-void get_pwm_duty_cycles()
+void get_pwm_duty_cycles(struct fanpico_config *config)
 {
 	uint slices[MBFAN_COUNT];
 	int i;
@@ -155,8 +155,19 @@ void get_pwm_duty_cycles()
 
 	/* Calculate duty cycles based on measurements. */
 	for (i=0; i < MBFAN_COUNT; i++) {
+		struct mb_input *mbfan = &config->mbfans[i];
 		uint16_t counter = pwm_get_counter(slices[i]);
 		float duty = counter * 100 / max_count;
+
+		/* Apply filter */
+		if (mbfan->filter != FILTER_NONE) {
+			float duty_f = filter(mbfan->filter, mbfan->filter_ctx, duty);
+			if (duty_f != duty) {
+				log_msg(LOG_DEBUG, "filter mbfan%d: %lf -> %lf\n", i+1, duty, duty_f);
+				duty = duty_f;
+			}
+		}
+
 		mbfan_pwm_duty[i] = duty;
 	}
 }
@@ -260,7 +271,7 @@ double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *co
 
 	fan = &config->fans[i];
 
-	/* get source value  */
+	/* Get source value  */
 	switch (fan->s_type) {
 	case PWM_FIXED:
 		val = fan->s_id;
@@ -277,8 +288,8 @@ double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *co
 		break;
 	}
 
-	/* apply filter */
-	if (fan->filter != FILTER_NONE && fan->filter_ctx) {
+	/* Apply filter */
+	if (fan->filter != FILTER_NONE) {
 		double f_val = filter(fan->filter, fan->filter_ctx, val);
 		if (f_val != val) {
 			log_msg(LOG_DEBUG, "filter fan%d: %lf -> %lf\n", i+1, val, f_val);
@@ -286,13 +297,13 @@ double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *co
 		}
 	}
 
-	/* apply mapping */
+	/* Apply mapping */
 	val = pwm_map(&fan->map, val);
 
-	/* apply coefficient */
+	/* Apply coefficient */
 	val *= fan->pwm_coefficient;
 
-	/* final step to enforce min/max limits for output */
+	/* Final step to enforce min/max limits for output */
 	if (val < fan->min_pwm) val = fan->min_pwm;
 	if (val > fan->max_pwm) val = fan->max_pwm;
 

@@ -169,28 +169,28 @@ cJSON* pwm_map2json(struct pwm_map *map)
 }
 
 
-void json2pwm_filter(cJSON *item, struct fan_output *f)
+void json2filter(cJSON *item, enum signal_filter_types *filter, void **filter_ctx)
 {
 	cJSON *args;
 
-	f->filter = str2filter(cJSON_GetStringValue(cJSON_GetObjectItem(item, "name")));
-	if ((args = cJSON_GetObjectItem(item, "args")) && f->filter != FILTER_NONE) {
-		f->filter_ctx =  filter_parse_args(f->filter, cJSON_GetStringValue(args));
-		if (!f->filter_ctx)
-			f->filter = FILTER_NONE;
+	*filter = str2filter(cJSON_GetStringValue(cJSON_GetObjectItem(item, "name")));
+	if ((args = cJSON_GetObjectItem(item, "args")) && *filter != FILTER_NONE) {
+		*filter_ctx =  filter_parse_args(*filter, cJSON_GetStringValue(args));
+		if (!*filter_ctx)
+			*filter = FILTER_NONE;
 	}
 }
 
 
-cJSON* pwm_filter2json(struct fan_output *f)
+cJSON* filter2json(enum signal_filter_types filter, void *filter_ctx)
 {
 	cJSON *o;
 
 	if ((o = cJSON_CreateObject()) == NULL)
 		return NULL;
 
-	cJSON_AddItemToObject(o, "name", cJSON_CreateString(filter2str(f->filter)));
-	cJSON_AddItemToObject(o, "args", cJSON_CreateString(filter_print_args(f->filter, f->filter_ctx)));
+	cJSON_AddItemToObject(o, "name", cJSON_CreateString(filter2str(filter)));
+	cJSON_AddItemToObject(o, "args", cJSON_CreateString(filter_print_args(filter, filter_ctx)));
 	return o;
 }
 
@@ -275,44 +275,48 @@ void clear_config(struct fanpico_config *cfg)
 	struct mb_input *m;
 
 	for (i = 0; i < SENSOR_MAX_COUNT; i++) {
-		s=&cfg->sensors[i];
+		s = &cfg->sensors[i];
 
-		s->name[0]=0;
+		s->name[0] = 0;
 		s->type = TEMP_INTERNAL;
 		s->thermistor_nominal = 0.0;
 		s->beta_coefficient = 0.0;
 		s->temp_nominal = 0.0;
-		s->temp_offset=0.0;
-		s->temp_coefficient=0.0;
-		s->map.points=0;
+		s->temp_offset = 0.0;
+		s->temp_coefficient = 0.0;
+		s->map.points = 0;
+		s->filter = FILTER_NONE;
+		s->filter_ctx = NULL;
 	}
 
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
-		f=&cfg->fans[i];
+		f = &cfg->fans[i];
 
-		f->name[0]=0;
-		f->min_pwm=0;
-		f->max_pwm=0;
-		f->pwm_coefficient=0.0;
-		f->s_type=PWM_FIXED;
-		f->s_id=0;
-		f->filter=FILTER_NONE;
+		f->name[0] = 0;
+		f->min_pwm = 0;
+		f->max_pwm = 0;
+		f->pwm_coefficient = 0.0;
+		f->s_type = PWM_FIXED;
+		f->s_id = 0;
+		f->map.points = 0;
+		f->rpm_factor = 2;
+		f->filter = FILTER_NONE;
 		f->filter_ctx = NULL;
-		f->map.points=0;
-		f->rpm_factor=2;
 	}
 
 	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
 		m=&cfg->mbfans[i];
 
-		m->name[0]=0;
-		m->min_rpm=0;
-		m->max_rpm=0;
-		m->rpm_coefficient=0.0;
-		m->rpm_factor=2;
-		m->s_type=TACHO_FIXED;
-		m->s_id=0;
-		m->map.points=0;
+		m->name[0] = 0;
+		m->min_rpm = 0;
+		m->max_rpm = 0;
+		m->rpm_coefficient = 0.0;
+		m->rpm_factor = 2;
+		m->s_type = TACHO_FIXED;
+		m->s_id = 0;
+		m->map.points = 0;
+		m->filter = FILTER_NONE;
+		m->filter_ctx = NULL;
 	}
 
 	cfg->local_echo = false;
@@ -398,7 +402,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 		cJSON_AddItemToObject(o, "source_id", cJSON_CreateNumber(f->s_id));
 		cJSON_AddItemToObject(o, "pwm_map", pwm_map2json(&f->map));
 		cJSON_AddItemToObject(o, "rpm_factor", cJSON_CreateNumber(f->rpm_factor));
-		cJSON_AddItemToObject(o, "filter", pwm_filter2json(f));
+		cJSON_AddItemToObject(o, "filter", filter2json(f->filter, f->filter_ctx));
 		cJSON_AddItemToArray(fans, o);
 	}
 	cJSON_AddItemToObject(config, "fans", fans);
@@ -422,6 +426,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 		cJSON_AddItemToObject(o, "source_type", cJSON_CreateString(tacho_source2str(m->s_type)));
 		cJSON_AddItemToObject(o, "source_id", cJSON_CreateNumber(m->s_id));
 		cJSON_AddItemToObject(o, "rpm_map", tacho_map2json(&m->map));
+		cJSON_AddItemToObject(o, "filter", filter2json(m->filter, m->filter_ctx));
 		cJSON_AddItemToArray(mbfans, o);
 	}
 	cJSON_AddItemToObject(config, "mbfans", mbfans);
@@ -450,6 +455,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 			cJSON_AddItemToObject(o, "beta_coefficient",
 					cJSON_CreateNumber(s->beta_coefficient));
 		}
+		cJSON_AddItemToObject(o, "filter", filter2json(s->filter, s->filter_ctx));
 		cJSON_AddItemToArray(sensors, o);
 	}
 	cJSON_AddItemToObject(config, "sensors", sensors);
@@ -560,7 +566,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 				json2pwm_map(r, &f->map);
 			f->rpm_factor = cJSON_GetNumberValue(cJSON_GetObjectItem(item,"rpm_factor"));
 			if ((r = cJSON_GetObjectItem(item, "filter")))
-				json2pwm_filter(r, f);
+				json2filter(r, &f->filter, &f->filter_ctx);
 		}
 	}
 
@@ -584,6 +590,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			m->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));
 			if ((r = cJSON_GetObjectItem(item, "rpm_map")))
 				json2tacho_map(r, &m->map);
+			if ((r = cJSON_GetObjectItem(item, "filter")))
+				json2filter(r, &m->filter, &m->filter_ctx);
 		}
 	}
 
@@ -612,6 +620,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 				cJSON_GetObjectItem(item, "temp_coefficient"));
 			if ((r = cJSON_GetObjectItem(item, "temp_map")))
 				json2temp_map(r, &s->map);
+			if ((r = cJSON_GetObjectItem(item, "filter")))
+				json2filter(r, &s->filter, &s->filter_ctx);
 		}
 	}
 

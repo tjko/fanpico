@@ -53,11 +53,15 @@ void* lossy_peak_parse_args(char *args)
 		return NULL;
 	if (!str_to_float(tok, &decay))
 		return NULL;
+	if (decay < 0.0)
+		return NULL;
 
 	/* delay parameter (seconds) */
 	if (!(tok = strtok_r(NULL, ",", &saveptr)))
 		return NULL;
 	if (!str_to_float(tok, &delay))
+		return NULL;
+	if (delay < 0.0)
 		return NULL;
 
 

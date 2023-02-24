@@ -53,7 +53,7 @@ int str2filter(const char *s)
 }
 
 
-const char* filter2str(enum pwm_filter_types source)
+const char* filter2str(enum signal_filter_types source)
 {
 	for (int i = 0; filters[i].name; i++) {
 		if (source == i) {
@@ -65,7 +65,7 @@ const char* filter2str(enum pwm_filter_types source)
 }
 
 
-void* filter_parse_args(enum pwm_filter_types filter, char *args)
+void* filter_parse_args(enum signal_filter_types filter, char *args)
 {
 	void *ret = NULL;
 
@@ -78,11 +78,11 @@ void* filter_parse_args(enum pwm_filter_types filter, char *args)
 }
 
 
-char* filter_print_args(enum pwm_filter_types filter, void *ctx)
+char* filter_print_args(enum signal_filter_types filter, void *ctx)
 {
 	char *ret = NULL;
 
-	if (filter <= FILTER_ENUM_MAX) {
+	if (filter <= FILTER_ENUM_MAX && ctx) {
 		if (filters[filter].print_args_func)
 			ret = filters[filter].print_args_func(ctx);
 	}
@@ -91,11 +91,11 @@ char* filter_print_args(enum pwm_filter_types filter, void *ctx)
 }
 
 
-float filter(enum pwm_filter_types filter, void *ctx, float input)
+float filter(enum signal_filter_types filter, void *ctx, float input)
 {
 	float ret = input;
 
-	if (filter <= FILTER_ENUM_MAX) {
+	if (filter <= FILTER_ENUM_MAX && ctx) {
 		if (filters[filter].filter_func)
 			ret = filters[filter].filter_func(ctx, input);
 	}

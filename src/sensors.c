@@ -76,6 +76,14 @@ double get_temperature(uint8_t input)
 		}
 	}
 
+	/* Apply filter */
+	if (sensor->filter != FILTER_NONE) {
+		double t_f = filter(sensor->filter, sensor->filter_ctx, t);
+		if (t_f != t) {
+			log_msg(LOG_DEBUG, "filter sensor%d: %lf -> %lf\n", i+1, t, t_f);
+			t = t_f;
+		}
+	}
 
 	log_msg(LOG_DEBUG, "get_temperature(%d): sensor_type=%u, raw=%u,  volt=%lf, temp=%lf",
 		input, sensor->type, raw, volt, t);

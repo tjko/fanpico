@@ -470,7 +470,7 @@ int cmd_fan_filter(const char *cmd, const char *args, int query, char *prev_cmd)
 	int ret = 0;
 	char *tok, *saveptr, *param;
 	struct fan_output *f;
-	enum pwm_filter_types new_filter;
+	enum signal_filter_types new_filter;
 	void *new_ctx;
 
 	fan = atoi(&prev_cmd[3]) - 1;
@@ -956,6 +956,50 @@ int cmd_mbfan_read(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
+int cmd_mbfan_filter(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int mbfan;
+	int ret = 0;
+	char *tok, *saveptr, *param;
+	struct mb_input *m;
+	enum signal_filter_types new_filter;
+	void *new_ctx;
+
+	mbfan = atoi(&prev_cmd[5]) - 1;
+	if (mbfan < 0 || mbfan >= MBFAN_COUNT)
+		return 1;
+
+	m = &conf->mbfans[mbfan];
+	if (query) {
+		printf("%s", filter2str(m->filter));
+		tok = filter_print_args(m->filter, m->filter_ctx);
+		if (tok) {
+			printf(",%s\n", tok);
+			free(tok);
+		} else {
+			printf(",\n");
+		}
+	} else {
+		param = strdup(args);
+		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
+			new_filter = str2filter(tok);
+			tok += strlen(tok) + 1;
+			new_ctx = filter_parse_args(new_filter, tok);
+			if (new_filter == FILTER_NONE || new_ctx != NULL) {
+				m->filter = new_filter;
+				if (m->filter_ctx)
+					free(m->filter_ctx);
+				m->filter_ctx = new_ctx;
+			} else {
+				ret = 1;
+			}
+		}
+		free(param);
+	}
+
+	return ret;
+}
+
 int cmd_sensor_name(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int sensor;
@@ -1164,6 +1208,50 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd
 	}
 
 	return 1;
+}
+
+int cmd_sensor_filter(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor;
+	int ret = 0;
+	char *tok, *saveptr, *param;
+	struct sensor_input *s;
+	enum signal_filter_types new_filter;
+	void *new_ctx;
+
+	sensor = atoi(&prev_cmd[6]) - 1;
+	if (sensor < 0 || sensor >= SENSOR_COUNT)
+		return 1;
+
+	s = &conf->sensors[sensor];
+	if (query) {
+		printf("%s", filter2str(s->filter));
+		tok = filter_print_args(s->filter, s->filter_ctx);
+		if (tok) {
+			printf(",%s\n", tok);
+			free(tok);
+		} else {
+			printf(",\n");
+		}
+	} else {
+		param = strdup(args);
+		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
+			new_filter = str2filter(tok);
+			tok += strlen(tok) + 1;
+			new_ctx = filter_parse_args(new_filter, tok);
+			if (new_filter == FILTER_NONE || new_ctx != NULL) {
+				s->filter = new_filter;
+				if (s->filter_ctx)
+					free(s->filter_ctx);
+				s->filter_ctx = new_ctx;
+			} else {
+				ret = 1;
+			}
+		}
+		free(param);
+	}
+
+	return ret;
 }
 
 int cmd_wifi(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1398,6 +1486,7 @@ struct cmd_t mbfan_c_commands[] = {
 	{ "RPMFactor", 4, NULL,              cmd_mbfan_rpm_factor },
 	{ "SOUrce",    3, NULL,              cmd_mbfan_source },
 	{ "RPMMap",    4, NULL,              cmd_mbfan_rpm_map },
+	{ "FILTER",    6, NULL,              cmd_mbfan_filter },
 	{ 0, 0, 0, 0 }
 };
 
@@ -1409,6 +1498,7 @@ struct cmd_t sensor_c_commands[] = {
 	{ "TEMPNominal", 5, NULL,             cmd_sensor_temp_nominal },
 	{ "THERmistor",  4, NULL,             cmd_sensor_ther_nominal },
 	{ "BETAcoeff",   4, NULL,             cmd_sensor_beta_coef },
+	{ "FILTER",      6, NULL,             cmd_sensor_filter },
 	{ 0, 0, 0, 0 }
 };
 

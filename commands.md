@@ -42,6 +42,8 @@ Fanpico supports following commands:
 * [CONFigure:MBFANx:SOUrce?](#configurembfanxsource-1)
 * [CONFigure:MBFANx:RPMMap](#configurembfanxrpmmap)
 * [CONFigure:MBFANx:RPMMap?](#configurembfanxrpmmap-1)
+* [CONFigure:MBFANx:FILTER](#configurembfanxfilter)
+* [CONFigure:MBFANx:FILTER?](#configurembfanxfilter-1)
 * [CONFigure:SENSORx:NAME](#configuresensorxname)
 * [CONFigure:SENSORx:NAME?](#configuresensorxname-1)
 * [CONFigure:SENSORx:TEMPOffset](#configuresensorxtempoffset)
@@ -56,6 +58,8 @@ Fanpico supports following commands:
 * [CONFigure:SENSORx:THERmistor?](#configuresensorxthermistor-1)
 * [CONFigure:SENSORx:TEMPNominal](#configuresensorxtempnominal)
 * [CONFigure:SENSORx:TEMPNominal?](#configuresensorxtempnominal-1)
+* [CONFigure:SENSORx:FILTER](#configuresensorxfilter)
+* [CONFigure:SENSORx:FILTER?](#configuresensorxfilter-1)
 * [MEASure:Read?](#measureread)
 * [MEASure:FANx?](#measurefanx)
 * [MEASure:FANx:Read?](#measurefanxread)
@@ -600,6 +604,34 @@ CONF:MBFAN1:RPMMAP?
 0,0,10000,10000
 ```
 
+#### CONFigure:MBFANx:FILTER
+Configure filter to be applied to the PWM signal received (from motheboard, etc.)
+
+List of available filters can be found here: [Available Filters](#configurefanfilter)
+
+By default, no filter is applied (filter is set to "none").
+
+
+Example: Set filter for the input signal to "Lossy Peak Detector", that is often useful
+with erratic PWM signals (like CPU Fan control signal on many motherboards).
+
+```
+CONF:MBFAN1:FILTER lossypeak,1.5,10
+```
+
+#### CONFigure:MBFANx:FILTER?
+Display currently active filter for the input PWM signal.
+
+Format: filter,arg_1,arg_2,...arg_n
+
+
+For example:
+```
+CONF:MBFAN1:FILTER?
+none,
+```
+
+
 ### CONFigure:SENSORx Commands
 SENSORx commands are used to configure specific (temperature) sensor.
 Where x is a number from 1 to 3.
@@ -768,6 +800,32 @@ CONF:SENSOR1:TEMPN?
 25.0
 ```
 
+#### CONFigure:SENSORx:FILTER
+Configure filter to be applied to the temperature signal received from the sensor.
+
+List of available filters can be found here: [Available Filters](#configurefanfilter)
+
+By default, no filter is applied (filter is set to "none").
+
+
+Example: Set filter for the input signal to "Simple Moving Average", that can
+be useful with noisy readings from temperature sensors.
+
+```
+CONF:SENSOR1:FILTER sma,10
+```
+
+#### CONFigure:SENSORx:FILTER?
+Display currently active filter for the temperature signal received from the sensor.
+
+Format: filter,arg_1,arg_2,...arg_n
+
+
+For example:
+```
+CONF:SENSOR1:FILTER?
+sma,10
+```
 
 
 ### MEASure Commands

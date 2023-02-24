@@ -54,7 +54,6 @@ void* sma_parse_args(char *args)
 		return NULL;
 	if (!str_to_int(tok, &window, 10))
 		return NULL;
-
 	if (window < 2 || window > SMA_WINDOW_MAX_SIZE)
 		return NULL;
 

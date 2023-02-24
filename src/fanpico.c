@@ -288,7 +288,7 @@ int main()
 			float new_duty;
 
 			log_msg(LOG_DEBUG, "Read PWM inputs");
-			get_pwm_duty_cycles();
+			get_pwm_duty_cycles(cfg);
 			for (i = 0; i < MBFAN_COUNT; i++) {
 				new_duty = roundf(mbfan_pwm_duty[i]);
 				if (check_for_change(st->mbfan_duty[i], new_duty, 0.5)) {
@@ -328,7 +328,7 @@ int main()
 			update_tacho_input_freq(st);
 		}
 
-		if (change || time_passed(&t_set_outputs, 3000)) {
+		if (change || time_passed(&t_set_outputs, 1000)) {
 			log_msg(LOG_DEBUG, "Updating output signals.");
 			update_outputs(st, cfg);
 		}

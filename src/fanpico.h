@@ -50,6 +50,7 @@
 
 #define WIFI_SSID_MAX_LEN    32
 #define WIFI_PASSWD_MAX_LEN  64
+#define WIFI_COUNTRY_MAX_LEN 3
 
 #ifdef NDEBUG
 #define WATCHDOG_ENABLED      1
@@ -65,7 +66,7 @@ enum pwm_source_types {
 };
 #define PWM_SOURCE_ENUM_MAX 3
 
-enum pwm_filter_types {
+enum signal_filter_types {
 	FILTER_NONE = 0,      /* No filtering */
 	FILTER_LOSSYPEAK = 1, /* "Lossy Peak Detector" with time decay */
 	FILTER_SMA = 2,       /* Simple moving average */
@@ -107,10 +108,10 @@ struct fan_output {
 	uint8_t max_pwm;
 	float pwm_coefficient;
 	enum pwm_source_types s_type;
-	enum pwm_filter_types filter;
-	void *filter_ctx;
 	uint16_t s_id;
 	struct pwm_map map;
+	enum signal_filter_types filter;
+	void *filter_ctx;
 
 	/* input Tacho signal settings */
 	uint8_t rpm_factor;
@@ -127,6 +128,10 @@ struct mb_input {
 	enum tacho_source_types s_type;
 	uint16_t s_id;
 	struct tacho_map map;
+
+	/* input PWM signal settings */
+	enum signal_filter_types filter;
+	void *filter_ctx;
 };
 
 struct sensor_input {
@@ -138,6 +143,8 @@ struct sensor_input {
 	float temp_offset;
 	float temp_coefficient;
 	struct temp_map map;
+	enum signal_filter_types filter;
+	void *filter_ctx;
 };
 
 struct fanpico_config {
@@ -151,7 +158,7 @@ struct fanpico_config {
 #ifdef WIFI_SUPPORT
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
 	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];
-	char wifi_country[4];
+	char wifi_country[WIFI_COUNTRY_MAX_LEN + 1];
 	char hostname[32];
 	ip_addr_t syslog_server;
 	ip_addr_t ntp_server;
@@ -188,8 +195,6 @@ int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd);
 extern struct fanpico_config *cfg;
 int str2pwm_source(const char *s);
 const char* pwm_source2str(enum pwm_source_types source);
-int str2pwm_filter(const char *s);
-const char* pwm_filter2str(enum pwm_filter_types source);
 int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id);
 int str2tacho_source(const char *s);
 const char* tacho_source2str(enum tacho_source_types source);
@@ -217,16 +222,16 @@ void setup_pwm_inputs();
 void setup_pwm_outputs();
 void set_pwm_duty_cycle(uint fan, float duty);
 float get_pwm_duty_cycle(uint fan);
-void get_pwm_duty_cycles();
+void get_pwm_duty_cycles(struct fanpico_config *config);
 double pwm_map(struct pwm_map *map, double val);
 double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *config, int i);
 
 /* filters.c */
 int str2filter(const char *s);
-const char* filter2str(enum pwm_filter_types source);
-void* filter_parse_args(enum pwm_filter_types filter, char *args);
-char* filter_print_args(enum pwm_filter_types filter, void *ctx);
-float filter(enum pwm_filter_types filter, void *ctx, float input);
+const char* filter2str(enum signal_filter_types source);
+void* filter_parse_args(enum signal_filter_types filter, char *args);
+char* filter_print_args(enum signal_filter_types filter, void *ctx);
+float filter(enum signal_filter_types filter, void *ctx, float input);
 
 /* sensors.c */
 double get_temperature(uint8_t input);
