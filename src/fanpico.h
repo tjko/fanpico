@@ -207,6 +207,7 @@ void print_config();
 /* display.c */
 void display_init();
 void clear_display();
+void display_message(int rows, const char **text_lines);
 void display_status(const struct fanpico_state *state, const struct fanpico_config *config);
 
 /* network.c */

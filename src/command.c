@@ -110,8 +110,24 @@ int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_usb_boot(const char *cmd, const char *args, int query, char *prev_cmd)
 {
+	char buf[64];
+	const char *msg[] = {
+		"FIRMWARE UPGRADE MODE",
+		"=====================",
+		"Use file (.uf2):",
+		buf,
+		"",
+		"Copy file to: RPI-RP2",
+		"",
+		"Press RESET to abort.",
+	};
+
 	if (query)
 		return 1;
+
+	snprintf(buf, sizeof(buf), " fanpico-%s-%s", FANPICO_MODEL, PICO_BOARD);
+	display_message(8, msg);
+
 	reset_usb_boot(0, 0);
 	return 0; /* should never get this far... */
 }
@@ -245,14 +261,23 @@ int cmd_display_type(const char *cmd, const char *args, int query, char *prev_cm
 
 int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (!query) {
-		log_msg(LOG_ALERT, "Initiating reboot...");
-		watchdog_disable();
-		sleep_ms(500);
-		watchdog_reboot(0, SRAM_END, 1);
-		while (1);
-	}
-	return 1;
+	const char *msg[] = {
+		"    Rebooting...",
+	};
+
+	if (query)
+		return 1;
+
+	log_msg(LOG_ALERT, "Initiating reboot...");
+	display_message(1, msg);
+
+	watchdog_disable();
+	sleep_ms(500);
+	watchdog_reboot(0, SRAM_END, 1);
+	while (1);
+
+	/* Should never get this far... */
+	return 0;
 }
 
 int cmd_save_config(const char *cmd, const char *args, int query, char *prev_cmd)

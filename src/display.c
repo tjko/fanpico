@@ -1,5 +1,5 @@
 /* display.c
-   Copyright (C) 2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2022-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -157,6 +157,27 @@ void oled_display_status(const struct fanpico_state *state,
 	oledDrawLine(&oled, 69, 40-1, oled_width - 1, 40-1, 1);
 }
 
+void oled_display_message(int rows, const char **text_lines)
+{
+	int screen_rows = oled_height / 8;
+	int start_row = 0;
+
+	oled_clear_display();
+
+	if (rows < screen_rows) {
+		start_row = (screen_rows - rows) / 2;
+	}
+
+	for(int i = 0; i < rows; i++) {
+		int row = start_row + i;
+		char *text = (char*)text_lines[i];
+
+		if (row >= screen_rows)
+			break;
+		oledWriteString(&oled, 0, 0, row, (text ? text : ""), FONT_6x8, 0, 1);
+	}
+}
+
 #endif /* OLED_DISPLAY */
 
 
@@ -184,5 +205,11 @@ void display_status(const struct fanpico_state *state,
 #endif
 }
 
+void display_message(int rows, const char **text_lines)
+{
+#ifdef OLED_DISPLAY
+	oled_display_message(rows, text_lines);
+#endif
+}
 
 
