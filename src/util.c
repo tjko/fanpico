@@ -225,11 +225,11 @@ const char *mac_address_str(const uint8_t *mac)
 	return buf;
 }
 
-int check_for_change(double oldval, double newval, double treshold)
+int check_for_change(double oldval, double newval, double threshold)
 {
 	double delta = fabs(oldval - newval);
 
-	if (delta >= treshold || newval < oldval)
+	if (delta >= threshold || newval < oldval)
 		return 1;
 
 	return 0;

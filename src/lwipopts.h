@@ -1,7 +1,7 @@
 #ifndef _LWIPOPTS_H
 #define _LWIPOPTS_H
 
-// Settings for FanPico when usign Pico W...
+// Settings for FanPico when using Pico W...
 // (see https://www.nongnu.org/lwip/2_1_x/group__lwip__opts.html for details)
 
 // allow override in some examples

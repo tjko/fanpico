@@ -11,13 +11,13 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * Monitoring fan speeds and behaviour as well as monitoring what exactly motherboard is doing.
 
 ## Features
-* Controls up to 8 fans. 
+* Controls up to 8 fans.
 * Connect up to 4 motherboard fan outputs.
 * Connect up to 2 remote temperature probes (plus onboard "ambient" temperature sensor).
 * Attached or remote (OLED) display support (boards where model name ends with "D").
 * Can be powered from motherboard fan outputs or using (AUX) 4-pin floppy connector.
 * Ability to define custom fan "curves" for each fan.
-* Ability to provide custom tachometer (fan RPM) output singal back to motherboard.
+* Ability to provide custom tachometer (fan RPM) output signal back to motherboard.
 * Control fans from any motherboard PWM signal or from temperature sensors.
 * OS Independent, no drivers or software needed.
 * Configuration stored on the device itself (in the flash memory).
@@ -33,7 +33,7 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 
    [![FanPico](images/fanpico-web-small.png)](images/fanpico-web.png?raw=true)
 
-For more documenation check [FanPico Wiki](https://github.com/tjko/fanpico/wiki)
+For more documentation check [FanPico Wiki](https://github.com/tjko/fanpico/wiki)
 
 ## Sponsors
 I would like to thank following sponsors, who have helped FanPico project:
@@ -56,7 +56,7 @@ Component list (BOM or bill of materials) is found under boards directory as wel
 NOTE, check [discussions forum](https://github.com/tjko/fanpico/discussions/) for giveaways for free PCBs.
 
 ### Review Units
-If you are member of press (or YouTuber) and would like to review/test Fanpico. Please contact me via email.  
+If you are member of press (or YouTuber) and would like to review/test Fanpico. Please contact me via email.
 
 
 ## How Can I help?
@@ -73,16 +73,16 @@ If you are member of press (or YouTuber) and would like to review/test Fanpico. 
 
 
 ## Hardware
-Fanpico is Open Source Hardware, reference design is provided for the "0804" model (8 fan outpus and 4 motherboard fan inputs), and "0804D" model that adds OLED display support (hence the "D" suffix).
+Fanpico is Open Source Hardware, reference design is provided for the "0804" model (8 fan outputs and 4 motherboard fan inputs), and "0804D" model that adds OLED display support (hence the "D" suffix).
 
 
 Additional models with different combinations of fan inputs/outputs could be easily designed (takining into account limitations of Raspberry Pi Pico I/O limits). New and improved PCB models/designs are most welcome.
 
-Model "0804" withouth display:
+Model "0804" without display (with straight connectors):
 
 ![Fanpico-0804](images/fanpico-0804.jpg)
 
-Model "0840D" with 1.3" OLED display directly mounted:
+Model "0840D" with 1.3" OLED display directly mounted (with right-angle connectors):
 
 [![Fanpico-0804D](images/fanpico-0804D.jpg)](images/fanpico-0804D-large.jpg)
 
@@ -97,7 +97,7 @@ Fanpico (reference design) utilizes all available I/O pins on a Raspberry Pi Pic
   - 0804D: signals are read through multiplexer measuring one fan at a time, by measuring pulse length.
 * Temperature readings are done using ADC, with help of a accurrate 3V voltage reference (LM4040). Any NTC (10k or 100k) thermistors can be used as themperature sensors.
 * Each FAN output has jumper to select whether fan gets its power from associated MBFAN connector or from the AUX connector
-* There is a jumper to select wheter power the Fanpico itself from MBFAN1 or AUX connector.
+* There is a jumper to select whether power the Fanpico itself from MBFAN1 or AUX connector.
 
 To help design and test Fanpico couple other projects were born:
 * [Tiny PicoProbe](https://github.com/tjko/tiny-picoprobe/) - tiny PicoProbe implementation.
@@ -149,7 +149,7 @@ Firmware upgrade steps:
 
 ### Building Firmware Images
 
-Raspberry Pi Pico C/C++ SDK is required for compiling the firmware: 
+Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 
 #### Requirements / Dependencies
 * [Raspberry Pi Pico C/C++ SDK](https://www.raspberrypi.com/documentation/microcontrollers/c_sdk.html)
@@ -183,10 +183,10 @@ $ cd fanpico
 $ mkdir build
 ```
 
-Select which board to build firmware for (default is "0804"):
+Select which board to build firmware for (default is "0804") and which Pico is to be used (default is "pico"):
 ```
 $ cd build
-$ cmake -DFANPICO_BOARD=0804 ..
+$ cmake -DFANPICO_BOARD=0804D -DPICO_BOARD=pico_w ..
 ```
 
 Then compile fanpico:
@@ -194,7 +194,7 @@ Then compile fanpico:
 $ make
 ```
 
-After successfull compile you should see firmare binary in the build directory:
+After successful compile you should see firmware binary in the build directory:
 subdirectory:
 
 ```
@@ -202,7 +202,7 @@ $ ls *.uf2
 fanpico.uf2
 ```
 
-If you have picotool installed you can check the firmare image information:
+If you have picotool installed you can check the firmware image information:
 ```
 $ picotool info -a fanpico.uf2
 File fanpico.uf2:
@@ -251,5 +251,3 @@ Build Information
  build date:        Sep  4 2022
  build attributes:  Release
 ```
-
-

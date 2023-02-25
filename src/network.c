@@ -288,7 +288,7 @@ void pico_dhcp_option_add_hook(struct netif *netif, struct dhcp *dhcp, u8_t stat
 }
 
 
-/* LwIP DHCP hook to parse additonal DHCP options received.
+/* LwIP DHCP hook to parse additional DHCP options received.
  */
 void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t state, struct dhcp_msg *msg,
              u8_t msg_type, u8_t option, u8_t option_len, struct pbuf *pbuf, u16_t option_value_offset)

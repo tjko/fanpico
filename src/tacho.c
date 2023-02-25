@@ -33,7 +33,7 @@
 
 /*
  * Functions for generating (emulating) fan tachometer output using PIO
- * and functions for reading tachometer singals from fans to calculate
+ * and functions for reading tachometer signals from fans to calculate
  * signal frequency and fan RPM.
  */
 

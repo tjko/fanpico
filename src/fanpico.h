@@ -262,7 +262,7 @@ int str_to_float(const char *str, float *val);
 const char *rp2040_model_str();
 const char *pico_serial_str();
 const char *mac_address_str(const uint8_t *mac);
-int check_for_change(double oldval, double newval, double treshold);
+int check_for_change(double oldval, double newval, double threshold);
 int time_passed(absolute_time_t *t, uint32_t us);
 char* base64encode(const char *input);
 char* base64decode(const char *input);

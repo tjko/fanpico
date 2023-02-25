@@ -119,7 +119,7 @@ Fanpico supports following commands:
 * [SYStem:WIFI:PASSword](#systemwifipassword)
 * [SYStem:WIFI:PASSword?](#systemwifipassword-1)
 
-Additionally unit will respond to following standard SCPI commands to provide compatiblity in case some program
+Additionally unit will respond to following standard SCPI commands to provide compatibility in case some program
 unconditionally will send these:
 * *CLS
 * *ESE
@@ -408,7 +408,7 @@ CONF:FAN1:FILTER lossypeak,1.0,30
 
 
 #### CONFigure:FANx:FILTER?
-Display currently active (PWM) filter fot the fan.
+Display currently active (PWM) filter for the fan.
 
 Format: filter,arg_1,arg_2,...arg_n
 
@@ -584,7 +584,7 @@ x|y
 10000|10000
 
 Example: Assuming we have configured FAN1 to only run above 30% PWM signal, but our
-motherboard sets alarm when it doesnt detect fan running, we can provide 'fake' 500RPM
+motherboard sets alarm when it doesn't detect fan running, we can provide 'fake' 500RPM
 speed to the motherboard until fan is actually running at least 500 RPM...
 ```
 CONF:MBFAN1:PWMMAP 0,500,500,500,10000,10000
@@ -742,7 +742,7 @@ CONF:SENSOR1:TEMPMAP?
 ```
 
 #### CONFigure:SENSORx:BETAcoeff
-Set beta coefficient of thermistor used to measure temperatur.
+Set beta coefficient of thermistor used to measure temperature.
 Typically thermistor beta coefficient is in the range 3000-4000.
 
 Default: 3950
@@ -833,7 +833,7 @@ sma,10
 These commands are for reading (measuring) the current input/output values on Fan and Motherboard Fan ports.
 
 #### MEASure:Read?
-This command returns all measurements for all FAN and MBFAN, ans SENSOR ports.
+This command returns all measurements for all FAN and MBFAN, and SENSOR ports.
 (This is same as: Read?)
 
 Response format:
@@ -1019,7 +1019,7 @@ MEAS:SENSOR1:TEMP?
 ### Read Commands
 
 #### Read?
-This command returns all measurements for all FAN and MBFAN, ans SENSOR ports.
+This command returns all measurements for all FAN and MBFAN, and SENSOR ports.
 (This is same as: MEASure:Read?)
 
 Response format:
@@ -1134,7 +1134,7 @@ Level|Name
 6|INFO
 7|DEBUG
 
-Example: Enable loggin of NOTICE (and lower level) message:
+Example: Enable logging of NOTICE (and lower level) message:
 ```
 SYS:LOG 5
 ```
@@ -1208,7 +1208,7 @@ SYS:ECHO?
 
 
 #### SYStem:FANS?
-Display number of FAN ouput ports available.
+Display number of FAN output ports available.
 
 Example:
 ```
@@ -1289,7 +1289,7 @@ SYS:SENSORS?
 
 #### SYStem:TIME?
 Return current Real-Time Clock (RTC) time.
-This is only available if usign Pico W and it has successfully
+This is only available if using Pico W and it has successfully
 gotten time from a NTP server.
 
 Currently FanPico will only use NTP server that is received from
@@ -1427,7 +1427,7 @@ SYS:WIFI:IP?
 
 
 #### SYStem:WIFI:NETMASK
-Set statically confiugred netmask.
+Set statically configured netmask.
 
 
 Example:
@@ -1448,7 +1448,7 @@ SYS:WIFI:NETMASK?
 
 
 #### SYStem:WIFI:GATEWAY
-Set statically confiugred default gateway (router).
+Set statically configured default gateway (router).
 
 
 Example:
