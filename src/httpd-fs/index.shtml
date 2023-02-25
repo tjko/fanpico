@@ -31,8 +31,8 @@
 		Fans:<br>
 		<table width="100%">
 		  <tr><td id="l1">
-		      <table class="pretty">
-			<tr><th>#</th><th>Name</th><th>RPM</th><th>PWM</th></tr>
+		      <table class="pretty" width="100%">
+			<tr style="font-size: 14px;"><th>#</th><th>Name</th><th>RPM&darr;</th><th>PWM&uarr;</th></tr>
 			<tr><!--#fanrow1--></tr>
 			<tr><!--#fanrow2--></tr>
 			<tr><!--#fanrow3--></tr>
@@ -48,8 +48,8 @@
 		MB Fans:<br>
 		<table width="100%">
 		  <tr><td id="l1">
-		      <table class="pretty">
-			<tr><th>#</th><th>Name</th><th>RPM</th><th>PWM</th></tr>
+		      <table class="pretty" width="100%">
+			<tr style="font-size: 14px;"><th>#</th><th>Name</th><th>RPM&uarr;</th><th>PWM&darr;</th></tr>
 			<tr><!--#mfanrow1--></tr>
 			<tr><!--#mfanrow2--></tr>
 			<tr><!--#mfanrow3--></tr>
@@ -63,8 +63,8 @@
 		Sensors:<br>
 		<table width="100%">
 		  <tr><td id="l1">
-		      <table class="pretty">
-			<tr><th>#</th><th>Name</th><th>Temperature</th></tr>
+		      <table class="pretty" width="100%">
+			<tr style="font-size: 14px;"><th>#</th><th>Name</th><th>Temp &#x2600;</th></tr>
 			<tr><!--#sensrow1--></tr>
 			<tr><!--#sensrow2--></tr>
 			<tr><!--#sensrow3--></tr>

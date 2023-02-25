@@ -19,7 +19,7 @@
 #define MEM_LIBC_MALLOC             0
 #endif
 #define MEM_ALIGNMENT               4
-#define MEM_SIZE                    32768
+#define MEM_SIZE                    65536
 #define MEM_SANITY_CHECK            1
 #define MEM_OVERFLOW_CHECK          1
 #define MEMP_NUM_TCP_SEG            32

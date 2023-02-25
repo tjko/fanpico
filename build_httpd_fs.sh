@@ -10,11 +10,14 @@ fatal() { echo "`basename $0`: $*"; exit 1; }
 
 [ -d "$FSDIR" ] || fatal "cannot find fs directory: $FSDIR"
 
-#find src/httpd-fs/ -type f -name '*~' -print -delete
 
 makefsdata ${FSDIR} -ssi:src/httpd-fs_ssi.list -f:${FSDATAFILE} -x:html~,shtml~,json~,~
 [ $? -eq 0 ] || fatal "makefsdata failed"
 
+dos2unix ${FSDATAFILE}
+[ $? -eq 0 ] || fatal "dos2unix failed"
+
+# HACK: make sure next build will recompile fanpico_fsdata.c...
 find build/ -type f -name 'fs.c.obj' -print -delete
 
 

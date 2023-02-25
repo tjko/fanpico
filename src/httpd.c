@@ -236,7 +236,7 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 		uint8_t i = tag[6] - '1';
 		if (i < FAN_COUNT) {
 			double rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
-			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td>%0.0f %%",
+			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td align=\"right\">%0.0f %%",
 					i + 1,
 					cfg->fans[i].name,
 					rpm,
@@ -247,7 +247,7 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 		uint8_t i = tag[7] - '1';
 		if (i < MBFAN_COUNT) {
 			double rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
-			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td>%0.0f %%",
+			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td align=\"right\">%0.0f %%",
 					i + 1,
 					cfg->mbfans[i].name,
 					rpm,
@@ -257,7 +257,7 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	else if (!strncmp(tag, "sensrow", 7)) {
 		uint8_t i = tag[7] - '1';
 		if (i < SENSOR_COUNT) {
-			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.1f C",
+			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td align=\"right\">%0.1f &#x2103;",
 					i + 1,
 					cfg->sensors[i].name,
 					st->temp[i]);
