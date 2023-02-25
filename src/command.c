@@ -1444,6 +1444,32 @@ int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int blocksize;
+
+	if (query) {
+		print_mallinfo();
+		return 0;
+	}
+	if (str_to_int(args, &blocksize, 10)) {
+		if (blocksize >= 512) {
+			void *buf = NULL;
+			size_t bufsize = blocksize;
+			do {
+				if (buf) {
+					free(buf);
+					bufsize += blocksize;
+				}
+				buf = malloc(bufsize);
+			} while (buf);
+			printf("Maximum available memory: %u bytes\n", bufsize - blocksize);
+		}
+		return 0;
+	}
+	return 1;
+}
+
 
 struct cmd_t wifi_commands[] = {
 #ifdef WIFI_SUPPORT
@@ -1471,6 +1497,7 @@ struct cmd_t system_commands[] = {
 	{ "LED",       3, NULL,              cmd_led },
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
+	{ "MEMory",    3, NULL,              cmd_memory },
 	{ "NAME",      4, NULL,              cmd_name },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
