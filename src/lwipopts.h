@@ -74,7 +74,6 @@ void pico_set_system_time(long int sec);
 #define LWIP_HTTPD_SSI_INCLUDE_TAG      0
 #define LWIP_HTTPD_SSI_EXTENSIONS       ".shtml", ".xml", ".json", ".csv"
 
-
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
 #define LWIP_STATS                  1
@@ -110,5 +109,6 @@ void pico_set_system_time(long int sec);
 #define SLIP_DEBUG                  LWIP_DBG_OFF
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 #define SNTP_DEBUG                  LWIP_DBG_OFF
+#define HTTPD_DEBUG                 LWIP_DBG_ON
 
 #endif /* __LWIPOPTS_H__ */

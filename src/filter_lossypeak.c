@@ -72,7 +72,7 @@ void* lossy_peak_parse_args(char *args)
 	c->delay_us = delay * 1000000;
 	c->decay = decay;
 	c->last_t = get_absolute_time();
-	c->peak_t = 0;
+	update_us_since_boot(&c->peak_t, 0);
 	c->state = 0;
 
 	return c;

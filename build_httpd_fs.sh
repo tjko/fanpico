@@ -11,7 +11,7 @@ fatal() { echo "`basename $0`: $*"; exit 1; }
 [ -d "$FSDIR" ] || fatal "cannot find fs directory: $FSDIR"
 
 
-makefsdata ${FSDIR} -ssi:src/httpd-fs_ssi.list -f:${FSDATAFILE} -x:html~,shtml~,json~,~
+makefsdata ${FSDIR} -m -ssi:src/httpd-fs_ssi.list -f:${FSDATAFILE} -x:html~,shtml~,json~,~
 [ $? -eq 0 ] || fatal "makefsdata failed"
 
 dos2unix ${FSDATAFILE}
