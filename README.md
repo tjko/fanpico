@@ -14,7 +14,7 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * Controls up to 8 fans. 
 * Connect up to 4 motherboard fan outputs.
 * Connect up to 2 remote temperature probes (plus onboard "ambient" temperature sensor).
-* Attached or remove (OLED) display support (boards where model name ends with "D").
+* Attached or remote (OLED) display support (boards where model name ends with "D").
 * Can be powered from motherboard fan outputs or using (AUX) 4-pin floppy connector.
 * Ability to define custom fan "curves" for each fan.
 * Ability to provide custom tachometer (fan RPM) output singal back to motherboard.
