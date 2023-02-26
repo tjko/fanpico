@@ -3,6 +3,8 @@
 # build_httpd_fs.sh
 #
 
+SERVER="FanPico (https://github.com/tjko/fanpico)"
+
 FSDIR=src/httpd-fs/
 FSDATAFILE=src/fanpico_fsdata.c
 
@@ -11,7 +13,7 @@ fatal() { echo "`basename $0`: $*"; exit 1; }
 [ -d "$FSDIR" ] || fatal "cannot find fs directory: $FSDIR"
 
 
-makefsdata ${FSDIR} -m -ssi:src/httpd-fs_ssi.list -f:${FSDATAFILE} -x:html~,shtml~,json~,~
+./contrib/makefsdata ${FSDIR} -m -svr:"${SERVER}" -ssi:src/httpd-fs_ssi.list -f:${FSDATAFILE} -x:html~,shtml~,json~,~
 [ $? -eq 0 ] || fatal "makefsdata failed"
 
 dos2unix ${FSDATAFILE}

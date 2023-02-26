@@ -1,0 +1,27 @@
+--- src/apps/http/makefsdata/makefsdata.c.orig	2022-09-11 14:26:22.946235452 -0700
++++ src/apps/http/makefsdata/makefsdata.c	2023-02-25 18:00:02.084295257 -0800
+@@ -882,7 +882,7 @@
+     ssi_file_lines = lines;
+     ssi_file_num_lines = l;
+   }
+-  return 0;
++  return 1;
+ }
+ 
+ static int is_ssi_file(const char *filename)
+@@ -1254,6 +1254,15 @@
+   LWIP_UNUSED_ARG(is_compressed);
+ #endif
+ 
++  if (file_type != HTTP_HDR_SSI && is_ssi_file(filename)) {
++	  const char *no_cache_str = "Expires: Fri, 10 Apr 2008 14:00:00 GMT\r\nPragma: no-cache\r\n";
++	  cur_string = no_cache_str;
++	  cur_len = strlen(cur_string);
++	  fprintf(data_file, NEWLINE "/* \"%s\" (%"SZT_F" bytes) */" NEWLINE, cur_string, cur_len);
++	  written += file_put_ascii(data_file, cur_string, cur_len, &i);
++	  i = 0;
++  }
++
+   /* write content-type, ATTENTION: this includes the double-CRLF! */
+   cur_string = file_type;
+   cur_len = strlen(cur_string);
