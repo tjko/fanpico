@@ -116,6 +116,7 @@ Fanpico supports following commands:
 * [SYStem:WIFI:SSID](#systemwifissid)
 * [SYStem:WIFI:SSID?](#systemwifissid-1)
 * [SYStem:WIFI:STATus?](#systemwifistatus)
+* [SYStem:WIFI:STATS?](#systemwifistats)
 * [SYStem:WIFI:PASSword](#systemwifipassword)
 * [SYStem:WIFI:PASSword?](#systemwifipassword-1)
 
@@ -1569,6 +1570,16 @@ Example:
 ```
 SYS:WIFI:STAT?
 1,192.168.1.42,255.255.255.0,192.168.1.1
+```
+
+#### SYStem:WIFI:STATS?
+Display TCP/IP stack (LwIP) statistics.
+
+NOTE, this command only works on "Debug" builds of the firmware currently.
+
+Example
+```
+SYS:WIFI:STATS?
 ```
 
 #### SYStem:WIFI:PASSword

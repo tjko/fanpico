@@ -37,6 +37,7 @@
 #include "fanpico.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
+#include "lwip/stats.h"
 #endif
 
 
@@ -1363,6 +1364,15 @@ int cmd_wifi_status(const char *cmd, const char *args, int query, char *prev_cmd
 	return 1;
 }
 
+int cmd_wifi_stats(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		stats_display();
+		return 0;
+	}
+	return 1;
+}
+
 int cmd_wifi_country(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (query) {
@@ -1507,6 +1517,7 @@ struct cmd_t wifi_commands[] = {
 	{ "NTP",       3, NULL,              cmd_wifi_ntp },
 	{ "PASSword",  4, NULL,              cmd_wifi_password },
 	{ "SSID",      4, NULL,              cmd_wifi_ssid },
+	{ "STATS",     5, NULL,              cmd_wifi_stats },
 	{ "STATus",    4, NULL,              cmd_wifi_status },
 	{ "SYSLOG",    6, NULL,              cmd_wifi_syslog },
 #endif

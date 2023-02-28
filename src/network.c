@@ -99,7 +99,8 @@ void wifi_init()
 				rev = country[2] - '0';
 			}
 			country_code = CYW43_COUNTRY(country[0], country[1], rev);
-			log_msg(LOG_DEBUG, "WiFi country code: %06x", country_code);
+			log_msg(LOG_NOTICE, "WiFi country code: %06x (%s)",
+				country_code, country);
 		}
 	}
 

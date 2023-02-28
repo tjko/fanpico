@@ -19,10 +19,12 @@
 #define MEM_LIBC_MALLOC             0
 #endif
 #define MEM_ALIGNMENT               4
-#define MEM_SIZE                    65536
+#define MEM_SIZE                    32768
 #define MEM_SANITY_CHECK            1
 #define MEM_OVERFLOW_CHECK          1
 #define MEMP_NUM_TCP_SEG            32
+#define MEMP_NUM_TCP_PCB            16
+#define MEMP_NUM_UDP_PCB            8
 #define MEMP_NUM_ARP_QUEUE          10
 #define MEMP_NUM_SYS_TIMEOUT        LWIP_NUM_SYS_TIMEOUT_INTERNAL + 8
 #define PBUF_POOL_SIZE              24
@@ -40,7 +42,7 @@
 #define LWIP_NETCONN                0
 #define MEM_STATS                   1
 #define SYS_STATS                   1
-#define MEMP_STATS                  0
+#define MEMP_STATS                  1
 #define LINK_STATS                  0
 // #define ETH_PAD_SIZE                2
 #define LWIP_CHKSUM_ALGORITHM       3
@@ -109,6 +111,6 @@ void pico_set_system_time(long int sec);
 #define SLIP_DEBUG                  LWIP_DBG_OFF
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 #define SNTP_DEBUG                  LWIP_DBG_OFF
-#define HTTPD_DEBUG                 LWIP_DBG_ON
+#define HTTPD_DEBUG                 LWIP_DBG_OFF
 
 #endif /* __LWIPOPTS_H__ */
