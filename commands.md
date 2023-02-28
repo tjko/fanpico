@@ -843,27 +843,27 @@ mbfan<n>,"<name>",<output rpm>,<output tacho frequency>,<input pwm duty cycle>
 ...
 fan<n>,"<name>",<input rpm>,<input tacho frequency>,<output pwm duty cycle>
 ...
-sensor<n>,"<name>",<temperature>
+sensor<n>,"<name>",<temperature>,<pwm duty cycle>
 ```
 
 Example:
 ```
 MEAS:READ?
-mbfan1,"mbfan1",1032,34.40,49.0
-mbfan2,"mbfan2",0,0.00,0.0
-mbfan3,"mbfan3",0,0.00,0.0
-mbfan4,"mbfan4",0,0.00,0.0
-fan1,"fan1",1032,34.40,42.4
-fan2,"fan2",0,0.00,0.0
-fan3,"fan3",0,0.00,0.0
-fan4,"fan4",0,0.00,0.0
-fan5,"fan5",0,0.00,0.0
-fan6,"fan6",0,0.00,0.0
-fan7,"fan7",0,0.00,0.0
-fan8,"fan8",0,0.00,0.0
-sensor1,"sensor1",25.0
-sensor2,"sensor2",26.5
-sensor3,"pico_temp",26.0
+mbfan1,"CPU Fan",1020,34.00,63.0
+mbfan2,"Chassis Fan 1",468,15.60,63.0
+mbfan3,"Chassis Fan 2",534,17.80,63.0
+mbfan4,"Chassis Fan 3",417,13.90,63.0
+fan1,"CPU Fan",1020,34.00,63.0
+fan2,"Rear Exhaust",468,15.60,31.5
+fan3,"unused",0,0.00,20.0
+fan4,"unused",0,0.00,20.0
+fan5,"Front Intake 1",534,17.80,35.0
+fan6,"Front Intake 2",420,14.00,35.0
+fan7,"Top Exhaust 1",417,13.90,22.8
+fan8,"Top Exhaust 2",462,15.40,22.8
+sensor1,"Intake Air",22.4,7.9
+sensor2,"Exhaust Air",30.5,35.0
+sensor3,"RPi Pico",26.5,21.8
 ```
 
 ### MEASure:FANx Commands
@@ -1029,27 +1029,26 @@ mbfan<n>,"<name>",<output rpm>,<output tacho frequency>,<input pwm duty cycle>
 ...
 fan<n>,"<name>",<input rpm>,<input tacho frequency>,<output pwm duty cycle>
 ...
-sensor<n>,"<name>",<temperature>
+sensor<n>,"<name>",<temperature>,<pwm duty cycle>
 ```
 
 Example:
 ```
-MEAS:READ?
-mbfan1,"mbfan1",1032,34.40,49.0
-mbfan2,"mbfan2",0,0.00,0.0
-mbfan3,"mbfan3",0,0.00,0.0
-mbfan4,"mbfan4",0,0.00,0.0
-fan1,"fan1",1032,34.40,42.4
-fan2,"fan2",0,0.00,0.0
-fan3,"fan3",0,0.00,0.0
-fan4,"fan4",0,0.00,0.0
-fan5,"fan5",0,0.00,0.0
-fan6,"fan6",0,0.00,0.0
-fan7,"fan7",0,0.00,0.0
-fan8,"fan8",0,0.00,0.0
-sensor1,"sensor1",25.0
-sensor2,"sensor2",26.5
-sensor3,"pico_temp",26.0
+mbfan1,"CPU Fan",1020,34.00,63.0
+mbfan2,"Chassis Fan 1",468,15.60,63.0
+mbfan3,"Chassis Fan 2",534,17.80,63.0
+mbfan4,"Chassis Fan 3",417,13.90,63.0
+fan1,"CPU Fan",1020,34.00,63.0
+fan2,"Rear Exhaust",468,15.60,31.5
+fan3,"unused",0,0.00,20.0
+fan4,"unused",0,0.00,20.0
+fan5,"Front Intake 1",534,17.80,35.0
+fan6,"Front Intake 2",420,14.00,35.0
+fan7,"Top Exhaust 1",417,13.90,22.8
+fan8,"Top Exhaust 2",462,15.40,22.8
+sensor1,"Intake Air",22.4,7.9
+sensor2,"Exhaust Air",30.5,35.0
+sensor3,"RPi Pico",26.5,21.8
 ```
 
 

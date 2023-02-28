@@ -322,7 +322,7 @@ int cmd_zero(const char *cmd, const char *args, int query, char *prev_cmd)
 int cmd_read(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int i;
-	double rpm;
+	double rpm, pwm;
 
 	if (!query)
 		return 1;
@@ -346,9 +346,11 @@ int cmd_read(const char *cmd, const char *args, int query, char *prev_cmd)
 	}
 
 	for (i = 0; i < SENSOR_COUNT; i++) {
-		printf("sensor%d,\"%s\",%.1lf\n", i+1,
+		pwm = sensor_get_duty(&conf->sensors[i], st->temp[i]);
+		printf("sensor%d,\"%s\",%.1lf,%.1f\n", i+1,
 			conf->sensors[i].name,
-			st->temp[i]);
+			st->temp[i],
+			pwm);
 	}
 
 	return 0;
@@ -1447,7 +1449,8 @@ int cmd_uptime(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 1;
 
-	printf("up %lu days, %lu hours, %lu minutes\n", days, hours % 24, mins % 60);
+	printf("up %lu days, %lu hours, %lu minutes%s\n", days, hours % 24, mins % 60,
+		(rebooted_by_watchdog ? " [rebooted by watchdog]" : ""));
 
 	return 0;
 }

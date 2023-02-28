@@ -40,7 +40,7 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 	static u16_t part;
 	static size_t buf_left;
 	char row[128];
-	double rpm;
+	double rpm, pwm;
 	int i;
 	size_t printed, count;
 
@@ -69,10 +69,12 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 			strncatenate(buf, row, sizeof(buf));
 		}
 		for (i = 0; i < SENSOR_COUNT; i++) {
-			snprintf(row, sizeof(row), "sensor%d,\"%s\",%.1lf\n",
+			pwm = sensor_get_duty(&cfg->sensors[i], st->temp[i]);
+			snprintf(row, sizeof(row), "sensor%d,\"%s\",%.1lf,%.1lf\n",
 				i+1,
 				cfg->sensors[i].name,
-				st->temp[i]);
+				st->temp[i],
+				pwm);
 			strncatenate(buf, row, sizeof(buf));
 		}
 
@@ -154,12 +156,14 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 		if (!(array = cJSON_CreateArray()))
 			goto panic;
 		for (i = 0; i < SENSOR_COUNT; i++) {
+			double pwm = sensor_get_duty(&cfg->sensors[i], st->temp[i]);
 			if (!(o = cJSON_CreateObject()))
 				goto panic;
 
 			cJSON_AddItemToObject(o, "sensor", cJSON_CreateNumber(i+1));
 			cJSON_AddItemToObject(o, "name", cJSON_CreateString(cfg->sensors[i].name));
 			cJSON_AddItemToObject(o, "temperature", cJSON_CreateNumber(st->temp[i]));
+			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(pwm));
 			cJSON_AddItemToArray(array, o);
 		}
 		cJSON_AddItemToObject(json, "mbfans", array);
