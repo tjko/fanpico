@@ -26,7 +26,7 @@
 #define MEMP_NUM_TCP_PCB            16
 #define MEMP_NUM_UDP_PCB            8
 #define MEMP_NUM_ARP_QUEUE          10
-#define MEMP_NUM_SYS_TIMEOUT        LWIP_NUM_SYS_TIMEOUT_INTERNAL + 8
+#define MEMP_NUM_SYS_TIMEOUT        (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 4)
 #define PBUF_POOL_SIZE              24
 #define LWIP_ARP                    1
 #define LWIP_ETHERNET               1
@@ -80,6 +80,7 @@ void pico_set_system_time(long int sec);
 #define LWIP_DEBUG                  1
 #define LWIP_STATS                  1
 #define LWIP_STATS_DISPLAY          1
+#define LWIP_DEBUG_TIMERNAMES       1
 #endif
 
 #define ETHARP_DEBUG                LWIP_DBG_OFF
@@ -112,5 +113,6 @@ void pico_set_system_time(long int sec);
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 #define SNTP_DEBUG                  LWIP_DBG_OFF
 #define HTTPD_DEBUG                 LWIP_DBG_OFF
+#define TIMERS_DEBUG                LWIP_DBG_OFF
 
 #endif /* __LWIPOPTS_H__ */
