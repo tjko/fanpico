@@ -20,6 +20,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
@@ -44,19 +45,47 @@ void oled_display_init()
 	int res;
 	int retries = 0;
 	int dtype = OLED_128x64;
+	int invert = 0;
+	int flip = 0;
+	uint8_t brightness = 50; /* display brightness: 0..100 */
+	uint8_t disp_brightness = 0;
+	int val;
+	char *tok, *args, *saveptr;
 
-	/* Check if display type is configured using SYS:DISP command... */
+	/* Check if display settings are configured using SYS:DISP command... */
 	if (cfg) {
-		if (strlen(cfg->display_type) > 0) {
-			if (strncmp(cfg->display_type, "132x64", 6) == 0)
-				dtype = OLED_132x64;
+		args = strdup(cfg->display_type);
+		if (args) {
+			tok = strtok_r(args, ",", &saveptr);
+			while (tok) {
+				if (!strncmp(tok, "132x64", 6))
+					dtype = OLED_132x64;
+				if (!strncmp(tok, "128x128", 7))
+					dtype = OLED_128x128;
+				else if (!strncmp(tok, "invert", 6))
+					invert = 1;
+				else if (!strncmp(tok, "flip", 4))
+					flip =1;
+				else if (!strncmp(tok, "brightness=", 11)) {
+					if (str_to_int(tok + 11, &val, 10)) {
+						if (val >=0 && val <= 100)
+							brightness = val;
+					}
+				}
+
+				tok = strtok_r(NULL, ",", &saveptr);
+			}
+			free(args);
 		}
 	}
+
+	disp_brightness = (brightness / 100.0) * 255;
+	log_msg(LOG_NOTICE,"display brightness: %u -> %u\n", brightness, disp_brightness);
 
 	log_msg(LOG_NOTICE, "Initializing OLED Display...");
 	do {
 		sleep_ms(50);
-		res = oledInit(&oled, dtype, -1, 0, 0, I2C_HW, SDA_PIN, SCL_PIN, -1,
+		res = oledInit(&oled, dtype, -1, flip, invert, I2C_HW, SDA_PIN, SCL_PIN, -1,
 			1000000L);
 	} while (res == OLED_NOT_FOUND && retries++ < 10);
 
@@ -92,7 +121,7 @@ void oled_display_init()
 
 	oledSetBackBuffer(&oled, ucBuffer);
 	oledFill(&oled, 0, 1);
-	oledSetContrast(&oled, 127);
+	oledSetContrast(&oled, disp_brightness);
 	oledWriteString(&oled, 0, 15, 1, "FanPico-" FANPICO_MODEL, FONT_8x8, 0, 1);
 	oledWriteString(&oled, 0, 40, 3, "v" FANPICO_VERSION, FONT_8x8, 0, 1);
 

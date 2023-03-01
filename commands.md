@@ -1149,8 +1149,10 @@ SYS:SYSLOG?
 ```
 
 #### SYStem:DISPlay
-Set display (module) type. Can be used if display module type
-cannot be automatically detected. Like with some OLED modules.
+Set display (module) parameters as a comma separated list.
+
+This can be used to set display module type if cannot be automatically detected.
+Additionally this can be used to set some display parameters like brightness.
 
 Default: default
 
@@ -1160,12 +1162,21 @@ Value|Description
 -----|-----------
 default|Use default settings (auto-detect).
 128x64|OLED 128x64 module installed.
+128x128|OLED 128x12x module installed.
 132x64|OLED 132x64 installed (some 1.3" 128x64 modules need this setting!)
+flip|Flip display (upside down)
+invert|Invert display
+brightness=n|Set display brightness (%) to n (where n=0..100) [default: 50]
 
 Example: 1.3" (SH1106) module installed that doesn't get detected correctly
 ```
 SYS:DISP 132x64
 ```
+
+Example: Invert display and set brightnes to 30%
+```
+SYS:DISP default,invert,brightness=30
+
 
 #### SYStem:DISPlay?
 Display current display module setting.

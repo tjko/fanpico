@@ -235,7 +235,7 @@ int main()
 	multicore_launch_core1(core1_main);
 #if WATCHDOG_ENABLED
 	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
-	log_msg(LOG_INFO, "Watchdog enabled.");
+	log_msg(LOG_NOTICE, "Watchdog enabled.");
 #endif
 
 	t_last = get_absolute_time();
