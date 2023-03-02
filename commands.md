@@ -1162,7 +1162,7 @@ Value|Description
 -----|-----------
 default|Use default settings (auto-detect).
 128x64|OLED 128x64 module installed.
-128x128|OLED 128x12x module installed.
+128x128|OLED 128x128 module installed.
 132x64|OLED 132x64 installed (some 1.3" 128x64 modules need this setting!)
 flip|Flip display (upside down)
 invert|Invert display
@@ -1176,7 +1176,7 @@ SYS:DISP 132x64
 Example: Invert display and set brightnes to 30%
 ```
 SYS:DISP default,invert,brightness=30
-
+```
 
 #### SYStem:DISPlay?
 Display current display module setting.
@@ -1184,7 +1184,7 @@ Display current display module setting.
 Example:
 ```
 SYS:DISP?
-default
+132x64,flip,invert,brightness=75
 ```
 
 #### SYStem:ECHO
