@@ -127,14 +127,19 @@ void clear_state(struct fanpico_state *s)
 
 	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
 		s->mbfan_duty[i] = 0.0;
+		s->mbfan_duty_prev[i] = 0.0;
 		s->mbfan_freq[i] = 0.0;
+		s->mbfan_freq_prev[i] = 0.0;
 	}
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
 		s->fan_duty[i] = 0.0;
+		s->fan_duty_prev[i] = 0.0;
 		s->fan_freq[i] = 0.0;
+		s->fan_freq_prev[i] = 0.0;
 	}
 	for (i = 0; i < SENSOR_MAX_COUNT; i++) {
 		s->temp[i] = 0.0;
+		s->temp_prev[i] = 0.0;
 	}
 }
 
@@ -142,31 +147,30 @@ void clear_state(struct fanpico_state *s)
 void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 {
 	int i;
-	float new;
 
 	/* update fan PWM signals */
 	for (i = 0; i < FAN_COUNT; i++) {
-		new = calculate_pwm_duty(state, config, i);
-		if (check_for_change(state->fan_duty[i], new, 0.1)) {
+		state->fan_duty[i] = calculate_pwm_duty(state, config, i);
+		if (check_for_change(state->fan_duty_prev[i], state->fan_duty[i], 1.0)) {
 			log_msg(LOG_INFO, "fan%d: Set output PWM %.1f%% --> %.1f%%",
 				i+1,
-				state->fan_duty[i],
-				new);
-			state->fan_duty[i] = new;
-			set_pwm_duty_cycle(i, new);
+				state->fan_duty_prev[i],
+				state->fan_duty[i]);
+			state->fan_duty_prev[i] = state->fan_duty[i];
+			set_pwm_duty_cycle(i, state->fan_duty[i]);
 		}
 	}
 
 	/* update mb tacho signals */
 	for (i = 0; i < MBFAN_COUNT; i++) {
-		new = calculate_tacho_freq(state, config, i);
-		if (check_for_change(state->mbfan_freq[i], new, 0.1)) {
+		state->mbfan_freq[i] = calculate_tacho_freq(state, config, i);
+		if (check_for_change(state->mbfan_freq_prev[i], state->mbfan_freq[i], 1.0)) {
 			log_msg(LOG_INFO, "mbfan%d: Set output Tacho %.2fHz --> %.2fHz",
 				i+1,
-				state->mbfan_freq[i],
-				new);
-			state->mbfan_freq[i] = new;
-			set_tacho_output_freq(i, new);
+				state->mbfan_freq_prev[i],
+				state->mbfan_freq[i]);
+			state->mbfan_freq_prev[i] = state->mbfan_freq[i];
+			set_tacho_output_freq(i, state->mbfan_freq[i]);
 		}
 	}
 }
@@ -284,20 +288,16 @@ int main()
 
 		/* Read PWM input signals (duty cycle) periodically */
 		if (time_passed(&t_poll_pwm, 1000)) {
-			int i;
-			float new_duty;
-
 			log_msg(LOG_DEBUG, "Read PWM inputs");
 			get_pwm_duty_cycles(cfg);
-			for (i = 0; i < MBFAN_COUNT; i++) {
-				new_duty = roundf(mbfan_pwm_duty[i]);
-				if (check_for_change(st->mbfan_duty[i], new_duty, 0.5)) {
-					log_msg(LOG_INFO, "mbfan%d: duty cycle change %.1f --> %.1f",
+			for (int i = 0; i < MBFAN_COUNT; i++) {
+				st->mbfan_duty[i] = roundf(mbfan_pwm_duty[i]);
+				if (check_for_change(st->mbfan_duty_prev[i], st->mbfan_duty[i], 1.0)) {
+					log_msg(LOG_INFO, "mbfan%d: Input PWM change %.1f%% --> %.1f%%",
 						i+1,
-						st->mbfan_duty[i],
-						new_duty);
-					st->mbfan_duty[i] = new_duty;
-					update_us_since_boot(&t_set_outputs, 0);
+						st->mbfan_duty_prev[i],
+						st->mbfan_duty[i]);
+					st->mbfan_duty_prev[i] = st->mbfan_duty[i];
 					change++;
 				}
 			}
@@ -305,18 +305,15 @@ int main()
 
 		/* Read temperature sensors periodically */
 		if (time_passed(&t_temp, 5000)) {
-			int i;
-			float temp;
-
 			log_msg(LOG_DEBUG, "Read temperature sensors");
-			for (i = 0; i < SENSOR_COUNT; i++) {
-				temp = get_temperature(i);
-				if (check_for_change(st->temp[i], temp, 0.5)) {
+			for (int i = 0; i < SENSOR_COUNT; i++) {
+				st->temp[i] = get_temperature(i);
+				if (check_for_change(st->temp_prev[i], st->temp[i], 0.5)) {
 					log_msg(LOG_INFO, "sensor%d: Temperature change %.1fC --> %.1fC",
 						i+1,
-						st->temp[i],
-						temp);
-					st->temp[i] = temp;
+						st->temp_prev[i],
+						st->temp[i]);
+					st->temp_prev[i] = st->temp[i];
 					change++;
 				}
 			}

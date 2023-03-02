@@ -228,7 +228,6 @@ void read_tacho_inputs()
 void update_tacho_input_freq(struct fanpico_state *st)
 {
 	int i;
-	float new_freq;
 	float freq[FAN_COUNT];
 
 	mutex_enter_blocking(&tacho_mutex);
@@ -238,13 +237,13 @@ void update_tacho_input_freq(struct fanpico_state *st)
 	mutex_exit(&tacho_mutex);
 
 	for (i = 0; i < FAN_COUNT; i++) {
-		new_freq = roundf(freq[i]*10)/10.0;
-		if (check_for_change(st->fan_freq[i], new_freq, 1.0)) {
-			log_msg(LOG_INFO, "fan%d: tacho freq change %.1f --> %.1f",
+		st->fan_freq[i] = roundf(freq[i]*100)/100.0;
+		if (check_for_change(st->fan_freq_prev[i], st->fan_freq[i], 1.0)) {
+			log_msg(LOG_INFO, "fan%d: Input Tacho change %.2fHz --> %.2fHz",
 				i+1,
-				st->fan_freq[i],
-				new_freq);
-			st->fan_freq[i] = new_freq;
+				st->fan_freq_prev[i],
+				st->fan_freq[i]);
+			st->fan_freq_prev[i] = st->fan_freq[i];
 		}
 	}
 }

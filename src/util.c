@@ -236,7 +236,7 @@ int check_for_change(double oldval, double newval, double threshold)
 {
 	double delta = fabs(oldval - newval);
 
-	if (delta >= threshold || newval < oldval)
+	if (delta >= threshold)
 		return 1;
 
 	return 0;

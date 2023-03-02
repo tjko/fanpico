@@ -80,13 +80,14 @@ void oled_display_init()
 	}
 
 	disp_brightness = (brightness / 100.0) * 255;
-	log_msg(LOG_NOTICE,"display brightness: %u -> %u\n", brightness, disp_brightness);
+	log_msg(LOG_DEBUG, "Set display brightness: %u%% (0x%x)\n",
+		brightness, disp_brightness);
 
 	log_msg(LOG_NOTICE, "Initializing OLED Display...");
 	do {
 		sleep_ms(50);
-		res = oledInit(&oled, dtype, -1, flip, invert, I2C_HW, SDA_PIN, SCL_PIN, -1,
-			1000000L);
+		res = oledInit(&oled, dtype, -1, flip, invert, I2C_HW,
+			SDA_PIN, SCL_PIN, -1, 1000000L);
 	} while (res == OLED_NOT_FOUND && retries++ < 10);
 
 	if (res == OLED_NOT_FOUND) {

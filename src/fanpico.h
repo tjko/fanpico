@@ -171,11 +171,16 @@ struct fanpico_config {
 struct fanpico_state {
 	/* inputs */
 	float mbfan_duty[MBFAN_MAX_COUNT];
+	float mbfan_duty_prev[MBFAN_MAX_COUNT];
 	float fan_freq[FAN_MAX_COUNT];
+	float fan_freq_prev[FAN_MAX_COUNT];
 	float temp[SENSOR_MAX_COUNT];
+	float temp_prev[SENSOR_MAX_COUNT];
 	/* outputs */
 	float fan_duty[FAN_MAX_COUNT];
+	float fan_duty_prev[FAN_MAX_COUNT];
 	float mbfan_freq[MBFAN_MAX_COUNT];
+	float mbfan_freq_prev[MBFAN_MAX_COUNT];
 };
 
 
