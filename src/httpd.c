@@ -225,7 +225,14 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 		uint32_t days = hours / 24;
 
 		printed = snprintf(insert, insertlen, "%lu days %02lu:%02lu:%02lu",
-				days, hours % 24, mins % 60, secs % 60);
+				days,
+				hours % 24,
+				mins % 60,
+				secs % 60);
+	}
+	if (!strncmp(tag, "watchdog", 8)) {
+		printed = snprintf(insert, insertlen, "%s",
+				(rebooted_by_watchdog ? "&#x2639;" : "&#x263a;"));
 	}
 	else if (!strncmp(tag, "model", 5)) {
 		printed = snprintf(insert, insertlen, "%s", FANPICO_MODEL);
