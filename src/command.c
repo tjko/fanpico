@@ -214,28 +214,51 @@ int cmd_debug(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_log_level(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int level;
+	int level = get_log_level();
+	int new_level;
+	const char *name, *new_name;
+
+	name = log_priority2str(level);
 
 	if (query) {
-		printf("%d\n", get_log_level());
-	} else if (str_to_int(args, &level, 10)) {
-	        level = (level < 0 ? 0 : level);
-		log_msg(LOG_NOTICE, "Change log level: %d -> %d", get_log_level(), level);
-		set_log_level(level);
+		if (name) {
+			printf("%s\n", name);
+		} else {
+			printf("%d\n", level);
+		}
+	} else {
+		if ((new_level = str2log_priority(args)) < 0)
+			return 1;
+		new_name = log_priority2str(new_level);
+
+		log_msg(LOG_NOTICE, "Change log level: %s (%d) -> %s (%d)",
+			(name ? name : ""), level, new_name, new_level);
+		set_log_level(new_level);
 	}
 	return 0;
 }
 
 int cmd_syslog_level(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int level;
+	int level = get_syslog_level();
+	int new_level;
+	const char *name, *new_name;
+
+	name = log_priority2str(level);
 
 	if (query) {
-		printf("%d\n", get_syslog_level());
-	} else if (str_to_int(args, &level, 10)) {
-	        level = (level < 0 ? 0 : level);
-		log_msg(LOG_NOTICE, "Change syslog level: %d -> %d", get_syslog_level(), level);
-		set_syslog_level(level);
+		if (name) {
+			printf("%s\n", name);
+		} else {
+			printf("%d\n", level);
+		}
+	} else {
+		if ((new_level = str2log_priority(args)) < 0)
+			return 1;
+		new_name = log_priority2str(new_level);
+		log_msg(LOG_NOTICE, "Change syslog level: %s (%d) -> %s (%d)",
+			(name ? name : "N/A"), level, new_name, new_level);
+		set_syslog_level(new_level);
 	}
 	return 0;
 }

@@ -252,7 +252,11 @@ void set_tacho_output_freq(uint fan, double frequency);
 double tacho_map(struct tacho_map *map, double val);
 double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i);
 
-/* util.c */
+/* log.c */
+int str2log_priority(const char *pri);
+const char* log_priority2str(int pri);
+int str2log_facility(const char *facility);
+const char* log_facility2str(int facility);
 void log_msg(int priority, const char *format, ...);
 int get_debug_level();
 void set_debug_level(int level);
@@ -261,6 +265,8 @@ void set_log_level(int level);
 int get_syslog_level();
 void set_syslog_level(int level);
 void debug(int debug_level, const char *fmt, ...);
+
+/* util.c */
 void print_mallinfo();
 char *trim_str(char *s);
 int str_to_int(const char *str, int *val, int base);

@@ -36,95 +36,7 @@
 #include "b64/cencode.h"
 #include "b64/cdecode.h"
 
-
 #include "fanpico.h"
-#ifdef WIFI_SUPPORT
-#include "syslog.h"
-#endif
-
-int global_debug_level = 0;
-int global_log_level = LOG_NOTICE;
-int global_syslog_level = LOG_ERR;
-
-auto_init_mutex(log_mutex);
-
-
-int get_log_level()
-{
-	return global_log_level;
-}
-
-void set_log_level(int level)
-{
-	global_log_level = level;
-}
-
-int get_syslog_level()
-{
-	return global_syslog_level;
-}
-
-void set_syslog_level(int level)
-{
-	global_syslog_level = level;
-}
-
-int get_debug_level()
-{
-	return global_debug_level;
-}
-
-void set_debug_level(int level)
-{
-	global_debug_level = level;
-}
-
-
-void log_msg(int priority, const char *format, ...)
-{
-	va_list ap;
-	char buf[256];
-	int len;
-
-	if ((priority > global_log_level) && (priority > global_syslog_level))
-		return;
-
-
-	va_start(ap, format);
-	vsnprintf(buf, sizeof(buf), format, ap);
-	va_end(ap);
-
-	if ((len = strlen(buf)) > 0) {
-		/* If string ends with \n, remove it. */
-		if (buf[len - 1] == '\n')
-			buf[len - 1] = 0;
-	}
-
-	mutex_enter_blocking(&log_mutex);
-	if (priority <= global_log_level) {
-		uint64_t t = to_us_since_boot(get_absolute_time());
-		printf("[%6llu.%06llu] %s\n", (t / 1000000), (t % 1000000), buf);
-	}
-#ifdef WIFI_SUPPORT
-	if (priority <= global_syslog_level) {
-		syslog_msg(priority, "%s", buf);
-	}
-#endif
-	mutex_exit(&log_mutex);
-}
-
-void debug(int debug_level, const char *fmt, ...)
-{
-	va_list ap;
-
-	if (debug_level > global_debug_level)
-		return;
-
-	printf("[DEBUG] ");
-	va_start(ap, fmt);
-	vprintf(fmt, ap);
-	va_end(ap);
-}
 
 
 void print_mallinfo()
@@ -383,6 +295,7 @@ time_t datetime_to_time(const datetime_t *datetime)
 	datetime_to_tm(datetime, &tm);
 	return mktime(&tm);
 }
+
 
 void watchdog_disable()
 {

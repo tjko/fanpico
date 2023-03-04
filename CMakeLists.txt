@@ -68,6 +68,7 @@ add_executable(fanpico
   src/square_wave_gen.c
   src/pulse_len.c
   src/util.c
+  src/log.c
   src/crc32.c
   src/default_config.s
   src/credits.s
