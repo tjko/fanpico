@@ -1086,7 +1086,7 @@ SYS:DEBUG?
 #### SYStem:LOG
 Set the system logging level. This controls the level of logging to the console.
 
-Default: 5  (NOTICE)
+Default: WARNING
 
 Log Levels:
 
@@ -1103,7 +1103,7 @@ Level|Name
 
 Example: Enable verbose debug output
 ```
-SYS:LOG 7
+SYS:LOG DEBUG
 ```
 
 #### SYStem:LOG?
@@ -1112,14 +1112,14 @@ Display current system logging level.
 Example:
 ```
 SYS:LOG?
-5
+NOTICE
 ```
 
 #### SYStem:SYSLOG
 Set the syslog logging level. This controls the level of logging to a remote
 syslog server.
 
-Default: 3  (ERR)
+Default: ERR
 
 Log Levels:
 
@@ -1136,7 +1136,7 @@ Level|Name
 
 Example: Enable logging of NOTICE (and lower level) message:
 ```
-SYS:LOG 5
+SYS:LOG NOTICE
 ```
 
 #### SYStem:SYSLOG?
@@ -1145,7 +1145,7 @@ Display current syslog logging level.
 Example:
 ```
 SYS:SYSLOG?
-3
+ERR
 ```
 
 #### SYStem:DISPlay
