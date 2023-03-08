@@ -10,3 +10,6 @@
 [submodule "libs/libb64"]
 	path = libs/libb64
 	url = https://github.com/libb64/libb64.git
+[submodule "libs/bb_spi_lcd-lib"]
+	path = libs/bb_spi_lcd-lib
+	url = https://github.com/tjko/bb_spi_lcd-lib.git
