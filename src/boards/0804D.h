@@ -77,12 +77,18 @@
 #define RX_PIN    1
 
 /* SPI */
-#define SCK_PIN   2
-#define MOSI_PIN  3
-#define MISO_PIN  0
-#define CS_PIN    1
+#define SCK_PIN        2
+#define MOSI_PIN       3
+#define MISO_PIN      -1
+#define CS_PIN         1
+
+#define DC_PIN         0
+#define LCD_RESET_PIN -1
+#define LCD_LIGHT_PIN -1
+
 
 #define OLED_DISPLAY 1
+#define LCD_DISPLAY 1
 
 #define TTL_SERIAL   1
 #define TTL_SERIAL_UART uart0

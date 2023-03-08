@@ -33,6 +33,9 @@ add_subdirectory(libs/littlefs-lib)
 # ss_oled
 add_subdirectory(libs/ss_oled-lib)
 
+# bb_spi_lcd
+add_subdirectory(libs/bb_spi_lcd-lib)
+
 # cJSON
 add_library(cJSON INTERFACE)
 target_include_directories(cJSON INTERFACE libs/cJSON)
@@ -101,6 +104,7 @@ target_link_libraries(fanpico PRIVATE
   littlefs-lib
   cJSON
   ss_oled-lib
+  bb_spi_lcd-lib
   libb64
   )
 

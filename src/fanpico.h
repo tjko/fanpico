@@ -155,6 +155,8 @@ struct fanpico_config {
 	uint8_t led_mode;
 	char display_type[64];
 	char name[32];
+	bool spi_active;
+	bool serial_active;
 #ifdef WIFI_SUPPORT
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
 	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];
