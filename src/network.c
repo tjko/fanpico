@@ -52,6 +52,7 @@ static bool network_initialized = false;
 static uint8_t cyw43_mac[6];
 static char wifi_hostname[32];
 static ip_addr_t syslog_server;
+static ip_addr_t current_ip;
 
 void wifi_mac()
 {
@@ -67,6 +68,7 @@ void wifi_status_cb(struct netif *netif)
 {
 	if (netif_is_up(netif)) {
 		log_msg(LOG_WARNING, "WiFi Status: UP (%s)", ipaddr_ntoa(netif_ip_addr4(netif)));
+		ip_addr_set(&current_ip, netif_ip_addr4(netif));
 	} else {
 		log_msg(LOG_WARNING, "WiFi Status: DOWN");
 	}
@@ -87,6 +89,7 @@ void wifi_init()
 
 	memset(cyw43_mac, 0, sizeof(cyw43_mac));
 	ip_addr_set_zero(&syslog_server);
+	ip_addr_set_zero(&current_ip);
 
 	log_msg(LOG_NOTICE, "Initializing WiFi...");
 
@@ -243,6 +246,13 @@ void wifi_poll()
 
 }
 
+const char* wifi_ip()
+{
+	if (ip_addr_isany(&current_ip))
+		return NULL;
+
+	return ipaddr_ntoa(&current_ip);
+}
 
 /* LwIP DHCP hook to customize option 55 (Parameter-Request) when DHCP
  * client send DHCP_REQUEST message...
@@ -371,3 +381,12 @@ void network_mac()
 #endif
 }
 
+
+const char *network_ip()
+{
+#ifdef WIFI_SUPPORT
+	return wifi_ip();
+#else
+	return NULL;
+#endif
+}

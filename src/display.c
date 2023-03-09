@@ -26,6 +26,7 @@
 #include <assert.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "hardware/rtc.h"
 
 #include "fanpico.h"
 
@@ -41,6 +42,10 @@
 static SPILCD lcd;
 static uint8_t lcd_found = 0;
 static uint16_t bg_color = 0;
+
+#define LCD_LOGO_WIDTH 160
+#define LCD_LOGO_HEIGHT 140
+extern uint8_t fanpico_lcd_logo_bmp[]; /* ptr to embedded lcd-logo.bmp */
 
 
 inline uint16_t rgb565(uint8_t red, uint8_t green, uint8_t blue)
@@ -125,13 +130,20 @@ void lcd_display_init()
 	log_msg(LOG_DEBUG, "spilcdInit(): %d", res);
 
 	spilcdSetOrientation(&lcd, orientation);
-	spilcdFill(&lcd, bg_color, DRAW_TO_LCD);
+	spilcdFill(&lcd, 0, DRAW_TO_LCD);
 
 	log_msg(LOG_NOTICE, "LCD display: %dx%d (native: %dx%d)",
 		lcd.iCurrentWidth, lcd.iCurrentHeight,
 		lcd.iWidth, lcd.iHeight);
 
-	spilcdWriteString(&lcd, 8, 8, "FanPico-" FANPICO_MODEL, rgb888_to_rgb565(0x07a3aa), bg_color, FONT_16x16, DRAW_TO_LCD);
+	spilcdDrawBMP(&lcd, fanpico_lcd_logo_bmp,
+		(lcd.iCurrentWidth - LCD_LOGO_WIDTH) / 2,
+		10,
+		0, -1, DRAW_TO_LCD);
+	spilcdWriteString(&lcd, 60, 165, "FanPico-" FANPICO_MODEL, rgb888_to_rgb565(0x07a3aa), 0, FONT_16x16, DRAW_TO_LCD);
+	spilcdWriteString(&lcd, 120, 190, "v" FANPICO_VERSION, rgb888_to_rgb565(0x07a3aa), 0, FONT_16x16, DRAW_TO_LCD);
+	spilcdWriteString(&lcd, 110, 220, "Initializing...", rgb888_to_rgb565(0x07a3aa), 0, FONT_8x8, DRAW_TO_LCD);
+	//sleep_ms(500);
 }
 
 void lcd_clear_display()
@@ -145,10 +157,19 @@ void lcd_clear_display()
 void lcd_display_status(const struct fanpico_state *state,
 	const struct fanpico_config *conf)
 {
-	char buf[64], l[32], r[32];
+	char buf[128], l[32], r[32];
 	int i, idx;
 	double rpm, pwm, temp;
+	datetime_t t;
 	static uint32_t counter = 0;
+	static uint8_t bg_drawn = 0;
+
+
+	if (!bg_drawn) {
+		/* draw background graphics only once... */
+		spilcdFill(&lcd, bg_color, DRAW_TO_LCD);
+		bg_drawn = 1;
+	}
 
 
 	if (!lcd_found || !state)
@@ -188,8 +209,36 @@ void lcd_display_status(const struct fanpico_state *state,
 		spilcdWriteString(&lcd, 8, i*16 + 32, buf, 0, bg_color, FONT_12x16, DRAW_TO_LCD);
 	}
 
-//	oledDrawLine(&oled, 69, 0, 69, oled_height - 1, 1);
-//	oledDrawLine(&oled, 69, 40-1, oled_width - 1, 40-1, 1);
+
+	/* IP */
+	const char *ip = network_ip();
+	if (ip) {
+		snprintf(buf, sizeof(buf), "IP: %s", ip);
+		spilcdWriteString(&lcd, 4, 230, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
+	}
+
+	/* NTP time */
+	if (rtc_get_datetime(&t)) {
+		snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
+			t.year, t.month, t.day, t.hour, t.min, t.sec);
+		spilcdWriteString(&lcd, 202, 221, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
+	}
+
+	/* uptime */
+	{
+		uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
+		uint32_t mins =  secs / 60;
+		uint32_t hours = mins / 60;
+		uint32_t days = hours / 24;
+
+		snprintf(buf, sizeof(buf), "Uptime: %lu days %02lu:%02lu:%02lu",
+				days,
+				hours % 24,
+				mins % 60,
+				secs % 60);
+		spilcdWriteString(&lcd, 178, 230, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
+	}
+
 }
 
 void lcd_display_message(int rows, const char **text_lines)
@@ -212,10 +261,9 @@ void lcd_display_message(int rows, const char **text_lines)
 
 		if (row >= screen_rows)
 			break;
-		log_msg(LOG_NOTICE, "lcd_msg: row=%d: '%s'", row, (text ? text : ""));
+
 		spilcdWriteString(&lcd, 0, row * 16, (text ? text : ""), 65535, 0, FONT_12x16, DRAW_TO_LCD);
 	}
-	//sleep_ms(2000);
 }
 #endif /* LCD_DISPLAY */
 
