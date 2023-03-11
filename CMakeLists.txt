@@ -8,7 +8,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.3.0
+  VERSION 1.4.0
   LANGUAGES C CXX ASM
   )
 set(CMAKE_C_STANDARD 11)
@@ -32,6 +32,9 @@ add_subdirectory(libs/littlefs-lib)
 
 # ss_oled
 add_subdirectory(libs/ss_oled-lib)
+
+# bb_spi_lcd
+add_subdirectory(libs/bb_spi_lcd-lib)
 
 # cJSON
 add_library(cJSON INTERFACE)
@@ -72,10 +75,11 @@ add_executable(fanpico
   src/crc32.c
   src/default_config.s
   src/credits.s
+  src/lcd-logo.s
   )
 
 
-set_property(SOURCE src/default_config.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src)
+set_property(SOURCE src/*.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src)
 set_property(SOURCE src/credits.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR})
 
 pico_generate_pio_header(fanpico ${CMAKE_CURRENT_LIST_DIR}/src/square_wave_gen.pio)
@@ -101,6 +105,7 @@ target_link_libraries(fanpico PRIVATE
   littlefs-lib
   cJSON
   ss_oled-lib
+  bb_spi_lcd-lib
   libb64
   )
 

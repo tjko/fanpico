@@ -155,6 +155,8 @@ struct fanpico_config {
 	uint8_t led_mode;
 	char display_type[64];
 	char name[32];
+	bool spi_active;
+	bool serial_active;
 #ifdef WIFI_SUPPORT
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
 	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];
@@ -221,6 +223,7 @@ void network_mac();
 void network_poll();
 void network_status();
 void set_pico_system_time(long unsigned int sec);
+const char *network_ip();
 
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];

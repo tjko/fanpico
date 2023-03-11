@@ -1534,6 +1534,43 @@ int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
+int cmd_serial(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int val;
+
+	if (query) {
+		printf("%d\n", conf->serial_active);
+		return 0;
+	}
+	if (str_to_int(args, &val, 10)) {
+		if (val >= 0 && val <= 1) {
+			log_msg(LOG_NOTICE, "Serial console active: %d -> %d", conf->serial_active, val);
+			conf->serial_active = val;
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
+int cmd_spi(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int val;
+
+	if (query) {
+		printf("%d\n", conf->spi_active);
+		return 0;
+	}
+	if (str_to_int(args, &val, 10)) {
+		if (val >= 0 && val <= 1) {
+			log_msg(LOG_NOTICE, "SPI (LCD Display) active: %d -> %d", conf->spi_active, val);
+			conf->spi_active = val;
+			return 0;
+		}
+	}
+	return 1;
+}
+
 
 struct cmd_t wifi_commands[] = {
 #ifdef WIFI_SUPPORT
@@ -1565,6 +1602,8 @@ struct cmd_t system_commands[] = {
 	{ "MEMory",    3, NULL,              cmd_memory },
 	{ "NAME",      4, NULL,              cmd_name },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
+	{ "SERIAL",    6, NULL,              cmd_serial },
+	{ "SPI",       3, NULL,              cmd_spi },
 	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
 	{ "TIME",      4, NULL,              cmd_time },
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },

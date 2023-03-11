@@ -46,22 +46,27 @@ bool rebooted_by_watchdog = false;
 
 void setup()
 {
+	int i = 0;
+
 	rtc_init();
 
-#if TTL_SERIAL
-	stdio_uart_init_full(TTL_SERIAL_UART,
-			TTL_SERIAL_SPEED, TX_PIN, RX_PIN);
-#endif
 	stdio_usb_init();
-
 	/* Wait a while for USB Serial to connect... */
-	int i = 0;
 	while (i++ < 10) {
 		if (stdio_usb_connected())
 			break;
 		sleep_ms(250);
 	}
 
+	read_config(false);
+
+#if TTL_SERIAL
+	/* Initialize serial console if configured... */
+	if(cfg->serial_active && !cfg->spi_active) {
+		stdio_uart_init_full(TTL_SERIAL_UART,
+				TTL_SERIAL_SPEED, TX_PIN, RX_PIN);
+	}
+#endif
 
 	printf("\n\n\n");
 	if (watchdog_enable_caused_reboot()) {
@@ -78,7 +83,6 @@ void setup()
 		clock_get_hz(clk_sys) / 1000000.0);
 	printf(" Serial Number: %s\n\n", pico_serial_str());
 
-	read_config(false);
 	display_init();
 	network_init(&system_state);
 
