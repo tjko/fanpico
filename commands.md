@@ -93,6 +93,10 @@ Fanpico supports following commands:
 * [SYStem:NAME](#systemname)
 * [SYStem:NAME?](#systemname-1)
 * [SYStem:SENSORS?](#systemsensors)
+* [SYStem:SERIAL](#systemserial)
+* [SYStem:SERIAL?](#systemserial-1)
+* [SYStem:SPI](#systemspi)
+* [SYStem:SPI?](#systemspi-1)
 * [SYStem:TIME?](#systemtime)
 * [SYStem:UPTIme?](#systemuptime)
 * [SYStem:UPGRADE](#systemupgrade)
@@ -1295,6 +1299,53 @@ Example:
 ```
 SYS:SENSORS?
 3
+```
+
+#### SYStem:SERIAL
+Enable or disable TTL Serial Console. This is enabled by default if board has this connector.
+Reason to disable this could be to use the second I2C bus that is sharing pins with the UART.
+
+Example (disable serial console):
+```
+SYS:SERIAL 0
+```
+
+#### SYStem:SERIAL?
+Return status of TTL Serial Console.
+
+Status|Description
+------|-----------
+1|Enabled
+0|Disabled
+
+Example:
+```
+SYS:SERIAL?
+1
+```
+
+#### SYStem:SPI
+Enable or disable SPI bus (on connector J18). When SPI bus is enabled I22 (OLED display) and Serial TTL connectors cannot be used
+as these share pins with the SPI bus. 
+Reason to enable SPI bus would be to connect LCD panel on the J18 connector.
+
+Example (enable SPI bus):
+```
+SYS:SPI 1
+```
+
+#### SYStem:SPI?
+Return status of SPI bus.
+
+Status|Description
+------|-----------
+1|Enabled
+0|Disabled
+
+Example:
+```
+SYS:SPI?
+0
 ```
 
 
