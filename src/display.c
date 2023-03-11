@@ -41,21 +41,35 @@
 #if LCD_DISPLAY
 static SPILCD lcd;
 static uint8_t lcd_found = 0;
-static uint16_t bg_color = 0;
 
 #define LCD_LOGO_WIDTH 160
 #define LCD_LOGO_HEIGHT 140
 extern uint8_t fanpico_lcd_logo_bmp[]; /* ptr to embedded lcd-logo.bmp */
 
+/* Macros for converting RGB888 colorspace to RGB565 */
 
-inline uint16_t rgb565(uint8_t red, uint8_t green, uint8_t blue)
-{
-	return ((red & 0xf8) << 8) | ((green & 0xfc) << 3) | (blue >> 3);
-}
+/* Convert 24bit color space to 16bit color space.  */
+#define RGB565(rgb) (uint16_t)( ((rgb & 0xf80000) >> 8) | ((rgb & 0xfc00) >> 5) | ((rgb & 0xf8) >> 3) )
+/* Generate 16bit color from 8bit RGB components. */
+#define RGB565C(r, g, b) (uint16_t)( ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | ((b & 0xf8) >> 3) )
 
-inline uint16_t rgb888_to_rgb565(uint32_t rgb)
+static uint16_t bg_color = RGB565(0x003531);  // 0x006567
+static uint16_t box_color = RGB565(0x008e4a);
+static uint16_t box2_color = RGB565(0x049467);
+static uint16_t text_color = RGB565(0x07a3aa);
+
+
+void draw_rounded_box(SPILCD *lcd, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t r, uint16_t color)
 {
-	return ((rgb & 0xf80000) >> 8) | ((rgb & 0xfc00) >> 5) | ((rgb & 0xf8) >> 3);
+
+	spilcdRectangle(lcd, x + r, y, width - (2 * r), r, color, color, 1, DRAW_TO_LCD);
+	spilcdRectangle(lcd, x, y + r, width, height - (2 * r), color, color, 1, DRAW_TO_LCD);
+	spilcdRectangle(lcd, x + r, y + height - r, width - (2 * r), r, color, color, 1, DRAW_TO_LCD);
+
+	spilcdEllipse(lcd, x + r, y + r, r, r, color, 1, DRAW_TO_LCD);
+	spilcdEllipse(lcd, x + width - r - 1, y + r, r, r, color, 1, DRAW_TO_LCD);
+	spilcdEllipse(lcd, x + r, y + height - r, r, r, color, 1, DRAW_TO_LCD);
+	spilcdEllipse(lcd, x + width - r - 1, y + height - r, r, r, color, 1, DRAW_TO_LCD);
 }
 
 void lcd_display_init()
@@ -66,7 +80,6 @@ void lcd_display_init()
 	int32_t spi_freq = (48 * 1024 * 1024);
 	int val;
 
-	bg_color = rgb888_to_rgb565(0x006567);
 
 	char *args, *tok, *saveptr;
 
@@ -140,10 +153,9 @@ void lcd_display_init()
 		(lcd.iCurrentWidth - LCD_LOGO_WIDTH) / 2,
 		10,
 		0, -1, DRAW_TO_LCD);
-	spilcdWriteString(&lcd, 60, 165, "FanPico-" FANPICO_MODEL, rgb888_to_rgb565(0x07a3aa), 0, FONT_16x16, DRAW_TO_LCD);
-	spilcdWriteString(&lcd, 120, 190, "v" FANPICO_VERSION, rgb888_to_rgb565(0x07a3aa), 0, FONT_16x16, DRAW_TO_LCD);
-	spilcdWriteString(&lcd, 110, 220, "Initializing...", rgb888_to_rgb565(0x07a3aa), 0, FONT_8x8, DRAW_TO_LCD);
-	//sleep_ms(500);
+	spilcdWriteString(&lcd, 60, 165, "FanPico-" FANPICO_MODEL, text_color, 0, FONT_16x16, DRAW_TO_LCD);
+	spilcdWriteString(&lcd, 120, 190, "v" FANPICO_VERSION, text_color, 0, FONT_16x16, DRAW_TO_LCD);
+	spilcdWriteString(&lcd, 110, 220, "Initializing...", text_color, 0, FONT_8x8, DRAW_TO_LCD);
 }
 
 void lcd_clear_display()
@@ -157,56 +169,130 @@ void lcd_clear_display()
 void lcd_display_status(const struct fanpico_state *state,
 	const struct fanpico_config *conf)
 {
-	char buf[128], l[32], r[32];
-	int i, idx;
+	char buf[96];
+	int i;
 	double rpm, pwm, temp;
 	datetime_t t;
-	static uint32_t counter = 0;
 	static uint8_t bg_drawn = 0;
-
-
-	if (!bg_drawn) {
-		/* draw background graphics only once... */
-		spilcdFill(&lcd, bg_color, DRAW_TO_LCD);
-		bg_drawn = 1;
-	}
+	uint16_t o_x = 0;
+	uint16_t o_y = 0;
+	uint16_t fans_x = 4 + o_y;
+	uint16_t fans_y = 20 + o_y;
+	uint16_t mbfans_x = 189 + o_y;
+	uint16_t mbfans_y = 20 + o_y;
+	uint16_t sensors_x = 189 + o_y;
+	uint16_t sensors_y = 130 + o_y;
+	uint16_t x, y, b;
 
 
 	if (!lcd_found || !state)
 		return;
 
-	for (i = 0; i < 8; i++) {
-		if (i < FAN_COUNT) {
-			rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
-			pwm = state->fan_duty[i];
-			snprintf(l,sizeof(l),"%d:%4.0lf %3.0lf%% ", i + 1, rpm, pwm);
-		} else {
-			snprintf(l,sizeof(l),"          ");
+	if (!bg_drawn) {
+		/* draw background graphics only once... */
+		spilcdFill(&lcd, 0x0000, DRAW_TO_LCD);
+		if (bg_color != 0)
+			draw_rounded_box(&lcd, o_x + 0, o_y + 0, 320, 240, 10, bg_color);
+
+		/* fans */
+		x = fans_x;
+		y = fans_y;
+		draw_rounded_box(&lcd, x, y, 181, 154, 8, box_color);
+		spilcdWriteString(&lcd, 4+x, y - 10, "FANS", 0, bg_color, FONT_8x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, x+4, y + 4, "#", 0, box_color, FONT_8x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, x+4+90, y + 4, "RPM", 0, box_color, FONT_8x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, x+4+140, y + 4, "PWM%", 0, box_color, FONT_8x8, DRAW_TO_LCD);
+		for(i = 0; i < FAN_COUNT; i++) {
+			b = (i % 2 ? box_color : box2_color);
+
+			spilcdRectangle(&lcd, x+4, y + i*17 + 16, 140, 16, b, b, 1, DRAW_TO_LCD);
+
+			snprintf(buf, sizeof(buf), "<%d>", i + 1);
+			spilcdWriteString(&lcd, x+4, y + i*17 + 16, buf, RGB565(0x3a393a), b, FONT_8x8, DRAW_TO_LCD);
+			snprintf(buf, sizeof(buf), "%s", conf->fans[i].name);
+			buf[14]=0;
+			spilcdWriteString(&lcd, x+4, y + i*17 + 16 + 8, buf, 0, b, FONT_6x8, DRAW_TO_LCD);
 		}
 
-		if (i == 0) {
-			snprintf(r, sizeof(r), "mb inputs   ");
-		} else if (i > 0 && i <= 4) {
-			idx = i - 1;
-			pwm = state->mbfan_duty[idx];
-			snprintf(r, sizeof(r), "%d: %4.0lf%%  ", idx + 1, pwm);
-		} else if (i > 4 && i < 8) {
-			idx = i - 5;
-			temp = state->temp[idx];
-			snprintf(r, sizeof(r), "%d:%5.1lfC  ", idx + 1, temp);
-		} else {
-			snprintf(r,sizeof(r),"         ");
+		/* mbfans */
+		x = mbfans_x;
+		y = mbfans_y;
+		draw_rounded_box(&lcd, x, y, 126, 86, 8, box_color);
+		spilcdWriteString(&lcd, x+4, y - 10, "MB FANS", 0, bg_color, FONT_8x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, x+4, y + 4, "#", 0, box_color, FONT_8x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, x+4+85, y + 4, "PWM%", 0, box_color, FONT_8x8, DRAW_TO_LCD);
+		for(i = 0; i < MBFAN_COUNT; i++) {
+			b = (i % 2 ? box_color : box2_color);
+
+			spilcdRectangle(&lcd, x+4, y + i*17 + 16, 120, 16, b, b, 1, DRAW_TO_LCD);
+
+			snprintf(buf, sizeof(buf), "<%d>", i + 1);
+			spilcdWriteString(&lcd, x+4, y + i*17 + 16, buf, RGB565(0x3a393a), b, FONT_8x8, DRAW_TO_LCD);
+			snprintf(buf, sizeof(buf), "%s", conf->mbfans[i].name);
+			buf[13]=0;
+			spilcdWriteString(&lcd, x+4, y + i*17 + 16 + 8, buf, 0, b, FONT_6x8, DRAW_TO_LCD);
 		}
 
-		memcpy(&buf[0], l, 12);
-		memcpy(&buf[12], r, 10);
-		buf[22] = 0;
+		/* sensors */
+		x = sensors_x;
+		y = sensors_y;
+		draw_rounded_box(&lcd, x, y, 126, 70, 8, box_color);
+		spilcdWriteString(&lcd, x+4, y - 10, "SENSORS", 0, bg_color, FONT_8x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, x+4, y + 4, "#", 0, box_color, FONT_8x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, x+4+69, y + 4, "Temp C", 0, box_color, FONT_8x8, DRAW_TO_LCD);
+		for(i = 0; i < SENSOR_COUNT; i++) {
+			b = (i % 2 ? box_color : box2_color);
 
-		if (i == 7) {
-			buf[21] = (counter++ % 2 == 0 ? '*' : ' ');
+			spilcdRectangle(&lcd, x+4, y + i*17 + 16, 120, 16, b, b, 1, DRAW_TO_LCD);
+
+			snprintf(buf, sizeof(buf), "<%d>", i + 1);
+			spilcdWriteString(&lcd, x+4, y + i*17 + 16, buf, RGB565(0x3a393a), b, FONT_8x8, DRAW_TO_LCD);
+			snprintf(buf, sizeof(buf), "%s", conf->sensors[i].name);
+			buf[13]=0;
+			spilcdWriteString(&lcd, x+4, y + i*17 + 16 + 8, buf, 0, b, FONT_6x8, DRAW_TO_LCD);
 		}
 
-		spilcdWriteString(&lcd, 8, i*16 + 32, buf, 0, bg_color, FONT_12x16, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, 4, 230,
+				"FanPico-" FANPICO_MODEL " v" FANPICO_VERSION,
+				0, bg_color, FONT_6x8, DRAW_TO_LCD);
+		bg_drawn = 1;
+	}
+
+
+	/* Fans */
+	x = fans_x;
+	y = fans_y;
+	for (i = 0; i < FAN_COUNT; i++) {
+		b = (i % 2 ? box_color : box2_color);
+		rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
+		pwm = state->fan_duty[i];
+		if (rpm > 9999)
+			rpm = 9999;
+		snprintf(buf, sizeof(buf), "%-4.0lf", rpm);
+		spilcdWriteString(&lcd, x + 90, y + i*17 + 16, buf, RGB565(0x0000ba), b, FONT_12x16, DRAW_TO_LCD);
+		snprintf(buf, sizeof(buf), "%3.0lf", pwm);
+		spilcdWriteString(&lcd, x + 140, y + i*17 + 16, buf, RGB565(0x005100), b, FONT_12x16, DRAW_TO_LCD);
+	}
+
+	/* MBFans */
+	x = mbfans_x;
+	y = mbfans_y;
+	for (i = 0; i < MBFAN_COUNT; i++) {
+		b = (i % 2 ? box_color : box2_color);
+		pwm = state->mbfan_duty[i];
+		snprintf(buf, sizeof(buf), "%3.0lf", pwm);
+		spilcdWriteString(&lcd, x + 85, y + i*17 + 16, buf, RGB565(0x005100), b, FONT_12x16, DRAW_TO_LCD);
+	}
+
+
+	/* Sensors */
+	x = sensors_x;
+	y = sensors_y;
+	for (i = 0; i < SENSOR_COUNT; i++) {
+		b = (i % 2 ? box_color : box2_color);
+		temp = state->temp[i];
+		snprintf(buf, sizeof(buf), "%3.1lf", temp);
+		spilcdWriteString(&lcd, x + 73, y + i*17 + 16, buf, RGB565(0x960000), b, FONT_12x16, DRAW_TO_LCD);
 	}
 
 
@@ -214,14 +300,14 @@ void lcd_display_status(const struct fanpico_state *state,
 	const char *ip = network_ip();
 	if (ip) {
 		snprintf(buf, sizeof(buf), "IP: %s", ip);
-		spilcdWriteString(&lcd, 4, 230, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, 4, 221, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
 	}
 
 	/* NTP time */
 	if (rtc_get_datetime(&t)) {
 		snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
 			t.year, t.month, t.day, t.hour, t.min, t.sec);
-		spilcdWriteString(&lcd, 202, 221, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, 198, 221, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
 	}
 
 	/* uptime */
@@ -231,12 +317,12 @@ void lcd_display_status(const struct fanpico_state *state,
 		uint32_t hours = mins / 60;
 		uint32_t days = hours / 24;
 
-		snprintf(buf, sizeof(buf), "Uptime: %lu days %02lu:%02lu:%02lu",
+		snprintf(buf, sizeof(buf), "Uptime: %3lu days %02lu:%02lu:%02lu",
 				days,
 				hours % 24,
 				mins % 60,
 				secs % 60);
-		spilcdWriteString(&lcd, 178, 230, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
+		spilcdWriteString(&lcd, 162, 230, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
 	}
 
 }
