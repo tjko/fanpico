@@ -226,7 +226,7 @@ int main()
 	int64_t max_delta = 0;
 	int64_t delta;
 	int c, change;
-	char input_buf[1024];
+	char input_buf[1024 + 1];
 	int i_ptr = 0;
 
 
@@ -343,7 +343,7 @@ int main()
 				if (cfg->local_echo) printf("\b \b");
 				continue;
 			}
-			if (c == 10 || c == 13 || i_ptr >= sizeof(input_buf)) {
+			if (c == 10 || c == 13 || i_ptr >= sizeof(input_buf) - 1) {
 				if (cfg->local_echo) printf("\r\n");
 				input_buf[i_ptr] = 0;
 				if (i_ptr > 0) {
