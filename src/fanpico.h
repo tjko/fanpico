@@ -188,10 +188,10 @@ struct fanpico_state {
 
 
 /* fanpico.c */
-void print_mallinfo();
 extern const struct fanpico_state *fanpico_state;
 extern bool rebooted_by_watchdog;
 extern mutex_t *state_mutex;
+void update_display_state();
 
 /* bi_decl.c */
 void set_binary_info();
@@ -251,6 +251,7 @@ double sensor_get_duty(const struct sensor_input *sensor, double temp);
 
 /* tacho.c */
 void setup_tacho_inputs();
+void setup_tacho_input_interrupts();
 void setup_tacho_outputs();
 void read_tacho_inputs();
 void update_tacho_input_freq(struct fanpico_state *state);

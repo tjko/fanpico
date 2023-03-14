@@ -42,11 +42,15 @@
 static struct fanpico_state core1_state;
 static struct fanpico_config core1_config;
 
+static struct fanpico_state transfer_state;
+
 static struct fanpico_state system_state;
 const struct fanpico_state *fanpico_state = &system_state;
+
 auto_init_mutex(state_mutex_inst);
 mutex_t *state_mutex = &state_mutex_inst;
 bool rebooted_by_watchdog = false;
+
 
 void setup()
 {
@@ -123,7 +127,7 @@ void setup()
 
 	/* Configure Tacho pins... */
 	setup_tacho_outputs();
-//	setup_tacho_inputs();
+	setup_tacho_inputs();
 
 	log_msg(LOG_NOTICE, "System initialization complete.");
 }
@@ -149,6 +153,20 @@ void clear_state(struct fanpico_state *s)
 		s->temp[i] = 0.0;
 		s->temp_prev[i] = 0.0;
 	}
+}
+
+
+/* update_system_state()
+ *  System state gets updated by core1 periodically (using state_mutex)
+ *  to intermediate buffer transfer_state.
+ *  This function updates system state from that buffer.
+ */
+
+void update_system_state()
+{
+	mutex_enter_blocking(state_mutex);
+	memcpy(&system_state, &transfer_state, sizeof(system_state));
+	mutex_exit(state_mutex);
 }
 
 
@@ -202,7 +220,7 @@ void core1_main()
 	/* Allow core0 to pause this core... */
 	multicore_lockout_victim_init();
 
-	setup_tacho_inputs();
+	setup_tacho_input_interrupts();
 
 	t_state = t_config = t_tick = t_last = get_absolute_time();
 
@@ -218,14 +236,14 @@ void core1_main()
 
 		/* Tachometer inputs from Fans */
 		read_tacho_inputs();
-		if (time_passed(&t_tacho, 2000)) {
+		if (time_passed(&t_tacho, 1000)) {
 			/* Calculate frequencies from input tachometer signals peridocially */
 			log_msg(LOG_DEBUG, "Updating tacho input signals.");
 			update_tacho_input_freq(state);
 		}
 
 		/* Read PWM input signals (duty cycle) periodically */
-		if (time_passed(&t_poll_pwm, 1000)) {
+		if (time_passed(&t_poll_pwm, 500)) {
 			log_msg(LOG_DEBUG, "Read PWM inputs");
 			get_pwm_duty_cycles(config);
 			for (int i = 0; i < MBFAN_COUNT; i++) {
@@ -241,7 +259,7 @@ void core1_main()
 		}
 
 		/* Read temperature sensors periodically */
-		if (time_passed(&t_temp, 5000)) {
+		if (time_passed(&t_temp, 2500)) {
 			log_msg(LOG_DEBUG, "Read temperature sensors");
 			for (int i = 0; i < SENSOR_COUNT; i++) {
 				state->temp[i] = get_temperature(i, config);
@@ -260,10 +278,7 @@ void core1_main()
 			update_outputs(state, config);
 		}
 
-		if (time_passed(&t_tick, 60000)) {
-			log_msg(LOG_DEBUG, "core1: tick");
-		}
-		if (time_passed(&t_config, 2000)) {
+		if (time_passed(&t_config, 1000)) {
 			/* Attempt to update config from core0 */
 			if (mutex_enter_timeout_us(config_mutex, 100)) {
 				memcpy(config, cfg, sizeof(*config));
@@ -272,15 +287,20 @@ void core1_main()
 				log_msg(LOG_INFO, "failed to get config_mutex");
 			}
 		}
-		if (time_passed(&t_state, 1000)) {
-			/* Attempt to update status on core0 */
-			if (mutex_enter_timeout_us(state_mutex, 250)) {
-				memcpy(&system_state, state, sizeof(system_state));
+		if (time_passed(&t_state, 500)) {
+			/* Attempt to update system state on core0 */
+			if (mutex_enter_timeout_us(state_mutex, 100)) {
+				memcpy(&transfer_state, state, sizeof(transfer_state));
 				mutex_exit(state_mutex);
 			} else {
-				log_msg(LOG_INFO, "failed to get state_mutex");
+				log_msg(LOG_INFO, "failed to get state_mutex"); 
 			}
 		}
+
+		if (time_passed(&t_tick, 60000)) {
+			log_msg(LOG_DEBUG, "core1: tick");
+		}
+
 	}
 }
 
@@ -300,6 +320,7 @@ int main()
 
 	set_binary_info();
 	clear_state(&system_state);
+	clear_state(&transfer_state);
 
 	/* Initialize MCU and other hardware... */
 	if (get_debug_level() >= 2)
@@ -308,7 +329,7 @@ int main()
 	if (get_debug_level() >= 2)
 		print_mallinfo();
 
-	/* Launch second core... */
+	/* Start second core (core1)... */
 	memcpy(&core1_config, cfg, sizeof(core1_config));
 	memcpy(&core1_state, &system_state, sizeof(core1_state));
 	multicore_launch_core1(core1_main);
@@ -358,6 +379,7 @@ int main()
 		/* Update display every 1000ms */
 		if (time_passed(&t_display, 1000)) {
 			log_msg(LOG_DEBUG, "Update display");
+			update_system_state();
 			display_status(fanpico_state, cfg);
 		}
 
@@ -374,6 +396,7 @@ int main()
 				if (cfg->local_echo) printf("\r\n");
 				input_buf[i_ptr] = 0;
 				if (i_ptr > 0) {
+					update_system_state();
 					process_command(fanpico_state, (struct fanpico_config *)cfg, input_buf);
 					i_ptr = 0;
 				}

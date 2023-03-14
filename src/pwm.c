@@ -106,7 +106,7 @@ float get_pwm_duty_cycle(uint fan)
 	/* Turn PWM slice (counter) on for short time... */
 	uint64_t t_start = to_us_since_boot(get_absolute_time());
 	pwm_set_enabled(slice_num, true);
-	sleep_ms(PWM_IN_SAMPLE_INTERVAL);
+	busy_wait_ms(PWM_IN_SAMPLE_INTERVAL);
 	pwm_set_enabled(slice_num, false);
 	uint64_t t_end = to_us_since_boot(get_absolute_time());
 
@@ -139,7 +139,7 @@ void get_pwm_duty_cycles(const struct fanpico_config *config)
 	for (i=0; i < MBFAN_COUNT; i++) {
 		pwm_set_enabled(slices[i], true);
 	}
-	sleep_ms(PWM_IN_SAMPLE_INTERVAL);
+	busy_wait_ms(PWM_IN_SAMPLE_INTERVAL);
 	for (i=0; i < MBFAN_COUNT; i++) {
 		pwm_set_enabled(slices[i], false);
 	}
