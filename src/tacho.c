@@ -172,53 +172,75 @@ void read_tacho_inputs()
 }
 #else
 {
+	static int state = 0;
 	static int q = 0;
-	int i;
+	static absolute_time_t start_t;
+	static int i;
 	uint64_t t;
 	double f;
+	uint64_t start, end;
 
+	if (state == 0) {
+		/* Pick next fan to 'measure' from queues... */
+		i = next_in_queue(q);
+		if (i < 0) {
+			/* End of queue reached, go to next queue. */
+			if (++q >= 2)
+				q = 0;
+			return;
+		}
 
-	/* Pick next fan to 'measure' from queues... */
-	i = next_in_queue(q);
-	if (i < 0) {
-                /* End of queue reached, go to next queue. */
-		if (++q >= 2)
+		/* process only one entry from second queue at a time */
+		if (q == 1) {
+			log_msg(LOG_DEBUG, "queue2: fan%d: read", i+1);
 			q = 0;
-		return;
+		}
+
+		/* Switch multiplexer to the fan we want to measure from... */
+		multiplexer_select(fan_gpio_tacho_map[i]);
+		busy_wait_us(50);
+		pulse_start_measure();
+		start_t = get_absolute_time();
+		state++;
 	}
+	else if (state == 1) {
+		// Measure pulse up to 600ms (down to 50 RPM)...
+		//t = pulse_measure(FAN_TACHO_READ_PIN, 1, 0, 600);
 
-	/* process only one entry from second queue at a time */
-	if (q == 1) {
-		log_msg(LOG_DEBUG, "queue2: fan%d: read", i+1);
-		q = 0;
+		t = pulse_interval();
+		if (t == 0) {
+			if (!time_passed(&start_t, 600))
+				return;
+		}
+
+		if (t > 0) {
+			/* Fan is spinning, make sure fan is in the first queue... */
+			if (queue[i] != 0)
+				queue[i] = 0;
+
+			f = 1 / (t / 1000000.0);
+		}
+		else {
+			/* Fan not spinning, put this fan into second queue */
+			if (queue[i] != 1)
+				queue[i] = 1;
+
+			f = 0;
+		}
+
+		log_msg(LOG_DEBUG + 0, "fan%d: pulse len=%llu", i+1, t);
+
+		start = to_us_since_boot(get_absolute_time());
+		mutex_enter_blocking(&tacho_mutex);
+		fan_tacho_freq[i] = f;
+		mutex_exit(&tacho_mutex);
+		end = to_us_since_boot(get_absolute_time());
+		if (end - start > 1000) {
+			log_msg(LOG_INFO, "mutex hung: %llu", end - start);
+		}
+
+		state = 0;
 	}
-
-	/* Switch multiplexer to the fan we want to measure from... */
-	multiplexer_select(fan_gpio_tacho_map[i]);
-	sleep_us(100);
-
-	// Measure pulse up to 600ms (down to 50 RPM)...
-	t = pulse_measure(FAN_TACHO_READ_PIN, 1, 0, 600);
-	if (t > 0) {
-		/* Fan is spinning, make sure fan is in the first queue... */
-		if (queue[i] != 0)
-			queue[i] = 0;
-
-		f = 1 / (t / 1000000.0);
-	}
-	else {
-		/* Fan not spinning, put this fan into second queue */
-		if (queue[i] != 1)
-			queue[i] = 1;
-
-		f = 0;
-	}
-
-	log_msg(LOG_DEBUG + 1, "fan%d: pulse len=%llu", i+1, t);
-
-	mutex_enter_blocking(&tacho_mutex);
-	fan_tacho_freq[i] = f;
-	mutex_exit(&tacho_mutex);
 }
 #endif
 
@@ -285,6 +307,7 @@ void setup_tacho_inputs()
 	gpio_set_dir(FAN_TACHO_READ_S1_PIN, GPIO_OUT);
 	gpio_set_dir(FAN_TACHO_READ_S2_PIN, GPIO_OUT);
 	multiplexer_select(0);
+	pulse_setup_interrupt(FAN_TACHO_READ_PIN, GPIO_IRQ_EDGE_RISE);
 #else
 	/* Enable interrupts on Fan Tacho input pins */
 	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_RISE,

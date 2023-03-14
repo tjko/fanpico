@@ -31,7 +31,7 @@
 
 #include "fanpico.h"
 
-/* default_config.s */
+/* Default configuration embedded using  default_config.s */
 extern const char fanpico_default_config[];
 
 

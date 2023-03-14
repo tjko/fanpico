@@ -38,10 +38,11 @@ uint8_t sensor_adc_map[SENSOR_MAX_COUNT] = {
 };
 
 
-double get_temperature(uint8_t input)
+double get_temperature(uint8_t input, struct fanpico_config *config)
 {
 	uint8_t pin;
 	uint32_t raw = 0;
+	uint64_t start, end;
 	double t, r, volt;
 	int i;
 	struct sensor_input *sensor;
@@ -49,7 +50,9 @@ double get_temperature(uint8_t input)
 	if (input >= SENSOR_COUNT)
 		return 0.0;
 
-	sensor = &cfg->sensors[input];
+	start = to_us_since_boot(get_absolute_time());
+
+	sensor = &config->sensors[input];
 
 	pin = sensor_adc_map[input];
 	adc_select_input(pin);
@@ -85,8 +88,10 @@ double get_temperature(uint8_t input)
 		}
 	}
 
-	log_msg(LOG_DEBUG, "get_temperature(%d): sensor_type=%u, raw=%u,  volt=%lf, temp=%lf",
-		input, sensor->type, raw, volt, t);
+	end = to_us_since_boot(get_absolute_time());
+
+	log_msg(LOG_DEBUG, "get_temperature(%d): sensor_type=%u, raw=%u,  volt=%lf, temp=%lf (duration=%llu)",
+		input, sensor->type, raw, volt, t, end - start);
 
 	return t;
 }

@@ -189,11 +189,13 @@ void log_msg(int priority, const char *format, ...)
 	va_list ap;
 	char buf[256];
 	int len;
+	uint64_t start, end;
+	uint core = get_core_num();
 
 	if ((priority > global_log_level) && (priority > global_syslog_level))
 		return;
 
-
+	start = to_us_since_boot(get_absolute_time());
 	va_start(ap, format);
 	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
@@ -207,7 +209,7 @@ void log_msg(int priority, const char *format, ...)
 	mutex_enter_blocking(&log_mutex);
 	if (priority <= global_log_level) {
 		uint64_t t = to_us_since_boot(get_absolute_time());
-		printf("[%6llu.%06llu] %s\n", (t / 1000000), (t % 1000000), buf);
+		printf("[%6llu.%06llu][%u] %s\n", (t / 1000000), (t % 1000000), core, buf);
 	}
 #ifdef WIFI_SUPPORT
 	if (priority <= global_syslog_level) {
@@ -215,6 +217,13 @@ void log_msg(int priority, const char *format, ...)
 	}
 #endif
 	mutex_exit(&log_mutex);
+
+	end = to_us_since_boot(get_absolute_time());
+	if (end - start > 10000) {
+#ifndef NDEBUG
+		printf("log_msg: core%u: %llu (duration=%llu)\n", core, end, end - start);
+#endif
+	}
 }
 
 

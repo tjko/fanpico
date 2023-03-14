@@ -19,9 +19,9 @@
    along with FanPico. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
+
 
 /*
  * Functions for measuring pulses on GPIO pins.
@@ -89,9 +89,11 @@ uint64_t pulseIn(int gpio, int value, uint32_t timeout_ms)
 
 
 
-volatile uint pulse_pin = 0;
+uint pulse_pin = 0;
 volatile uint32_t pulse_counter = 0;
-absolute_time_t pulse_last_read;
+volatile bool measure_complete = false;
+absolute_time_t pulse_start;
+absolute_time_t pulse_end;
 uint32_t pulse_events;
 
 
@@ -99,18 +101,29 @@ uint32_t pulse_events;
  */
 void __time_critical_func(pulse_measure_callback)(uint gpio, uint32_t events)
 {
-	if (gpio == pulse_pin)
+	if (gpio != pulse_pin || pulse_counter > 1)
+		return;
+
+	if (pulse_counter == 0) {
+		pulse_start = get_absolute_time();
 		pulse_counter++;
+	}
+	else if (pulse_counter == 1) {
+		pulse_end = get_absolute_time();
+		measure_complete = true;
+		pulse_counter++;
+	}
 }
 
+/* Setup a GPIO pin to be used for measurements */
 void pulse_setup_interrupt(uint gpio, uint32_t events)
 {
 	pulse_pin = gpio;
 	pulse_events = events;
-	pulse_counter = 0;
-	pulse_last_read = get_absolute_time();
+	pulse_counter = 2;
+	measure_complete = false;
 
-	gpio_set_irq_enabled_with_callback(gpio, events, true,
+	gpio_set_irq_enabled_with_callback(pulse_pin, pulse_events, true,
 					&pulse_measure_callback);
 }
 
@@ -119,26 +132,33 @@ void pulse_disable_interrupt()
 	gpio_set_irq_enabled(pulse_pin, pulse_events, false);
 }
 
+void pulse_enable_interrupt()
+{
+	gpio_set_irq_enabled(pulse_pin, pulse_events, true);
+}
+
+/* Call to start measruement. */
+void pulse_start_measure()
+{
+	pulse_disable_interrupt();
+	pulse_counter = 0;
+	measure_complete = false;
+	pulse_enable_interrupt();
+}
+
+/* Call to check if a pulse has been measured yet. */
 uint64_t pulse_interval()
 {
-	uint32_t pulses;
-	absolute_time_t read_time;
-	uint64_t delta, i;
+	uint64_t delta;
 
-	/* Read current counter value. */
-	pulses = pulse_counter;
-	read_time = get_absolute_time();
-
-	if (pulses < 1)
+	if (!measure_complete)
 		return 0;
 
-	pulse_counter = 0;
+	/* Calculate pulse length. */
+	delta = absolute_time_diff_us(pulse_start, pulse_end);
 
-	/* Calculate average interval between pulses. */
-	delta = absolute_time_diff_us(pulse_last_read, read_time);
-	i = delta / pulses;
-
-	pulse_last_read = read_time;
-
-	return i;
+	return delta;
 }
+
+
+/* eof :-) */

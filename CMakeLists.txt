@@ -125,6 +125,8 @@ endif()
 target_compile_options(fanpico PRIVATE -Wall)
 target_compile_definitions(fanpico PRIVATE PARAM_ASSERTIONS_ENABLE_ALL=1)
 target_compile_definitions(fanpico PRIVATE PICO_MALLOC_PANIC=0)
+target_compile_definitions(fanpico PRIVATE PICO_STACK_SIZE=0x1000)
+target_compile_definitions(fanpico PRIVATE PICO_USE_STACK_GUARDS=1)
 target_compile_definitions(fanpico PRIVATE PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
 
 

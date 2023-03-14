@@ -22,14 +22,15 @@
 #ifndef PULSE_LEN_H
 #define PULSE_LEN_H 1
 
+/* Busy wait based measurement (blocking). */
 uint64_t pulse_measure(int pin, bool type, bool mode, uint32_t timeout);
 uint64_t pulseIn(int gpio, int value, uint32_t timeout_ms);
 
+/* Interrupt based measurement (non-blocking). */
 void pulse_setup_interrupt(uint gpio, uint32_t events);
 void pulse_disable_interrupt();
+void pulse_start_measure();
 uint64_t pulse_interval();
-
-
 
 
 #endif /* PULSE_LEN_H */

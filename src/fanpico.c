@@ -119,7 +119,7 @@ void setup()
 
 	/* Configure Tacho pins... */
 	setup_tacho_outputs();
-	setup_tacho_inputs();
+//	setup_tacho_inputs();
 
 	log_msg(LOG_NOTICE, "System initialization complete.");
 }
@@ -186,10 +186,13 @@ void core1_main()
 	int64_t max_delta = 0;
 	int64_t delta;
 
+
 	log_msg(LOG_INFO, "core1: started...");
 
 	/* Allow core0 to pause this core... */
 	multicore_lockout_victim_init();
+
+	setup_tacho_inputs();
 
 	t_tick = t_last = get_absolute_time();
 
@@ -198,9 +201,9 @@ void core1_main()
 		delta = absolute_time_diff_us(t_last, t_now);
 		t_last = t_now;
 
-		if (delta > max_delta) {
+		if (delta > max_delta || delta > 1000000) {
 			max_delta = delta;
-			log_msg(LOG_DEBUG, "core1: max_loop_time=%lld", max_delta);
+			log_msg(LOG_INFO, "core1: max_loop_time=%lld", max_delta);
 		}
 
 		read_tacho_inputs();
@@ -255,9 +258,9 @@ int main()
 		delta = absolute_time_diff_us(t_last, t_now);
 		t_last = t_now;
 
-		if (delta > max_delta) {
+		if (delta > max_delta || delta > 1000000) {
 			max_delta = delta;
-			log_msg(LOG_DEBUG, "core0: max_loop_time=%lld", max_delta);
+			log_msg(LOG_INFO, "core0: max_loop_time=%lld", max_delta);
 		}
 
 		if (time_passed(&t_network, 1)) {
@@ -311,7 +314,7 @@ int main()
 		if (time_passed(&t_temp, 5000)) {
 			log_msg(LOG_DEBUG, "Read temperature sensors");
 			for (int i = 0; i < SENSOR_COUNT; i++) {
-				st->temp[i] = get_temperature(i);
+				st->temp[i] = get_temperature(i, cfg);
 				if (check_for_change(st->temp_prev[i], st->temp[i], 0.5)) {
 					log_msg(LOG_INFO, "sensor%d: Temperature change %.1fC --> %.1fC",
 						i+1,

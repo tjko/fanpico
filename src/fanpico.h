@@ -243,7 +243,7 @@ char* filter_print_args(enum signal_filter_types filter, void *ctx);
 float filter(enum signal_filter_types filter, void *ctx, float input);
 
 /* sensors.c */
-double get_temperature(uint8_t input);
+double get_temperature(uint8_t input, struct fanpico_config *config);
 double sensor_get_duty(struct sensor_input *sensor, double temp);
 
 /* tacho.c */
@@ -271,6 +271,7 @@ void debug(int debug_level, const char *fmt, ...);
 
 /* util.c */
 void print_mallinfo();
+void print_irqinfo();
 char *trim_str(char *s);
 int str_to_int(const char *str, int *val, int base);
 int str_to_float(const char *str, float *val);

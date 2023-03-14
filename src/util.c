@@ -55,6 +55,17 @@ void print_mallinfo()
 	printf("Topmost releasable block (keepcost):   %d\n", mi.keepcost);
 }
 
+void print_irqinfo()
+{
+	uint core = get_core_num();
+	uint enabled, shared;
+
+	for(uint i = 0; i < 32; i++) {
+		enabled = irq_is_enabled(i);
+		shared = (enabled ? irq_has_shared_handler(i) : 0);
+		printf("core%u: IRQ%-2u: enabled=%u, shared=%u\n", core, i, enabled, shared);
+	}
+}
 
 char *trim_str(char *s)
 {
