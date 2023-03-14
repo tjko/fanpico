@@ -23,6 +23,7 @@
 #include <malloc.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
+#include "pico/mutex.h"
 #include "cJSON.h"
 #include "pico_hal.h"
 #ifdef WIFI_SUPPORT
@@ -35,9 +36,10 @@
 extern const char fanpico_default_config[];
 
 
-struct fanpico_config config;
-struct fanpico_config *cfg = &config;
-
+struct fanpico_config fanpico_config;
+const struct fanpico_config *cfg = &fanpico_config;
+auto_init_mutex(config_mutex_inst);
+mutex_t *config_mutex = &config_mutex_inst;
 
 int str2pwm_source(const char *s)
 {
@@ -150,7 +152,7 @@ void json2pwm_map(cJSON *item, struct pwm_map *map)
 }
 
 
-cJSON* pwm_map2json(struct pwm_map *map)
+cJSON* pwm_map2json(const struct pwm_map *map)
 {
 	int i;
 	cJSON *o, *row;
@@ -212,7 +214,7 @@ void json2tacho_map(cJSON *item, struct tacho_map *map)
 }
 
 
-cJSON* tacho_map2json(struct tacho_map *map)
+cJSON* tacho_map2json(const struct tacho_map *map)
 {
 	int i;
 	cJSON *o, *row;
@@ -248,7 +250,7 @@ void json2temp_map(cJSON *item, struct temp_map *map)
 }
 
 
-cJSON* temp_map2json(struct temp_map *map)
+cJSON* temp_map2json(const struct temp_map *map)
 {
 	int i;
 	cJSON *o, *row;
@@ -273,6 +275,8 @@ void clear_config(struct fanpico_config *cfg)
 	struct sensor_input *s;
 	struct fan_output *f;
 	struct mb_input *m;
+
+	mutex_enter_blocking(config_mutex);
 
 	for (i = 0; i < SENSOR_MAX_COUNT; i++) {
 		s = &cfg->sensors[i];
@@ -336,10 +340,12 @@ void clear_config(struct fanpico_config *cfg)
 	ip_addr_set_any(0, &cfg->netmask);
 	ip_addr_set_any(0, &cfg->gateway);
 #endif
+
+	mutex_exit(config_mutex);
 }
 
 
-cJSON *config_to_json(struct fanpico_config *cfg)
+cJSON *config_to_json(const struct fanpico_config *cfg)
 {
 	cJSON *config = cJSON_CreateObject();
 	cJSON *fans, *mbfans, *sensors, *o;
@@ -392,7 +398,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	if (!fans)
 		goto panic;
 	for (i = 0; i < FAN_COUNT; i++) {
-		struct fan_output *f = &cfg->fans[i];
+		const struct fan_output *f = &cfg->fans[i];
 
 		o = cJSON_CreateObject();
 		if (!o)
@@ -416,7 +422,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	if (!mbfans)
 		goto panic;
 	for (i = 0; i < MBFAN_COUNT; i++) {
-		struct mb_input *m = &cfg->mbfans[i];
+		const struct mb_input *m = &cfg->mbfans[i];
 
 		o = cJSON_CreateObject();
 		if (!o)
@@ -440,7 +446,7 @@ cJSON *config_to_json(struct fanpico_config *cfg)
 	if (!sensors)
 		goto panic;
 	for (i = 0; i < SENSOR_COUNT; i++) {
-		struct sensor_input *s = &cfg->sensors[i];
+		const struct sensor_input *s = &cfg->sensors[i];
 
 		o = cJSON_CreateObject();
 		if (!o)
@@ -481,6 +487,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if (!config || !cfg)
 		return -1;
 
+	mutex_enter_blocking(config_mutex);
 
 	/* Parse JSON configuration */
 
@@ -633,6 +640,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		}
 	}
 
+	mutex_exit(config_mutex);
 	return 0;
 }
 
@@ -712,8 +720,8 @@ void read_config(bool multicore)
 
 
         /* Parse JSON configuration */
-	clear_config(cfg);
-	if (json_to_config(config, cfg) < 0) {
+	clear_config(&fanpico_config);
+	if (json_to_config(config, &fanpico_config) < 0) {
 		log_msg(LOG_ERR, "Error parsing JSON configuration");
 	}
 

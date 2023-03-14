@@ -63,7 +63,7 @@ struct error_t error_codes[] = {
 
 int last_error_num = 0;
 
-struct fanpico_state *st = NULL;
+const struct fanpico_state *st = NULL;
 struct fanpico_config *conf = NULL;
 
 /* credits.s */
@@ -166,11 +166,11 @@ int cmd_led(const char *cmd, const char *args, int query, char *prev_cmd)
 	int mode;
 
 	if (query) {
-		printf("%d\n", cfg->led_mode);
+		printf("%d\n", conf->led_mode);
 	} else if (str_to_int(args, &mode, 10)) {
 		if (mode >= 0 && mode <= 2) {
-			log_msg(LOG_NOTICE, "Set system LED mode: %d -> %d", cfg->led_mode, mode);
-			cfg->led_mode = mode;
+			log_msg(LOG_NOTICE, "Set system LED mode: %d -> %d", conf->led_mode, mode);
+			conf->led_mode = mode;
 		}
 	}
 	return 0;
@@ -268,9 +268,9 @@ int cmd_echo(const char *cmd, const char *args, int query, char *prev_cmd)
 	int val;
 
 	if (query) {
-		printf("%u\n", cfg->local_echo);
+		printf("%u\n", conf->local_echo);
 	} else if (str_to_int(args, &val, 10)) {
-		cfg->local_echo = (val > 0 ? true : false);
+		conf->local_echo = (val > 0 ? true : false);
 	}
 	return 0;
 }
@@ -279,9 +279,9 @@ int cmd_echo(const char *cmd, const char *args, int query, char *prev_cmd)
 int cmd_display_type(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (query) {
-		printf("%s\n", cfg->display_type);
+		printf("%s\n", conf->display_type);
 	} else {
-		strncopy(cfg->display_type, args, sizeof(cfg->display_type));
+		strncopy(conf->display_type, args, sizeof(conf->display_type));
 	}
 	return 0;
 }
@@ -1339,27 +1339,27 @@ int ip_change(const char *cmd, const char *args, int query, char *prev_cmd, cons
 
 int cmd_wifi_ip(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	return ip_change(cmd, args, query, prev_cmd, "IP", &cfg->ip);
+	return ip_change(cmd, args, query, prev_cmd, "IP", &conf->ip);
 }
 
 int cmd_wifi_netmask(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	return ip_change(cmd, args, query, prev_cmd, "Netmask", &cfg->netmask);
+	return ip_change(cmd, args, query, prev_cmd, "Netmask", &conf->netmask);
 }
 
 int cmd_wifi_gateway(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	return ip_change(cmd, args, query, prev_cmd, "Default Gateway", &cfg->gateway);
+	return ip_change(cmd, args, query, prev_cmd, "Default Gateway", &conf->gateway);
 }
 
 int cmd_wifi_syslog(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	return ip_change(cmd, args, query, prev_cmd, "Syslog Server", &cfg->syslog_server);
+	return ip_change(cmd, args, query, prev_cmd, "Syslog Server", &conf->syslog_server);
 }
 
 int cmd_wifi_ntp(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	return ip_change(cmd, args, query, prev_cmd, "NTP Server", &cfg->ntp_server);
+	return ip_change(cmd, args, query, prev_cmd, "NTP Server", &conf->ntp_server);
 }
 
 int cmd_wifi_mac(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1741,10 +1741,14 @@ struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level, char **prev_subcmd)
 						/* Match for command */
 						query = (s[strlen(s)-1] == '?' ? 1 : 0);
 						arg = t + cmd_len + 1;
+						if (query)
+							mutex_enter_blocking(config_mutex);
 						res = cmd_level[i].func(s,
 								(total_len > cmd_len+1 ? arg : ""),
 								query,
 								(*prev_subcmd ? *prev_subcmd : ""));
+						if (query)
+							mutex_exit(config_mutex);
 					}
 					break;
 				}
@@ -1773,7 +1777,7 @@ struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level, char **prev_subcmd)
 }
 
 
-void process_command(struct fanpico_state *state, struct fanpico_config *config, char *command)
+void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command)
 {
 	char *saveptr, *cmd;
 	char *prev_subcmd = NULL;

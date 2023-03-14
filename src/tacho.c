@@ -24,7 +24,6 @@
 #include <string.h>
 #include <assert.h>
 #include "pico/stdlib.h"
-#include "pico/mutex.h"
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "square_wave_gen.h"
@@ -74,14 +73,8 @@ absolute_time_t fan_tacho_last_read;
 
 
 
-auto_init_mutex(tacho_mutex);
-
 /* Array holding calculated fan tachometer (input) frequencies.
- *
- * Note, access to this array must use tacho_mutex as core1
- * writes to this array.
  */
-
 float fan_tacho_freq[FAN_MAX_COUNT];
 
 
@@ -156,13 +149,11 @@ void read_tacho_inputs()
 		return;
 
 	s = delta / 1000000.0;
-	mutex_enter_blocking(&tacho_mutex);
 	for (i = 0; i < FAN_COUNT; i++) {
 		pulses = counters[i] - fan_tacho_counters_last[i];
 		f = pulses / s;
 		fan_tacho_freq[i] = f;
 	}
-	mutex_exit(&tacho_mutex);
 
 	/* Save counter values for next time... */
 	for (i = 0; i < FAN_COUNT; i++) {
@@ -178,7 +169,7 @@ void read_tacho_inputs()
 	static int i;
 	uint64_t t;
 	double f;
-	uint64_t start, end;
+//	uint64_t start, end;
 
 	if (state == 0) {
 		/* Pick next fan to 'measure' from queues... */
@@ -230,15 +221,7 @@ void read_tacho_inputs()
 
 		log_msg(LOG_DEBUG + 0, "fan%d: pulse len=%llu", i+1, t);
 
-		start = to_us_since_boot(get_absolute_time());
-		mutex_enter_blocking(&tacho_mutex);
 		fan_tacho_freq[i] = f;
-		mutex_exit(&tacho_mutex);
-		end = to_us_since_boot(get_absolute_time());
-		if (end - start > 1000) {
-			log_msg(LOG_INFO, "mutex hung: %llu", end - start);
-		}
-
 		state = 0;
 	}
 }
@@ -249,17 +232,8 @@ void read_tacho_inputs()
  */
 void update_tacho_input_freq(struct fanpico_state *st)
 {
-	int i;
-	float freq[FAN_COUNT];
-
-	mutex_enter_blocking(&tacho_mutex);
-	for (i = 0; i < FAN_COUNT; i++) {
-		freq[i] = fan_tacho_freq[i];
-	}
-	mutex_exit(&tacho_mutex);
-
-	for (i = 0; i < FAN_COUNT; i++) {
-		st->fan_freq[i] = roundf(freq[i]*100)/100.0;
+	for (int i = 0; i < FAN_COUNT; i++) {
+		st->fan_freq[i] = roundf(fan_tacho_freq[i]*100)/100.0;
 		if (check_for_change(st->fan_freq_prev[i], st->fan_freq[i], 1.0)) {
 			log_msg(LOG_INFO, "fan%d: Input Tacho change %.2fHz --> %.2fHz",
 				i+1,
@@ -282,7 +256,6 @@ void setup_tacho_inputs()
 	/* Configure pins and build GPIO to FAN mapping */
 	memset(gpio_fan_tacho_map, 0, sizeof(gpio_fan_tacho_map));
 
-	mutex_enter_blocking(&tacho_mutex);
 	for (i = 0; i < FAN_COUNT; i++) {
 		fan_tacho_counters[i] = 0;
 		fan_tacho_counters_last[i] = 0;
@@ -294,7 +267,6 @@ void setup_tacho_inputs()
 		gpio_set_dir(pin, GPIO_IN);
 #endif
 	}
-	mutex_exit(&tacho_mutex);
 
 #if TACHO_READ_MULTIPLEX > 0
 	// Setup multiplexer pins */
@@ -307,6 +279,17 @@ void setup_tacho_inputs()
 	gpio_set_dir(FAN_TACHO_READ_S1_PIN, GPIO_OUT);
 	gpio_set_dir(FAN_TACHO_READ_S2_PIN, GPIO_OUT);
 	multiplexer_select(0);
+#endif
+
+	fan_tacho_last_read = get_absolute_time();
+}
+
+
+void setup_tacho_input_interrupts()
+{
+	/* This must be called from the core doing the measurements. */
+
+#if TACHO_READ_MULTIPLEX > 0
 	pulse_setup_interrupt(FAN_TACHO_READ_PIN, GPIO_IRQ_EDGE_RISE);
 #else
 	/* Enable interrupts on Fan Tacho input pins */
@@ -316,9 +299,7 @@ void setup_tacho_inputs()
 		gpio_set_irq_enabled(fan_gpio_tacho_map[i], GPIO_IRQ_EDGE_RISE, true);
 	}
 #endif
-	fan_tacho_last_read = get_absolute_time();
 }
-
 
 /* Function to set output frequency for tachometer output pin.
  */
@@ -352,7 +333,7 @@ void setup_tacho_outputs()
 }
 
 
-double tacho_map(struct tacho_map *map, double val)
+double tacho_map(const struct tacho_map *map, double val)
 {
 	int i;
 	double newval;
@@ -378,9 +359,9 @@ double tacho_map(struct tacho_map *map, double val)
 }
 
 
-double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i)
+double calculate_tacho_freq(struct fanpico_state *state, const struct fanpico_config *config, int i)
 {
-	struct mb_input *mbfan;
+	const struct mb_input *mbfan;
 	double val = 0;
 
 	mbfan = &config->mbfans[i];

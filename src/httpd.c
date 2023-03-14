@@ -31,7 +31,6 @@
 
 
 
-
 u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part)
 {
 	const struct fanpico_state *st = fanpico_state;

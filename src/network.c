@@ -95,7 +95,7 @@ void wifi_init()
 
 	/* If WiFi country is defined in configuratio, use it... */
 	if (cfg) {
-		char *country = cfg->wifi_country;
+		const char *country = cfg->wifi_country;
 		if (strlen(country) > 1) {
 			uint rev = 0;
 			if (country[2] >= '0' && country[2] <= '9') {
