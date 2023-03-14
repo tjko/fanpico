@@ -191,12 +191,13 @@ struct fanpico_state {
 void print_mallinfo();
 extern const struct fanpico_state *fanpico_state;
 extern bool rebooted_by_watchdog;
+extern mutex_t *state_mutex;
 
 /* bi_decl.c */
 void set_binary_info();
 
 /* command.c */
-void process_command(struct fanpico_state *state, struct fanpico_config *config, char *command);
+void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command);
 int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd);
 
 /* config.c */

@@ -188,7 +188,11 @@ void core1_main()
 {
 	struct fanpico_config *config = &core1_config;
 	struct fanpico_state *state = &core1_state;
-	absolute_time_t t_tick, t_last, t_now, t_config, t_state, t_tacho;
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_temp, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_tacho, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_pwm, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_set_outputs, 0);
+	absolute_time_t t_tick, t_last, t_now, t_config, t_state;
 	int64_t max_delta = 0;
 	int64_t delta;
 
@@ -200,7 +204,7 @@ void core1_main()
 
 	setup_tacho_inputs();
 
-	t_tacho = t_state = t_config = t_tick = t_last = get_absolute_time();
+	t_state = t_config = t_tick = t_last = get_absolute_time();
 
 	while (1) {
 		t_now = get_absolute_time();
@@ -220,6 +224,41 @@ void core1_main()
 			update_tacho_input_freq(state);
 		}
 
+		/* Read PWM input signals (duty cycle) periodically */
+		if (time_passed(&t_poll_pwm, 1000)) {
+			log_msg(LOG_DEBUG, "Read PWM inputs");
+			get_pwm_duty_cycles(config);
+			for (int i = 0; i < MBFAN_COUNT; i++) {
+				state->mbfan_duty[i] = roundf(mbfan_pwm_duty[i]);
+				if (check_for_change(state->mbfan_duty_prev[i], state->mbfan_duty[i], 1.0)) {
+					log_msg(LOG_INFO, "mbfan%d: Input PWM change %.1f%% --> %.1f%%",
+						i+1,
+						state->mbfan_duty_prev[i],
+						state->mbfan_duty[i]);
+					state->mbfan_duty_prev[i] = state->mbfan_duty[i];
+				}
+			}
+		}
+
+		/* Read temperature sensors periodically */
+		if (time_passed(&t_temp, 5000)) {
+			log_msg(LOG_DEBUG, "Read temperature sensors");
+			for (int i = 0; i < SENSOR_COUNT; i++) {
+				state->temp[i] = get_temperature(i, config);
+				if (check_for_change(state->temp_prev[i], state->temp[i], 0.5)) {
+					log_msg(LOG_INFO, "sensor%d: Temperature change %.1fC --> %.1fC",
+						i+1,
+						state->temp_prev[i],
+						state->temp[i]);
+					state->temp_prev[i] = state->temp[i];
+				}
+			}
+		}
+
+		if (time_passed(&t_set_outputs, 1000)) {
+			log_msg(LOG_DEBUG, "Updating output signals.");
+			update_outputs(state, config);
+		}
 
 		if (time_passed(&t_tick, 60000)) {
 			log_msg(LOG_DEBUG, "core1: tick");
@@ -236,7 +275,7 @@ void core1_main()
 		if (time_passed(&t_state, 1000)) {
 			/* Attempt to update status on core0 */
 			if (mutex_enter_timeout_us(state_mutex, 250)) {
-				//memcpy(&system_state, state, sizeof(system_state));
+				memcpy(&system_state, state, sizeof(system_state));
 				mutex_exit(state_mutex);
 			} else {
 				log_msg(LOG_INFO, "failed to get state_mutex");
@@ -248,25 +287,19 @@ void core1_main()
 
 int main()
 {
-	struct fanpico_state *st = &system_state;
-	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_pwm, 0);
-//	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_tacho, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_led, 0);
-	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_temp, 0);
-	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_set_outputs, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_network, 0);
 	absolute_time_t t_now, t_last, t_display;
 	uint8_t led_state = 0;
 	int64_t max_delta = 0;
 	int64_t delta;
-	int c, change;
+	int c;
 	char input_buf[1024 + 1];
 	int i_ptr = 0;
 
 
 	set_binary_info();
-	clear_state(st);
-	clear_state(&core1_state);
+	clear_state(&system_state);
 
 	/* Initialize MCU and other hardware... */
 	if (get_debug_level() >= 2)
@@ -275,8 +308,11 @@ int main()
 	if (get_debug_level() >= 2)
 		print_mallinfo();
 
+	/* Launch second core... */
 	memcpy(&core1_config, cfg, sizeof(core1_config));
+	memcpy(&core1_state, &system_state, sizeof(core1_state));
 	multicore_launch_core1(core1_main);
+
 #if WATCHDOG_ENABLED
 	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
 	log_msg(LOG_NOTICE, "Watchdog enabled.");
@@ -286,7 +322,6 @@ int main()
 	t_display = t_last;
 
 	while (1) {
-		change = 0;
 		t_now = get_absolute_time();
 		delta = absolute_time_diff_us(t_last, t_now);
 		t_last = t_now;
@@ -320,54 +355,10 @@ int main()
 #endif
 		}
 
-		/* Update display every 2000ms */
-		if (time_passed(&t_display, 2000)) {
+		/* Update display every 1000ms */
+		if (time_passed(&t_display, 1000)) {
 			log_msg(LOG_DEBUG, "Update display");
-			display_status(st, cfg);
-		}
-
-		/* Read PWM input signals (duty cycle) periodically */
-		if (time_passed(&t_poll_pwm, 1000)) {
-			log_msg(LOG_DEBUG, "Read PWM inputs");
-			get_pwm_duty_cycles(cfg);
-			for (int i = 0; i < MBFAN_COUNT; i++) {
-				st->mbfan_duty[i] = roundf(mbfan_pwm_duty[i]);
-				if (check_for_change(st->mbfan_duty_prev[i], st->mbfan_duty[i], 1.0)) {
-					log_msg(LOG_INFO, "mbfan%d: Input PWM change %.1f%% --> %.1f%%",
-						i+1,
-						st->mbfan_duty_prev[i],
-						st->mbfan_duty[i]);
-					st->mbfan_duty_prev[i] = st->mbfan_duty[i];
-					change++;
-				}
-			}
-		}
-
-		/* Read temperature sensors periodically */
-		if (time_passed(&t_temp, 5000)) {
-			log_msg(LOG_DEBUG, "Read temperature sensors");
-			for (int i = 0; i < SENSOR_COUNT; i++) {
-				st->temp[i] = get_temperature(i, cfg);
-				if (check_for_change(st->temp_prev[i], st->temp[i], 0.5)) {
-					log_msg(LOG_INFO, "sensor%d: Temperature change %.1fC --> %.1fC",
-						i+1,
-						st->temp_prev[i],
-						st->temp[i]);
-					st->temp_prev[i] = st->temp[i];
-					change++;
-				}
-			}
-		}
-#if 0
-		/* Calculate frequencies from input tachometer signals peridocially */
-		if (time_passed(&t_poll_tacho, 2000)) {
-			log_msg(LOG_DEBUG, "Updating tacho input signals.");
-			update_tacho_input_freq(st);
-		}
-#endif
-		if (change || time_passed(&t_set_outputs, 1000)) {
-			log_msg(LOG_DEBUG, "Updating output signals.");
-			update_outputs(st, cfg);
+			display_status(fanpico_state, cfg);
 		}
 
 		/* Process any (user) input */
@@ -383,7 +374,7 @@ int main()
 				if (cfg->local_echo) printf("\r\n");
 				input_buf[i_ptr] = 0;
 				if (i_ptr > 0) {
-					process_command(st, (struct fanpico_config *)cfg, input_buf);
+					process_command(fanpico_state, (struct fanpico_config *)cfg, input_buf);
 					i_ptr = 0;
 				}
 				continue;

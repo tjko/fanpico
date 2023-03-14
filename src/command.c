@@ -63,7 +63,7 @@ struct error_t error_codes[] = {
 
 int last_error_num = 0;
 
-struct fanpico_state *st = NULL;
+const struct fanpico_state *st = NULL;
 struct fanpico_config *conf = NULL;
 
 /* credits.s */
@@ -1777,7 +1777,7 @@ struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level, char **prev_subcmd)
 }
 
 
-void process_command(struct fanpico_state *state, struct fanpico_config *config, char *command)
+void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command)
 {
 	char *saveptr, *cmd;
 	char *prev_subcmd = NULL;
