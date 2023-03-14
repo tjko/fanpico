@@ -122,7 +122,7 @@ float get_pwm_duty_cycle(uint fan)
 
 /* Read multiple PWM signals simultaneously using PWM hardware.
  */
-void get_pwm_duty_cycles(struct fanpico_config *config)
+void get_pwm_duty_cycles(const struct fanpico_config *config)
 {
 	uint slices[MBFAN_COUNT];
 	int i;
@@ -155,7 +155,7 @@ void get_pwm_duty_cycles(struct fanpico_config *config)
 
 	/* Calculate duty cycles based on measurements. */
 	for (i=0; i < MBFAN_COUNT; i++) {
-		struct mb_input *mbfan = &config->mbfans[i];
+		const struct mb_input *mbfan = &config->mbfans[i];
 		uint16_t counter = pwm_get_counter(slices[i]);
 		float duty = counter * 100 / max_count;
 
@@ -238,7 +238,7 @@ void setup_pwm_inputs()
 }
 
 
-double pwm_map(struct pwm_map *map, double val)
+double pwm_map(const struct pwm_map *map, double val)
 {
 	int i;
 	double newval;
@@ -264,9 +264,9 @@ double pwm_map(struct pwm_map *map, double val)
 }
 
 
-double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *config, int i)
+double calculate_pwm_duty(struct fanpico_state *state, const struct fanpico_config *config, int i)
 {
-	struct fan_output *fan;
+	const struct fan_output *fan;
 	double val = 0;
 
 	fan = &config->fans[i];

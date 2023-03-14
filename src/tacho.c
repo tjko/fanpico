@@ -178,7 +178,7 @@ void read_tacho_inputs()
 	static int i;
 	uint64_t t;
 	double f;
-	uint64_t start, end;
+//	uint64_t start, end;
 
 	if (state == 0) {
 		/* Pick next fan to 'measure' from queues... */
@@ -230,14 +230,14 @@ void read_tacho_inputs()
 
 		log_msg(LOG_DEBUG + 0, "fan%d: pulse len=%llu", i+1, t);
 
-		start = to_us_since_boot(get_absolute_time());
-		mutex_enter_blocking(&tacho_mutex);
+//		start = to_us_since_boot(get_absolute_time());
+//		mutex_enter_blocking(&tacho_mutex);
 		fan_tacho_freq[i] = f;
-		mutex_exit(&tacho_mutex);
-		end = to_us_since_boot(get_absolute_time());
-		if (end - start > 1000) {
-			log_msg(LOG_INFO, "mutex hung: %llu", end - start);
-		}
+//		mutex_exit(&tacho_mutex);
+//		end = to_us_since_boot(get_absolute_time());
+//		if (end - start > 1000) {
+//			log_msg(LOG_INFO, "mutex hung: %llu", end - start);
+//		}
 
 		state = 0;
 	}
@@ -250,6 +250,7 @@ void read_tacho_inputs()
 void update_tacho_input_freq(struct fanpico_state *st)
 {
 	int i;
+#if 0
 	float freq[FAN_COUNT];
 
 	mutex_enter_blocking(&tacho_mutex);
@@ -257,9 +258,10 @@ void update_tacho_input_freq(struct fanpico_state *st)
 		freq[i] = fan_tacho_freq[i];
 	}
 	mutex_exit(&tacho_mutex);
+#endif
 
 	for (i = 0; i < FAN_COUNT; i++) {
-		st->fan_freq[i] = roundf(freq[i]*100)/100.0;
+		st->fan_freq[i] = roundf(fan_tacho_freq[i]*100)/100.0;
 		if (check_for_change(st->fan_freq_prev[i], st->fan_freq[i], 1.0)) {
 			log_msg(LOG_INFO, "fan%d: Input Tacho change %.2fHz --> %.2fHz",
 				i+1,
@@ -352,7 +354,7 @@ void setup_tacho_outputs()
 }
 
 
-double tacho_map(struct tacho_map *map, double val)
+double tacho_map(const struct tacho_map *map, double val)
 {
 	int i;
 	double newval;
@@ -378,9 +380,9 @@ double tacho_map(struct tacho_map *map, double val)
 }
 
 
-double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i)
+double calculate_tacho_freq(struct fanpico_state *state, const struct fanpico_config *config, int i)
 {
-	struct mb_input *mbfan;
+	const struct mb_input *mbfan;
 	double val = 0;
 
 	mbfan = &config->mbfans[i];

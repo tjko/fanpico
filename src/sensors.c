@@ -38,14 +38,14 @@ uint8_t sensor_adc_map[SENSOR_MAX_COUNT] = {
 };
 
 
-double get_temperature(uint8_t input, struct fanpico_config *config)
+double get_temperature(uint8_t input, const struct fanpico_config *config)
 {
 	uint8_t pin;
 	uint32_t raw = 0;
 	uint64_t start, end;
 	double t, r, volt;
 	int i;
-	struct sensor_input *sensor;
+	const struct sensor_input *sensor;
 
 	if (input >= SENSOR_COUNT)
 		return 0.0;
@@ -97,11 +97,11 @@ double get_temperature(uint8_t input, struct fanpico_config *config)
 }
 
 
-double sensor_get_duty(struct sensor_input *sensor, double temp)
+double sensor_get_duty(const struct sensor_input *sensor, double temp)
 {
 	int i;
 	double a, t;
-	struct temp_map *map;
+	const struct temp_map *map;
 
 	t = temp;
 	map = &sensor->map;

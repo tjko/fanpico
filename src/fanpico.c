@@ -39,9 +39,13 @@
 
 #include "fanpico.h"
 
+static struct fanpico_state core1_state;
+static struct fanpico_config core1_config;
 
 static struct fanpico_state system_state;
 const struct fanpico_state *fanpico_state = &system_state;
+auto_init_mutex(state_mutex_inst);
+mutex_t *state_mutex = &state_mutex_inst;
 bool rebooted_by_watchdog = false;
 
 void setup()
@@ -148,11 +152,11 @@ void clear_state(struct fanpico_state *s)
 }
 
 
-void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
+void update_outputs(struct fanpico_state *state, const struct fanpico_config *config)
 {
 	int i;
 
-	/* update fan PWM signals */
+	/* Update fan PWM signals */
 	for (i = 0; i < FAN_COUNT; i++) {
 		state->fan_duty[i] = calculate_pwm_duty(state, config, i);
 		if (check_for_change(state->fan_duty_prev[i], state->fan_duty[i], 1.0)) {
@@ -165,7 +169,7 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 		}
 	}
 
-	/* update mb tacho signals */
+	/* Update mb tacho signals */
 	for (i = 0; i < MBFAN_COUNT; i++) {
 		state->mbfan_freq[i] = calculate_tacho_freq(state, config, i);
 		if (check_for_change(state->mbfan_freq_prev[i], state->mbfan_freq[i], 1.0)) {
@@ -182,7 +186,9 @@ void update_outputs(struct fanpico_state *state, struct fanpico_config *config)
 
 void core1_main()
 {
-	absolute_time_t t_tick, t_last, t_now;
+	struct fanpico_config *config = &core1_config;
+	struct fanpico_state *state = &core1_state;
+	absolute_time_t t_tick, t_last, t_now, t_config, t_state, t_tacho;
 	int64_t max_delta = 0;
 	int64_t delta;
 
@@ -194,7 +200,7 @@ void core1_main()
 
 	setup_tacho_inputs();
 
-	t_tick = t_last = get_absolute_time();
+	t_tacho = t_state = t_config = t_tick = t_last = get_absolute_time();
 
 	while (1) {
 		t_now = get_absolute_time();
@@ -206,10 +212,35 @@ void core1_main()
 			log_msg(LOG_INFO, "core1: max_loop_time=%lld", max_delta);
 		}
 
+		/* Tachometer inputs from Fans */
 		read_tacho_inputs();
+		if (time_passed(&t_tacho, 2000)) {
+			/* Calculate frequencies from input tachometer signals peridocially */
+			log_msg(LOG_DEBUG, "Updating tacho input signals.");
+			update_tacho_input_freq(state);
+		}
+
 
 		if (time_passed(&t_tick, 60000)) {
 			log_msg(LOG_DEBUG, "core1: tick");
+		}
+		if (time_passed(&t_config, 2000)) {
+			/* Attempt to update config from core0 */
+			if (mutex_enter_timeout_us(config_mutex, 100)) {
+				memcpy(config, cfg, sizeof(*config));
+				mutex_exit(config_mutex);
+			} else {
+				log_msg(LOG_INFO, "failed to get config_mutex");
+			}
+		}
+		if (time_passed(&t_state, 1000)) {
+			/* Attempt to update status on core0 */
+			if (mutex_enter_timeout_us(state_mutex, 250)) {
+				//memcpy(&system_state, state, sizeof(system_state));
+				mutex_exit(state_mutex);
+			} else {
+				log_msg(LOG_INFO, "failed to get state_mutex");
+			}
 		}
 	}
 }
@@ -219,7 +250,7 @@ int main()
 {
 	struct fanpico_state *st = &system_state;
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_pwm, 0);
-	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_tacho, 0);
+//	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_tacho, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_led, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_temp, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_set_outputs, 0);
@@ -235,6 +266,7 @@ int main()
 
 	set_binary_info();
 	clear_state(st);
+	clear_state(&core1_state);
 
 	/* Initialize MCU and other hardware... */
 	if (get_debug_level() >= 2)
@@ -243,6 +275,7 @@ int main()
 	if (get_debug_level() >= 2)
 		print_mallinfo();
 
+	memcpy(&core1_config, cfg, sizeof(core1_config));
 	multicore_launch_core1(core1_main);
 #if WATCHDOG_ENABLED
 	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
@@ -325,13 +358,13 @@ int main()
 				}
 			}
 		}
-
+#if 0
 		/* Calculate frequencies from input tachometer signals peridocially */
 		if (time_passed(&t_poll_tacho, 2000)) {
 			log_msg(LOG_DEBUG, "Updating tacho input signals.");
 			update_tacho_input_freq(st);
 		}
-
+#endif
 		if (change || time_passed(&t_set_outputs, 1000)) {
 			log_msg(LOG_DEBUG, "Updating output signals.");
 			update_outputs(st, cfg);
@@ -350,7 +383,7 @@ int main()
 				if (cfg->local_echo) printf("\r\n");
 				input_buf[i_ptr] = 0;
 				if (i_ptr > 0) {
-					process_command(st, cfg, input_buf);
+					process_command(st, (struct fanpico_config *)cfg, input_buf);
 					i_ptr = 0;
 				}
 				continue;

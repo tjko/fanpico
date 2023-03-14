@@ -25,6 +25,7 @@
 #include "config.h"
 #include "log.h"
 #include <time.h>
+#include "pico/mutex.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #define WIFI_SUPPORT 1
 #include "lwip/ip_addr.h"
@@ -199,7 +200,8 @@ void process_command(struct fanpico_state *state, struct fanpico_config *config,
 int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd);
 
 /* config.c */
-extern struct fanpico_config *cfg;
+extern mutex_t *config_mutex;
+extern const struct fanpico_config *cfg;
 int str2pwm_source(const char *s);
 const char* pwm_source2str(enum pwm_source_types source);
 int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id);
@@ -231,9 +233,9 @@ void setup_pwm_inputs();
 void setup_pwm_outputs();
 void set_pwm_duty_cycle(uint fan, float duty);
 float get_pwm_duty_cycle(uint fan);
-void get_pwm_duty_cycles(struct fanpico_config *config);
-double pwm_map(struct pwm_map *map, double val);
-double calculate_pwm_duty(struct fanpico_state *state, struct fanpico_config *config, int i);
+void get_pwm_duty_cycles(const struct fanpico_config *config);
+double pwm_map(const struct pwm_map *map, double val);
+double calculate_pwm_duty(struct fanpico_state *state, const struct fanpico_config *config, int i);
 
 /* filters.c */
 int str2filter(const char *s);
@@ -243,8 +245,8 @@ char* filter_print_args(enum signal_filter_types filter, void *ctx);
 float filter(enum signal_filter_types filter, void *ctx, float input);
 
 /* sensors.c */
-double get_temperature(uint8_t input, struct fanpico_config *config);
-double sensor_get_duty(struct sensor_input *sensor, double temp);
+double get_temperature(uint8_t input, const struct fanpico_config *config);
+double sensor_get_duty(const struct sensor_input *sensor, double temp);
 
 /* tacho.c */
 void setup_tacho_inputs();
@@ -252,8 +254,8 @@ void setup_tacho_outputs();
 void read_tacho_inputs();
 void update_tacho_input_freq(struct fanpico_state *state);
 void set_tacho_output_freq(uint fan, double frequency);
-double tacho_map(struct tacho_map *map, double val);
-double calculate_tacho_freq(struct fanpico_state *state, struct fanpico_config *config, int i);
+double tacho_map(const struct tacho_map *map, double val);
+double calculate_tacho_freq(struct fanpico_state *state, const struct fanpico_config *config, int i);
 
 /* log.c */
 int str2log_priority(const char *pri);
