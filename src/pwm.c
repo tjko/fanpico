@@ -124,51 +124,63 @@ float get_pwm_duty_cycle(uint fan)
  */
 void get_pwm_duty_cycles(const struct fanpico_config *config)
 {
-	uint slices[MBFAN_COUNT];
+	static uint state = 0;
+	static uint64_t t_start = 0;
+	static uint slices[MBFAN_COUNT];
 	int i;
 
-	/* Reset counters on all PWM slices. */
-	for (i=0; i < MBFAN_COUNT; i++) {
-		slices[i] = pwm_gpio_to_slice_num(mbfan_gpio_pwm_map[i]);
-		pwm_set_enabled(slices[i], false);
-		pwm_set_counter(slices[i], 0);
-	}
-
-	/* Turn on all PWM slices for short period of time... */
-	uint64_t t_start = to_us_since_boot(get_absolute_time());
-	for (i=0; i < MBFAN_COUNT; i++) {
-		pwm_set_enabled(slices[i], true);
-	}
-	busy_wait_ms(PWM_IN_SAMPLE_INTERVAL);
-	for (i=0; i < MBFAN_COUNT; i++) {
-		pwm_set_enabled(slices[i], false);
-	}
-	uint64_t t_end = to_us_since_boot(get_absolute_time());
-
-	float max_count = pwm_in_count_rate * ((t_end - t_start) / 1000000.0);
-
-	if (max_count >= 65535) {
-		log_msg(LOG_WARNING, "get_pwm_duty_cycles(): counter overflow: %f (%llu)",
-			max_count, (t_end - t_start));
-		return;
-	}
-
-	/* Calculate duty cycles based on measurements. */
-	for (i=0; i < MBFAN_COUNT; i++) {
-		const struct mb_input *mbfan = &config->mbfans[i];
-		uint16_t counter = pwm_get_counter(slices[i]);
-		float duty = counter * 100 / max_count;
-
-		/* Apply filter */
-		if (mbfan->filter != FILTER_NONE) {
-			float duty_f = filter(mbfan->filter, mbfan->filter_ctx, duty);
-			if (duty_f != duty) {
-				log_msg(LOG_DEBUG, "filter mbfan%d: %lf -> %lf\n", i+1, duty, duty_f);
-				duty = duty_f;
-			}
+	if (state == 0) {
+		/* Reset counters on all PWM slices. */
+		for (i = 0; i < MBFAN_COUNT; i++) {
+			slices[i] = pwm_gpio_to_slice_num(mbfan_gpio_pwm_map[i]);
+			pwm_set_enabled(slices[i], false);
+			pwm_set_counter(slices[i], 0);
 		}
 
-		mbfan_pwm_duty[i] = duty;
+		/* Turn on all PWM slices for short period of time... */
+		t_start = to_us_since_boot(get_absolute_time());
+		for (i = 0; i < MBFAN_COUNT; i++) {
+			pwm_set_enabled(slices[i], true);
+		}
+		state = 1;
+	}
+	else if (state == 1) {
+		//busy_wait_ms(PWM_IN_SAMPLE_INTERVAL);
+		uint64_t t_end = to_us_since_boot(get_absolute_time());
+		if (t_end - t_start < PWM_IN_SAMPLE_INTERVAL * 1000)
+			return;
+
+		state = 0;
+		for (i = 0; i < MBFAN_COUNT; i++) {
+			pwm_set_enabled(slices[i], false);
+		}
+		t_end = to_us_since_boot(get_absolute_time());
+
+		float max_count = pwm_in_count_rate * ((t_end - t_start) / 1000000.0);
+		if (max_count >= 65535) {
+			log_msg(LOG_WARNING, "get_pwm_duty_cycles(): counter overflow: %f (%llu)",
+				max_count, (t_end - t_start));
+			return;
+		}
+
+		/* Calculate duty cycles based on measurements. */
+		for (i = 0; i < MBFAN_COUNT; i++) {
+			const struct mb_input *mbfan = &config->mbfans[i];
+			uint16_t counter = pwm_get_counter(slices[i]);
+			float duty = counter * 100 / max_count;
+
+			/* Apply filter */
+			if (mbfan->filter != FILTER_NONE) {
+				float duty_f = filter(mbfan->filter, mbfan->filter_ctx, duty);
+				if (duty_f != duty) {
+					log_msg(LOG_DEBUG, "filter mbfan%d: %lf -> %lf\n", i+1, duty, duty_f);
+					duty = duty_f;
+				}
+			}
+
+			mbfan_pwm_duty[i] = duty;
+		}
+
 	}
 }
 

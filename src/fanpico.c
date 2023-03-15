@@ -210,7 +210,7 @@ void core1_main()
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_tacho, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_pwm, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_set_outputs, 0);
-	absolute_time_t t_tick, t_last, t_now, t_config, t_state;
+	absolute_time_t t_last, t_now, t_config, t_state;
 	int64_t max_delta = 0;
 	int64_t delta;
 
@@ -222,7 +222,7 @@ void core1_main()
 
 	setup_tacho_input_interrupts();
 
-	t_state = t_config = t_tick = t_last = get_absolute_time();
+	t_state = t_config = t_last = get_absolute_time();
 
 	while (1) {
 		t_now = get_absolute_time();
@@ -242,10 +242,10 @@ void core1_main()
 			update_tacho_input_freq(state);
 		}
 
-		/* Read PWM input signals (duty cycle) periodically */
-		if (time_passed(&t_poll_pwm, 500)) {
+		/* PWM input signals (duty cycles) from "motherboard". */
+		get_pwm_duty_cycles(config);
+		if (time_passed(&t_poll_pwm, 200)) {
 			log_msg(LOG_DEBUG, "Read PWM inputs");
-			get_pwm_duty_cycles(config);
 			for (int i = 0; i < MBFAN_COUNT; i++) {
 				state->mbfan_duty[i] = roundf(mbfan_pwm_duty[i]);
 				if (check_for_change(state->mbfan_duty_prev[i], state->mbfan_duty[i], 1.0)) {
@@ -259,7 +259,7 @@ void core1_main()
 		}
 
 		/* Read temperature sensors periodically */
-		if (time_passed(&t_temp, 2500)) {
+		if (time_passed(&t_temp, 2000)) {
 			log_msg(LOG_DEBUG, "Read temperature sensors");
 			for (int i = 0; i < SENSOR_COUNT; i++) {
 				state->temp[i] = get_temperature(i, config);
@@ -273,7 +273,7 @@ void core1_main()
 			}
 		}
 
-		if (time_passed(&t_set_outputs, 1000)) {
+		if (time_passed(&t_set_outputs, 500)) {
 			log_msg(LOG_DEBUG, "Updating output signals.");
 			update_outputs(state, config);
 		}
@@ -293,12 +293,8 @@ void core1_main()
 				memcpy(&transfer_state, state, sizeof(transfer_state));
 				mutex_exit(state_mutex);
 			} else {
-				log_msg(LOG_INFO, "failed to get state_mutex"); 
+				log_msg(LOG_INFO, "failed to get state_mutex");
 			}
-		}
-
-		if (time_passed(&t_tick, 60000)) {
-			log_msg(LOG_DEBUG, "core1: tick");
 		}
 
 	}
