@@ -463,8 +463,8 @@ void oled_clear_display()
 void oled_display_status(const struct fanpico_state *state,
 	const struct fanpico_config *conf)
 {
-	char buf[64], l[32], r[32];
-	int i, idx;
+	char buf[64];
+	int i;
 	double rpm, pwm, temp;
 	datetime_t t;
 	static uint32_t counter = 0;
@@ -481,66 +481,54 @@ void oled_display_status(const struct fanpico_state *state,
 			oledWriteString(&oled, 0, 74, 0, "MB Inputs", FONT_6x8, 0, 1);
 			oledWriteString(&oled, 0, 76, 6, "Sensors", FONT_6x8, 0, 1);
 			oledDrawLine(&oled, 72, 44, oled_width - 1, 44, 1);
+			oledDrawLine(&oled, 72, 0, 72, 80, 1);
+		} else {
+			//oledWriteString(&oled, 0, 74, 0, "mb inputs", FONT_6x8, 0, 1);
+			oledDrawLine(&oled, 70, 35, oled_width - 1, 35, 1);
+			oledDrawLine(&oled, 70, 0, 70, 63, 1);
 		}
-		oledDrawLine(&oled, 72, 0, 72, (oled_height <=64 ? 63 : 80), 1);
 		bg_drawn = 1;
 	}
 
 	if (oled_height <= 64) {
-		for (i = 0; i < 8; i++) {
-			if (i < FAN_COUNT) {
-				rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
-				pwm = state->fan_duty[i];
-				snprintf(l,sizeof(l),"%d:%4.0lf %3.0lf%% ", i + 1, rpm, pwm);
-			} else {
-				snprintf(l,sizeof(l),"          ");
+		for (i = 0; i < FAN_COUNT; i++) {
+			rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
+			pwm = state->fan_duty[i];
+			snprintf(buf, sizeof(buf), "%d:%4.0lf %3.0lf%%", i + 0, rpm, pwm);
+			oledWriteString(&oled, 0 , 0, i, buf, FONT_6x8, 0, 1);
+		}
+		for (i = 0; i < MBFAN_COUNT; i++) {
+			pwm = state->mbfan_duty[i];
+			snprintf(buf, sizeof(buf), "%d: %4.0lf%%  ", i + 1, pwm);
+			oledWriteString(&oled, 0 , 74, i + 0, buf, FONT_6x8, 0, 1);
+		}
+		for (i = 0; i < SENSOR_COUNT; i++) {
+			temp = state->temp[i];
+			snprintf(buf, sizeof(buf), "%d:%5.1lfC ", i + 1, temp);
+			if (i == 2) {
+				buf[8] = (counter++ % 2 == 0 ? '*' : ' ');
 			}
-
-			if (i == 0) {
-				snprintf(r, sizeof(r), "mb inputs   ");
-			} else if (i > 0 && i <= 4) {
-				idx = i - 1;
-				pwm = state->mbfan_duty[idx];
-				snprintf(r, sizeof(r), "%d: %4.0lf%%  ", idx + 1, pwm);
-			} else if (i > 4 && i < 8) {
-				idx = i - 5;
-				temp = state->temp[idx];
-				snprintf(r, sizeof(r), "%d:%5.1lfC ", idx + 1, temp);
-			} else {
-				snprintf(r,sizeof(r),"        ");
-			}
-
-			memcpy(&buf[0], l, 12);
-			memcpy(&buf[12], r, 10);
-			buf[22] = 0;
-
-			if (i == 7) {
-				buf[20] = (counter++ % 2 == 0 ? '*' : ' ');
-			}
-
-			oledWriteString(&oled, 0, 0, i, buf, FONT_6x8, 0, 1);
+			oledWriteString(&oled, 0 , 74, i + 5, buf, FONT_6x8, 0, 1);
 		}
 
-		oledDrawLine(&oled, 69, 0, 69, oled_height - 1, 1);
-		oledDrawLine(&oled, 69, 40-1, oled_width - 1, 40-1, 1);
+		//oledDrawLine(&oled, 68, 40-1, oled_width - 1, 40-1, 1);
 	}
 	else {
 		for (i = 0; i < FAN_COUNT; i++) {
 			rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
 			pwm = state->fan_duty[i];
-			snprintf(l,sizeof(l),"%d:%4.0lf %3.0lf%% ", i + 1, rpm, pwm);
-
-			oledWriteString(&oled, 0 , 0, i + 1, l, FONT_6x8, 0, 1);
+			snprintf(buf, sizeof(buf), "%d:%4.0lf %3.0lf%% ", i + 1, rpm, pwm);
+			oledWriteString(&oled, 0 , 0, i + 1, buf, FONT_6x8, 0, 1);
 		}
 		for (i = 0; i < MBFAN_COUNT; i++) {
 			pwm = state->mbfan_duty[i];
-			snprintf(r, sizeof(r), "%d: %4.0lf%%  ", i + 1, pwm);
-			oledWriteString(&oled, 0 , 78, i + 1, r, FONT_6x8, 0, 1);
+			snprintf(buf, sizeof(buf), "%d: %4.0lf%%  ", i + 1, pwm);
+			oledWriteString(&oled, 0 , 78, i + 1, buf, FONT_6x8, 0, 1);
 		}
 		for (i = 0; i < SENSOR_COUNT; i++) {
-				temp = state->temp[i];
-				snprintf(r, sizeof(r), "%d:%5.1lfC ", i + 1, temp);
-				oledWriteString(&oled, 0 , 78, i + 7, r, FONT_6x8, 0, 1);
+			temp = state->temp[i];
+			snprintf(buf, sizeof(buf), "%d:%5.1lfC ", i + 1, temp);
+			oledWriteString(&oled, 0 , 78, i + 7, buf, FONT_6x8, 0, 1);
 		}
 
 		/* IP */
