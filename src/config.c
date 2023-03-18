@@ -325,7 +325,7 @@ void clear_config(struct fanpico_config *cfg)
 
 	cfg->local_echo = false;
 	cfg->spi_active = false;
-	cfg->serial_active = true;
+	cfg->serial_active = false;
 	cfg->led_mode = 0;
 	strncopy(cfg->name, "fanpico1", sizeof(cfg->name));
 	strncopy(cfg->display_type, "default", sizeof(cfg->display_type));

@@ -36,6 +36,7 @@
 #include "hardware/rtc.h"
 #include "hardware/clocks.h"
 #include "hardware/watchdog.h"
+#include "hardware/vreg.h"
 
 #include "fanpico.h"
 
@@ -52,6 +53,12 @@ mutex_t *state_mutex = &state_mutex_inst;
 bool rebooted_by_watchdog = false;
 
 
+void boot_reason()
+{
+	printf("     CHIP_RESET: %08lx\n", vreg_and_chip_reset_hw->chip_reset);
+	printf("WATCHDOG_REASON: %08lx\n", watchdog_hw->reason);
+}
+
 void setup()
 {
 	int i = 0;
@@ -60,11 +67,12 @@ void setup()
 
 	stdio_usb_init();
 	/* Wait a while for USB Serial to connect... */
-	while (i++ < 10) {
+	while (i++ < 40) {
 		if (stdio_usb_connected())
 			break;
-		sleep_ms(250);
+		sleep_ms(50);
 	}
+
 
 	read_config(false);
 
@@ -75,12 +83,15 @@ void setup()
 				TTL_SERIAL_SPEED, TX_PIN, RX_PIN);
 	}
 #endif
-
-	printf("\n\n\n");
+	printf("\n\n");
+#ifndef NDEBUG
+	boot_reason();
+#endif
 	if (watchdog_enable_caused_reboot()) {
-		printf("[Rebooted by watchdog]\n\n");
+		printf("[Rebooted by watchdog]\n");
 		rebooted_by_watchdog = true;
 	}
+	printf("\n");
 
 	/* Run "SYStem:VERsion" command... */
 	cmd_version(NULL, NULL, 0, NULL);

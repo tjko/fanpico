@@ -18,9 +18,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(FANPICO_BOARD 0804 CACHE STRING "Fanpico Board Model")
 #set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0803D)
 
-message("Firmware target (FANPICO_BOARD): ${FANPICO_BOARD}")
 #set(CMAKE_BUILD_TYPE Debug)
-message("Build type: ${CMAKE_BUILD_TYPE}")
+
+message("------------------------------")
+message("   FANPICO_BOARD: ${FANPICO_BOARD}")
+message("      PICO_BOARD: ${PICO_BOARD}")
+message("CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+message("------------------------------")
 
 pico_sdk_init()
 

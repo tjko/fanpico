@@ -44,7 +44,6 @@
 int global_debug_level = 0;
 int global_log_level = LOG_ERR;
 int global_syslog_level = LOG_ERR;
-auto_init_mutex(log_mutex);
 
 struct log_priority {
 	uint8_t  priority;
@@ -206,17 +205,16 @@ void log_msg(int priority, const char *format, ...)
 			buf[len - 1] = 0;
 	}
 
-	mutex_enter_blocking(&log_mutex);
 	if (priority <= global_log_level) {
 		uint64_t t = to_us_since_boot(get_absolute_time());
 		printf("[%6llu.%06llu][%u] %s\n", (t / 1000000), (t % 1000000), core, buf);
 	}
+
 #ifdef WIFI_SUPPORT
 	if (priority <= global_syslog_level) {
 		syslog_msg(priority, "%s", buf);
 	}
 #endif
-	mutex_exit(&log_mutex);
 
 	end = to_us_since_boot(get_absolute_time());
 	if (end - start > 10000) {
