@@ -30,11 +30,11 @@
 
 #include "fanpico.h"
 
-#if LCD_DISPLAY
-#include "bb_spi_lcd.h"
-#endif
 #if OLED_DISPLAY
 #include "ss_oled.h"
+#endif
+#if LCD_DISPLAY
+#include "bb_spi_lcd.h"
 #endif
 
 
@@ -53,11 +53,29 @@ extern uint8_t fanpico_lcd_logo_bmp[]; /* ptr to embedded lcd-logo.bmp */
 /* Generate 16bit color from 8bit RGB components. */
 #define RGB565C(r, g, b) (uint16_t)( ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | ((b & 0xf8) >> 3) )
 
-static uint16_t bg_color = RGB565(0x003531);  // 0x006567
+static uint16_t bg_color = RGB565(0x006163);  // 0x006567
 static uint16_t box_color = RGB565(0x008e4a);
 static uint16_t box2_color = RGB565(0x049467);
 static uint16_t text_color = RGB565(0x07a3aa);
 
+
+struct lcd_type {
+	const char* name;
+	int dtype;
+	int flags;
+	int orientation;
+	int32_t spi_freq;
+};
+
+const struct lcd_type lcd_types[] = {
+	{ "ILI9341", LCD_ILI9341, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
+//	{ "ILI9342", LCD_ILI9342, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
+	{ "ST7789", LCD_ST7789, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
+	{ "ILI9486", LCD_ILI9486, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
+	{ "ILI9486_RPI", LCD_ILI9486, FLAGS_16BIT|FLAGS_SWAP_RB, LCD_ORIENTATION_90, -1 },
+	{ "HX8357", LCD_HX8357, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
+	{ NULL, -1, -1, -1, -1}
+};
 
 void draw_rounded_box(SPILCD *lcd, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t r, uint16_t color)
 {
@@ -77,7 +95,8 @@ void lcd_display_init()
 	int dtype = LCD_INVALID;
 	int flags = FLAGS_NONE;
 	int orientation = LCD_ORIENTATION_90;
-	int32_t spi_freq = (48 * 1024 * 1024);
+	int32_t spi_freq = (48 * 1000 * 1000); // Default to 48MHz
+	const char *lcd_name;
 	int val;
 
 
@@ -93,16 +112,21 @@ void lcd_display_init()
 	while (tok) {
 		if (!strncmp(tok,"lcd=", 4)) {
 			char *t = tok + 4;
-			if (!strncmp(t, "ILI9341", 7))
-				dtype = LCD_ILI9341;
-			else if (!strncmp(t, "ILI9342", 7))
-				dtype = LCD_ILI9342;
-			else if (!strncmp(t, "ILI9486", 7))
-				dtype = LCD_ILI9486;
-			else if (!strncmp(t, "ST7789", 6))
-				dtype = LCD_ST7789;
-			else if (!strncmp(t, "HX8357", 6))
-				dtype = LCD_HX8357;
+			int i = 0;
+			while (lcd_types[i].name) {
+				if (!strcmp(lcd_types[i].name, t)) {
+					lcd_name = lcd_types[i].name;
+					dtype = lcd_types[i].dtype;
+					if (lcd_types[i].flags >= 0)
+						flags = lcd_types[i].flags;
+					if (lcd_types[i].orientation >= 0)
+						orientation = lcd_types[i].orientation;
+					if (lcd_types[i].spi_freq >= 0)
+						spi_freq = lcd_types[i].spi_freq;
+					break;
+				}
+				i++;
+			}
 		}
 		else if (!strncmp(tok, "rotate=", 7)) {
 			if (str_to_int(tok + 7, &val, 10)) {
@@ -121,8 +145,20 @@ void lcd_display_init()
 				}
 			}
 		}
+		else if (!strncmp(tok, "spifreq=", 8)) {
+			if (str_to_int(tok + 8, &val, 10)) {
+				if (val > 0 && val < 1000) {
+					spi_freq = val * 1000 * 1000;
+				}
+				else if (val >= 1000) {
+					spi_freq = val;
+				}
+			}
+		}
 		else if (!strncmp(tok, "invert", 6))
-			flags |= FLAGS_INVERT;
+			flags ^= FLAGS_INVERT;
+		else if (!strncmp(tok, "swapcolors", 10))
+			flags ^= FLAGS_SWAP_RB;
 
 		tok = strtok_r(NULL, ",", &saveptr);
 	}
@@ -135,9 +171,10 @@ void lcd_display_init()
 	lcd_found = 1;
 
 	log_msg(LOG_NOTICE, "Initializing LCD display...");
+	log_msg(LOG_INFO, "SPI Frequency: %ld Hz", spi_freq);
 
 	memset(&lcd, 0, sizeof(lcd));
-	int res = spilcdInit(&lcd, dtype, FLAGS_NONE, spi_freq,
+	int res = spilcdInit(&lcd, dtype, flags, spi_freq,
 		CS_PIN, DC_PIN, LCD_RESET_PIN, LCD_LIGHT_PIN,
 		MISO_PIN, MOSI_PIN, SCK_PIN);
 	log_msg(LOG_DEBUG, "spilcdInit(): %d", res);
@@ -145,9 +182,9 @@ void lcd_display_init()
 	spilcdSetOrientation(&lcd, orientation);
 	spilcdFill(&lcd, 0, DRAW_TO_LCD);
 
-	log_msg(LOG_NOTICE, "LCD display: %dx%d (native: %dx%d)",
-		lcd.iCurrentWidth, lcd.iCurrentHeight,
-		lcd.iWidth, lcd.iHeight);
+	log_msg(LOG_NOTICE, "LCD display: %s %dx%d",
+		lcd_name,
+		lcd.iCurrentWidth, lcd.iCurrentHeight);
 
 	spilcdDrawBMP(&lcd, fanpico_lcd_logo_bmp,
 		(lcd.iCurrentWidth - LCD_LOGO_WIDTH) / 2,
@@ -193,6 +230,8 @@ void lcd_display_status(const struct fanpico_state *state,
 		spilcdFill(&lcd, 0x0000, DRAW_TO_LCD);
 		if (bg_color != 0)
 			draw_rounded_box(&lcd, o_x + 0, o_y + 0, 320, 240, 10, bg_color);
+		//spilcdRectangle(&lcd, 0, 0, lcd.iCurrentWidth -1, lcd.iCurrentHeight - 1, 0xffff, 0xffff, 0, DRAW_TO_LCD);
+
 
 		/* fans */
 		x = fans_x;

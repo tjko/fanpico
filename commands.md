@@ -1162,15 +1162,18 @@ Default: default
 
 Currently supported values:
 
-Value|Description
------|-----------
+Value|Description|Notes
+-----|-----------|-----
 default|Use default settings (auto-detect).
-128x64|OLED 128x64 module installed.
-128x128|OLED 128x128 module installed.
-132x64|OLED 132x64 installed (some 1.3" 128x64 modules need this setting!)
-flip|Flip display (upside down)
-invert|Invert display
-brightness=n|Set display brightness (%) to n (where n=0..100) [default: 50]
+128x64|OLED 128x64 module installed.|OLED
+128x128|OLED 128x128 module installed.|OLED
+132x64|OLED 132x64 installed (some 1.3" 128x64 modules need this setting!)|OLED
+flip|Flip display (upside down)|OLED and LCD
+invert|Invert display|OLED and LCD
+brightness=n|Set display brightness (%) to n (where n=0..100) [default: 50]|OLED
+rotate=n|Rotate display n degrees (where n=0, 90, 180, 270) [default: 90]|LCD only
+swapcolors|Swap Red and Blue colors (use if colors dont show up correctly)|LCD only
+spifreq=n|Set SPI Bus frequency (values < 1000 assumed to be in MHz, values >1000 assumed to be in Hz)  [default: 30 (MHz)]|LCD only
 
 Example: 1.3" (SH1106) module installed that doesn't get detected correctly
 ```
