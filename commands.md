@@ -1173,7 +1173,8 @@ invert|Invert display|OLED and LCD
 brightness=n|Set display brightness (%) to n (where n=0..100) [default: 50]|OLED
 rotate=n|Rotate display n degrees (where n=0, 90, 180, 270) [default: 90]|LCD only
 swapcolors|Swap Red and Blue colors (use if colors dont show up correctly)|LCD only
-spifreq=n|Set SPI Bus frequency (values < 1000 assumed to be in MHz, values >1000 assumed to be in Hz)  [default: 30 (MHz)]|LCD only
+spifreq=n|Set SPI Bus frequency (values < 1000 assumed to be in MHz, values >1000 assumed to be in Hz)  [default: 48 (MHz)]|LCD only
+16bit|Use 16bit SPI bus transfers only (needed often for display modules made for Raspberry Pi)|LCD only
 
 Example: 1.3" (SH1106) module installed that doesn't get detected correctly
 ```
