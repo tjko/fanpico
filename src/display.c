@@ -65,21 +65,103 @@ struct lcd_type {
 	int flags;
 	int orientation;
 	int32_t spi_freq;
+	const uint8_t *custom_init;
+	uint32_t custom_init_len;
+	int invert_offset;
+	int rgb_offset;
+};
+
+
+const uint8_t waveshare35a[] = {
+	1, 0x01,
+	LCD_DELAY, 50,
+	1, 0x28,
+	2, 0xb0, 0x00,
+	1, 0x11,
+	1, 0x20,   // no-invert [12]
+	2, 0x3a, 0x55,
+	2, 0x36, 0x28, // RGB mode [18]
+
+	2, 0xc2, 0x44,
+	5, 0xc5, 0x00, 0x00, 0x00, 0x00,
+	16, 0xe0, 0x0f, 0x1f, 0x1c, 0x0c, 0x0f, 0x08, 0x48, 0x98, 0x37, 0x0a, 0x13, 0x04, 0x11, 0x0d, 0x00,
+	16, 0xe1, 0x0f, 0x32, 0x2e, 0x0b, 0x0d, 0x05, 0x47, 0x75, 0x37, 0x06, 0x10, 0x03, 0x24, 0x20, 0x00,
+	16, 0xe2, 0x0f, 0x32, 0x2e, 0x0b, 0x0d, 0x05, 0x47, 0x75, 0x37, 0x06, 0x10, 0x03, 0x24, 0x20, 0x00,
+
+	1, 0x11,
+	LCD_DELAY, 150,
+	1, 0x29,
+	LCD_DELAY, 25,
+	0
+};
+
+const uint8_t waveshare35b[] = {
+	1, 0x01,
+	LCD_DELAY, 50,
+	1, 0x28,
+	2, 0xb0, 0x00,
+	1, 0x11,
+	1, 0x21,   // invert [12]
+	2, 0x3a, 0x55,
+	2, 0x36, 0x28, // RGB mode [18]
+
+	3, 0xc0, 0x09, 0x09,
+	3, 0xc1, 0x41, 0x00,
+	3, 0xc5, 0x00, 0x36,
+	16, 0xe0, 0x00, 0x2c, 0x2c, 0x0b, 0x0c, 0x04, 0x4c, 0x64, 0x36, 0x03, 0x0e, 0x01, 0x10, 0x01, 0x00,
+	16, 0xe1, 0x0f, 0x37, 0x37, 0x0c, 0x0f, 0x05, 0x50, 0x32, 0x36, 0x04, 0x0b, 0x00, 0x19, 0x14, 0x0f,
+
+	1, 0x11,
+	LCD_DELAY, 150,
+	1, 0x29,
+	LCD_DELAY, 25,
+	0
+};
+
+const uint8_t waveshare35bv2[] = {
+	1, 0x01,
+	LCD_DELAY, 50,
+	1, 0x28,
+	2, 0xb0, 0x00,
+	1, 0x11,
+	1, 0x21,   // invert [12]
+	2, 0x3a, 0x55,
+	2, 0x36, 0x28, // RGB mode [18]
+
+	2, 0xc2, 0x33,
+	4, 0xc5, 0x00, 0x1e, 0x80,
+	2, 0xb1, 0xb0,
+	16, 0xe0, 0x00, 0x13, 0x18, 0x04, 0x0f, 0x06, 0x3a, 0x56, 0x4d, 0x03, 0x0a, 0x06, 0x30, 0x3e, 0x0f,
+	16, 0xe1, 0x00, 0x13, 0x18, 0x01, 0x11, 0x06, 0x38, 0x34, 0x4d, 0x06, 0x0d, 0x0b, 0x31, 0x37, 0x0f,
+
+	1, 0x11,
+	LCD_DELAY, 150,
+	1, 0x29,
+	LCD_DELAY, 25,
+	0
 };
 
 const struct lcd_type lcd_types[] = {
-	{ "ILI9341", LCD_ILI9341, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
-//	{ "ILI9342", LCD_ILI9342, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
-	{ "ST7789", LCD_ST7789, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
-	{ "ILI9486", LCD_ILI9486, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
-	{ "ILI9486_RPI", LCD_ILI9486, FLAGS_16BIT|FLAGS_SWAP_RB, LCD_ORIENTATION_90, -1 },
-	{ "HX8357", LCD_HX8357, FLAGS_NONE, LCD_ORIENTATION_90, -1 },
-	{ NULL, -1, -1, -1, -1}
+	/* Generic controllers/panels */
+	{"ILI9341", LCD_ILI9341, FLAGS_NONE, LCD_ORIENTATION_90, -1, NULL, 0, -1, -1},
+//	{"ILI9342", LCD_ILI9342, FLAGS_NONE, LCD_ORIENTATION_90, -1, NULL, 0, -1, -1},
+	{"ST7789", LCD_ST7789, FLAGS_NONE, LCD_ORIENTATION_90, -1, NULL, 0, -1, -1},
+	{"ILI9486", LCD_ILI9486, FLAGS_NONE, LCD_ORIENTATION_90, -1, NULL, 0, -1, -1},
+	{"HX8357", LCD_HX8357, FLAGS_NONE, LCD_ORIENTATION_90, -1, NULL, 0, -1, -1},
+
+	/* Panel/module specific support */
+	{"waveshare35a", LCD_ILI9486, FLAGS_16BIT|FLAGS_SWAP_RB|FLAGS_SWAP_X, LCD_ORIENTATION_90, -1,
+	 waveshare35a, sizeof(waveshare35a), 12, 18},
+	{"waveshare35b", LCD_ILI9486, FLAGS_16BIT|FLAGS_SWAP_RB|FLAGS_SWAP_X, LCD_ORIENTATION_90, -1,
+	 waveshare35b, sizeof(waveshare35b), 12, 18},
+	{"waveshare35bv2", LCD_ILI9486, FLAGS_16BIT|FLAGS_SWAP_RB|FLAGS_SWAP_X, LCD_ORIENTATION_90, -1,
+	 waveshare35bv2, sizeof(waveshare35bv2), 12, 18},
+
+	{NULL, -1, -1, -1, -1, NULL, 0, -1, -1}
 };
 
 void draw_rounded_box(SPILCD *lcd, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t r, uint16_t color)
 {
-
 	spilcdRectangle(lcd, x + r, y, width - (2 * r), r, color, color, 1, DRAW_TO_LCD);
 	spilcdRectangle(lcd, x, y + r, width, height - (2 * r), color, color, 1, DRAW_TO_LCD);
 	spilcdRectangle(lcd, x + r, y + height - r, width - (2 * r), r, color, color, 1, DRAW_TO_LCD);
@@ -98,12 +180,12 @@ void lcd_display_init()
 	int32_t spi_freq = (48 * 1000 * 1000); // Default to 48MHz
 	const char *lcd_name;
 	int val;
-
-
 	char *args, *tok, *saveptr;
+
 
 	if (!cfg)
 		return;
+	memset(&lcd, 0, sizeof(lcd));
 
 	args = strdup(cfg->display_type);
 	if (!args)
@@ -114,15 +196,19 @@ void lcd_display_init()
 			char *t = tok + 4;
 			int i = 0;
 			while (lcd_types[i].name) {
-				if (!strcmp(lcd_types[i].name, t)) {
-					lcd_name = lcd_types[i].name;
-					dtype = lcd_types[i].dtype;
-					if (lcd_types[i].flags >= 0)
-						flags = lcd_types[i].flags;
-					if (lcd_types[i].orientation >= 0)
-						orientation = lcd_types[i].orientation;
-					if (lcd_types[i].spi_freq >= 0)
-						spi_freq = lcd_types[i].spi_freq;
+				const struct lcd_type *l = &lcd_types[i];
+				if (!strcmp(l->name, t)) {
+					lcd_name = l->name;
+					dtype = l->dtype;
+					if (l->flags >= 0)
+						flags = l->flags;
+					if (l->orientation >= 0)
+						orientation = l->orientation;
+					if (l->spi_freq >= 0)
+						spi_freq = l->spi_freq;
+					if (l->custom_init)
+						spilcdCustomInit(&lcd, l->custom_init, l->custom_init_len,
+								l->invert_offset, l->rgb_offset);
 					break;
 				}
 				i++;
@@ -159,6 +245,8 @@ void lcd_display_init()
 			flags ^= FLAGS_INVERT;
 		else if (!strncmp(tok, "swapcolors", 10))
 			flags ^= FLAGS_SWAP_RB;
+		else if (!strncmp(tok, "16bit", 5))
+			flags |= FLAGS_16BIT;
 
 		tok = strtok_r(NULL, ",", &saveptr);
 	}
@@ -173,7 +261,6 @@ void lcd_display_init()
 	log_msg(LOG_NOTICE, "Initializing LCD display...");
 	log_msg(LOG_INFO, "SPI Frequency: %ld Hz", spi_freq);
 
-	memset(&lcd, 0, sizeof(lcd));
 	int res = spilcdInit(&lcd, dtype, flags, spi_freq,
 		CS_PIN, DC_PIN, LCD_RESET_PIN, LCD_LIGHT_PIN,
 		MISO_PIN, MOSI_PIN, SCK_PIN);
@@ -190,9 +277,10 @@ void lcd_display_init()
 		(lcd.iCurrentWidth - LCD_LOGO_WIDTH) / 2,
 		10,
 		0, -1, DRAW_TO_LCD);
-	spilcdWriteString(&lcd, 60, 165, "FanPico-" FANPICO_MODEL, text_color, 0, FONT_16x16, DRAW_TO_LCD);
-	spilcdWriteString(&lcd, 120, 190, "v" FANPICO_VERSION, text_color, 0, FONT_16x16, DRAW_TO_LCD);
-	spilcdWriteString(&lcd, 110, 220, "Initializing...", text_color, 0, FONT_8x8, DRAW_TO_LCD);
+	int w_c = lcd.iCurrentWidth / 2;
+	spilcdWriteString(&lcd, w_c - 100, 165, "FanPico-" FANPICO_MODEL, text_color, 0, FONT_16x16, DRAW_TO_LCD);
+	spilcdWriteString(&lcd, w_c - 40, 190, "v" FANPICO_VERSION, text_color, 0, FONT_16x16, DRAW_TO_LCD);
+	spilcdWriteString(&lcd, w_c - 50, 220, "Initializing...", text_color, 0, FONT_8x8, DRAW_TO_LCD);
 }
 
 void lcd_clear_display()
