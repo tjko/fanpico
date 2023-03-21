@@ -65,6 +65,8 @@ add_executable(fanpico
   src/command.c
   src/config.c
   src/display.c
+  src/display_lcd.c
+  src/display_oled.c
   src/network.c
   src/pwm.c
   src/tacho.c
@@ -80,6 +82,7 @@ add_executable(fanpico
   src/default_config.s
   src/credits.s
   src/lcd-logo.s
+  src/lcd-background.s
   )
 
 

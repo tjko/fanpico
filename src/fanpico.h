@@ -220,6 +220,18 @@ void clear_display();
 void display_message(int rows, const char **text_lines);
 void display_status(const struct fanpico_state *state, const struct fanpico_config *config);
 
+/* display_lcd.c */
+void lcd_display_init();
+void lcd_clear_display();
+void lcd_display_status(const struct fanpico_state *state,const struct fanpico_config *conf);
+void lcd_display_message(int rows, const char **text_lines);
+
+/* display_oled.c */
+void oled_display_init();
+void oled_clear_display();
+void oled_display_status(const struct fanpico_state *state, const struct fanpico_config *conf);
+void oled_display_message(int rows, const char **text_lines);
+
 /* network.c */
 void network_init();
 void network_mac();
