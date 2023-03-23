@@ -286,6 +286,16 @@ int cmd_display_type(const char *cmd, const char *args, int query, char *prev_cm
 	return 0;
 }
 
+int cmd_display_theme(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", conf->display_theme);
+	} else {
+		strncopy(conf->display_theme, args, sizeof(conf->display_theme));
+	}
+	return 0;
+}
+
 int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	const char *msg[] = {
@@ -1572,6 +1582,10 @@ int cmd_spi(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 
 
+struct cmd_t display_commands[] = {
+	{ "THEMe",     4, NULL,              cmd_display_theme },
+	{ 0, 0, 0, 0 }
+};
 struct cmd_t wifi_commands[] = {
 #ifdef WIFI_SUPPORT
 	{ "COUntry",   3, NULL,              cmd_wifi_country },
@@ -1592,7 +1606,7 @@ struct cmd_t wifi_commands[] = {
 
 struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
-	{ "DISPlay",   4, NULL,              cmd_display_type },
+	{ "DISPlay",   4, display_commands,  cmd_display_type },
 	{ "ECHO",      4, NULL,              cmd_echo },
 	{ "ERRor",     3, NULL,              cmd_err },
 	{ "FANS",      4, NULL,              cmd_fans },

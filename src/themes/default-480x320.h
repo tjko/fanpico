@@ -81,6 +81,8 @@ display_field_t theme_default_480x320_fg[] = {
 	{ 0, 0, -1, -1, -1, 0, 0, -1 }
 };
 
+extern uint8_t fanpico_theme_default_480x320_bmp[]; /* ptr to embedded background image */
+
 struct display_theme theme_default_480x320 = {
 	theme_default_480x320_bg,
 	theme_default_480x320_fg,

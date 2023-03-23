@@ -329,6 +329,7 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->led_mode = 0;
 	strncopy(cfg->name, "fanpico1", sizeof(cfg->name));
 	strncopy(cfg->display_type, "default", sizeof(cfg->display_type));
+	strncopy(cfg->display_theme, "default", sizeof(cfg->display_theme));
 #ifdef WIFI_SUPPORT
 	cfg->wifi_ssid[0] = 0;
 	cfg->wifi_passwd[0] = 0;
@@ -364,6 +365,8 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	cJSON_AddItemToObject(config, "serial_active", cJSON_CreateNumber(cfg->serial_active));
 	if (strlen(cfg->display_type) > 0)
 		cJSON_AddItemToObject(config, "display_type", cJSON_CreateString(cfg->display_type));
+	if (strlen(cfg->display_theme) > 0)
+		cJSON_AddItemToObject(config, "display_theme", cJSON_CreateString(cfg->display_theme));
 	if (strlen(cfg->name) > 0)
 		cJSON_AddItemToObject(config, "name", cJSON_CreateString(cfg->name));
 
@@ -510,6 +513,10 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "display_type"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->display_type, val, sizeof(cfg->display_type));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "display_theme"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->display_theme, val, sizeof(cfg->display_theme));
 	}
 	if ((ref = cJSON_GetObjectItem(config, "name"))) {
 		if ((val = cJSON_GetStringValue(ref)))

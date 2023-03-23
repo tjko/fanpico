@@ -84,6 +84,8 @@ Fanpico supports following commands:
 * [SYStem:SYSLOG?](#systemsyslog-1)
 * [SYStem:DISPlay](#systemdisplay)
 * [SYStem:DISPlay?](#systemdisplay)
+* [SYStem:DISPlay:THEMe](#systemdisplaytheme)
+* [SYStem:DISPlay:THEME?](#systemdisplaytheme-1)
 * [SYStem:ECHO](#systemecho)
 * [SYStem:ECHO?](#systemecho)
 * [SYStem:FANS?](#systemfans)
@@ -1194,6 +1196,26 @@ Example:
 SYS:DISP?
 132x64,flip,invert,brightness=75
 ```
+
+#### SYStem:DISPlay:THEMe
+Configure (LCD) Display theme to use.
+
+Default: default
+
+Example: configure custom theme
+```
+SYS:DISP:THEME custom
+```
+
+#### SYStem:DISPlay:THEMe?
+Display currently configured (LCD) display theme name.
+
+Example:
+```
+SYS:DISP:THEME?
+default
+```
+
 
 #### SYStem:ECHO
 Enable or disaple local echo on the console.

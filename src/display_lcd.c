@@ -35,11 +35,11 @@
 static SPILCD lcd;
 static uint8_t lcd_found = 0;
 
+/* Embedded FanPico Logo graphics */
 #define LCD_LOGO_WIDTH 160
 #define LCD_LOGO_HEIGHT 140
-extern uint8_t fanpico_lcd_logo_bmp[]; /* ptr to embedded lcd-logo.bmp */
-extern uint8_t fanpico_theme_default_320x240_bmp[]; /* ptr to embedded background image */
-extern uint8_t fanpico_theme_default_480x320_bmp[]; /* ptr to embedded background image */
+extern uint8_t fanpico_lcd_logo_bmp[];
+
 
 /* Macros for converting RGB888 colorspace to RGB565 */
 
@@ -47,9 +47,6 @@ extern uint8_t fanpico_theme_default_480x320_bmp[]; /* ptr to embedded backgroun
 #define RGB565(rgb) (uint16_t)( ((rgb & 0xf80000) >> 8) | ((rgb & 0xfc00) >> 5) | ((rgb & 0xf8) >> 3) )
 /* Generate 16bit color from 8bit RGB components. */
 #define RGB565C(r, g, b) (uint16_t)( ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | ((b & 0xf8) >> 3) )
-
-static uint16_t bg_color = RGB565(0x006163);
-static uint16_t text_color = RGB565(0x07a3aa);
 
 
 struct lcd_type {
@@ -113,11 +110,32 @@ struct display_theme {
 	uint8_t sensor_name_len;
 };
 
+struct display_theme_entry {
+	const char *name;
+	const struct display_theme *theme_small;  /* 320x240 */
+	const struct display_theme *theme_normal; /* 480x320 */
+};
+
+static uint16_t bg_color = RGB565(0x006163);
+static uint16_t text_color = RGB565(0x07a3aa);
+
 
 #include "themes/default-320x240.h"
 #include "themes/default-480x320.h"
+#if FANPICO_CUSTOM_THEME > 0
+#include "themes/custom-320x240.h"
+#include "themes/custom-480x320.h"
+#endif
 
-struct display_theme *theme = NULL;
+const struct display_theme_entry themes[] = {
+	{"default", &theme_default_320x240, &theme_default_480x320},
+#if FANPICO_CUSTOM_THEME > 0
+	{"custom", &theme_custom_320x240, &theme_custom_480x320},
+#endif
+	{NULL, NULL, NULL}
+};
+
+const struct display_theme *theme = NULL;
 
 
 const uint8_t waveshare35a[] = {
@@ -229,6 +247,7 @@ void lcd_display_init()
 	const char *lcd_name;
 	int val;
 	char *args, *tok, *saveptr;
+	int theme_idx;
 
 
 	if (!cfg)
@@ -304,6 +323,7 @@ void lcd_display_init()
 		log_msg(LOG_NOTICE, "No LCD type configured!");
 		return;
 	}
+
 	lcd_found = 1;
 
 	log_msg(LOG_NOTICE, "Initializing LCD display...");
@@ -321,16 +341,31 @@ void lcd_display_init()
 		lcd_name,
 		lcd.iCurrentWidth, lcd.iCurrentHeight);
 
-	spilcdDrawBMP(&lcd, fanpico_lcd_logo_bmp,
-		(lcd.iCurrentWidth - LCD_LOGO_WIDTH) / 2,
-		10,
-		0, -1, DRAW_TO_LCD);
+	/* Draw logo screen */
 	int w_c = lcd.iCurrentWidth / 2;
-	spilcdWriteString(&lcd, w_c - 100, 165, "FanPico-" FANPICO_MODEL, text_color, 0, FONT_16x16, DRAW_TO_LCD);
-	spilcdWriteString(&lcd, w_c - 40, 190, "v" FANPICO_VERSION, text_color, 0, FONT_16x16, DRAW_TO_LCD);
-	spilcdWriteString(&lcd, w_c - 50, 220, "Initializing...", text_color, 0, FONT_8x8, DRAW_TO_LCD);
+	int h_c = lcd.iCurrentHeight / 2;
+	spilcdDrawBMP(&lcd, fanpico_lcd_logo_bmp,
+		w_c - (LCD_LOGO_WIDTH / 2),
+		h_c - ((LCD_LOGO_HEIGHT + 80) / 2),
+		0, -1, DRAW_TO_LCD);
+	h_c += LCD_LOGO_HEIGHT / 2;
+	spilcdWriteString(&lcd, w_c - 100, h_c, "FanPico-" FANPICO_MODEL, text_color, 0, FONT_16x16, DRAW_TO_LCD);
+	spilcdWriteString(&lcd, w_c - 40, h_c + 25, "v" FANPICO_VERSION, text_color, 0, FONT_16x16, DRAW_TO_LCD);
+	spilcdWriteString(&lcd, w_c - 50, h_c + 55, "Initializing...", text_color, 0, FONT_8x8, DRAW_TO_LCD);
 
-	theme = (lcd.iCurrentWidth >= 480 ? &theme_default_480x320 : &theme_default_320x240);
+	/* Select theme to use... */
+	theme_idx = 0; /* use first theme by default... */
+	if (strlen(cfg->display_theme) > 0) {
+		int i = 0;
+		while (themes[i].name) {
+			if (!strcmp(themes[i].name, cfg->display_theme)) {
+				theme_idx = i;
+				break;
+			}
+		}
+	}
+	theme = (lcd.iCurrentWidth >= 480 ? themes[theme_idx].theme_normal : themes[theme_idx].theme_small);
+	log_msg(LOG_INFO, "LCD theme: %s", themes[theme_idx].name);
 }
 
 void lcd_clear_display()

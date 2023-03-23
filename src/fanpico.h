@@ -155,6 +155,7 @@ struct fanpico_config {
 	bool local_echo;
 	uint8_t led_mode;
 	char display_type[64];
+	char display_theme[16];
 	char name[32];
 	bool spi_active;
 	bool serial_active;
