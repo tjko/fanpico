@@ -38,7 +38,8 @@ static uint8_t lcd_found = 0;
 #define LCD_LOGO_WIDTH 160
 #define LCD_LOGO_HEIGHT 140
 extern uint8_t fanpico_lcd_logo_bmp[]; /* ptr to embedded lcd-logo.bmp */
-extern uint8_t fanpico_lcd_bg_1_bmp[]; /* ptr to embedded lcd-background-1.bmp */
+extern uint8_t fanpico_theme_default_320x240_bmp[]; /* ptr to embedded background image */
+extern uint8_t fanpico_theme_default_480x320_bmp[]; /* ptr to embedded background image */
 
 /* Macros for converting RGB888 colorspace to RGB565 */
 
@@ -47,9 +48,7 @@ extern uint8_t fanpico_lcd_bg_1_bmp[]; /* ptr to embedded lcd-background-1.bmp *
 /* Generate 16bit color from 8bit RGB components. */
 #define RGB565C(r, g, b) (uint16_t)( ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | ((b & 0xf8) >> 3) )
 
-static uint16_t bg_color = RGB565(0x006163);  // 0x006567
-static uint16_t box_color = RGB565(0x008e4a);
-static uint16_t box2_color = RGB565(0x049467);
+static uint16_t bg_color = RGB565(0x006163);
 static uint16_t text_color = RGB565(0x07a3aa);
 
 
@@ -73,7 +72,11 @@ enum display_field_types {
 	UPTIME,
 	TIME,
 	DATE,
+	DATE_TIME,
 	IP,
+	MODEL,
+	VERSION,
+	MODEL_VERSION,
 	DISPLAY_FIELD_TYPE_COUNT
 };
 
@@ -98,74 +101,24 @@ typedef struct display_field {
 	int font;
 } display_field_t;
 
-struct display_fields {
+struct display_theme {
 	display_field_t *bg; /* background items, draw only once */
 	display_field_t *fg; /* foreground items */
+	uint8_t *bmp;
+	const char* fan_name_fmt;
+	uint8_t fan_name_len;
+	const char* mbfan_name_fmt;
+	uint8_t mbfan_name_len;
+	const char* sensor_name_fmt;
+	uint8_t sensor_name_len;
 };
 
 
-display_field_t theme_1_bg[] = {
-	{ FAN, LABEL, 0, 3,  34, RGB565(0x000000), RGB565(0xffcc66), FONT_8x8 },
-	{ FAN, LABEL, 1, 3,  54, RGB565(0x000000), RGB565(0xffff99), FONT_8x8 },
-	{ FAN, LABEL, 2, 3,  74, RGB565(0x000000), RGB565(0xcc99cc), FONT_8x8 },
-	{ FAN, LABEL, 3, 3,  94, RGB565(0x000000), RGB565(0xcc6699), FONT_8x8 },
-	{ FAN, LABEL, 4, 3, 114, RGB565(0x000000), RGB565(0x99ccff), FONT_8x8 },
-	{ FAN, LABEL, 5, 3, 134, RGB565(0x000000), RGB565(0xff9966), FONT_8x8 },
-	{ FAN, LABEL, 6, 3, 154, RGB565(0x000000), RGB565(0xffcc66), FONT_8x8 },
-	{ FAN, LABEL, 7, 3, 174, RGB565(0x000000), RGB565(0xffff99), FONT_8x8 },
+#include "themes/default-320x240.h"
+#include "themes/default-480x320.h"
 
-	{ MBFAN, LABEL, 0, 3, 212, RGB565(0x000000), RGB565(0xcc6699), FONT_8x8 },
-	{ MBFAN, LABEL, 1, 3, 232, RGB565(0x000000), RGB565(0xffcc66), FONT_8x8 },
-	{ MBFAN, LABEL, 2, 3, 252, RGB565(0x000000), RGB565(0xcc99cc), FONT_8x8 },
-	{ MBFAN, LABEL, 3, 3, 272, RGB565(0x000000), RGB565(0xcc6666), FONT_8x8 },
+struct display_theme *theme = NULL;
 
-	{ SENSOR, LABEL, 0, 276, 212, RGB565(0x000000), RGB565(0x6688cc), FONT_8x8 },
-	{ SENSOR, LABEL, 1, 276, 232, RGB565(0x000000), RGB565(0x9977aa), FONT_8x8 },
-	{ SENSOR, LABEL, 2, 276, 252, RGB565(0x000000), RGB565(0x774466), FONT_8x8 },
-
-	{ 0, 0, -1, -1, -1, 0, 0, -1 }
-};
-
-display_field_t theme_1_fg[] = {
-	{ FAN, RPM, 0, 128,  32, RGB565(0xffcc66), RGB565(0x000000), FONT_12x16 },
-	{ FAN, RPM, 1, 128,  52, RGB565(0xffff99), RGB565(0x000000), FONT_12x16 },
-	{ FAN, RPM, 2, 128,  72, RGB565(0xcc99cc), RGB565(0x000000), FONT_12x16 },
-	{ FAN, RPM, 3, 128,  92, RGB565(0xcc6699), RGB565(0x000000), FONT_12x16 },
-	{ FAN, RPM, 4, 128, 112, RGB565(0x99ccff), RGB565(0x000000), FONT_12x16 },
-	{ FAN, RPM, 5, 128, 132, RGB565(0xff9966), RGB565(0x000000), FONT_12x16 },
-	{ FAN, RPM, 6, 128, 152, RGB565(0xffcc66), RGB565(0x000000), FONT_12x16 },
-	{ FAN, RPM, 7, 128, 172, RGB565(0xffff99), RGB565(0x000000), FONT_12x16 },
-	{ FAN, PWM, 0, 200,  32, RGB565(0xffcc66), RGB565(0x000000), FONT_12x16 },
-	{ FAN, PWM, 1, 200,  52, RGB565(0xffff99), RGB565(0x000000), FONT_12x16 },
-	{ FAN, PWM, 2, 200,  72, RGB565(0xcc99cc), RGB565(0x000000), FONT_12x16 },
-	{ FAN, PWM, 3, 200,  92, RGB565(0xcc6699), RGB565(0x000000), FONT_12x16 },
-	{ FAN, PWM, 4, 200, 112, RGB565(0x99ccff), RGB565(0x000000), FONT_12x16 },
-	{ FAN, PWM, 5, 200, 132, RGB565(0xff9966), RGB565(0x000000), FONT_12x16 },
-	{ FAN, PWM, 6, 200, 152, RGB565(0xffcc66), RGB565(0x000000), FONT_12x16 },
-	{ FAN, PWM, 7, 200, 172, RGB565(0xffff99), RGB565(0x000000), FONT_12x16 },
-
-	{ MBFAN, RPM, 0, 128, 210, RGB565(0xcc6699), RGB565(0x000000), FONT_12x16 },
-	{ MBFAN, RPM, 1, 128, 230, RGB565(0xffcc66), RGB565(0x000000), FONT_12x16 },
-	{ MBFAN, RPM, 2, 128, 250, RGB565(0xcc99cc), RGB565(0x000000), FONT_12x16 },
-	{ MBFAN, RPM, 3, 128, 270, RGB565(0xcc6666), RGB565(0x000000), FONT_12x16 },
-	{ MBFAN, PWM, 0, 200, 210, RGB565(0xcc6699), RGB565(0x000000), FONT_12x16 },
-	{ MBFAN, PWM, 1, 200, 230, RGB565(0xffcc66), RGB565(0x000000), FONT_12x16 },
-	{ MBFAN, PWM, 2, 200, 250, RGB565(0xcc99cc), RGB565(0x000000), FONT_12x16 },
-	{ MBFAN, PWM, 3, 200, 270, RGB565(0xcc6666), RGB565(0x000000), FONT_12x16 },
-
-	{ SENSOR, TEMP, 0, 401, 210, RGB565(0x6688cc), RGB565(0x000000), FONT_12x16 },
-	{ SENSOR, TEMP, 1, 401, 230, RGB565(0x9977aa), RGB565(0x000000), FONT_12x16 },
-	{ SENSOR, TEMP, 2, 401, 250, RGB565(0x774466), RGB565(0x000000), FONT_12x16 },
-
-	{ IP, OTHER, 0, 344, 308, RGB565(0x000000), RGB565(0xff9900), FONT_8x8 },
-	{ UPTIME, OTHER, 0, 292, 48, RGB565(0x000000), RGB565(0xcc99cc), FONT_12x16 },
-	{ DATE, OTHER, 0, 300, 90, RGB565(0xff9900), RGB565(0x000000), FONT_12x16 },
-	{ TIME, OTHER, 0, 300, 118, RGB565(0xffcc66), RGB565(0x000000), FONT_16x32 },
-
-	{ 0, 0, -1, -1, -1, 0, 0, -1 }
-};
-
-struct display_fields theme_1 = {theme_1_bg, theme_1_fg};
 
 const uint8_t waveshare35a[] = {
 	1, 0x01,
@@ -376,6 +329,8 @@ void lcd_display_init()
 	spilcdWriteString(&lcd, w_c - 100, 165, "FanPico-" FANPICO_MODEL, text_color, 0, FONT_16x16, DRAW_TO_LCD);
 	spilcdWriteString(&lcd, w_c - 40, 190, "v" FANPICO_VERSION, text_color, 0, FONT_16x16, DRAW_TO_LCD);
 	spilcdWriteString(&lcd, w_c - 50, 220, "Initializing...", text_color, 0, FONT_8x8, DRAW_TO_LCD);
+
+	theme = (lcd.iCurrentWidth >= 480 ? &theme_default_480x320 : &theme_default_320x240);
 }
 
 void lcd_clear_display()
@@ -386,13 +341,15 @@ void lcd_clear_display()
 	spilcdFill(&lcd, 0, DRAW_TO_LCD);
 }
 
-void draw_fields(const struct fanpico_state *state, const struct fanpico_config *conf, display_field_t *list)
+void draw_fields(const struct fanpico_state *state, const struct fanpico_config *conf, const struct display_theme *theme, int mode)
 {
 	int i = 0;
 	char buf[64];
-	const char *s;
 	double val;
 	datetime_t t;
+	display_field_t *list;
+
+	list = (mode ? theme->fg : theme->bg);
 
 
 	while (list[i].type > INVALID_FIELDTYPE && list[i].type < DISPLAY_FIELD_TYPE_COUNT) {
@@ -405,21 +362,28 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 			switch (f->type) {
 
 			case FAN:
-				s = conf->fans[f->id].name;
+				snprintf(buf, theme->fan_name_len + 1, theme->fan_name_fmt,
+					conf->fans[f->id].name);
 				break;
 
 			case MBFAN:
-				s = conf->mbfans[f->id].name;
+				snprintf(buf, theme->mbfan_name_len + 1, theme->mbfan_name_fmt,
+					conf->mbfans[f->id].name);
 				break;
 
 			case SENSOR:
-				s = conf->sensors[f->id].name;
+				snprintf(buf, theme->sensor_name_len + 1, theme->sensor_name_fmt,
+					conf->sensors[f->id].name);
+				break;
+
+			case MODEL_VERSION:
+				snprintf(buf, sizeof(buf), "%s",
+					"FanPico-" FANPICO_MODEL " v" FANPICO_VERSION);
 				break;
 
 			default:
-				s = "";
+				break;
 			}
-			snprintf(buf, 15, "%14s", s);
 			break;
 
 		case RPM:
@@ -462,7 +426,13 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 		case OTHER:
 			switch (f->type) {
 			case IP:
-				snprintf(buf, 16, "%15s", network_ip());
+				snprintf(buf, 16, "%-15s", network_ip());
+				break;
+			case DATE_TIME:
+				if (rtc_get_datetime(&t)) {
+					snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
+						t.year, t.month, t.day, t.hour, t.min, t.sec);
+				}
 				break;
 			case DATE:
 				if (rtc_get_datetime(&t)) {
@@ -484,7 +454,7 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 					uint32_t days = hours / 24;
 
 					snprintf(buf, 13, "%03lu+%02lu:%02lu:%02lu",
-						days,
+						days % 1000,
 						hours % 24,
 						mins % 60,
 						secs % 60);
@@ -510,20 +480,7 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 void lcd_display_status(const struct fanpico_state *state,
 	const struct fanpico_config *conf)
 {
-	char buf[96];
-	int i;
-	double rpm, pwm, temp;
-	datetime_t t;
 	static uint8_t bg_drawn = 0;
-	uint16_t o_x = 0;
-	uint16_t o_y = 0;
-	uint16_t fans_x = 4 + o_y;
-	uint16_t fans_y = 20 + o_y;
-	uint16_t mbfans_x = 189 + o_y;
-	uint16_t mbfans_y = 20 + o_y;
-	uint16_t sensors_x = 189 + o_y;
-	uint16_t sensors_y = 130 + o_y;
-	uint16_t x, y, b;
 
 
 	if (!lcd_found || !state)
@@ -532,157 +489,24 @@ void lcd_display_status(const struct fanpico_state *state,
 	if (!bg_drawn) {
 		/* draw background graphics only once... */
 		bg_drawn = 1;
+		//spilcdRectangle(&lcd, 0, 0, lcd.iCurrentWidth -1, lcd.iCurrentHeight - 1, 0xffff, 0xffff, 0, DRAW_TO_LCD);
 
-		if (lcd.iCurrentWidth >= 480) {
-			spilcdDrawBMP(&lcd, fanpico_lcd_bg_1_bmp, 0, 0,	0, -1, DRAW_TO_LCD);
-			draw_fields(state, conf, theme_1.bg);
+		if (theme->bmp) {
+			spilcdDrawBMP(&lcd, theme->bmp, 0, 0,	0, -1, DRAW_TO_LCD);
+			draw_fields(state, conf, theme, 0);
 			return;
 		} else {
 			spilcdFill(&lcd, 0x0000, DRAW_TO_LCD);
-
 			if (bg_color != 0)
-				draw_rounded_box(&lcd, o_x + 0, o_y + 0, 320, 240, 10, bg_color);
-			//spilcdRectangle(&lcd, 0, 0, lcd.iCurrentWidth -1, lcd.iCurrentHeight - 1, 0xffff, 0xffff, 0, DRAW_TO_LCD);
-
-
-			/* fans */
-			x = fans_x;
-			y = fans_y;
-			draw_rounded_box(&lcd, x, y, 181, 154, 8, box_color);
-			spilcdWriteString(&lcd, 4+x, y - 10, "FANS", 0, bg_color, FONT_8x8, DRAW_TO_LCD);
-			spilcdWriteString(&lcd, x+4, y + 4, "#", 0, box_color, FONT_8x8, DRAW_TO_LCD);
-			spilcdWriteString(&lcd, x+4+90, y + 4, "RPM", 0, box_color, FONT_8x8, DRAW_TO_LCD);
-			spilcdWriteString(&lcd, x+4+140, y + 4, "PWM%", 0, box_color, FONT_8x8, DRAW_TO_LCD);
-			for(i = 0; i < FAN_COUNT; i++) {
-				b = (i % 2 ? box_color : box2_color);
-
-				spilcdRectangle(&lcd, x+4, y + i*17 + 16, 140, 16, b, b, 1, DRAW_TO_LCD);
-
-				snprintf(buf, sizeof(buf), "<%d>", i + 1);
-				spilcdWriteString(&lcd, x+4, y + i*17 + 16, buf, RGB565(0x3a393a), b, FONT_8x8, DRAW_TO_LCD);
-				snprintf(buf, sizeof(buf), "%s", conf->fans[i].name);
-				buf[14]=0;
-				spilcdWriteString(&lcd, x+4, y + i*17 + 16 + 8, buf, 0, b, FONT_6x8, DRAW_TO_LCD);
-			}
-
-			/* mbfans */
-			x = mbfans_x;
-			y = mbfans_y;
-			draw_rounded_box(&lcd, x, y, 126, 86, 8, box_color);
-			spilcdWriteString(&lcd, x+4, y - 10, "MB FANS", 0, bg_color, FONT_8x8, DRAW_TO_LCD);
-			spilcdWriteString(&lcd, x+4, y + 4, "#", 0, box_color, FONT_8x8, DRAW_TO_LCD);
-			spilcdWriteString(&lcd, x+4+85, y + 4, "PWM%", 0, box_color, FONT_8x8, DRAW_TO_LCD);
-			for(i = 0; i < MBFAN_COUNT; i++) {
-				b = (i % 2 ? box_color : box2_color);
-
-				spilcdRectangle(&lcd, x+4, y + i*17 + 16, 120, 16, b, b, 1, DRAW_TO_LCD);
-
-				snprintf(buf, sizeof(buf), "<%d>", i + 1);
-				spilcdWriteString(&lcd, x+4, y + i*17 + 16, buf, RGB565(0x3a393a), b, FONT_8x8, DRAW_TO_LCD);
-				snprintf(buf, sizeof(buf), "%s", conf->mbfans[i].name);
-				buf[13]=0;
-				spilcdWriteString(&lcd, x+4, y + i*17 + 16 + 8, buf, 0, b, FONT_6x8, DRAW_TO_LCD);
-			}
-
-			/* sensors */
-			x = sensors_x;
-			y = sensors_y;
-			draw_rounded_box(&lcd, x, y, 126, 70, 8, box_color);
-			spilcdWriteString(&lcd, x+4, y - 10, "SENSORS", 0, bg_color, FONT_8x8, DRAW_TO_LCD);
-			spilcdWriteString(&lcd, x+4, y + 4, "#", 0, box_color, FONT_8x8, DRAW_TO_LCD);
-			spilcdWriteString(&lcd, x+4+69, y + 4, "Temp C", 0, box_color, FONT_8x8, DRAW_TO_LCD);
-			for(i = 0; i < SENSOR_COUNT; i++) {
-				b = (i % 2 ? box_color : box2_color);
-
-				spilcdRectangle(&lcd, x+4, y + i*17 + 16, 120, 16, b, b, 1, DRAW_TO_LCD);
-
-				snprintf(buf, sizeof(buf), "<%d>", i + 1);
-				spilcdWriteString(&lcd, x+4, y + i*17 + 16, buf, RGB565(0x3a393a), b, FONT_8x8, DRAW_TO_LCD);
-				snprintf(buf, sizeof(buf), "%s", conf->sensors[i].name);
-				buf[13]=0;
-				spilcdWriteString(&lcd, x+4, y + i*17 + 16 + 8, buf, 0, b, FONT_6x8, DRAW_TO_LCD);
-			}
-
-			spilcdWriteString(&lcd, 4, 230,
-					"FanPico-" FANPICO_MODEL " v" FANPICO_VERSION,
-					0, bg_color, FONT_6x8, DRAW_TO_LCD);
+				draw_rounded_box(&lcd,
+						0, 0,
+						lcd.iCurrentWidth - 1, lcd.iCurrentHeight -1 ,
+						10, bg_color);
+			draw_fields(state, conf, theme, 0);
 		}
 	}
 
-
-
-	if (lcd.iCurrentWidth >= 480) {
-		draw_fields(state, conf, theme_1.fg);
-		return;
-	}
-
-
-	/* Fans */
-	x = fans_x;
-	y = fans_y;
-	for (i = 0; i < FAN_COUNT; i++) {
-		b = (i % 2 ? box_color : box2_color);
-		rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
-		pwm = state->fan_duty[i];
-		if (rpm > 9999)
-			rpm = 9999;
-		snprintf(buf, sizeof(buf), "%-4.0lf", rpm);
-		spilcdWriteString(&lcd, x + 90, y + i*17 + 16, buf, RGB565(0x0000ba), b, FONT_12x16, DRAW_TO_LCD);
-		snprintf(buf, sizeof(buf), "%3.0lf", pwm);
-		spilcdWriteString(&lcd, x + 140, y + i*17 + 16, buf, RGB565(0x005100), b, FONT_12x16, DRAW_TO_LCD);
-	}
-
-	/* MBFans */
-	x = mbfans_x;
-	y = mbfans_y;
-	for (i = 0; i < MBFAN_COUNT; i++) {
-		b = (i % 2 ? box_color : box2_color);
-		pwm = state->mbfan_duty[i];
-		snprintf(buf, sizeof(buf), "%3.0lf", pwm);
-		spilcdWriteString(&lcd, x + 85, y + i*17 + 16, buf, RGB565(0x005100), b, FONT_12x16, DRAW_TO_LCD);
-	}
-
-
-	/* Sensors */
-	x = sensors_x;
-	y = sensors_y;
-	for (i = 0; i < SENSOR_COUNT; i++) {
-		b = (i % 2 ? box_color : box2_color);
-		temp = state->temp[i];
-		snprintf(buf, sizeof(buf), "%3.1lf", temp);
-		spilcdWriteString(&lcd, x + 73, y + i*17 + 16, buf, RGB565(0x960000), b, FONT_12x16, DRAW_TO_LCD);
-	}
-
-
-	/* IP */
-	const char *ip = network_ip();
-	if (ip) {
-		snprintf(buf, sizeof(buf), "IP: %s", ip);
-		spilcdWriteString(&lcd, 4, 221, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
-	}
-
-	/* NTP time */
-	if (rtc_get_datetime(&t)) {
-		snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
-			t.year, t.month, t.day, t.hour, t.min, t.sec);
-		spilcdWriteString(&lcd, 198, 221, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
-	}
-
-	/* uptime */
-	{
-		uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
-		uint32_t mins =  secs / 60;
-		uint32_t hours = mins / 60;
-		uint32_t days = hours / 24;
-
-		snprintf(buf, sizeof(buf), "Uptime: %3lu days %02lu:%02lu:%02lu",
-				days,
-				hours % 24,
-				mins % 60,
-				secs % 60);
-		spilcdWriteString(&lcd, 162, 230, buf, 0, bg_color, FONT_6x8, DRAW_TO_LCD);
-	}
-
+	draw_fields(state, conf, theme, 1);
 }
 
 void lcd_display_message(int rows, const char **text_lines)

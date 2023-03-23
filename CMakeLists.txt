@@ -82,11 +82,12 @@ add_executable(fanpico
   src/default_config.s
   src/credits.s
   src/lcd-logo.s
-  src/lcd-background.s
+  src/themes/lcd-background.s
   )
 
 
 set_property(SOURCE src/*.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src)
+set_property(SOURCE src/themes/lcd-background.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src/themes)
 set_property(SOURCE src/credits.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR})
 
 pico_generate_pio_header(fanpico ${CMAKE_CURRENT_LIST_DIR}/src/square_wave_gen.pio)
