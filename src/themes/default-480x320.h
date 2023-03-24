@@ -20,7 +20,7 @@
 */
 
 
-display_field_t theme_default_480x320_bg[] = {
+const display_field_t theme_default_480x320_bg[] = {
 	{ FAN, LABEL, 0, 3,  34, RGB565(0x000000), RGB565(0xffff99), FONT_8x8 },
 	{ FAN, LABEL, 1, 3,  54, RGB565(0x000000), RGB565(0xffcc66), FONT_8x8 },
 	{ FAN, LABEL, 2, 3,  74, RGB565(0x000000), RGB565(0xff9966), FONT_8x8 },
@@ -42,7 +42,7 @@ display_field_t theme_default_480x320_bg[] = {
 	{ 0, 0, -1, -1, -1, 0, 0, -1 }
 };
 
-display_field_t theme_default_480x320_fg[] = {
+const display_field_t theme_default_480x320_fg[] = {
 	{ FAN, RPM, 0, 128,  32, RGB565(0xffff99), RGB565(0x000000), FONT_12x16 },
 	{ FAN, RPM, 1, 128,  52, RGB565(0xffcc66), RGB565(0x000000), FONT_12x16 },
 	{ FAN, RPM, 2, 128,  72, RGB565(0xff9966), RGB565(0x000000), FONT_12x16 },
@@ -81,9 +81,9 @@ display_field_t theme_default_480x320_fg[] = {
 	{ 0, 0, -1, -1, -1, 0, 0, -1 }
 };
 
-extern uint8_t fanpico_theme_default_480x320_bmp[]; /* ptr to embedded background image */
+extern const uint8_t fanpico_theme_default_480x320_bmp[]; /* ptr to embedded background image */
 
-struct display_theme theme_default_480x320 = {
+const struct display_theme theme_default_480x320 = {
 	theme_default_480x320_bg,
 	theme_default_480x320_fg,
 	fanpico_theme_default_480x320_bmp,

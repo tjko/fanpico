@@ -9,4 +9,6 @@
 #include "boards/@FANPICO_BOARD@.h"
 #define FANPICO_BOARD "@FANPICO_BOARD@"
 
+#define FANPICO_CUSTOM_THEME @FANPICO_CUSTOM_THEME@
+
 #endif /* FANPICO_CONFIG_H */

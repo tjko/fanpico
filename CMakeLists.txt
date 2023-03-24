@@ -17,6 +17,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(FANPICO_BOARD 0804 CACHE STRING "Fanpico Board Model")
 #set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0803D)
+set(FANPICO_CUSTOM_THEME 0 CACHE STRING "Fanpico LCD Custom Theme")
 
 #set(CMAKE_BUILD_TYPE Debug)
 
@@ -85,6 +86,11 @@ add_executable(fanpico
   src/themes/lcd-background.s
   )
 
+if (FANPICO_CUSTOM_THEME)
+  message("Enable custom theme...")
+  target_sources(fanpico PRIVATE src/themes/custom.s)
+  set_property(SOURCE src/themes/custom.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src/themes)
+endif()
 
 set_property(SOURCE src/*.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src)
 set_property(SOURCE src/themes/lcd-background.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src/themes)

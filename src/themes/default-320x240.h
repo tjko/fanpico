@@ -19,7 +19,7 @@
    along with FanPico. If not, see <https://www.gnu.org/licenses/>.
 */
 
-display_field_t theme_default_320x240_bg[] = {
+const display_field_t theme_default_320x240_bg[] = {
 	{ FAN, LABEL, 0, 8,  40, RGB565(0x000000), RGB565(0x00aa44), FONT_6x8 },
 	{ FAN, LABEL, 1, 8,  57, RGB565(0x000000), RGB565(0x5fd35f), FONT_6x8 },
 	{ FAN, LABEL, 2, 8,  74, RGB565(0x000000), RGB565(0x00aa44), FONT_6x8 },
@@ -43,7 +43,7 @@ display_field_t theme_default_320x240_bg[] = {
 	{ 0, 0, -1, -1, -1, 0, 0, -1 }
 };
 
-display_field_t theme_default_320x240_fg[] = {
+const display_field_t theme_default_320x240_fg[] = {
 	{ FAN, RPM, 0,  94,  36, RGB565(0xccff00), RGB565(0x00aa44), FONT_12x16 },
 	{ FAN, RPM, 1,  94,  53, RGB565(0xccff00), RGB565(0x5fd35f), FONT_12x16 },
 	{ FAN, RPM, 2,  94,  70, RGB565(0xccff00), RGB565(0x00aa44), FONT_12x16 },
@@ -78,9 +78,9 @@ display_field_t theme_default_320x240_fg[] = {
 	{ 0, 0, -1, -1, -1, 0, 0, -1 }
 };
 
-extern uint8_t fanpico_theme_default_320x240_bmp[]; /* ptr to embedded background image */
+extern const uint8_t fanpico_theme_default_320x240_bmp[]; /* ptr to embedded background image */
 
-struct display_theme theme_default_320x240 = {
+const struct display_theme theme_default_320x240 = {
 	theme_default_320x240_bg,
 	theme_default_320x240_fg,
 	fanpico_theme_default_320x240_bmp,

@@ -99,9 +99,9 @@ typedef struct display_field {
 } display_field_t;
 
 struct display_theme {
-	display_field_t *bg; /* background items, draw only once */
-	display_field_t *fg; /* foreground items */
-	uint8_t *bmp;
+	const display_field_t *bg; /* background items, draw only once */
+	const display_field_t *fg; /* foreground items */
+	const uint8_t *bmp;
 	const char* fan_name_fmt;
 	uint8_t fan_name_len;
 	const char* mbfan_name_fmt;
@@ -362,6 +362,7 @@ void lcd_display_init()
 				theme_idx = i;
 				break;
 			}
+			i++;
 		}
 	}
 	theme = (lcd.iCurrentWidth >= 480 ? themes[theme_idx].theme_normal : themes[theme_idx].theme_small);
@@ -382,13 +383,13 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 	char buf[64];
 	double val;
 	datetime_t t;
-	display_field_t *list;
+	const display_field_t *list;
 
 	list = (mode ? theme->fg : theme->bg);
 
 
 	while (list[i].type > INVALID_FIELDTYPE && list[i].type < DISPLAY_FIELD_TYPE_COUNT) {
-		display_field_t *f = &list[i];
+		const display_field_t *f = &list[i];
 
 		buf[0] = 0;
 		switch (f->data) {
