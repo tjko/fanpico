@@ -42,9 +42,10 @@ I would like to thank following sponsors, who have helped FanPico project:
 
 
 ## Where can I get one?
-Currently Fanpico is available as a DIY project. Instructions for building the kit are in [FanPico Wiki](https://github.com/tjko/fanpico/wiki)
+Currently Fanpico is available as a DIY project. 
+Check discussion forums for places to purchase Kits or PCBs: [Places to Purchase FanPico](https://github.com/tjko/fanpico/discussions/12)
 
-Check discussion forums for places to purchase Kits or PCBs: [FanPico Forum](https://github.com/tjko/fanpico/discussions/12)
+(Instructions for building the kit are in [FanPico Wiki](https://github.com/tjko/fanpico/wiki))
 
 However, if there is sufficient interest, then ready-made units may be made available for sale.
 If you'd be interested in purchasing FanPico pease indicate your interest here: [FanPico Forum](https://github.com/tjko/fanpico/discussions/9)
@@ -114,7 +115,14 @@ Currently following models are available:
 (all boards have one additional 'on-board' temperature sensor on the RP2040 MCU itself)
 
 Models ending with "D" support a display to see 'real-time' status of fans and temperatures.
-![FanPico Display](images/oled-status-screen-2.jpg)
+
+OLED panel directly mounted on the PCB:
+
+![FanPico OLED Display](images/oled-status-screen-2.jpg)
+
+LCD Panel attached via a short cable:
+
+![FanPico LCD Display](images/theme-default-480x320-small.jpg)
 
 ## Firmware
 Firmware is developed in C using the Pico SDK. Pre-compiled firmware is released when there is new major features or bug fixes.
@@ -156,6 +164,7 @@ Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 * [cJSON](https://github.com/DaveGamble/cJSON)
 * [littlefs-lib](https://github.com/lurk101/littlefs-lib)
 * [ss_oled-lib](https://github.com/tjko/ss_oled-lib)
+* [bb_spi_lcd-lib](https://github.com/tjko/bb_spi_lcd-lib)
 * [libb64](https://github.com/libb64/libb64)
 
 ##### Install Pico SDK
@@ -209,18 +218,18 @@ File fanpico.uf2:
 
 Program Information
  name:          fanpico
- version:       1.2.0 (Sep  4 2022)
+ version:       1.4.0 (Mar 24 2023)
  web site:      https://github.com/tjko/fanpico/
- description:   FanPico-0804 - Smart PWM Fan Controller
+ description:   FanPico-0804D - Smart PWM Fan Controller
  features:      USB stdin / stdout
  binary start:  0x10000000
- binary end:    0x10022914
+ binary end:    0x10093648
 
 Fixed Pin Information
- 0:   Fan8 tacho signal (input)
- 1:   Fan7 tacho signal (input)
- 2:   Fan1 tacho signal (input)
- 3:   Fan2 tacho signal (input)
+ 0:   TX (Serial) / MISO (SPI)
+ 1:   RX (Serial) / CS (SPI)
+ 2:   SDA (I2C) / SCK (SPI)
+ 3:   SCL (I2C) / MOSI (SPI)
  4:   Fan1 PWM signal (output)
  5:   Fan2 PWM signal (output)
  6:   Fan3 PWM signal (output)
@@ -237,17 +246,16 @@ Fixed Pin Information
  17:  MB Fan3 PWM signal (input)
  18:  MB Fan4 tacho signal (output)
  19:  MB Fan4 PWM signal (input)
- 20:  Fan3 tacho signal (input)
- 21:  Fan4 tacho signal (input)
- 22:  Fan5 tacho signal (input)
- 25:  On-board LED (output)
- 26:  Fan6 tacho signal (input)
+ 20:  Multiplexer S2 (output)
+ 21:  Multiplexer S1 (output)
+ 22:  Multiplexer S0 (output)
+ 26:  Multiplexer A [tacho signal] (input)
  27:  Temperature Sensor1 (input)
  28:  Temperature Sensor2 (input)
 
 Build Information
- sdk version:       1.4.0
- pico_board:        pico
- build date:        Sep  4 2022
+ sdk version:       1.5.0
+ pico_board:        pico_w
+ build date:        Mar 24 2023
  build attributes:  Release
 ```
