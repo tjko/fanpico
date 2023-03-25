@@ -21,11 +21,12 @@ set(FANPICO_CUSTOM_THEME 0 CACHE STRING "Fanpico LCD Custom Theme")
 
 #set(CMAKE_BUILD_TYPE Debug)
 
-message("------------------------------")
-message("   FANPICO_BOARD: ${FANPICO_BOARD}")
-message("      PICO_BOARD: ${PICO_BOARD}")
-message("CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-message("------------------------------")
+message("---------------------------------")
+message("       FANPICO_BOARD: ${FANPICO_BOARD}")
+message("          PICO_BOARD: ${PICO_BOARD}")
+message("FANPICO_CUSTOM_THEME: ${FANPICO_CUSTOM_THEME}")
+message("    CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+message("---------------------------------")
 
 pico_sdk_init()
 
@@ -137,11 +138,12 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
 endif()
 
 target_compile_options(fanpico PRIVATE -Wall)
+target_compile_definitions(fanpico PRIVATE USBD_MANUFACTURER="TJKO Industries")
+target_compile_definitions(fanpico PRIVATE USBD_PRODUCT="FanPico-${FANPICO_BOARD}")
 target_compile_definitions(fanpico PRIVATE PARAM_ASSERTIONS_ENABLE_ALL=1)
 target_compile_definitions(fanpico PRIVATE PICO_MALLOC_PANIC=0)
 target_compile_definitions(fanpico PRIVATE PICO_STACK_SIZE=0x1000)
 target_compile_definitions(fanpico PRIVATE PICO_USE_STACK_GUARDS=1)
 target_compile_definitions(fanpico PRIVATE PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
-
 
 # eof :-)
