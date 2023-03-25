@@ -31,6 +31,7 @@
 #include "ss_oled.h"
 #include "fanpico.h"
 
+#ifdef OLED_DISPLAY
 
 static SSOLED oled;
 static uint8_t ucBuffer[(128*128)/8];
@@ -265,5 +266,6 @@ void oled_display_message(int rows, const char **text_lines)
 	}
 }
 
+#endif
 
 /* eof :-) */

@@ -295,7 +295,7 @@ void setup_tacho_input_interrupts()
 	/* Enable interrupts on Fan Tacho input pins */
 	gpio_set_irq_enabled_with_callback(FAN1_TACHO_READ_PIN,	GPIO_IRQ_EDGE_RISE,
 					true, &fan_tacho_read_callback);
-	for (i = 1; i < FAN_COUNT; i++) {
+	for (int i = 1; i < FAN_COUNT; i++) {
 		gpio_set_irq_enabled(fan_gpio_tacho_map[i], GPIO_IRQ_EDGE_RISE, true);
 	}
 #endif

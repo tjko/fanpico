@@ -31,6 +31,7 @@
 #include "bb_spi_lcd.h"
 #include "fanpico.h"
 
+#if LCD_DISPLAY
 
 static SPILCD lcd;
 static uint8_t lcd_found = 0;
@@ -570,5 +571,5 @@ void lcd_display_message(int rows, const char **text_lines)
 	}
 }
 
-
+#endif
 /* eod :-) */
