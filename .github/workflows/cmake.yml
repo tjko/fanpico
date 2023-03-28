@@ -24,12 +24,14 @@ jobs:
       uses: actions/checkout@v3
       with:
         path: main
+        submodules: true
         
     - name: Checkout Pico-SDK
       uses: actions/checkout@v3
       with:
         repository: raspberrypi/pico-sdk
         path: pico-sdk
+        submodules: true
         
     - name: Set PICO_SDK_PATH
       run: |
