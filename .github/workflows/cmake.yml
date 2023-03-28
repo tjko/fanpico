@@ -47,10 +47,10 @@ jobs:
       run: cmake --build ${{github.workspace}}/main/build --config ${{env.BUILD_TYPE}}
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{github.workspace}}/main/build
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
-        cd ${{github.workspace}}/main/build
         ls -l fanpico.*
+        sha256sum fanpico.uf2
 
