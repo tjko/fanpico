@@ -9,29 +9,28 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  # Pico-SDK v1.5.0
+  PICO_SDK_VER: 1.5.0
   PICO_SDK_REF: f396d05f8252d4670d4ea05c8b7ac938ef0cd381
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        pico_board: ["pico", "pico_w"]
         fanpico_board: ["0804", "0804D"]
+        pico_board: ["pico", "pico_w"]
+    
     steps:
-    - uses: carlosperate/arm-none-eabi-gcc-action@v1
-    
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        path: main
-        submodules: true
-    
+    - name: Arm GNU Toolchain (arm-none-eabi-gcc)
+      uses: carlosperate/arm-none-eabi-gcc-action@v1
+       
     - name: Cache Pico-SDK
       id: cache-pico-sdk
       uses: actions/cache@v3
       with:
-        path: pico-sdk
+        path: ~/pico-sdk-${{env.PICO_SDK_VER}}
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
     
     - if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
@@ -40,20 +39,25 @@ jobs:
       with:
         repository: raspberrypi/pico-sdk
         ref: ${{env.PICO_SDK_REF}}
-        path: pico-sdk
+        path: ~/pico-sdk-${{env.PICO_SDK_VER}}
         submodules: true
         
-    - name: Set PICO_SDK_PATH
+    - name: Add PICO_SDK_PATH to Environment
       run: |
-        echo "PICO_SDK_PATH=${{github.workspace}}/pico-sdk" >> $GITHUB_ENV
+        echo "PICO_SDK_PATH=~/pico-sdk-${{env.PICO_SDK_VER}}"
+        echo "PICO_SDK_PATH=~/pico-sdk-${{env.PICO_SDK_VER}}" >> $GITHUB_ENV
+        #echo "PICO_SDK_PATH=${{github.workspace}}/pico-sdk" >> $GITHUB_ENV
 
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        path: main
+        submodules: true
+    
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -S main -B ${{github.workspace}}/main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=${{matrix.pico_board}} -DFANPICO_BOARD=${{matrix.fanpico_board}}
 
     - name: Build
-      # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/main/build --config ${{env.BUILD_TYPE}}
 
     - name: Test
