@@ -7,10 +7,8 @@ on:
     branches: [ "main" ]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   # Pico-SDK v1.5.0
-  PICO_SDK_VER: 1.5.0
   PICO_SDK_REF: f396d05f8252d4670d4ea05c8b7ac938ef0cd381
 
 jobs:
@@ -30,7 +28,7 @@ jobs:
       id: cache-pico-sdk
       uses: actions/cache@v3
       with:
-        path: ~/pico-sdk-${{env.PICO_SDK_VER}}
+        path: pico-sdk
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
     
     - if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
@@ -39,14 +37,12 @@ jobs:
       with:
         repository: raspberrypi/pico-sdk
         ref: ${{env.PICO_SDK_REF}}
-        path: ~/pico-sdk-${{env.PICO_SDK_VER}}
+        path: pico-sdk
         submodules: true
         
     - name: Add PICO_SDK_PATH to Environment
       run: |
-        echo "PICO_SDK_PATH=~/pico-sdk-${{env.PICO_SDK_VER}}"
-        echo "PICO_SDK_PATH=~/pico-sdk-${{env.PICO_SDK_VER}}" >> $GITHUB_ENV
-        #echo "PICO_SDK_PATH=${{github.workspace}}/pico-sdk" >> $GITHUB_ENV
+        echo "PICO_SDK_PATH=${{github.workspace}}/pico-sdk" >> $GITHUB_ENV
 
     - name: Checkout
       uses: actions/checkout@v3
