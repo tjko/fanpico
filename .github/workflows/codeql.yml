@@ -20,6 +20,11 @@ on:
   schedule:
     - cron: '30 8 * * 6'
 
+env:
+  BUILD_TYPE: Release
+  # Pico-SDK v1.5.0
+  PICO_SDK_REF: f396d05f8252d4670d4ea05c8b7ac938ef0cd381
+
 jobs:
   analyze:
     name: Analyze
@@ -46,7 +51,7 @@ jobs:
       id: cache-pico-sdk
       uses: actions/cache@v3
       with:
-        path: /home/runner/pico-sdk
+        path: pico-sdk
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
     
     - if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
@@ -55,15 +60,18 @@ jobs:
       with:
         repository: raspberrypi/pico-sdk
         ref: ${{env.PICO_SDK_REF}}
-        path: /home/runner/pico-sdk
+        path: pico-sdk
         submodules: true
         
     - name: Add PICO_SDK_PATH to Environment
       run: |
-        echo "PICO_SDK_PATH=/home/runner/pico-sdk" >> $GITHUB_ENV
+        echo "PICO_SDK_PATH=${{github.workspace}}/pico-sdk" >> $GITHUB_ENV
 
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        path: main
+        submodules: true
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -94,10 +102,10 @@ jobs:
     #     ./location_of_script_within_repo/buildscript.sh
 
     - name: Configure CMake
-      run: cmake -S main -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=0804D -DFANPICO_BOARD=pico_w
+      run: cmake -S main -B main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=0804D -DFANPICO_BOARD=pico_w
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config Release    
+      run: cmake --build main/build --config ${{env.BUILD_TYPE}}    
     
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
