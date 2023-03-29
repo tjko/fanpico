@@ -39,6 +39,29 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
+    - name: Arm GNU Toolchain (arm-none-eabi-gcc)
+      uses: carlosperate/arm-none-eabi-gcc-action@v1
+       
+    - name: Cache Pico-SDK
+      id: cache-pico-sdk
+      uses: actions/cache@v3
+      with:
+        path: /home/runner/pico-sdk
+        key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
+    
+    - if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
+      name: Checkout Pico-SDK
+      uses: actions/checkout@v3
+      with:
+        repository: raspberrypi/pico-sdk
+        ref: ${{env.PICO_SDK_REF}}
+        path: /home/runner/pico-sdk
+        submodules: true
+        
+    - name: Add PICO_SDK_PATH to Environment
+      run: |
+        echo "PICO_SDK_PATH=/home/runner/pico-sdk" >> $GITHUB_ENV
+
     - name: Checkout repository
       uses: actions/checkout@v3
 
@@ -57,8 +80,8 @@ jobs:
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+    #- name: Autobuild
+    #  uses: github/codeql-action/autobuild@v2
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -70,6 +93,12 @@ jobs:
     #     echo "Run, Build Application using script"
     #     ./location_of_script_within_repo/buildscript.sh
 
+    - name: Configure CMake
+      run: cmake -S main -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=0804D -DFANPICO_BOARD=pico_w
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config Release    
+    
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
       with:
