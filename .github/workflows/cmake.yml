@@ -64,12 +64,17 @@ jobs:
         ls -l fanpico.*
         sha256sum fanpico.uf2
 
+    - name: Gather Artifact Files
+      working-directory: ${{github.workspace}}/main/build
+      run: |
+        mkdir dist
+        cp -av fanpico.uf2 dist/fanpico-${{matrix.fanpico_board}}-${{matrix.pico_board}}.uf2
+        cp -av fanpico.elf dist/fanpico-${{matrix.fanpico_board}}-${{matrix.pico_board}}.elf
+        cp -av fanpico.elf.map dist/fanpico-${{matrix.fanpico_board}}-${{matrix.pico_board}}.elf.map
+        
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: fanpico-firmware-${{matrix.fanpico_board}}-${{matrix.pico_board}}
-        path: |
-          main/build/fanpico.uf2
-          main/build/fanpico.elf
-          main/build/fanpico.elf.map
-          
+        name: fanpico-firmware-${{github.run_number}}-${{github.sha}}
+        path: main/build/dist
+                    
