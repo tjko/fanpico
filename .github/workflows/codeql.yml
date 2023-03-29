@@ -102,7 +102,7 @@ jobs:
     #     ./location_of_script_within_repo/buildscript.sh
 
     - name: Configure CMake
-      run: cmake -S main -B main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=0804D -DFANPICO_BOARD=pico_w
+      run: cmake -S main -B main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=pico_w -DFANPICO_BOARD=0804D
 
     - name: Build
       run: cmake --build main/build --config ${{env.BUILD_TYPE}}    
