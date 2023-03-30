@@ -220,30 +220,22 @@ void oled_display_status(const struct fanpico_state *state,
 			oledWriteString(&oled, 0, 12, 15, buf, FONT_6x8, 0, 1);
 		}
 
+		/* Uptime & NTP time */
+		uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
+		uint32_t mins =  secs / 60;
+		uint32_t hours = mins / 60;
+		uint32_t days = hours / 24;
+		snprintf(buf, sizeof(buf), "%03lu+%02lu:%02lu:%02lu",
+			days,
+			hours % 24,
+			mins % 60,
+			secs % 60);
 		if (rtc_get_datetime(&t)) {
-			/* NTP time */
-#if 0
-			snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
-				t.year, t.month, t.day, t.hour, t.min, t.sec);
-			oledWriteString(&oled, 0, 6, 11, buf, FONT_6x8, 0, 1);
-#endif
+			oledWriteString(&oled, 0, 28, 14, buf, FONT_6x8, 0, 1);
 			snprintf(buf, sizeof(buf), "%02d:%02d:%02d", t.hour, t.min, t.sec);
 			oledWriteString(&oled, 0, 16, 11, buf, FONT_12x16, 0, 1);
-		}
-		{
-			/* uptime */
-
-			uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
-			uint32_t mins =  secs / 60;
-			uint32_t hours = mins / 60;
-			uint32_t days = hours / 24;
-
-			snprintf(buf, sizeof(buf), "%03lu+%02lu:%02lu:%02lu",
-				days,
-				hours % 24,
-				mins % 60,
-				secs % 60);
-			oledWriteString(&oled, 0, 28, 13, buf, FONT_6x8, 0, 1);
+		} else {
+			oledWriteString(&oled, 0, 28, 12, buf, FONT_6x8, 0, 1);
 		}
 
 	}
