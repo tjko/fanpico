@@ -120,15 +120,18 @@ void oled_display_init()
 		log_msg(LOG_ERR, "Unknown OLED Display.");
 	}
 
-	oled_found = 1;
-
+	/* Initialize screen. */
 	oledSetBackBuffer(&oled, ucBuffer);
 	oledFill(&oled, 0, 1);
 	oledSetContrast(&oled, disp_brightness);
-	oledWriteString(&oled, 0, 15, 1, "FanPico-" FANPICO_MODEL, FONT_8x8, 0, 1);
-	oledWriteString(&oled, 0, 40, 3, "v" FANPICO_VERSION, FONT_8x8, 0, 1);
 
-	oledWriteString(&oled, 0, 20, 6, "Initializing...", FONT_6x8, 0, 1);
+	/* Display model and firmware version. */
+	int y_o = (oled_height > 64 ? 4 : 0);
+	oledWriteString(&oled, 0, 15, y_o + 1, "FanPico-" FANPICO_MODEL, FONT_8x8, 0, 1);
+	oledWriteString(&oled, 0, 40, y_o + 3, "v" FANPICO_VERSION, FONT_8x8, 0, 1);
+	oledWriteString(&oled, 0, 20, y_o + 6, "Initializing...", FONT_6x8, 0, 1);
+
+	oled_found = 1;
 }
 
 void oled_clear_display()
@@ -217,26 +220,22 @@ void oled_display_status(const struct fanpico_state *state,
 			oledWriteString(&oled, 0, 12, 15, buf, FONT_6x8, 0, 1);
 		}
 
+		/* Uptime & NTP time */
+		uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
+		uint32_t mins =  secs / 60;
+		uint32_t hours = mins / 60;
+		uint32_t days = hours / 24;
+		snprintf(buf, sizeof(buf), "%03lu+%02lu:%02lu:%02lu",
+			days,
+			hours % 24,
+			mins % 60,
+			secs % 60);
 		if (rtc_get_datetime(&t)) {
-			/* NTP time */
-			snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
-				t.year, t.month, t.day, t.hour, t.min, t.sec);
-			oledWriteString(&oled, 0, 6, 13, buf, FONT_6x8, 0, 1);
-		}
-		else {
-			/* uptime */
-
-			uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
-			uint32_t mins =  secs / 60;
-			uint32_t hours = mins / 60;
-			uint32_t days = hours / 24;
-
-			snprintf(buf, sizeof(buf), "%3lu days %02lu:%02lu:%02lu",
-				days,
-				hours % 24,
-				mins % 60,
-				secs % 60);
-			oledWriteString(&oled, 0, 6, 13, buf, FONT_6x8, 0, 1);
+			oledWriteString(&oled, 0, 28, 14, buf, FONT_6x8, 0, 1);
+			snprintf(buf, sizeof(buf), "%02d:%02d:%02d", t.hour, t.min, t.sec);
+			oledWriteString(&oled, 0, 16, 11, buf, FONT_12x16, 0, 1);
+		} else {
+			oledWriteString(&oled, 0, 28, 12, buf, FONT_6x8, 0, 1);
 		}
 
 	}
