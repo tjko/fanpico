@@ -175,7 +175,7 @@ void oled_display_status(const struct fanpico_state *state,
 		for (i = 0; i < FAN_COUNT; i++) {
 			rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
 			pwm = state->fan_duty[i];
-			snprintf(buf, sizeof(buf), "%d:%4.0lf %3.0lf%%", i + 0, rpm, pwm);
+			snprintf(buf, sizeof(buf), "%d:%4.0lf %3.0lf%%", i + 1, rpm, pwm);
 			oledWriteString(&oled, 0 , 0, i, buf, FONT_6x8, 0, 1);
 		}
 		for (i = 0; i < MBFAN_COUNT; i++) {
