@@ -108,6 +108,61 @@ int str_to_float(const char *str, float *val)
 	return (str == endptr ? 0 : 1);
 }
 
+#define GET_DIGITS(buf, n, s, dest) {		\
+		count = 0;			\
+		while (count < n) {			\
+			if (*s >= '0' && *s <= '9') {	\
+				buf[count++] = *s++;	\
+			} else {			\
+				return 0;		\
+			}				\
+		}					\
+		buf[count] = 0;				\
+		int val;				\
+		if (!str_to_int(buf, &val, 10))		\
+			return 0;			\
+		dest = val;				\
+	}
+
+int str_to_datetime(const char *str, datetime_t *t)
+{
+	const char *s = str;
+	char buf[8];
+	int count;
+
+	if (!str || !t)
+		return 0;
+
+	/* Expecting string in format: "YYYY-MM-DD HH:MM:SS" */
+
+	/* Year */
+	GET_DIGITS(buf, 4, s, t->year);
+	if (*s++ != '-')
+		return 0;
+	/* Month */
+	GET_DIGITS(buf, 2, s, t->month);
+	if (*s++ != '-')
+		return 0;
+	/* Day */
+	GET_DIGITS(buf, 2, s, t->day);
+	if (*s++ != ' ')
+		return 0;
+	/* Hour */
+	GET_DIGITS(buf, 2, s, t->hour);
+	if (*s++ != ':')
+		return 0;
+	/* Minutes */
+	GET_DIGITS(buf, 2, s, t->min);
+	if (*s++ != ':')
+		return 0;
+	/* Seconds */
+	GET_DIGITS(buf, 2, s, t->sec);
+
+	/* No support for day of the week. */
+	t->dotw = 0;
+
+	return 1;
+}
 
 const char *rp2040_model_str()
 {

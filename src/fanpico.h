@@ -292,6 +292,7 @@ void print_irqinfo();
 char *trim_str(char *s);
 int str_to_int(const char *str, int *val, int base);
 int str_to_float(const char *str, float *val);
+int str_to_datetime(const char *str, datetime_t *t);
 const char *rp2040_model_str();
 const char *pico_serial_str();
 const char *mac_address_str(const uint8_t *mac);

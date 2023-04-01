@@ -159,15 +159,14 @@ void oled_display_status(const struct fanpico_state *state,
 	if (!bg_drawn) {
 		oled_clear_display();
 		if (oled_height > 64) {
-			oledWriteString(&oled, 0, 0, 0, "Fans", FONT_6x8, 0, 1);
+			oledWriteString(&oled, 0,  0, 0, "Fans", FONT_6x8, 0, 1);
 			oledWriteString(&oled, 0, 74, 0, "MB Inputs", FONT_6x8, 0, 1);
-			oledWriteString(&oled, 0, 76, 6, "Sensors", FONT_6x8, 0, 1);
+			oledWriteString(&oled, 0, 74, 6, "Sensors", FONT_6x8, 0, 1);
 			oledDrawLine(&oled, 72, 44, oled_width - 1, 44, 1);
-			oledDrawLine(&oled, 72, 0, 72, 80, 1);
+			oledDrawLine(&oled, 72,  0, 72, 79, 1);
 		} else {
-			//oledWriteString(&oled, 0, 74, 0, "mb inputs", FONT_6x8, 0, 1);
 			oledDrawLine(&oled, 70, 35, oled_width - 1, 35, 1);
-			oledDrawLine(&oled, 70, 0, 70, 63, 1);
+			oledDrawLine(&oled, 70,  0, 70, 63, 1);
 		}
 		bg_drawn = 1;
 	}
@@ -176,7 +175,7 @@ void oled_display_status(const struct fanpico_state *state,
 		for (i = 0; i < FAN_COUNT; i++) {
 			rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
 			pwm = state->fan_duty[i];
-			snprintf(buf, sizeof(buf), "%d:%4.0lf %3.0lf%%", i + 0, rpm, pwm);
+			snprintf(buf, sizeof(buf), "%d:%4.0lf %3.0lf%%", i + 1, rpm, pwm);
 			oledWriteString(&oled, 0 , 0, i, buf, FONT_6x8, 0, 1);
 		}
 		for (i = 0; i < MBFAN_COUNT; i++) {
@@ -192,8 +191,6 @@ void oled_display_status(const struct fanpico_state *state,
 			}
 			oledWriteString(&oled, 0 , 74, i + 5, buf, FONT_6x8, 0, 1);
 		}
-
-		//oledDrawLine(&oled, 68, 40-1, oled_width - 1, 40-1, 1);
 	}
 	else {
 		for (i = 0; i < FAN_COUNT; i++) {
@@ -216,8 +213,14 @@ void oled_display_status(const struct fanpico_state *state,
 		/* IP */
 		const char *ip = network_ip();
 		if (ip) {
-			snprintf(buf, sizeof(buf), "IP: %s", ip);
-			oledWriteString(&oled, 0, 12, 15, buf, FONT_6x8, 0, 1);
+			/* Center align the IP string */
+			int delta = (15 + 1) - strlen(ip);
+			if (delta < 0)
+				delta = 0;
+			int offset = delta / 2;
+			memset(buf, ' ', 8);
+			snprintf(buf + offset, sizeof(buf), " %s", ip);
+			oledWriteString(&oled, 0, 10 + (delta % 2 ? 3 : 0), 15, buf, FONT_6x8, 0, 1);
 		}
 
 		/* Uptime & NTP time */
@@ -237,7 +240,6 @@ void oled_display_status(const struct fanpico_state *state,
 		} else {
 			oledWriteString(&oled, 0, 28, 12, buf, FONT_6x8, 0, 1);
 		}
-
 	}
 }
 

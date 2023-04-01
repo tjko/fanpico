@@ -99,7 +99,8 @@ Fanpico supports following commands:
 * [SYStem:SERIAL?](#systemserial-1)
 * [SYStem:SPI](#systemspi)
 * [SYStem:SPI?](#systemspi-1)
-* [SYStem:TIME?](#systemtime)
+* [SYStem:TIME](#systemtime)
+* [SYStem:TIME?](#systemtime-1)
 * [SYStem:UPTIme?](#systemuptime)
 * [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
@@ -1375,13 +1376,22 @@ SYS:SPI?
 ```
 
 
+#### SYStem:TIME
+Set system Real-Time Clock (RTC) time.
+
+This command expects time in following format:
+  YYYY-MM-DD HH:MM:SS
+
+Example:
+```
+SYS:TIME 2022-09-19 18:55:42
+```
+
 #### SYStem:TIME?
 Return current Real-Time Clock (RTC) time.
 This is only available if using Pico W and it has successfully
-gotten time from a NTP server.
-
-Currently FanPico will only use NTP server that is received from
-DHCP server.
+gotten time from a NTP server or RTC has been initialized using
+SYStem:TIME command.
 
 Command returns nothing if RTC has not been initialized.
 
