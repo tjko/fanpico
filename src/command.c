@@ -1460,19 +1460,23 @@ int cmd_wifi_hostname(const char *cmd, const char *args, int query, char *prev_c
 int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	datetime_t t;
-	time_t tnow;
-	char buf[64];
 
-	if (!query)
-		return 1;
-
-	if (rtc_get_datetime(&t)) {
-		tnow = datetime_to_time(&t);
-		strftime(buf, sizeof(buf), "%a, %d %b %Y %T %z %Z", localtime(&tnow));
-		printf("%s\n", buf);
+	if (query) {
+		if (rtc_get_datetime(&t)) {
+			printf("%04d-%02d-%02d %02d:%02d:%02d\n",
+				t.year, t.month, t.day,	t.hour, t.min, t.sec);
+		}
+		return 0;
 	}
 
-	return 0;
+	if (str_to_datetime(args, &t)) {
+		if (rtc_set_datetime(&t)) {
+			log_msg(LOG_NOTICE, "Set system clock: %04d-%02d-%02d %02d:%02d:%02d",
+				t.year, t.month, t.day, t.hour, t.min, t.sec);
+			return 0;
+		}
+	}
+	return 2;
 }
 
 int cmd_uptime(const char *cmd, const char *args, int query, char *prev_cmd)
