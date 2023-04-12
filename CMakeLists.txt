@@ -8,7 +8,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.4.0
+  VERSION 1.4.1
   LANGUAGES C CXX ASM
   )
 set(CMAKE_C_STANDARD 11)
@@ -65,6 +65,7 @@ add_executable(fanpico
   src/fanpico.c
   src/bi_decl.c
   src/command.c
+  src/flash.c
   src/config.c
   src/display.c
   src/display_lcd.c
@@ -112,6 +113,7 @@ target_link_libraries(fanpico PRIVATE
   pico_stdlib
   pico_stdio_uart
   pico_multicore
+  pico_rand
   hardware_pwm
   hardware_pio
   hardware_adc
