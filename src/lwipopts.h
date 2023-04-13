@@ -1,6 +1,8 @@
 #ifndef _LWIPOPTS_H
 #define _LWIPOPTS_H
 
+#include "fanpico-compile.h"
+
 // Settings for FanPico when using Pico W...
 // (see https://www.nongnu.org/lwip/2_1_x/group__lwip__opts.html for details)
 
@@ -22,7 +24,7 @@
 #define MEM_SIZE                    32768
 #define MEM_SANITY_CHECK            1
 #define MEM_OVERFLOW_CHECK          1
-#define MEMP_NUM_TCP_SEG            32
+#define MEMP_NUM_TCP_SEG            48
 #define MEMP_NUM_TCP_PCB            16
 #define MEMP_NUM_UDP_PCB            8
 #define MEMP_NUM_ARP_QUEUE          10
@@ -32,7 +34,7 @@
 #define LWIP_ETHERNET               1
 #define LWIP_ICMP                   1
 #define LWIP_RAW                    1
-#define TCP_WND                     (8 * TCP_MSS)
+#define TCP_WND                     (12 * TCP_MSS)
 #define TCP_MSS                     1460
 #define TCP_SND_BUF                 (8 * TCP_MSS)
 #define TCP_SND_QUEUELEN            ((4 * (TCP_SND_BUF) + (TCP_MSS - 1)) / (TCP_MSS))
@@ -76,6 +78,13 @@ void pico_set_system_time(long int sec);
 #define LWIP_HTTPD_SSI_INCLUDE_TAG      0
 #define LWIP_HTTPD_SSI_EXTENSIONS       ".shtml", ".xml", ".json", ".csv"
 
+#if TLS_SUPPORT
+#define HTTPD_ENABLE_HTTPS              1
+#define LWIP_ALTCP                      1
+#define LWIP_ALTCP_TLS                  1
+#define LWIP_ALTCP_TLS_MBEDTLS          1
+#endif
+
 #ifndef NDEBUG
 #define LWIP_DEBUG                  1
 #define LWIP_STATS                  1
@@ -95,7 +104,7 @@ void pico_set_system_time(long int sec);
 #define IP_REASS_DEBUG              LWIP_DBG_OFF
 #define RAW_DEBUG                   LWIP_DBG_OFF
 #define MEM_DEBUG                   LWIP_DBG_ON
-#define MEMP_DEBUG                  LWIP_DBG_OFF
+#define MEMP_DEBUG                  LWIP_DBG_ON
 #define SYS_DEBUG                   LWIP_DBG_ON
 #define TCP_DEBUG                   LWIP_DBG_OFF
 #define TCP_INPUT_DEBUG             LWIP_DBG_OFF
@@ -113,6 +122,9 @@ void pico_set_system_time(long int sec);
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 #define SNTP_DEBUG                  LWIP_DBG_OFF
 #define HTTPD_DEBUG                 LWIP_DBG_OFF
+#define ALTCP_MBEDTLS_DEBUG         LWIP_DBG_ON
+#define ALTCP_MBEDTLS_MEM_DEBUG     LWIP_DBG_ON
+#define ALTCP_MBEDTLS_LIB_DEBUG     LWIP_DBG_ON
 #define TIMERS_DEBUG                LWIP_DBG_OFF
 
 #endif /* __LWIPOPTS_H__ */

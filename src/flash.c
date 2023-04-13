@@ -59,13 +59,13 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int 
 
 	/* Open file */
 	if ((fd = pico_open(filename, LFS_O_RDONLY)) < 0) {
-		log_msg(LOG_NOTICE, "Cannot open file \"%s\": %d (%s)",
+		log_msg(LOG_DEBUG, "Cannot open file \"%s\": %d (%s)",
 			filename, fd, pico_errmsg(fd));
 		res = -3;
 	} else {
 		/* Check file size */
 		uint32_t file_size = pico_size(fd);
-		log_msg(LOG_INFO, "File \"%s\" opened ok: %li bytes", filename, file_size);
+		log_msg(LOG_DEBUG, "File \"%s\" opened ok: %li bytes", filename, file_size);
 		if (file_size > 0) {
 			*bufptr = malloc(file_size);
 			if (!*bufptr) {
@@ -74,7 +74,7 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int 
 				res = -4;
 			} else {
 				/* Read file... */
-				log_msg(LOG_INFO, "Reading file \"%s\"...", filename);
+				log_msg(LOG_DEBUG, "Reading file \"%s\"...", filename);
 				*sizeptr = pico_read(fd, *bufptr, file_size);
 				if (*sizeptr < file_size) {
 					log_msg(LOG_ERR, "Error reading file \"%s\": %lu",
@@ -117,7 +117,7 @@ int flash_write_file(const char *buf, uint32_t size, const char *filename)
 				filename, wrote);
 			res = -3;
 		} else {
-			log_msg(LOG_NOTICE, "File \"%s\" sucfessfully created: %li bytes",
+			log_msg(LOG_INFO, "File \"%s\" sucfessfully created: %li bytes",
 				filename, wrote);
 			res = 0;
 		}
@@ -153,7 +153,7 @@ int flash_delete_file(const char *filename)
 		ret = -2;
 	} else {
 		/* Remove configuration file...*/
-		log_msg(LOG_NOTICE, "Removing file \"%s\" (%lu bytes)",
+		log_msg(LOG_INFO, "Removing file \"%s\" (%lu bytes)",
 			filename, stat.size);
 		if ((res = pico_remove(filename)) < 0) {
 			log_msg(LOG_ERR, "Failed to remove file \"%s\": %d (%s)",

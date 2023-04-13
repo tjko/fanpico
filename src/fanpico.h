@@ -246,6 +246,12 @@ void network_status();
 void set_pico_system_time(long unsigned int sec);
 const char *network_ip();
 
+/* tls.c */
+int read_pem_file(char *buf, uint32_t size, uint32_t timeout);
+#ifdef WIFI_SUPPORT
+struct altcp_tls_config* tls_server_config();
+#endif
+
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];
 void setup_pwm_inputs();

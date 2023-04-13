@@ -245,7 +245,7 @@ void lcd_display_init()
 	int flags = FLAGS_NONE;
 	int orientation = LCD_ORIENTATION_90;
 	int32_t spi_freq = (48 * 1000 * 1000); // Default to 48MHz
-	const char *lcd_name;
+	const char *lcd_name = "";
 	int val;
 	char *args, *tok, *saveptr;
 	int theme_idx;

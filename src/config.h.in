@@ -11,4 +11,6 @@
 
 #define FANPICO_CUSTOM_THEME @FANPICO_CUSTOM_THEME@
 
+#include "fanpico-compile.h"
+
 #endif /* FANPICO_CONFIG_H */

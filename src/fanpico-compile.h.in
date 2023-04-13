@@ -1,0 +1,6 @@
+#ifndef FANPICO_COMPILE_H
+#define FANPICO_COMPILE_H 1
+
+#define TLS_SUPPORT @TLS_SUPPORT@
+
+#endif /* FANPICO_COMPILE_H */

@@ -30,6 +30,8 @@
 #include "pico/unique_id.h"
 #include "pico/bootrom.h"
 #include "pico/util/datetime.h"
+#include "pico/rand.h"
+#include "pico/multicore.h"
 #include "hardware/watchdog.h"
 #include "hardware/rtc.h"
 #include "cJSON.h"
@@ -1455,7 +1457,117 @@ int cmd_wifi_hostname(const char *cmd, const char *args, int query, char *prev_c
 	}
 	return 0;
 }
+
+#if TLS_SUPPORT
+int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	char *buf;
+	uint32_t buf_len = 4096;
+	uint32_t file_size;
+	int res = 0;
+
+	if (query) {
+		multicore_lockout_start_blocking();
+		res = flash_read_file(&buf, &file_size, "key.pem", false);
+		multicore_lockout_end_blocking();
+		if (res == 0 && buf != NULL) {
+			printf("%s\n", buf);
+			free(buf);
+			return 0;
+		}
+		return 2;
+	}
+
+	if ((buf = malloc(buf_len)) == NULL) {
+		log_msg(LOG_ERR,"cmd_tls_pkey(): not enough memory");
+		return 2;
+	}
+	buf[0] = 0;
+
+#if WATCHDOG_ENABLED
+	watchdog_disable();
 #endif
+	printf("Paste private key in PEM format:\n");
+
+	if (read_pem_file(buf, buf_len, 5000) != 1) {
+		printf("Invalid private key!\n");
+		res = 2;
+	} else {
+		multicore_lockout_start_blocking();
+		res = flash_write_file(buf, strlen(buf) + 1, "key.pem");
+		multicore_lockout_end_blocking();
+		if (res) {
+			printf("Failed to save private key.\n");
+			res = 2;
+		} else {
+			printf("Private key succesfully saved. (length=%u)\n",
+				strlen(buf));
+			res = 0;
+		}
+	}
+#if WATCHDOG_ENABLED
+	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
+#endif
+
+	free(buf);
+	return res;
+}
+
+int cmd_tls_cert(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	char *buf;
+	uint32_t buf_len = 8192;
+	uint32_t file_size;
+	int res = 0;
+
+	if (query) {
+		multicore_lockout_start_blocking();
+		res = flash_read_file(&buf, &file_size, "cert.pem", false);
+		multicore_lockout_end_blocking();
+		if (res == 0 && buf != NULL) {
+			printf("%s\n", buf);
+			free(buf);
+			return 0;
+		}
+		return 2;
+	}
+
+	if ((buf = malloc(buf_len)) == NULL) {
+		log_msg(LOG_ERR,"cmd_tls_cert(): not enough memory");
+		return 2;
+	}
+	buf[0] = 0;
+
+#if WATCHDOG_ENABLED
+	watchdog_disable();
+#endif
+	printf("Paste certificate in PEM format:\n");
+
+	if (read_pem_file(buf, buf_len, 5000) != 1) {
+		printf("Invalid private key!\n");
+		res = 2;
+	} else {
+		multicore_lockout_start_blocking();
+		res = flash_write_file(buf, strlen(buf) + 1, "cert.pem");
+		multicore_lockout_end_blocking();
+		if (res) {
+			printf("Failed to save certificate.\n");
+			res = 2;
+		} else {
+			printf("Certificate succesfully saved. (length=%u)\n",
+				strlen(buf));
+			res = 0;
+		}
+	}
+#if WATCHDOG_ENABLED
+	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
+#endif
+
+	free(buf);
+	return res;
+}
+#endif /* TLS_SUPPORT */
+#endif /* WIFI_SUPPOERT */
 
 int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 {
@@ -1608,6 +1720,16 @@ struct cmd_t wifi_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+struct cmd_t tls_commands[] = {
+#ifdef WIFI_SUPPORT
+#if TLS_SUPPORT
+	{ "CERT",      4, NULL,              cmd_tls_cert },
+	{ "PKEY",      4, NULL,              cmd_tls_pkey },
+#endif
+#endif
+	{ 0, 0, 0, 0 }
+};
+
 struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
 	{ "DISPlay",   4, display_commands,  cmd_display_type },
@@ -1624,6 +1746,7 @@ struct cmd_t system_commands[] = {
 	{ "SPI",       3, NULL,              cmd_spi },
 	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
 	{ "TIME",      4, NULL,              cmd_time },
+	{ "TLS",       3, tls_commands,      NULL },
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "UPTIme",    4, NULL,              cmd_uptime },
 	{ "VERsion",   3, NULL,              cmd_version },
