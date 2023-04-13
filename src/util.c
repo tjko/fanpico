@@ -221,7 +221,7 @@ int check_for_change(double oldval, double newval, double threshold)
 }
 
 
-int time_passed(absolute_time_t *t, uint32_t us)
+int time_passed(absolute_time_t *t, uint32_t ms)
 {
 	absolute_time_t t_now = get_absolute_time();
 
@@ -229,7 +229,7 @@ int time_passed(absolute_time_t *t, uint32_t us)
 		return -1;
 
 	if (to_us_since_boot(*t) == 0 ||
-	    to_us_since_boot(delayed_by_ms(*t, us)) < to_us_since_boot(t_now)) {
+	    to_us_since_boot(delayed_by_ms(*t, ms)) < to_us_since_boot(t_now)) {
 		*t = t_now;
 		return 1;
 	}
@@ -366,6 +366,40 @@ time_t datetime_to_time(const datetime_t *datetime)
 void watchdog_disable()
 {
 	hw_clear_bits(&watchdog_hw->ctrl, WATCHDOG_CTRL_ENABLE_BITS);
+}
+
+
+int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout)
+{
+	absolute_time_t t_timeout = get_absolute_time();
+	char *p;
+	int res = 0;
+	int len;
+
+	if (!str || maxlen < 2)
+		return -1;
+
+	len = strnlen(str, maxlen);
+	if (len >= maxlen)
+		return -2;
+	p = str + len;
+
+	while ((p - str) < (maxlen - 1) ) {
+		if (time_passed(&t_timeout, timeout)) {
+			break;
+		}
+		int c = getchar_timeout_us(1);
+		if (c == PICO_ERROR_TIMEOUT)
+			continue;
+		if (c == 10 || c == 13) {
+			res = 1;
+			break;
+		}
+		*p++ = c;
+	}
+	*p = 0;
+
+	return res;
 }
 
 /* eof */

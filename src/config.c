@@ -657,8 +657,9 @@ void read_config(bool multicore)
 	const char *default_config = fanpico_default_config;
 	uint32_t default_config_size = strlen(default_config);
 	cJSON *config = NULL;
-	int res, fd;
-	int32_t file_size, bytes_read;
+	int res;
+	uint32_t file_size;
+	char  *buf = NULL;
 
 
 	log_msg(LOG_INFO, "Reading configuration...");
@@ -666,48 +667,16 @@ void read_config(bool multicore)
 	if (multicore)
 		multicore_lockout_start_blocking();
 
-	/* Mount flash filesystem... */
-	if ((res = pico_mount(false)) < 0) {
-		log_msg(LOG_NOTICE, "pico_mount() failed: %d (%s)", res, pico_errmsg(res));
-		log_msg(LOG_NOTICE, "Trying to initialize a new filesystem...");
-		if ((res = pico_mount(true)) < 0) {
-			log_msg(LOG_ERR, "Unable to initialize flash filesystem!");
-		} else {
-			log_msg(LOG_NOTICE, "Filesystem successfully initialized. (%d)", res);
+	res = flash_read_file(&buf, &file_size, "fanpico.cfg", true);
+	if (res == 0 && buf != NULL) {
+		/* parse saved config... */
+		config = cJSON_Parse(buf);
+		if (!config) {
+			const char *error_str = cJSON_GetErrorPtr();
+			log_msg(LOG_ERR, "Failed to parse saved config: %s",
+				(error_str ? error_str : "") );
 		}
-	} else {
-		log_msg(LOG_INFO, "Filesystem mounted OK");
-		/* Read configuration file... */
-		if ((fd = pico_open("fanpico.cfg", LFS_O_RDONLY)) < 0) {
-			log_msg(LOG_NOTICE, "Cannot open fanpico.cfg: %d (%s)", fd, pico_errmsg(fd));
-		} else {
-			file_size = pico_size(fd);
-			log_msg(LOG_INFO, "Configuration file opened ok: %li bytes", file_size);
-			if (file_size > 0) {
-				char *buf = malloc(file_size);
-				if (!buf) {
-					log_msg(LOG_ALERT, "Not enough memory!");
-				} else {
-					/* read saved config... */
-					log_msg(LOG_INFO, "Reading saved configuration...");
-					bytes_read = pico_read(fd, buf, file_size);
-					if (bytes_read < file_size) {
-						log_msg(LOG_ERR, "Error reading configuration file: %li", bytes_read);
-					} else {
-						/* parse saved config... */
-						config = cJSON_Parse(buf);
-						if (!config) {
-							const char *error_str = cJSON_GetErrorPtr();
-							log_msg(LOG_ERR, "Failed to parse saved config: %s",
-								(error_str ? error_str : "") );
-						}
-					}
-					free(buf);
-				}
-			}
-			pico_close(fd);
-		}
-		pico_unmount();
+		free(buf);
 	}
 
 	if (multicore)
@@ -740,7 +709,6 @@ void save_config()
 {
 	cJSON *config;
 	char *str;
-	int res, fd;
 
 	log_msg(LOG_NOTICE, "Saving configuration...");
 
@@ -756,26 +724,7 @@ void save_config()
 		uint32_t config_size = strlen(str) + 1;
 
 		multicore_lockout_start_blocking();
-
-		/* Mount flash filesystem... */
-		if ((res = pico_mount(false)) < 0) {
-			log_msg(LOG_ERR, "Mount failed: %d (%s)", res, pico_errmsg(res));
-		} else {
-			if ((fd = pico_open("fanpico.cfg", LFS_O_WRONLY | LFS_O_CREAT)) < 0) {
-				log_msg(LOG_ERR, "Failed to create configuration file: %d (%s)",
-					fd, pico_errmsg(fd));
-			} else {
-				lfs_size_t wrote = pico_write(fd, str, config_size);
-				if (wrote < config_size) {
-					log_msg(LOG_ERR, "Failed to write configuration to file: %li", wrote);
-				} else {
-					log_msg(LOG_NOTICE, "Configuration successfully saved: %li bytes", wrote);
-				}
-				pico_close(fd);
-			}
-			pico_unmount();
-		}
-
+		flash_write_file(str, config_size, "fanpico.cfg");
 		multicore_lockout_end_blocking();
 		free(str);
 	}
@@ -809,26 +758,12 @@ void print_config()
 void delete_config()
 {
 	int res;
-	struct lfs_info stat;
 
 	multicore_lockout_start_blocking();
-
-	/* Mount flash filesystem... */
-	if ((res = pico_mount(false)) < 0) {
-		log_msg(LOG_ERR, "Mount failed: %d (%s)", res, pico_errmsg(res));
-	} else {
-		/* Check configuration file exists... */
-		if ((res = pico_stat("fanpico.cfg", &stat)) < 0) {
-			log_msg(LOG_ERR, "Configuration file not found: %d (%s)", res, pico_errmsg(res));
-		} else {
-			/* Remove configuration file...*/
-			log_msg(LOG_NOTICE, "Removing configuration file (%lu bytes)", stat.size);
-			if ((res = pico_remove("fanpico.cfg")) < 0) {
-				log_msg(LOG_ERR, "Failed to remove file: %d (%s)", res, pico_errmsg(res));
-			}
-		}
-		pico_unmount();
-	}
-
+	res = flash_delete_file("fanpico.cfg");
 	multicore_lockout_end_blocking();
+
+	if (res) {
+		log_msg(LOG_ERR, "Failed to delete configuration.");
+	}
 }

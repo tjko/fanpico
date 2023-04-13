@@ -233,6 +233,11 @@ void oled_clear_display();
 void oled_display_status(const struct fanpico_state *state, const struct fanpico_config *conf);
 void oled_display_message(int rows, const char **text_lines);
 
+/* flash.h */
+int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int init_flash);
+int flash_write_file(const char *buf, uint32_t size, const char *filename);
+int flash_delete_file(const char *filename);
+
 /* network.c */
 void network_init();
 void network_mac();
@@ -240,6 +245,12 @@ void network_poll();
 void network_status();
 void set_pico_system_time(long unsigned int sec);
 const char *network_ip();
+
+/* tls.c */
+int read_pem_file(char *buf, uint32_t size, uint32_t timeout);
+#ifdef WIFI_SUPPORT
+struct altcp_tls_config* tls_server_config();
+#endif
 
 /* pwm.c */
 extern float mbfan_pwm_duty[MBFAN_MAX_COUNT];
@@ -306,6 +317,7 @@ datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t);
 struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
 time_t datetime_to_time(const datetime_t *datetime);
 void watchdog_disable();
+int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
 
 /* crc32.c */
 unsigned int xcrc32 (const unsigned char *buf, int len, unsigned int init);

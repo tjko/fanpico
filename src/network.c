@@ -185,6 +185,13 @@ void wifi_init()
 
 	/* Enable HTTP server */
 	httpd_init();
+#if TLS_SUPPORT
+	struct altcp_tls_config *tls_config = tls_server_config();
+	if (tls_config) {
+		log_msg(LOG_NOTICE, "HTTPS/TLS enabled");
+		httpd_inits(tls_config);
+	}
+#endif
 	http_set_ssi_handler(fanpico_ssi_handler, NULL, 0);
 
 	cyw43_arch_lwip_end();
