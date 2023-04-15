@@ -126,9 +126,9 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 
 			cJSON_AddItemToObject(o, "fan", cJSON_CreateNumber(i+1));
 			cJSON_AddItemToObject(o, "name", cJSON_CreateString(cfg->fans[i].name));
-			cJSON_AddItemToObject(o, "rpm", cJSON_CreateNumber(rpm));
-			cJSON_AddItemToObject(o, "frequency", cJSON_CreateNumber(st->fan_freq[i]));
-			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(st->fan_duty[i]));
+			cJSON_AddItemToObject(o, "rpm", cJSON_CreateNumber(round_decimal(rpm, 0)));
+			cJSON_AddItemToObject(o, "frequency", cJSON_CreateNumber(round_decimal(st->fan_freq[i], 2)));
+			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(round_decimal(st->fan_duty[i], 1)));
 			cJSON_AddItemToArray(array, o);
 		}
 		cJSON_AddItemToObject(json, "fans", array);
@@ -144,9 +144,9 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 
 			cJSON_AddItemToObject(o, "mbfan", cJSON_CreateNumber(i+1));
 			cJSON_AddItemToObject(o, "name", cJSON_CreateString(cfg->mbfans[i].name));
-			cJSON_AddItemToObject(o, "rpm", cJSON_CreateNumber(rpm));
-			cJSON_AddItemToObject(o, "frequency", cJSON_CreateNumber(st->mbfan_freq[i]));
-			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(st->mbfan_duty[i]));
+			cJSON_AddItemToObject(o, "rpm", cJSON_CreateNumber(round_decimal(rpm, 0)));
+			cJSON_AddItemToObject(o, "frequency", cJSON_CreateNumber(round_decimal(st->mbfan_freq[i], 2)));
+			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(round_decimal(st->mbfan_duty[i], 1)));
 			cJSON_AddItemToArray(array, o);
 		}
 		cJSON_AddItemToObject(json, "mbfans", array);
@@ -161,8 +161,8 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 
 			cJSON_AddItemToObject(o, "sensor", cJSON_CreateNumber(i+1));
 			cJSON_AddItemToObject(o, "name", cJSON_CreateString(cfg->sensors[i].name));
-			cJSON_AddItemToObject(o, "temperature", cJSON_CreateNumber(st->temp[i]));
-			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(pwm));
+			cJSON_AddItemToObject(o, "temperature", cJSON_CreateNumber(round_decimal(st->temp[i], 1)));
+			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(round_decimal(pwm, 1)));
 			cJSON_AddItemToArray(array, o);
 		}
 		cJSON_AddItemToObject(json, "mbfans", array);

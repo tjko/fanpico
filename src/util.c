@@ -238,6 +238,40 @@ int time_passed(absolute_time_t *t, uint32_t ms)
 }
 
 
+#define SQRT_INT64_MAX 3037000499  // sqrt(INT64_MAX)
+
+int64_t pow_i64(int64_t x, uint8_t y)
+{
+	int64_t res;
+
+	/* Handle edge cases. */
+	if (x == 1 || y == 0)
+		return 1;
+	if (x == 0)
+		return 0;
+
+	/* Calculate x^y by squaring method. */
+	res = (y & 1 ? x : 1);
+	y >>= 1;
+	while (y) {
+		/* Check for overflow. */
+		if (x > SQRT_INT64_MAX)
+			return 0;
+		x *= x;
+		if (y & 1)
+			res *= x; /* This may still overflow... */
+		y >>= 1;
+	}
+
+	return res;
+}
+
+double round_decimal(double val, unsigned int decimal)
+{
+	double f = pow_i64(10, decimal);
+	return round(val * f) / f;
+}
+
 char* base64encode(const char *input)
 {
 	base64_encodestate ctx;

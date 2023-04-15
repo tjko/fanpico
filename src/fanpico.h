@@ -246,6 +246,12 @@ void network_status();
 void set_pico_system_time(long unsigned int sec);
 const char *network_ip();
 
+/* httpd.c */
+#if WIFI_SUPPORT
+u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
+			u16_t current_tag_part, u16_t *next_tag_part);
+#endif
+
 /* tls.c */
 int read_pem_file(char *buf, uint32_t size, uint32_t timeout);
 #ifdef WIFI_SUPPORT
@@ -309,6 +315,8 @@ const char *pico_serial_str();
 const char *mac_address_str(const uint8_t *mac);
 int check_for_change(double oldval, double newval, double threshold);
 int time_passed(absolute_time_t *t, uint32_t us);
+int64_t pow_i64(int64_t x, uint8_t y);
+double round_decimal(double val, unsigned int decimal);
 char* base64encode(const char *input);
 char* base64decode(const char *input);
 char *strncopy(char *dst, const char *src, size_t size);
