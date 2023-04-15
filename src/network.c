@@ -42,10 +42,6 @@
 
 #include "syslog.h"
 
-u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
-			u16_t current_tag_part, u16_t *next_tag_part);
-
-
 static absolute_time_t t_network_initialized;
 static bool wifi_initialized = false;
 static bool network_initialized = false;
