@@ -5,8 +5,8 @@
   (paper "A4")
 
   (title_block
-    (title "FanPico-0804D v1.1")
-    (date "2022-10-06")
+    (title "FanPico-0804D v1.2")
+    (date "2023-02-17")
     (company "Timo Kokkonen <tjko@iki.fi>")
     (comment 3 "Fanpico firmware reference PCB.")
   )
