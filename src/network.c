@@ -154,9 +154,25 @@ void wifi_init()
 	if (cfg) {
 		if (strlen(cfg->wifi_ssid) > 0 && strlen(cfg->wifi_passwd) > 0) {
 			log_msg(LOG_NOTICE, "WiFi connecting to network: %s", cfg->wifi_ssid);
-			res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
-							cfg->wifi_passwd,
-							CYW43_AUTH_WPA2_AES_PSK);
+			if (cfg->wifi_mode == 0) {
+				/* Default is to initiate asynchronous connection. */
+				res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
+								cfg->wifi_passwd,
+								CYW43_AUTH_WPA2_AES_PSK);
+			} else {
+				/* If "SYS:WIFI:MODE 1" has been used, attemp synchronous connection
+				   as connection to some buggy(?) APs don't seem to always work with
+				   asynchronouse connection... */
+				int retries = 2;
+
+				do {
+					res = cyw43_arch_wifi_connect_timeout_ms(cfg->wifi_ssid,
+										cfg->wifi_passwd,
+										CYW43_AUTH_WPA2_AES_PSK,
+										30000);
+					log_msg(LOG_NOTICE,"cyw43_arch_wifi_connect_timeout_ms(): %d", res);
+				} while (res != 0 && --retries > 0);
+			}
 			if (res != 0) {
 				log_msg(LOG_ERR, "WiFi connect failed: %d", res);
 				cyw43_arch_deinit();

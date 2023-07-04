@@ -111,6 +111,8 @@ Fanpico supports following commands:
 * [SYStem:WIFI:HOSTname?](#systemwifihostname-1)
 * [SYStem:WIFI:IPaddress](#systemwifiipaddress)
 * [SYStem:WIFI:IPaddress?](#systemwifiipaddress-1)
+* [SYStem:WIFI:MODE](#systemwifimode)
+* [SYStem:WIFI:MODE?](#systemwifimode-1)
 * [SYStem:WIFI:NETMASK](#systemwifinetmask)
 * [SYStem:WIFI:NETMASK?](#systemwifinetmask-1)
 * [SYStem:WIFI:GATEWAY](#systemwifigateway)
@@ -1523,6 +1525,41 @@ SYS:WIFI:IP?
 0.0.0.0
 ```
 
+
+#### SYStem:WIFI:MODE
+Set WiFi connection mode. Normally this setting is not needed with modern APs.
+
+However, if FanPico is failing to connect to WiFi network, this couldbe
+due to old firmware on the AP (upgrading to latest firmare typically helps).
+If firmware update did not help or there is no updated firmware available, setting
+connection mode to synchronous can help (however this could cause FanPico to "hang" for up to 60 seconds
+during boot up).
+
+
+Mode|Description
+------|-----------
+0|Asynchronous connection mode (default)
+1|Synchronous connection mode (
+
+Default: 0
+
+
+Example:
+
+```
+SYS:WIFI:MODE 1
+```
+
+#### SYStem:WIFI:MODE?
+Display currently configured WiFi connection mdoe?
+
+Example:
+
+```
+SYS:WIFI:MODE?
+0
+
+```
 
 #### SYStem:WIFI:NETMASK
 Set statically configured netmask.
