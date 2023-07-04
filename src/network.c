@@ -170,7 +170,7 @@ void wifi_init()
 										cfg->wifi_passwd,
 										CYW43_AUTH_WPA2_AES_PSK,
 										30000);
-					log_msg(LOG_NOTICE,"cyw43_arch_wifi_connect_timeout_ms(): %d", res);
+					log_msg(LOG_INFO, "cyw43_arch_wifi_connect_timeout_ms(): %d", res);
 				} while (res != 0 && --retries > 0);
 			}
 			if (res != 0) {
