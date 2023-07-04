@@ -333,6 +333,7 @@ void clear_config(struct fanpico_config *cfg)
 #ifdef WIFI_SUPPORT
 	cfg->wifi_ssid[0] = 0;
 	cfg->wifi_passwd[0] = 0;
+	cfg->wifi_mode = 0;
 	cfg->hostname[0] = 0;
 	strncopy(cfg->wifi_country, "XX", sizeof(cfg->wifi_country));
 	ip_addr_set_any(0, &cfg->syslog_server);
@@ -383,6 +384,9 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 			cJSON_AddItemToObject(config, "wifi_passwd", cJSON_CreateString(p));
 			free(p);
 		}
+	}
+	if (cfg->wifi_mode != 0) {
+		cJSON_AddItemToObject(config, "wifi_mode", cJSON_CreateNumber(cfg->wifi_mode));
 	}
 	if (!ip_addr_isany(&cfg->syslog_server))
 		cJSON_AddItemToObject(config, "syslog_server", cJSON_CreateString(ipaddr_ntoa(&cfg->syslog_server)));
@@ -544,6 +548,9 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 				free(p);
 			}
 		}
+	}
+	if ((ref = cJSON_GetObjectItem(config, "wifi_mode"))) {
+		cfg->wifi_mode = cJSON_GetNumberValue(ref);
 	}
 	if ((ref = cJSON_GetObjectItem(config, "syslog_server"))) {
 		if ((val = cJSON_GetStringValue(ref)))

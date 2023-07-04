@@ -1,5 +1,5 @@
 /* command.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -1458,6 +1458,28 @@ int cmd_wifi_hostname(const char *cmd, const char *args, int query, char *prev_c
 	return 0;
 }
 
+int cmd_wifi_mode(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int val;
+
+	if (query) {
+		printf("%u\n", conf->wifi_mode);
+		return 0;
+	}
+
+	if (str_to_int(args, &val, 10)) {
+		if (val >= 0 && val <= 1) {
+			log_msg(LOG_NOTICE, "WiFi mode change %d --> %d", cfg->wifi_mode, val);
+			conf->wifi_mode = val;
+		} else {
+			log_msg(LOG_WARNING, "Invalid WiFi mode: %s", args);
+			return 2;
+		}
+		return 0;
+	}
+	return 1;
+}
+
 #if TLS_SUPPORT
 int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
 {
@@ -1711,6 +1733,7 @@ struct cmd_t wifi_commands[] = {
 	{ "MAC",       3, NULL,              cmd_wifi_mac },
 	{ "NETMask",   4, NULL,              cmd_wifi_netmask },
 	{ "NTP",       3, NULL,              cmd_wifi_ntp },
+	{ "MODE",      4, NULL,              cmd_wifi_mode },
 	{ "PASSword",  4, NULL,              cmd_wifi_password },
 	{ "SSID",      4, NULL,              cmd_wifi_ssid },
 	{ "STATS",     5, NULL,              cmd_wifi_stats },
