@@ -1,5 +1,5 @@
 /* sensors.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -97,14 +97,12 @@ double get_temperature(uint8_t input, const struct fanpico_config *config)
 }
 
 
-double sensor_get_duty(const struct sensor_input *sensor, double temp)
+double sensor_get_duty(const struct temp_map *map, double temp)
 {
 	int i;
 	double a, t;
-	const struct temp_map *map;
 
 	t = temp;
-	map = &sensor->map;
 
 	if (t <= map->temp[0][0])
 		return map->temp[0][1];
@@ -121,5 +119,68 @@ double sensor_get_duty(const struct sensor_input *sensor, double temp)
 }
 
 
+double get_vsensor(uint8_t i, struct fanpico_config *config,
+		struct fanpico_state *state)
+{
+	struct vsensor_input *s = &config->vsensors[i];
+	double t = state->vtemp[i];
 
+	if (s->mode == VSMODE_MANUAL) {
+		/* Copy over values from WRITE:VSENSORx commands ... */
+		if (config->vtemp_updated[i] != state->vtemp_updated[i]) {
+			t = config->vtemp[i];
+			state->vtemp_updated[i] = config->vtemp_updated[i];
+		}
+		/* Check if should reset temperature back to default due to lack of updates... */
+		if (s->timeout > 0 && t != s->default_temp) {
+			if (absolute_time_diff_us(state->vtemp_updated[i], get_absolute_time())/1000000
+				> s->timeout) {
+				log_msg(LOG_INFO,"sensor%d: timeout, temperature reset to default", i + 1);
+				t = s->default_temp;
+			}
+		}
+	} else  {
+		int count = 0;
+		t = 0.0;
+
+		for (int j = 0; j < SENSOR_COUNT && s->sensors[j]; j++) {
+			float val = state->temp[s->sensors[j] - 1];
+			count++;
+
+			if (s->mode == VSMODE_MAX) {
+				if (count == 1 || val > t)
+					t = val;
+			}
+			else if (s->mode == VSMODE_MIN) {
+				if (count == 1 || val < t)
+					t = val;
+			}
+			else if (s->mode == VSMODE_AVG) {
+				t += val;
+			}
+			else if (s->mode == VSMODE_DELTA) {
+				if (count == 1)
+					t = val;
+				else if (count == 2)
+					t -= val;
+			}
+		}
+		if (s->mode == VSMODE_AVG && count > 0) {
+			t /= count;
+		}
+
+	}
+
+
+	/* Apply filter */
+	if (s->filter != FILTER_NONE) {
+		double t_f = filter(s->filter, s->filter_ctx, t);
+		if (t_f != t) {
+			log_msg(LOG_DEBUG, "filter vsensor%d: %lf -> %lf\n", i+1, t, t_f);
+			t = t_f;
+		}
+	}
+
+	return t;
+}
 

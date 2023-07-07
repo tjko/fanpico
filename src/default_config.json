@@ -46,6 +46,96 @@
 	    ]
 	}
     ],
+    "vsensors": [
+	{
+	    "id":	0,
+	    "name":	"vsensor1",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout_ms":	10000,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	1,
+	    "name":	"vsensor2",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout_ms":	10000,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	2,
+	    "name":	"vsensor3",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout_ms":	10000,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	3,
+	    "name":	"vsensor4",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout_ms":	10000,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	4,
+	    "name":	"vsensor5",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout_ms":	10000,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	5,
+	    "name":	"vsensor6",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout_ms":	10000,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	6,
+	    "name":	"vsensor7",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout_ms":	10000,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	7,
+	    "name":	"vsensor8",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout_ms":	10000,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	}
+    ],
     "fans": [
 	{
 	    "id": 0,

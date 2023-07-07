@@ -1,5 +1,5 @@
 /* fanpico.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -164,6 +164,11 @@ void clear_state(struct fanpico_state *s)
 		s->temp[i] = 0.0;
 		s->temp_prev[i] = 0.0;
 	}
+	for (i = 0; i < VSENSOR_MAX_COUNT; i++) {
+		s->vtemp[i] = 0.0;
+		s->vtemp_prev[i] = 0.0;
+		s->vtemp_updated[i] = 0;
+	}
 }
 
 
@@ -280,6 +285,18 @@ void core1_main()
 						state->temp_prev[i],
 						state->temp[i]);
 					state->temp_prev[i] = state->temp[i];
+				}
+			}
+
+			log_msg(LOG_DEBUG, "Update virtual sensors");
+			for (int i = 0; i < VSENSOR_COUNT; i++) {
+				state->vtemp[i] = get_vsensor(i, config, state);
+				if (check_for_change(state->vtemp_prev[i], state->vtemp[i], 0.5)) {
+					log_msg(LOG_INFO, "vsensor%d: Temperature change %.1fC --> %.1fC",
+						i+1,
+						state->vtemp_prev[i],
+						state->vtemp[i]);
+					state->vtemp_prev[i] = state->vtemp[i];
 				}
 			}
 		}

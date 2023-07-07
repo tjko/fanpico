@@ -1,5 +1,5 @@
 /* fanpico.h
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -35,9 +35,12 @@
 #error unknown board model
 #endif
 
-#define FAN_MAX_COUNT     8   /* Max Number of Fan outputs on the board */
-#define MBFAN_MAX_COUNT   4   /* Max Number of (Motherboard) Fan inputs on the board */
-#define SENSOR_MAX_COUNT  3   /* Max Number of sensor inputs on the board */
+#define FAN_MAX_COUNT     8   /* Max number of Fan outputs on the board */
+#define MBFAN_MAX_COUNT   4   /* Max number of (Motherboard) Fan inputs on the board */
+#define SENSOR_MAX_COUNT  3   /* Max number of sensor inputs on the board */
+#define VSENSOR_MAX_COUNT 8   /* Max number of virtual sensors */
+
+#define VSENSOR_COUNT 8
 
 #define SENSOR_SERIES_RESISTANCE 10000.0
 
@@ -64,6 +67,7 @@ enum pwm_source_types {
 	PWM_MB      = 1,     /* Mb pwm signal */
 	PWM_SENSOR  = 2,     /* Sensor signal */
 	PWM_FAN     = 3,     /* Another fan */
+	PWM_VSENSOR = 4,     /* Virtual sensor */
 };
 #define PWM_SOURCE_ENUM_MAX 3
 
@@ -85,6 +89,15 @@ enum temp_sensor_types {
 	TEMP_EXTERNAL = 1,
 };
 #define TEMP_ENUM_MAX 1
+
+enum vsensor_modes {
+	VSMODE_MANUAL = 0,
+	VSMODE_MAX = 1,
+	VSMODE_MIN = 2,
+	VSMODE_AVG = 3,
+	VSMODE_DELTA = 4,
+};
+#define VSMODE_ENUM_MAX 4
 
 struct pwm_map {
 	uint8_t points;
@@ -148,8 +161,20 @@ struct sensor_input {
 	void *filter_ctx;
 };
 
+struct vsensor_input {
+	char name[MAX_NAME_LEN];
+	uint8_t mode;
+	float default_temp;
+	int32_t timeout;
+	uint8_t sensors[SENSOR_MAX_COUNT];
+	struct temp_map map;
+	enum signal_filter_types filter;
+	void *filter_ctx;
+};
+
 struct fanpico_config {
 	struct sensor_input sensors[SENSOR_MAX_COUNT];
+	struct vsensor_input vsensors[VSENSOR_MAX_COUNT];
 	struct fan_output fans[FAN_MAX_COUNT];
 	struct mb_input mbfans[MBFAN_MAX_COUNT];
 	bool local_echo;
@@ -171,6 +196,9 @@ struct fanpico_config {
 	ip_addr_t netmask;
 	ip_addr_t gateway;
 #endif
+	/* Non-config items */
+	float vtemp[VSENSOR_MAX_COUNT];
+	absolute_time_t vtemp_updated[VSENSOR_MAX_COUNT];
 };
 
 struct fanpico_state {
@@ -181,6 +209,9 @@ struct fanpico_state {
 	float fan_freq_prev[FAN_MAX_COUNT];
 	float temp[SENSOR_MAX_COUNT];
 	float temp_prev[SENSOR_MAX_COUNT];
+	float vtemp[VSENSOR_MAX_COUNT];
+	absolute_time_t vtemp_updated[VSENSOR_MAX_COUNT];
+	float vtemp_prev[VSENSOR_MAX_COUNT];
 	/* outputs */
 	float fan_duty[FAN_MAX_COUNT];
 	float fan_duty_prev[FAN_MAX_COUNT];
@@ -207,6 +238,8 @@ extern mutex_t *config_mutex;
 extern const struct fanpico_config *cfg;
 int str2pwm_source(const char *s);
 const char* pwm_source2str(enum pwm_source_types source);
+int str2vsmode(const char *s);
+const char* vsmode2str(enum vsensor_modes mode);
 int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id);
 int str2tacho_source(const char *s);
 const char* tacho_source2str(enum tacho_source_types source);
@@ -278,7 +311,9 @@ float filter(enum signal_filter_types filter, void *ctx, float input);
 
 /* sensors.c */
 double get_temperature(uint8_t input, const struct fanpico_config *config);
-double sensor_get_duty(const struct sensor_input *sensor, double temp);
+double sensor_get_duty(const struct temp_map *map, double temp);
+double get_vsensor(uint8_t i, struct fanpico_config *config,
+		struct fanpico_state *state);
 
 /* tacho.c */
 void setup_tacho_inputs();

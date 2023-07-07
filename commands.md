@@ -60,6 +60,14 @@ Fanpico supports following commands:
 * [CONFigure:SENSORx:TEMPNominal?](#configuresensorxtempnominal-1)
 * [CONFigure:SENSORx:FILTER](#configuresensorxfilter)
 * [CONFigure:SENSORx:FILTER?](#configuresensorxfilter-1)
+* [CONFigure:VSENSORx:NAME](#configurevsensorxname)
+* [CONFigure:VSENSORx:NAME?](#configurevsensorxname-1)
+* [CONFigure:VSENSORx:SOUrce](#configurevsensorxsource)
+* [CONFigure:VSENSORx:SOUrce?](#configurevsensorxsource-1)
+* [CONFigure:VSENSORx:TEMPMap](#configurevsensorxtempmap)
+* [CONFigure:VSENSORx:TEMPMap?](#configurevsensorxtempmap-1)
+* [CONFigure:VSENSORx:FILTER](#configurevsensorxfilter)
+* [CONFigure:VSENSORx:FILTER?](#configurevsensorxfilter-1)
 * [MEASure:Read?](#measureread)
 * [MEASure:FANx?](#measurefanx)
 * [MEASure:FANx:Read?](#measurefanxread)
@@ -74,6 +82,9 @@ Fanpico supports following commands:
 * [MEASure:SENSORx?](#measuresensorx)
 * [MEASure:SENSORx:Read?](#measuresensorxread)
 * [MEASure:SENSORx:TEMP?](#measuresensorxtemp)
+* [MEASure:VSENSORx?](#measurevsensorx)
+* [MEASure:VSENSORx:Read?](#measurevsensorxread)
+* [MEASure:VSENSORx:TEMP?](#measurevsensorxtemp)
 * [Read?](#read)
 * [SYStem:ERRor?](#systemerror)
 * [SYStem:DEBug](#systemdebug)
@@ -128,6 +139,8 @@ Fanpico supports following commands:
 * [SYStem:WIFI:STATS?](#systemwifistats)
 * [SYStem:WIFI:PASSword](#systemwifipassword)
 * [SYStem:WIFI:PASSword?](#systemwifipassword-1)
+* [WRIte:VSENSORx](#writevsensorx)
+
 
 Additionally unit will respond to following standard SCPI commands to provide compatibility in case some program
 unconditionally will send these:
@@ -839,6 +852,163 @@ sma,10
 ```
 
 
+### CONFigure:VSENSORx Commands
+VSENSORx commands are used to configure virtual temperature sensors.
+These can be "sensors" that are updated by software, like "CPU Temperature" of host system.
+Or these can be be virtual sensors that report value of multiple physical sensors fed through a mathematical formula.
+
+
+Where x is a number from 1 to 3.
+
+Virtual Sensor Mode|Description
+------|-----------
+manual|Manually updated (by software) sensor values. For example host CPU Temperature.
+max|Maximum temperature of configured source sensors.
+min|Minimum temperature of configured source sensors.
+avg|Average temperature of configured source sensors.
+delta|Temperature delta between readings from two source sensors.
+
+
+#### CONFigure:VSENSORx:NAME
+Set name for virtual temperature sensor.
+
+For example:
+```
+CONF:VSENSOR1:NAME CPU Temperature
+```
+
+#### CONFigure:VSENSORx:NAME?
+Query name of a virtual temperature sensor.
+
+For example:
+```
+CONF:VSENSOR1:NAME?
+CPU Temperature
+```
+
+#### CONFigure:VSENSORx:SOUrce
+Configure source for the virtual temperature sensor.
+
+Source types:
+
+MODE|Description|No of Parameters|Parameters
+----|-----------|----------------|----------
+MANUAL|Temperature updated by external program/driver|2|default_temperature_C,timeout
+MAX|Maximum temperatore between source sensors|2+|sensor_a, sensor_b, ...
+MIN|Minimum temperature between source sensors|2+|sensor_a, sensor_b, ...
+AVG|Average temperature between source sensors|2+|sensor_a, sensor_b, ...
+DELTA|Temperature delta between to source sensors|2|sensor_a, sensor_b
+
+
+Note, in "manual" mode if timeout_ms is set to zero, then sensor's temperature reading
+will never revert back to default value (if no updates are being received).
+
+
+Defaults:
+
+Default for all virtual sensors is to be in "MANUAL" mode and revert automatically to 0C
+if no temperature update has been received within 30 seconds.
+
+VSENSOR|SOURCE
+---|------
+1|MANUAL,0,30
+...|...
+
+
+Example: Set VSENSOR1 to report temperature that is updated by external program. And to sensor reading to revert to default value of 99C if no update has been received within 5 seconds.
+```
+CONF:VSENSOR2:SOURCE manual,99,5
+```
+
+Example: Set VSENSOR2 to follow report temperature delta between SENSOR1 and  SENSOR2.
+```
+CONF:VSENSOR2:SOURCE delta,1,2
+```
+
+Example: Set VSENSOR3 to report average temperature between SENSOR1 through SENSOR3.
+```
+CONF:VSENSOR3:SOURCE avg,1,2,3
+```
+
+#### CONFigure:VSENSORx:SOUrce?
+Query a virtual temperature sensor configuration (temperature reading source).
+
+
+Command returns response in following format:
+```
+mode,parameter,parameter,...
+```
+
+Example:
+```
+CONF:VSENSOR1:SOU?
+manual,99.0,5
+```
+
+#### CONFigure:VSENSORx:TEMPMap
+Set mapping (curve) for converting temperature to PWM signal duty cycle (%).
+This can be used to customize how temperature affects fan speed.
+
+Mapping is specified with up to 32 points (that can be plotted as a curve)
+that map the relation of the temperature (x value) to output PWM signal (y value).
+Mapping should at minimum include that start and end points of the expected input signal.
+
+
+Default mapping:
+x (Temperature in C)|y (Fan Duty Cycle in %)
+-|-
+20|0
+50|100
+
+Example: Set Fan to start running at 20% duty cycle at 25C and to be full speed at 50C
+```
+CONF:VSENSOR1:TEMPMAP 25,20,50,100
+```
+
+#### CONFigure:VSENSORx:TEMPMap?
+Display currently active mapping (curve) for convertin measured temperature
+to PWM duty cycle (%) for the fan output signal.
+
+Mapping is displayed as comma separated list of values:
+```
+x_1,y_1,x_2,y_2,...,x_n,y_n
+```
+
+For example:
+```
+CONF:VSENSOR1:TEMPMAP?
+20,0,50,10000
+```
+
+#### CONFigure:VSENSORx:FILTER
+Configure filter to be applied to the temperature signal received from the sensor.
+
+List of available filters can be found here: [Available Filters](#configurefanfilter)
+
+By default, no filter is applied (filter is set to "none").
+
+
+Example: Set filter for the input signal to "Simple Moving Average", that can
+be useful with noisy readings from temperature sensors.
+
+```
+CONF:VSENSOR1:FILTER sma,10
+```
+
+#### CONFigure:VSENSORx:FILTER?
+Display currently active filter for the temperature signal received from the sensor.
+
+Format: filter,arg_1,arg_2,...arg_n
+
+
+For example:
+```
+CONF:VENSOR1:FILTER?
+sma,10
+```
+
+
+
 ### MEASure Commands
 These commands are for reading (measuring) the current input/output values on Fan and Motherboard Fan ports.
 
@@ -853,6 +1023,8 @@ mbfan<n>,"<name>",<output rpm>,<output tacho frequency>,<input pwm duty cycle>
 fan<n>,"<name>",<input rpm>,<input tacho frequency>,<output pwm duty cycle>
 ...
 sensor<n>,"<name>",<temperature>,<pwm duty cycle>
+...
+vsensor<n>,"<name>",<temperature>,<pwm duty cycle>
 ```
 
 Example:
@@ -873,6 +1045,14 @@ fan8,"Top Exhaust 2",462,15.40,22.8
 sensor1,"Intake Air",22.4,7.9
 sensor2,"Exhaust Air",30.5,35.0
 sensor3,"RPi Pico",26.5,21.8
+vsensor1,"CPU Temp",55.0,60.5
+vsensor2,"unused",0.0,20.0
+vsensor3,"unused",0.0,20.0
+vsensor4,"unused",0.0,20.0
+vsensor5,"unused",0.0,20.0
+vsensor6,"unused",0.0,20.0
+vsensor7,"unused",0.0,20.0
+vsensor8,"unused",0.0,20.0
 ```
 
 ### MEASure:FANx Commands
@@ -1016,7 +1196,7 @@ MEAS:SENSOR1:R?
 ```
 
 #### MEASure:SENSORx:TEMP?
-Return current fan speed (RPM) reported out to motherboard.
+Return current temperature (C) measured by the sensor.
 
 This is same as: MEASure:SENSORx?
 
@@ -1025,6 +1205,38 @@ Example:
 MEAS:SENSOR1:TEMP?
 25
 ```
+
+#### MEASure:VENSORx?
+Return current temperature (C) measured by the sensor.
+
+Example:
+```
+MEAS:VSENSOR1?
+25
+```
+
+#### MEASure:VSENSORx:Read?
+Return current temperature (C) measured by the sensor.
+
+This is same as: MEASure:VSENSORx?
+
+Example:
+```
+MEAS:VSENSOR1:R?
+25
+```
+
+#### MEASure:VSENSORx:TEMP?
+Return current temperature (C) measured by the sensor.
+
+This is same as: MEASure:VSENSORx?
+
+Example:
+```
+MEAS:VSENSOR1:TEMP?
+25
+```
+
 
 ### Read Commands
 
@@ -1039,6 +1251,8 @@ mbfan<n>,"<name>",<output rpm>,<output tacho frequency>,<input pwm duty cycle>
 fan<n>,"<name>",<input rpm>,<input tacho frequency>,<output pwm duty cycle>
 ...
 sensor<n>,"<name>",<temperature>,<pwm duty cycle>
+...
+vsensor<n>,"<name>",<temperature>,<pwm duty cycle>
 ```
 
 Example:
@@ -1058,6 +1272,14 @@ fan8,"Top Exhaust 2",462,15.40,22.8
 sensor1,"Intake Air",22.4,7.9
 sensor2,"Exhaust Air",30.5,35.0
 sensor3,"RPi Pico",26.5,21.8
+vsensor1,"CPU Temp",55.0,60.5
+vsensor2,"unused",0.0,20.0
+vsensor3,"unused",0.0,20.0
+vsensor4,"unused",0.0,20.0
+vsensor5,"unused",0.0,20.0
+vsensor6,"unused",0.0,20.0
+vsensor7,"unused",0.0,20.0
+vsensor8,"unused",0.0,20.0
 ```
 
 
@@ -1734,3 +1956,20 @@ Example:
 SYS:WIFI:PASS?
 mynetworkpassword
 ```
+
+
+### WRIte Commands
+
+These commands are for sending (writing) information from host to FanPico unit.
+
+#### WRIte:VSENSORx
+
+Set/update temperature of a virtual sensor. This can be used by a program on the host
+system to feed external temperature information into FanPico.
+
+
+Example: Set VSENSOR1 temperature to 42.1C
+```
+WRITE:VSENSOR1 42.1
+```
+

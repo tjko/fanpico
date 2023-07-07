@@ -384,10 +384,18 @@ int cmd_read(const char *cmd, const char *args, int query, char *prev_cmd)
 	}
 
 	for (i = 0; i < SENSOR_COUNT; i++) {
-		pwm = sensor_get_duty(&conf->sensors[i], st->temp[i]);
+		pwm = sensor_get_duty(&conf->sensors[i].map, st->temp[i]);
 		printf("sensor%d,\"%s\",%.1lf,%.1f\n", i+1,
 			conf->sensors[i].name,
 			st->temp[i],
+			pwm);
+	}
+
+	for (i = 0; i < VSENSOR_COUNT; i++) {
+		pwm = sensor_get_duty(&conf->vsensors[i].map, st->vtemp[i]);
+		printf("vsensor%d,\"%s\",%.1lf,%.1f\n", i+1,
+			conf->vsensors[i].name,
+			st->vtemp[i],
 			pwm);
 	}
 
@@ -1320,6 +1328,254 @@ int cmd_sensor_filter(const char *cmd, const char *args, int query, char *prev_c
 	return ret;
 }
 
+int cmd_vsensor_name(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor;
+
+	sensor = atoi(&prev_cmd[7]) - 1;
+	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
+		if (query) {
+			printf("%s\n", conf->vsensors[sensor].name);
+		} else {
+			log_msg(LOG_NOTICE, "vsensor%d: change name '%s' --> '%s'", sensor + 1,
+				conf->vsensors[sensor].name, args);
+			strncopy(conf->vsensors[sensor].name, args,
+				sizeof(conf->vsensors[sensor].name));
+		}
+		return 0;
+	}
+	return 1;
+}
+
+int cmd_vsensor_source(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor, val, i;
+	uint8_t vsmode, selected[SENSOR_MAX_COUNT];
+	float default_temp;
+	int timeout;
+	char *tok, *saveptr, *param, temp_str[32], tmp[8];
+	int ret = 0;
+	int count = 0;
+
+	sensor = atoi(&prev_cmd[7]) - 1;
+	if (sensor < 0 || sensor >= VSENSOR_COUNT)
+		return 1;
+	vsmode = conf->vsensors[sensor].mode;
+
+	if (query) {
+		printf("%s", vsmode2str(vsmode));
+		if (vsmode == VSMODE_MANUAL) {
+			printf(",%0.2f,%ld",
+				conf->vsensors[sensor].default_temp,
+				conf->vsensors[sensor].timeout);
+		} else {
+			for(i = 0; i < SENSOR_COUNT; i++) {
+				if (conf->vsensors[sensor].sensors[i]) {
+					printf(",%d", conf->vsensors[sensor].sensors[i]);
+				}
+			}
+		}
+		printf("\n");
+	} else {
+		ret = 2;
+		if ((param = strdup(args)) == NULL)
+			return 1;
+
+		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
+			vsmode = str2vsmode(tok);
+			if (vsmode == VSMODE_MANUAL) {
+				tok = strtok_r(NULL, ",", &saveptr);
+				if (str_to_float(tok, &default_temp)) {
+					tok = strtok_r(NULL, ",", &saveptr);
+					if (str_to_int(tok, &timeout, 10)) {
+						if (timeout < 0)
+							timeout = 0;
+						log_msg(LOG_NOTICE, "vsensor%d: set source to %s,%0.2f,%d",
+							sensor + 1,
+							vsmode2str(vsmode),
+							default_temp,
+							timeout);
+						conf->vsensors[sensor].mode = vsmode;
+						conf->vsensors[sensor].default_temp = default_temp;
+						conf->vsensors[sensor].timeout = timeout;
+						ret = 0;
+					}
+				}
+			} else {
+				temp_str[0] = 0;
+				for(i = 0; i < SENSOR_MAX_COUNT; i++)
+					selected[i] = 0;
+				while((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
+					if (count < SENSOR_MAX_COUNT && str_to_int(tok, &val, 10)) {
+						if (val >= 1 && val <= SENSOR_COUNT) {
+							selected[count++] = val;
+							snprintf(tmp, sizeof(tmp), ",%d", val);
+							strncatenate(temp_str, tmp, sizeof(temp_str));
+						}
+					}
+				}
+				if (count >= 2) {
+					log_msg(LOG_NOTICE, "vsensor%d: set source to %s%s",
+						sensor + 1,
+						vsmode2str(vsmode),
+						temp_str);
+					conf->vsensors[sensor].mode = vsmode;
+					for(i = 0; i < SENSOR_COUNT; i++) {
+						conf->vsensors[sensor].sensors[i] = selected[i];
+					}
+					ret = 0;
+				}
+			}
+		}
+		free(param);
+	}
+
+	return ret;
+}
+
+int cmd_vsensor_temp_map(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor, i, count;
+	float val;
+	char *arg, *t, *saveptr;
+	struct temp_map *map;
+	struct temp_map new_map;
+	int ret = 0;
+
+	sensor = atoi(&prev_cmd[7]) - 1;
+	if (sensor < 0 || sensor >= VSENSOR_COUNT)
+		return 1;
+	map = &conf->vsensors[sensor].map;
+	new_map.points = 0;
+
+	if (query) {
+		for (i = 0; i < map->points; i++) {
+			if (i > 0)
+				printf(",");
+			printf("%f,%f", map->temp[i][0], map->temp[i][1]);
+		}
+		printf("\n");
+	} else {
+		arg = strdup(args);
+		count = 0;
+		t = strtok_r(arg, ",", &saveptr);
+		while (t) {
+			val = atof(t);
+			new_map.temp[count / 2][count % 2] = val;
+			count++;
+			t = strtok_r(NULL, ",", &saveptr);
+		}
+		if ((count >= 4) && (count % 2 == 0)) {
+			new_map.points = count / 2;
+			*map = new_map;
+		} else {
+			log_msg(LOG_WARNING, "vsensor%d: invalid new map: %s", sensor + 1, args);
+			ret = 2;
+		}
+		free(arg);
+	}
+
+	return ret;
+}
+
+int cmd_vsensor_temp(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor;
+	float d;
+
+	if (!query)
+		return 1;
+
+	if (!strncasecmp(prev_cmd, "vsensor", 7)) {
+		sensor = atoi(&prev_cmd[7]) - 1;
+	} else {
+		sensor = atoi(&cmd[7]) - 1;
+	}
+
+	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
+		d = st->vtemp[sensor];
+		log_msg(LOG_DEBUG, "vsensor%d temperature = %fC", sensor + 1, d);
+		printf("%.0f\n", d);
+		return 0;
+	}
+
+	return 1;
+}
+
+int cmd_vsensor_filter(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor;
+	int ret = 0;
+	char *tok, *saveptr, *param;
+	struct vsensor_input *s;
+	enum signal_filter_types new_filter;
+	void *new_ctx;
+
+	sensor = atoi(&prev_cmd[7]) - 1;
+	if (sensor < 0 || sensor >= VSENSOR_COUNT)
+		return 1;
+
+	s = &conf->vsensors[sensor];
+	if (query) {
+		printf("%s", filter2str(s->filter));
+		tok = filter_print_args(s->filter, s->filter_ctx);
+		if (tok) {
+			printf(",%s\n", tok);
+			free(tok);
+		} else {
+			printf(",\n");
+		}
+	} else {
+		param = strdup(args);
+		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
+			new_filter = str2filter(tok);
+			tok += strlen(tok) + 1;
+			new_ctx = filter_parse_args(new_filter, tok);
+			if (new_filter == FILTER_NONE || new_ctx != NULL) {
+				s->filter = new_filter;
+				if (s->filter_ctx)
+					free(s->filter_ctx);
+				s->filter_ctx = new_ctx;
+			} else {
+				ret = 1;
+			}
+		}
+		free(param);
+	}
+
+	return ret;
+}
+
+int cmd_vsensor_write(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int sensor;
+	float val;
+
+	if (query)
+		return 1;
+
+	if (!strncasecmp(prev_cmd, "vsensor", 7)) {
+		sensor = atoi(&prev_cmd[7]) - 1;
+	} else {
+		sensor = atoi(&cmd[7]) - 1;
+	}
+
+	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
+		if (conf->vsensors[sensor].mode == VSMODE_MANUAL) {
+			if (str_to_float(args, &val)) {
+				log_msg(LOG_INFO, "vsensor%d: write temperature = %fC", sensor + 1, val);
+				conf->vtemp[sensor] = val;
+				conf->vtemp_updated[sensor] = get_absolute_time();
+				return 0;
+			}
+		} else {
+			return 2;
+		}
+	}
+
+	return 1;
+}
+
 int cmd_wifi(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (query) {
@@ -1802,14 +2058,22 @@ struct cmd_t mbfan_c_commands[] = {
 };
 
 struct cmd_t sensor_c_commands[] = {
-	{ "BETAcoeff",   4, NULL,             cmd_sensor_beta_coef },
-	{ "FILTER",      6, NULL,             cmd_sensor_filter },
-	{ "NAME",        4, NULL,             cmd_sensor_name },
-	{ "TEMPCoeff",   5, NULL,             cmd_sensor_temp_coef },
-	{ "TEMPMap",     5, NULL,             cmd_sensor_temp_map },
-	{ "TEMPNominal", 5, NULL,             cmd_sensor_temp_nominal },
-	{ "TEMPOffset",  5, NULL,             cmd_sensor_temp_offset },
-	{ "THERmistor",  4, NULL,             cmd_sensor_ther_nominal },
+	{ "BETAcoeff",   4, NULL,            cmd_sensor_beta_coef },
+	{ "FILTER",      6, NULL,            cmd_sensor_filter },
+	{ "NAME",        4, NULL,            cmd_sensor_name },
+	{ "TEMPCoeff",   5, NULL,            cmd_sensor_temp_coef },
+	{ "TEMPMap",     5, NULL,            cmd_sensor_temp_map },
+	{ "TEMPNominal", 5, NULL,            cmd_sensor_temp_nominal },
+	{ "TEMPOffset",  5, NULL,            cmd_sensor_temp_offset },
+	{ "THERmistor",  4, NULL,            cmd_sensor_ther_nominal },
+	{ 0, 0, 0, 0 }
+};
+
+struct cmd_t vsensor_c_commands[] = {
+	{ "FILTER",      6, NULL,            cmd_vsensor_filter },
+	{ "NAME",        4, NULL,            cmd_vsensor_name },
+	{ "SOUrce",      3, NULL,            cmd_vsensor_source },
+	{ "TEMPMap",     5, NULL,            cmd_vsensor_temp_map },
 	{ 0, 0, 0, 0 }
 };
 
@@ -1820,6 +2084,7 @@ struct cmd_t config_commands[] = {
 	{ "Read",      1, NULL,              cmd_print_config },
 	{ "SAVe",      3, NULL,              cmd_save_config },
 	{ "SENSOR",    6, sensor_c_commands, NULL },
+	{ "VSENSOR",   7, vsensor_c_commands, NULL },
 	{ 0, 0, 0, 0 }
 };
 
@@ -1845,11 +2110,23 @@ struct cmd_t sensor_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+struct cmd_t vsensor_commands[] = {
+	{ "Read",      1, NULL,              cmd_vsensor_temp },
+	{ "TEMP",      4, NULL,              cmd_vsensor_temp },
+	{ 0, 0, 0, 0 }
+};
+
 struct cmd_t measure_commands[] = {
 	{ "FAN",       3, fan_commands,      cmd_fan_read },
 	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read },
 	{ "Read",      1, NULL,              cmd_read },
 	{ "SENSOR",    6, sensor_commands,   cmd_sensor_temp },
+	{ "VSENSOR",   7, vsensor_commands,  cmd_vsensor_temp },
+	{ 0, 0, 0, 0 }
+};
+
+struct cmd_t write_commands[] = {
+	{ "VSENSOR",   7, NULL,              cmd_vsensor_write },
 	{ 0, 0, 0, 0 }
 };
 
@@ -1868,6 +2145,7 @@ struct cmd_t commands[] = {
 	{ "MEAsure",   3, measure_commands,  NULL },
 	{ "SYStem",    3, system_commands,   NULL },
 	{ "Read",      1, NULL,              cmd_read },
+	{ "WRIte",     3, write_commands,    NULL },
 	{ 0, 0, 0, 0 }
 };
 
@@ -1905,13 +2183,13 @@ struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level, char **prev_subcmd)
 						/* Match for command */
 						query = (s[strlen(s)-1] == '?' ? 1 : 0);
 						arg = t + cmd_len + 1;
-						if (query)
+						if (!query)
 							mutex_enter_blocking(config_mutex);
 						res = cmd_level[i].func(s,
 								(total_len > cmd_len+1 ? arg : ""),
 								query,
 								(*prev_subcmd ? *prev_subcmd : ""));
-						if (query)
+						if (!query)
 							mutex_exit(config_mutex);
 					}
 					break;

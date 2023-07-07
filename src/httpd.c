@@ -68,7 +68,7 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 			strncatenate(buf, row, sizeof(buf));
 		}
 		for (i = 0; i < SENSOR_COUNT; i++) {
-			pwm = sensor_get_duty(&cfg->sensors[i], st->temp[i]);
+			pwm = sensor_get_duty(&cfg->sensors[i].map, st->temp[i]);
 			snprintf(row, sizeof(row), "sensor%d,\"%s\",%.1lf,%.1lf\n",
 				i+1,
 				cfg->sensors[i].name,
@@ -155,7 +155,7 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 		if (!(array = cJSON_CreateArray()))
 			goto panic;
 		for (i = 0; i < SENSOR_COUNT; i++) {
-			double pwm = sensor_get_duty(&cfg->sensors[i], st->temp[i]);
+			double pwm = sensor_get_duty(&cfg->sensors[i].map, st->temp[i]);
 			if (!(o = cJSON_CreateObject()))
 				goto panic;
 
