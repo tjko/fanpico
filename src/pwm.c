@@ -292,8 +292,10 @@ double calculate_pwm_duty(struct fanpico_state *state, const struct fanpico_conf
 		val = state->mbfan_duty[fan->s_id];
 		break;
 	case PWM_SENSOR:
-		val = sensor_get_duty(&config->sensors[fan->s_id], state->temp[fan->s_id]);
-		//printf("temp duty: %fC --> %lf\n", state->temp[fan->s_id], val);
+		val = sensor_get_duty(&config->sensors[fan->s_id].map, state->temp[fan->s_id]);
+		break;
+	case PWM_VSENSOR:
+		val = sensor_get_duty(&config->vsensors[fan->s_id].map, state->vtemp[fan->s_id]);
 		break;
 	case PWM_FAN:
 		val = state->fan_duty[fan->s_id];

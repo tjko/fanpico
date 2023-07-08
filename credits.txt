@@ -2,9 +2,12 @@ FanPico: Smart PWM (PC) Fan Controller
 Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
 https://github.com/tjko/fanpico
 
-License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
+This program comes with ABSOLUTELY NO WARRANTY.
+
+This is free software: you can redistribute it and/or modify it under
+the terms of GNU General Public License, either version 3 of the License,
+or (at your option) any later version.
+
 
 Libraries used in FanPico:
 

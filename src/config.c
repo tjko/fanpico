@@ -1,5 +1,5 @@
 /* config.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -43,16 +43,18 @@ mutex_t *config_mutex = &config_mutex_inst;
 
 int str2pwm_source(const char *s)
 {
-	int ret = 0;
+	int ret = PWM_FIXED;
 
-	if (!strncasecmp(s, "fixed", 5))
-		ret = PWM_FIXED;
-	else if (!strncasecmp(s, "mbfan", 5))
-		ret = PWM_MB;
-	else if (!strncasecmp(s, "sensor", 6))
-		ret = PWM_SENSOR;
-	else if (!strncasecmp(s, "fan", 3))
-		ret = PWM_FAN;
+	if (s) {
+		if (!strncasecmp(s, "mbfan", 5))
+			ret = PWM_MB;
+		else if (!strncasecmp(s, "sensor", 6))
+			ret = PWM_SENSOR;
+		else if (!strncasecmp(s, "vsensor", 7))
+			ret = PWM_VSENSOR;
+		else if (!strncasecmp(s, "fan", 3))
+			ret = PWM_FAN;
+	}
 
 	return ret;
 }
@@ -64,6 +66,8 @@ const char* pwm_source2str(enum pwm_source_types source)
 		return "mbfan";
 	else if (source == PWM_SENSOR)
 		return "sensor";
+	else if (source == PWM_VSENSOR)
+		return "vsensor";
 	else if (source == PWM_FAN)
 		return "fan";
 
@@ -86,6 +90,9 @@ int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id)
 	case PWM_SENSOR:
 		ret = (s_id >= 0 && s_id < SENSOR_MAX_COUNT ? 1 : 0);
 		break;
+	case PWM_VSENSOR:
+		ret = (s_id >= 0 && s_id < VSENSOR_MAX_COUNT ? 1 : 0);
+		break;
 	case PWM_FAN:
 		ret = (s_id >= 0 && s_id < FAN_MAX_COUNT ? 1 : 0);
 		break;
@@ -94,15 +101,48 @@ int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id)
 	return ret;
 }
 
+int str2vsmode(const char *s)
+{
+	int ret = VSMODE_MANUAL;
+
+	if (s) {
+		if (!strncasecmp(s, "max", 3))
+			ret = VSMODE_MAX;
+		else if (!strncasecmp(s, "min", 3))
+			ret = VSMODE_MIN;
+		else if (!strncasecmp(s, "avg", 3))
+			ret = VSMODE_AVG;
+		else if (!strncasecmp(s, "delta", 5))
+			ret = VSMODE_DELTA;
+	}
+
+	return ret;
+}
+
+const char* vsmode2str(enum vsensor_modes mode)
+{
+	if (mode == VSMODE_MAX)
+		return "max";
+	else if (mode == VSMODE_MIN)
+		return "min";
+	else if (mode == VSMODE_AVG)
+		return "avg";
+	else if (mode == VSMODE_DELTA)
+		return "delta";
+
+	return "manual";
+}
 
 int str2tacho_source(const char *s)
 {
 	int ret = 0;
 
-	if (!strncasecmp(s, "fixed", 5))
-		ret = TACHO_FIXED;
-	else if (!strncasecmp(s, "fan", 2))
-		ret = TACHO_FAN;
+	if (s) {
+		if (!strncasecmp(s, "fixed", 5))
+			ret = TACHO_FIXED;
+		else if (!strncasecmp(s, "fan", 3))
+			ret = TACHO_FAN;
+	}
 
 	return ret;
 }
@@ -269,10 +309,46 @@ cJSON* temp_map2json(const struct temp_map *map)
 }
 
 
-void clear_config(struct fanpico_config *cfg)
+void json2vsensors(cJSON *item, uint8_t *s)
+{
+	cJSON *o;
+	int i,val;
+	int count = 0;
+
+	for (i = 0; i < SENSOR_MAX_COUNT; i++)
+		s[i] = 0;
+
+	cJSON_ArrayForEach(o, item) {
+		val = cJSON_GetNumberValue(o);
+		if (count < SENSOR_COUNT && val >= 1 && val <= SENSOR_COUNT) {
+			s[count++] = val;
+		}
+	}
+}
+
+
+cJSON* vsensors2json(const uint8_t *s)
 {
 	int i;
+	cJSON *o;
+
+	if ((o = cJSON_CreateArray()) == NULL)
+		return NULL;
+
+	for (i = 0; i < SENSOR_COUNT; i++) {
+		if (s[i]) {
+			cJSON_AddItemToArray(o, cJSON_CreateNumber(s[i]));
+		}
+	}
+	return o;
+}
+
+
+void clear_config(struct fanpico_config *cfg)
+{
+	int i, j;
 	struct sensor_input *s;
+	struct vsensor_input *vs;
 	struct fan_output *f;
 	struct mb_input *m;
 
@@ -291,6 +367,27 @@ void clear_config(struct fanpico_config *cfg)
 		s->map.points = 0;
 		s->filter = FILTER_NONE;
 		s->filter_ctx = NULL;
+	}
+
+	for (i = 0; i < VSENSOR_MAX_COUNT; i++) {
+		vs = &cfg->vsensors[i];
+
+		vs->name[0] = 0;
+		vs->mode = VSMODE_MANUAL;
+		vs->default_temp = 0.0;
+		vs->timeout = 30;
+		for (j = 0; j < SENSOR_MAX_COUNT; j++)
+			vs->sensors[j] = 0;
+		vs->map.points = 2;
+		vs->map.temp[0][0] = 20.0;
+		vs->map.temp[0][1] = 0.0;
+		vs->map.temp[1][0] = 50.0;
+		vs->map.temp[1][1] = 100.0;
+		vs->filter = FILTER_NONE;
+		vs->filter_ctx = NULL;
+
+		cfg->vtemp[i] = 0.0;
+		cfg->vtemp_updated[i] = 0;
 	}
 
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
@@ -350,7 +447,7 @@ void clear_config(struct fanpico_config *cfg)
 cJSON *config_to_json(const struct fanpico_config *cfg)
 {
 	cJSON *config = cJSON_CreateObject();
-	cJSON *fans, *mbfans, *sensors, *o;
+	cJSON *fans, *mbfans, *sensors, *vsensors, *o;
 	int i;
 
 	if (!config)
@@ -476,6 +573,31 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToArray(sensors, o);
 	}
 	cJSON_AddItemToObject(config, "sensors", sensors);
+
+	/* Virtual Sensors */
+	vsensors = cJSON_CreateArray();
+	if (!vsensors)
+		goto panic;
+	for (i = 0; i < VSENSOR_COUNT; i++) {
+		const struct vsensor_input *s = &cfg->vsensors[i];
+
+		o = cJSON_CreateObject();
+		if (!o)
+			goto panic;
+		cJSON_AddItemToObject(o, "id", cJSON_CreateNumber(i));
+		cJSON_AddItemToObject(o, "name", cJSON_CreateString(s->name));
+		cJSON_AddItemToObject(o, "mode", cJSON_CreateString(vsmode2str(s->mode)));
+		cJSON_AddItemToObject(o, "temp_map", temp_map2json(&s->map));
+		if (s->mode == VSMODE_MANUAL) {
+			cJSON_AddItemToObject(o, "default_temp", cJSON_CreateNumber(s->default_temp));
+			cJSON_AddItemToObject(o, "timeout", cJSON_CreateNumber(s->timeout));
+		} else {
+			cJSON_AddItemToObject(o, "sensors", vsensors2json(s->sensors));
+		}
+		cJSON_AddItemToObject(o, "filter", filter2json(s->filter, s->filter_ctx));
+		cJSON_AddItemToArray(vsensors, o);
+	}
+	cJSON_AddItemToObject(config, "vsensors", vsensors);
 
 	return config;
 
@@ -654,6 +776,33 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		}
 	}
 
+	/* Virtual Sensor configurations */
+	ref = cJSON_GetObjectItem(config, "vsensors");
+	cJSON_ArrayForEach(item, ref) {
+		id = (int)cJSON_GetNumberValue(cJSON_GetObjectItem(item, "id"));
+		if (id >= 0 && id < VSENSOR_COUNT) {
+			struct vsensor_input *s = &cfg->vsensors[id];
+
+			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
+			if (name) strncopy(s->name, name ,sizeof(s->name));
+
+			s->mode = str2vsmode(cJSON_GetStringValue(cJSON_GetObjectItem(item, "mode")));
+			if (s->mode == VSMODE_MANUAL) {
+				if ((r = cJSON_GetObjectItem(item, "default_temp")))
+					s->default_temp = cJSON_GetNumberValue(r);
+				if ((r = cJSON_GetObjectItem(item, "timeout")))
+					s->timeout = cJSON_GetNumberValue(r);
+			} else {
+				if ((r = cJSON_GetObjectItem(item, "sensors")))
+					json2vsensors(r, s->sensors);
+			}
+			if ((r = cJSON_GetObjectItem(item, "temp_map")))
+				json2temp_map(r, &s->map);
+			if ((r = cJSON_GetObjectItem(item, "filter")))
+				json2filter(r, &s->filter, &s->filter_ctx);
+		}
+	}
+
 	mutex_exit(config_mutex);
 	return 0;
 }
@@ -729,7 +878,6 @@ void save_config()
 		log_msg(LOG_ERR, "Failed to generate JSON output");
 	} else {
 		uint32_t config_size = strlen(str) + 1;
-
 		multicore_lockout_start_blocking();
 		flash_write_file(str, config_size, "fanpico.cfg");
 		multicore_lockout_end_blocking();
