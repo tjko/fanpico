@@ -202,7 +202,7 @@ $ cmake -DFANPICO_BOARD=0804D -DPICO_BOARD=pico_w ..
 
 Then compile fanpico:
 ```
-$ make
+$ make -j
 ```
 
 After successful compile you should see firmware binary in the build directory:

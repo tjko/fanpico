@@ -1,5 +1,5 @@
 /* config.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -45,14 +45,16 @@ int str2pwm_source(const char *s)
 {
 	int ret = PWM_FIXED;
 
-	if (!strncasecmp(s, "mbfan", 5))
-		ret = PWM_MB;
-	else if (!strncasecmp(s, "sensor", 6))
-		ret = PWM_SENSOR;
-	else if (!strncasecmp(s, "vsensor", 7))
-		ret = PWM_VSENSOR;
-	else if (!strncasecmp(s, "fan", 3))
-		ret = PWM_FAN;
+	if (s) {
+		if (!strncasecmp(s, "mbfan", 5))
+			ret = PWM_MB;
+		else if (!strncasecmp(s, "sensor", 6))
+			ret = PWM_SENSOR;
+		else if (!strncasecmp(s, "vsensor", 7))
+			ret = PWM_VSENSOR;
+		else if (!strncasecmp(s, "fan", 3))
+			ret = PWM_FAN;
+	}
 
 	return ret;
 }
@@ -103,14 +105,16 @@ int str2vsmode(const char *s)
 {
 	int ret = VSMODE_MANUAL;
 
-	if (!strncasecmp(s, "max", 3))
-		ret = VSMODE_MAX;
-	else if (!strncasecmp(s, "min", 3))
-		ret = VSMODE_MIN;
-	else if (!strncasecmp(s, "avg", 3))
-		ret = VSMODE_AVG;
-	else if (!strncasecmp(s, "delta", 5))
-		ret = VSMODE_DELTA;
+	if (s) {
+		if (!strncasecmp(s, "max", 3))
+			ret = VSMODE_MAX;
+		else if (!strncasecmp(s, "min", 3))
+			ret = VSMODE_MIN;
+		else if (!strncasecmp(s, "avg", 3))
+			ret = VSMODE_AVG;
+		else if (!strncasecmp(s, "delta", 5))
+			ret = VSMODE_DELTA;
+	}
 
 	return ret;
 }
@@ -133,10 +137,12 @@ int str2tacho_source(const char *s)
 {
 	int ret = 0;
 
-	if (!strncasecmp(s, "fixed", 5))
-		ret = TACHO_FIXED;
-	else if (!strncasecmp(s, "fan", 2))
-		ret = TACHO_FAN;
+	if (s) {
+		if (!strncasecmp(s, "fixed", 5))
+			ret = TACHO_FIXED;
+		else if (!strncasecmp(s, "fan", 3))
+			ret = TACHO_FAN;
+	}
 
 	return ret;
 }
@@ -782,10 +788,10 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 
 			s->mode = str2vsmode(cJSON_GetStringValue(cJSON_GetObjectItem(item, "mode")));
 			if (s->mode == VSMODE_MANUAL) {
-				s->default_temp = cJSON_GetNumberValue(
-					cJSON_GetObjectItem(item, "default_temp"));
-				s->timeout = cJSON_GetNumberValue(
-					cJSON_GetObjectItem(item, "timeout"));
+				if ((r = cJSON_GetObjectItem(item, "default_temp")))
+					s->default_temp = cJSON_GetNumberValue(r);
+				if ((r = cJSON_GetObjectItem(item, "timeout")))
+					s->timeout = cJSON_GetNumberValue(r);
 			} else {
 				if ((r = cJSON_GetObjectItem(item, "sensors")))
 					json2vsensors(r, s->sensors);

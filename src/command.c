@@ -142,11 +142,13 @@ int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (cmd && !query)
 		return 1;
 
-	printf("FanPico v%s (%s; %s; SDK v%s)\n\n",
+	printf("FanPico-%s v%s (%s; %s; SDK v%s; %s)\n\n",
+		FANPICO_MODEL,
 		FANPICO_VERSION,
 		__DATE__,
 		PICO_CMAKE_BUILD_TYPE,
-		PICO_SDK_VERSION_STRING);
+		PICO_SDK_VERSION_STRING,
+		PICO_BOARD);
 
 	if (query)
 		printf("%s\n", credits);

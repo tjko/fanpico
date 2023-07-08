@@ -52,7 +52,7 @@
 	    "name":	"vsensor1",
 	    "mode":	"manual",
 	    "default_temp":	0,
-	    "timeout_ms":	10000,
+	    "timeout":		30,
 	    "temp_map":	[
 		[ 20, 0 ],
 		[ 50, 100 ]
@@ -63,7 +63,7 @@
 	    "name":	"vsensor2",
 	    "mode":	"manual",
 	    "default_temp":	0,
-	    "timeout_ms":	10000,
+	    "timeout":		30,
 	    "temp_map":	[
 		[ 20, 0 ],
 		[ 50, 100 ]
@@ -74,7 +74,7 @@
 	    "name":	"vsensor3",
 	    "mode":	"manual",
 	    "default_temp":	0,
-	    "timeout_ms":	10000,
+	    "timeout":		30,
 	    "temp_map":	[
 		[ 20, 0 ],
 		[ 50, 100 ]
@@ -85,7 +85,7 @@
 	    "name":	"vsensor4",
 	    "mode":	"manual",
 	    "default_temp":	0,
-	    "timeout_ms":	10000,
+	    "timeout":		30,
 	    "temp_map":	[
 		[ 20, 0 ],
 		[ 50, 100 ]
@@ -96,7 +96,7 @@
 	    "name":	"vsensor5",
 	    "mode":	"manual",
 	    "default_temp":	0,
-	    "timeout_ms":	10000,
+	    "timeout":		30,
 	    "temp_map":	[
 		[ 20, 0 ],
 		[ 50, 100 ]
@@ -107,7 +107,7 @@
 	    "name":	"vsensor6",
 	    "mode":	"manual",
 	    "default_temp":	0,
-	    "timeout_ms":	10000,
+	    "timeout":		30,
 	    "temp_map":	[
 		[ 20, 0 ],
 		[ 50, 100 ]
@@ -118,7 +118,7 @@
 	    "name":	"vsensor7",
 	    "mode":	"manual",
 	    "default_temp":	0,
-	    "timeout_ms":	10000,
+	    "timeout":		30,
 	    "temp_map":	[
 		[ 20, 0 ],
 		[ 50, 100 ]
@@ -129,7 +129,7 @@
 	    "name":	"vsensor8",
 	    "mode":	"manual",
 	    "default_temp":	0,
-	    "timeout_ms":	10000,
+	    "timeout":		30,
 	    "temp_map":	[
 		[ 20, 0 ],
 		[ 50, 100 ]
