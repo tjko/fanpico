@@ -30,11 +30,12 @@
 #include "fanpico.h"
 
 
+#define BUF_LEN 1024
 
 u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part)
 {
 	const struct fanpico_state *st = fanpico_state;
-	static char buf[512];
+	static char *buf = NULL;
 	static char *p;
 	static u16_t part;
 	static size_t buf_left;
@@ -45,6 +46,8 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 
 	if (current_tag_part == 0) {
 		/* Generate 'output' into a buffer that then will be fed in chunks to LwIP... */
+		if (!(buf = malloc(BUF_LEN)))
+			return 0;
 		buf[0] = 0;
 
 		for (i = 0; i < FAN_COUNT; i++) {
@@ -55,7 +58,7 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				rpm,
 				st->fan_freq[i],
 				st->fan_duty[i]);
-			strncatenate(buf, row, sizeof(buf));
+			strncatenate(buf, row, BUF_LEN);
 		}
 		for (i = 0; i < MBFAN_COUNT; i++) {
 			rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
@@ -65,7 +68,7 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				rpm,
 				st->mbfan_freq[i],
 				st->mbfan_duty[i]);
-			strncatenate(buf, row, sizeof(buf));
+			strncatenate(buf, row, BUF_LEN);
 		}
 		for (i = 0; i < SENSOR_COUNT; i++) {
 			pwm = sensor_get_duty(&cfg->sensors[i].map, st->temp[i]);
@@ -74,7 +77,16 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				cfg->sensors[i].name,
 				st->temp[i],
 				pwm);
-			strncatenate(buf, row, sizeof(buf));
+			strncatenate(buf, row, BUF_LEN);
+		}
+		for (i = 0; i < VSENSOR_COUNT; i++) {
+			pwm = sensor_get_duty(&cfg->vsensors[i].map, st->vtemp[i]);
+			snprintf(row, sizeof(row), "vsensor%d,\"%s\",%.1lf,%.1lf\n",
+				i+1,
+				cfg->vsensors[i].name,
+				st->vtemp[i],
+				pwm);
+			strncatenate(buf, row, BUF_LEN);
 		}
 
 		p = buf;
@@ -90,8 +102,12 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 	printed = count;
 	buf_left -= count;
 
-	if (buf_left > 0)
+	if (buf_left > 0) {
 		*next_tag_part = part++;
+	} else {
+		free(buf);
+		buf = p = NULL;
+	}
 
 	return printed;
 }
@@ -151,7 +167,7 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 		}
 		cJSON_AddItemToObject(json, "mbfans", array);
 
-		/* MB Fans */
+		/* Sensors */
 		if (!(array = cJSON_CreateArray()))
 			goto panic;
 		for (i = 0; i < SENSOR_COUNT; i++) {
@@ -165,8 +181,23 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(round_decimal(pwm, 1)));
 			cJSON_AddItemToArray(array, o);
 		}
-		cJSON_AddItemToObject(json, "mbfans", array);
+		cJSON_AddItemToObject(json, "sensors", array);
 
+		/* Virtual Sensors */
+		if (!(array = cJSON_CreateArray()))
+			goto panic;
+		for (i = 0; i < VSENSOR_COUNT; i++) {
+			double pwm = sensor_get_duty(&cfg->vsensors[i].map, st->vtemp[i]);
+			if (!(o = cJSON_CreateObject()))
+				goto panic;
+
+			cJSON_AddItemToObject(o, "sensor", cJSON_CreateNumber(i+1));
+			cJSON_AddItemToObject(o, "name", cJSON_CreateString(cfg->vsensors[i].name));
+			cJSON_AddItemToObject(o, "temperature", cJSON_CreateNumber(round_decimal(st->vtemp[i], 1)));
+			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(round_decimal(pwm, 1)));
+			cJSON_AddItemToArray(array, o);
+		}
+		cJSON_AddItemToObject(json, "vsensors", array);
 
 		if (!(buf = cJSON_Print(json)))
 			goto panic;
@@ -271,6 +302,15 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 					i + 1,
 					cfg->sensors[i].name,
 					st->temp[i]);
+		}
+	}
+	else if (!strncmp(tag, "vsenrow", 7)) {
+		uint8_t i = tag[7] - '1';
+		if (i < VSENSOR_COUNT) {
+			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td align=\"right\">%0.1f &#x2103;",
+					i + 1,
+					cfg->vsensors[i].name,
+					st->vtemp[i]);
 		}
 	}
 	else if (!strncmp(tag, "csvstat", 7)) {
