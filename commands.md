@@ -115,6 +115,7 @@ Fanpico supports following commands:
 * [SYStem:UPTIme?](#systemuptime)
 * [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
+* [SYStem:VSENSORS?](#systemvsensors)
 * [SYStem:WIFI?](#systemwifi)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
@@ -1655,6 +1656,17 @@ Example:
 ```
 SYS:VER?
 ```
+
+
+#### SYStem:VSENSORS?
+Display number of virtual (temperature) sensors available.
+
+Example:
+```
+SYS:VSENSORS?
+8
+```
+
 
 #### SYStem:WIFI?
 Check if the unit support WiFi networking.
