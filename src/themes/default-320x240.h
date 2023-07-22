@@ -84,7 +84,8 @@ const struct display_theme theme_default_320x240 = {
 	theme_default_320x240_bg,
 	theme_default_320x240_fg,
 	fanpico_theme_default_320x240_bmp,
-	"%-14s", 14,
-	"%-13s", 13,
-	"%-11s", 11,
+	"%-14s", 14, /* fan label */
+	"%-13s", 13, /* mbfan label */
+	"%-11s", 11, /* sensor label */
+	"%-11s", 11, /* vsensor label */
 };
