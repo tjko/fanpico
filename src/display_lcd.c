@@ -67,6 +67,7 @@ enum display_field_types {
 	FAN,
 	MBFAN,
 	SENSOR,
+	VSENSOR,
 	UPTIME,
 	TIME,
 	DATE,
@@ -109,6 +110,8 @@ struct display_theme {
 	uint8_t mbfan_name_len;
 	const char* sensor_name_fmt;
 	uint8_t sensor_name_len;
+	const char* vsensor_name_fmt;
+	uint8_t vsensor_name_len;
 };
 
 struct display_theme_entry {
@@ -413,6 +416,11 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 					conf->sensors[f->id].name);
 				break;
 
+			case VSENSOR:
+				snprintf(buf, theme->vsensor_name_len + 1, theme->vsensor_name_fmt,
+					conf->vsensors[f->id].name);
+				break;
+
 			case MODEL_VERSION:
 				snprintf(buf, sizeof(buf), "%s",
 					"FanPico-" FANPICO_MODEL " v" FANPICO_VERSION);
@@ -455,9 +463,17 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 			break;
 
 		case TEMP:
-			if (f->type == SENSOR) {
-				snprintf(buf,5, "%2.1lf", state->temp[f->id]);
+			switch (f->type) {
+			case SENSOR:
+				val = state->temp[f->id];
+				break;
+			case VSENSOR:
+				val = state->vtemp[f->id];
+				break;
+			default:
+				val = 0.0;
 			}
+			snprintf(buf, 5, "%2.1lf", val);
 			break;
 
 		case OTHER:

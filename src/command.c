@@ -198,6 +198,15 @@ int cmd_sensors(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_vsensors(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	printf("%d\n", VSENSOR_COUNT);
+	return 0;
+}
+
 int cmd_null(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	log_msg(LOG_INFO, "null command: %s %s (query=%d)", cmd, args, query);
@@ -2031,6 +2040,7 @@ struct cmd_t system_commands[] = {
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "UPTIme",    4, NULL,              cmd_uptime },
 	{ "VERsion",   3, NULL,              cmd_version },
+	{ "VENSORS",   8, NULL,              cmd_vsensors },
 	{ "WIFI",      4, wifi_commands,     cmd_wifi },
 	{ 0, 0, 0, 0 }
 };
