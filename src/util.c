@@ -436,4 +436,17 @@ int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout)
 	return res;
 }
 
+
+int clamp_int(int val, int min, int max)
+{
+	int res = val;
+
+	if (res < min)
+		res = min;
+	if (res > max)
+		res = max;
+
+	return res;
+}
+
 /* eof */

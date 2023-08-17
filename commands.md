@@ -95,8 +95,10 @@ Fanpico supports following commands:
 * [SYStem:SYSLOG?](#systemsyslog-1)
 * [SYStem:DISPlay](#systemdisplay)
 * [SYStem:DISPlay?](#systemdisplay)
+* [SYStem:DISPlay:LAYOUTR](#systemdisplaylayoutr)
+* [SYStem:DISPlay:LAYOUTR?](#systemdisplaylayoutr-1)
 * [SYStem:DISPlay:THEMe](#systemdisplaytheme)
-* [SYStem:DISPlay:THEME?](#systemdisplaytheme-1)
+* [SYStem:DISPlay:THEMe?](#systemdisplaytheme-1)
 * [SYStem:ECHO](#systemecho)
 * [SYStem:ECHO?](#systemecho)
 * [SYStem:FANS?](#systemfans)
@@ -1422,6 +1424,50 @@ Example:
 SYS:DISP?
 132x64,flip,invert,brightness=75
 ```
+
+#### SYStem:DISPlay:LAYOUTR
+Configure (OLED) Display layout for the right side of the screen.
+
+Layout is specified as a comma delimited string descibing what to
+display on each row (8 rows available if using 128x64 OLEd module, 10 rows available with 128x128 pixel modules).
+
+Syntax: <R1>,<R2>,...<R8>
+
+Wehre tow specifications can be one of the following:
+
+Type|Description|Notes
+----|-----------|-----
+Mn|MBFan input n|n=1..4
+Sn|Sensor input n|n=1..3
+Vn|Virtual Sensor input n|n=1..8
+-|Horizontal Line|
+Ltext|Line with "text"|Max lenght 9 characters.
+
+
+Default: <not set>
+
+When this setting is not set following defaults are used based
+on the OLED module size:
+
+Screen Size|Available Rows|Default Configuration
+-----------|--------------|---------------------
+128x64|8|M1,M2,M3,M4,-,S1,S2,S3
+128x128|10|LMB Inputs,M1,M2,M3,M4,-,LSensors,S1,S2,S3
+
+Example: configure custom theme (for 128x64 display):
+```
+SYS:DISP:LAYOUTR M1,M2,-,S1,S2,S3,V1,V2
+```
+
+#### SYStem:DISPlay:THEMe?
+Display currently configured (OLED) Display layout for the right side of the screen.
+
+Example:
+```
+SYS:DISP:THEME?
+M1,M2,-,S1,S2,S3,V1,V2
+```
+
 
 #### SYStem:DISPlay:THEMe
 Configure (LCD) Display theme to use.

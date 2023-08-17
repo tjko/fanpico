@@ -33,11 +33,90 @@
 
 #ifdef OLED_DISPLAY
 
+enum layout_item_types {
+	BLANK = 0,
+	LABEL = 1,
+	LINE = 2,
+	MBFAN = 3,
+	SENSOR = 4,
+	VSENSOR = 5,
+};
+
+struct layout_item {
+	enum layout_item_types type;
+	uint8_t idx;
+	const char *label;
+};
+
+#define R_LAYOUT_MAX 10
+
 static SSOLED oled;
 static uint8_t ucBuffer[(128*128)/8];
 static uint8_t oled_width = 128;
 static uint8_t oled_height = 64;
 static uint8_t oled_found = 0;
+static uint8_t r_lines = 8;
+static struct layout_item r_layout[R_LAYOUT_MAX];
+
+
+/* Default screen layouts for inputs/sensors */
+#define R_LAYOUT_128x64  "M1,M2,M3,M4,-,S1,S2,S3"
+#define R_LAYOUT_128x128 "LMB Inputs,M1,M2,M3,M4,-,LSensors,S1,S2,S3"
+
+
+void parse_r_layout(const char *layout)
+{
+	int i;
+	char *tok, *saveptr, *tmp;
+
+	for (i = 0; i < R_LAYOUT_MAX; i++) {
+		r_layout[i].type = BLANK;
+		r_layout[i].idx = 0;
+		r_layout[i].label = NULL;
+	}
+
+	if (!layout)
+		return;
+
+	tmp = strdup(layout);
+	if (!tmp)
+		return;
+
+	log_msg(LOG_DEBUG, "parse OLED right layout: '%s", tmp);
+
+	i = 0;
+	tok = strtok_r(tmp, ",", &saveptr);
+	while (tok && i < r_lines) {
+		switch (tok[0]) {
+		case '-':
+			r_layout[i].type = LINE;
+			break;
+		case 'L':
+			r_layout[i].type = LABEL;
+			r_layout[i].idx = strlen(tok) - 1;
+			r_layout[i].label = layout + (tok - tmp) + 1;
+			break;
+		case 'M':
+			r_layout[i].type = MBFAN;
+			r_layout[i].idx = clamp_int(atoi(tok + 1), 1, MBFAN_COUNT) - 1;
+			break;
+		case 'S':
+			r_layout[i].type = SENSOR;
+			r_layout[i].idx = clamp_int(atoi(tok + 1), 1, SENSOR_COUNT) - 1;
+			break;
+		case 'V':
+			r_layout[i].type = VSENSOR;
+			r_layout[i].idx = clamp_int(atoi(tok + 1), 1, VSENSOR_COUNT) - 1;
+			break;
+
+		};
+
+		tok = strtok_r(NULL, ",", &saveptr);
+		i++;
+	}
+
+	free(tmp);
+}
 
 
 void oled_display_init()
@@ -63,6 +142,7 @@ void oled_display_init()
 				if (!strncmp(tok, "128x128", 7)) {
 					dtype = OLED_128x128;
 					oled_height = 128;
+					r_lines = 10;
 				}
 				else if (!strncmp(tok, "invert", 6))
 					invert = 1;
@@ -79,6 +159,12 @@ void oled_display_init()
 			}
 			free(args);
 		}
+	}
+
+	if (strlen(cfg->display_layout_r) > 1) {
+		parse_r_layout(cfg->display_layout_r);
+	} else {
+		parse_r_layout(r_lines == 8 ? R_LAYOUT_128x64 : R_LAYOUT_128x128);
 	}
 
 	disp_brightness = (brightness / 100.0) * 255;
@@ -156,60 +242,73 @@ void oled_display_status(const struct fanpico_state *state,
 	if (!oled_found || !state)
 		return;
 
+	int h_pos = 70;
+	int fan_row_offset = (oled_height > 64 ? 1 : 0);
+
 	if (!bg_drawn) {
+		/* Draw "background" only once... */
 		oled_clear_display();
+
 		if (oled_height > 64) {
 			oledWriteString(&oled, 0,  0, 0, "Fans", FONT_6x8, 0, 1);
-			oledWriteString(&oled, 0, 74, 0, "MB Inputs", FONT_6x8, 0, 1);
-			oledWriteString(&oled, 0, 74, 6, "Sensors", FONT_6x8, 0, 1);
-			oledDrawLine(&oled, 72, 44, oled_width - 1, 44, 1);
-			oledDrawLine(&oled, 72,  0, 72, 79, 1);
-		} else {
-			oledDrawLine(&oled, 70, 35, oled_width - 1, 35, 1);
-			oledDrawLine(&oled, 70,  0, 70, 63, 1);
 		}
+
+		for (i = 0; i < r_lines; i++) {
+			struct layout_item *l = &r_layout[i];
+			char label[16];
+			int y = i * 8;
+
+			if (l->type == LINE) {
+				oledDrawLine(&oled, h_pos, y + 4, oled_width - 1, y + 4, 1);
+			}
+			else if (l->type == LABEL) {
+				int len = l->idx;
+				if (len >= sizeof(label))
+					len = sizeof(label) - 1;
+				memcpy(label, l->label, len);
+				label[len] = 0;
+				oledWriteString(&oled, 0, h_pos + 2, i, label, FONT_6x8, 0, 1);
+			}
+		}
+		oledDrawLine(&oled, h_pos, 0, h_pos, r_lines * 8 - 1, 1);
 		bg_drawn = 1;
 	}
 
-	if (oled_height <= 64) {
-		for (i = 0; i < FAN_COUNT; i++) {
-			rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
-			pwm = state->fan_duty[i];
-			snprintf(buf, sizeof(buf), "%d:%4.0lf %3.0lf%%", i + 1, rpm, pwm);
-			oledWriteString(&oled, 0 , 0, i, buf, FONT_6x8, 0, 1);
+
+	for (i = 0; i < FAN_COUNT; i++) {
+		rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
+		pwm = state->fan_duty[i];
+		snprintf(buf, sizeof(buf), "%d:%4.0lf %3.0lf%%", i + 1, rpm, pwm);
+		oledWriteString(&oled, 0 , 0, i + fan_row_offset, buf, FONT_6x8, 0, 1);
+	}
+	for (i = 0; i < r_lines; i++) {
+		struct layout_item *l = &r_layout[i];
+		int write_buf = 0;
+
+		if (l->type == MBFAN) {
+			pwm = state->mbfan_duty[l->idx];
+			snprintf(buf, sizeof(buf), "%d: %4.0lf%%  ", l->idx + 1, pwm);
+			write_buf = 1;
 		}
-		for (i = 0; i < MBFAN_COUNT; i++) {
-			pwm = state->mbfan_duty[i];
-			snprintf(buf, sizeof(buf), "%d: %4.0lf%%  ", i + 1, pwm);
-			oledWriteString(&oled, 0 , 74, i + 0, buf, FONT_6x8, 0, 1);
+		else if (l->type == SENSOR) {
+			temp = state->temp[l->idx];
+			snprintf(buf, sizeof(buf), "s%d:%5.1lfC", l->idx + 1, temp);
+			write_buf = 1;
 		}
-		for (i = 0; i < SENSOR_COUNT; i++) {
-			temp = state->temp[i];
-			snprintf(buf, sizeof(buf), "%d:%5.1lfC ", i + 1, temp);
-			if (i == 2) {
+		else if (l->type ==  VSENSOR) {
+			temp = state->vtemp[l->idx];
+			snprintf(buf, sizeof(buf), "v%d:%5.1lfC", l->idx + 1, temp);
+			write_buf = 1;
+		}
+		if (write_buf) {
+			if (oled_height <= 64 && i == 0) {
 				buf[8] = (counter++ % 2 == 0 ? '*' : ' ');
 			}
-			oledWriteString(&oled, 0 , 74, i + 5, buf, FONT_6x8, 0, 1);
+			oledWriteString(&oled, 0 , h_pos + 2, i, buf, FONT_6x8, 0, 1);
 		}
 	}
-	else {
-		for (i = 0; i < FAN_COUNT; i++) {
-			rpm = state->fan_freq[i] * 60 / conf->fans[i].rpm_factor;
-			pwm = state->fan_duty[i];
-			snprintf(buf, sizeof(buf), "%d:%4.0lf %3.0lf%% ", i + 1, rpm, pwm);
-			oledWriteString(&oled, 0 , 0, i + 1, buf, FONT_6x8, 0, 1);
-		}
-		for (i = 0; i < MBFAN_COUNT; i++) {
-			pwm = state->mbfan_duty[i];
-			snprintf(buf, sizeof(buf), "%d: %4.0lf%%  ", i + 1, pwm);
-			oledWriteString(&oled, 0 , 78, i + 1, buf, FONT_6x8, 0, 1);
-		}
-		for (i = 0; i < SENSOR_COUNT; i++) {
-			temp = state->temp[i];
-			snprintf(buf, sizeof(buf), "%d:%5.1lfC ", i + 1, temp);
-			oledWriteString(&oled, 0 , 78, i + 7, buf, FONT_6x8, 0, 1);
-		}
 
+	if (oled_height > 64) {
 		/* IP */
 		const char *ip = network_ip();
 		if (ip) {

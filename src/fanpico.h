@@ -181,6 +181,7 @@ struct fanpico_config {
 	uint8_t led_mode;
 	char display_type[64];
 	char display_theme[16];
+	char display_layout_r[64];
 	char name[32];
 	bool spi_active;
 	bool serial_active;
@@ -362,6 +363,7 @@ struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
 time_t datetime_to_time(const datetime_t *datetime);
 void watchdog_disable();
 int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
+int clamp_int(int val, int min, int max);
 
 /* crc32.c */
 unsigned int xcrc32 (const unsigned char *buf, int len, unsigned int init);
