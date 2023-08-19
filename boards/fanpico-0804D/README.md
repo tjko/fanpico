@@ -7,8 +7,7 @@ PCB Size: 135mm x 81.5mm
 ## Change Log
 
 v1.2b
-- Errata:
-  - C5 was not derated correctly. Replace with 25V part for proper derating.
+- C5 was not derated correctly. Replace with 25V part for proper derating.
 
 v1.2
 - Add alternate OLED display header with alternate pinout (J2)
