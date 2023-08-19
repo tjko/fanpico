@@ -10,6 +10,8 @@ v1.3
 - Rotate fan and temperature sensor connectors 180 degrees to allow use of right-angle connectors
 - Fix silksreen labels for JP11 (SENSOR2)
 - Update SW1 pad to support both SMD and through-hole 6mm switches.
+- Errata:
+  - C5 incorrectly derated. Use 25V (or higher) rated tantalum.
 
 v1.2
 - Change sensor connectors to JST XH (2.5mm)
