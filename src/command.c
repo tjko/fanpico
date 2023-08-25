@@ -309,6 +309,16 @@ int cmd_display_theme(const char *cmd, const char *args, int query, char *prev_c
 	return 0;
 }
 
+int cmd_display_logo(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", conf->display_logo);
+	} else {
+		strncopy(conf->display_theme, args, sizeof(conf->display_logo));
+	}
+	return 0;
+}
+
 int cmd_display_layout_r(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (query) {
@@ -1998,8 +2008,9 @@ int cmd_spi(const char *cmd, const char *args, int query, char *prev_cmd)
 
 
 struct cmd_t display_commands[] = {
+	{ "LAYOUTR",   7, NULL,              cmd_display_layout_r },
+	{ "LOGO",      4, NULL,              cmd_display_logo },
 	{ "THEMe",     4, NULL,              cmd_display_theme },
-	{ "LAYOUTR",   4, NULL,              cmd_display_layout_r },
 	{ 0, 0, 0, 0 }
 };
 struct cmd_t wifi_commands[] = {
