@@ -1,6 +1,6 @@
 # FanPico-OLED-Adapter
 
-PCB Size: 135mm x 81.5mm
+PCB Size: 25mm x 14.5mm
 
 This is small adapter for making it easier to mount larger 1.5" 128x128 pixel OLED modules.
 
