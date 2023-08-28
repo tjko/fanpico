@@ -314,7 +314,7 @@ int cmd_display_logo(const char *cmd, const char *args, int query, char *prev_cm
 	if (query) {
 		printf("%s\n", conf->display_logo);
 	} else {
-		strncopy(conf->display_theme, args, sizeof(conf->display_logo));
+		strncopy(conf->display_logo, args, sizeof(conf->display_logo));
 	}
 	return 0;
 }
