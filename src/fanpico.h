@@ -181,6 +181,7 @@ struct fanpico_config {
 	uint8_t led_mode;
 	char display_type[64];
 	char display_theme[16];
+	char display_logo[16];
 	char display_layout_r[64];
 	char name[32];
 	bool spi_active;

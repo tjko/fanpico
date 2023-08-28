@@ -36,11 +36,6 @@
 static SPILCD lcd;
 static uint8_t lcd_found = 0;
 
-/* Embedded FanPico Logo graphics */
-#define LCD_LOGO_WIDTH 160
-#define LCD_LOGO_HEIGHT 140
-extern uint8_t fanpico_lcd_logo_bmp[];
-
 
 /* Macros for converting RGB888 colorspace to RGB565 */
 
@@ -120,6 +115,14 @@ struct display_theme_entry {
 	const struct display_theme *theme_normal; /* 480x320 */
 };
 
+typedef struct display_logo {
+	const char *name;
+	uint16_t width;
+	uint16_t height;
+	const uint8_t *bmp;
+} display_logo_t;
+
+
 static uint16_t bg_color = RGB565(0x006163);
 static uint16_t text_color = RGB565(0x07a3aa);
 
@@ -137,6 +140,20 @@ const struct display_theme_entry themes[] = {
 	{"custom", &theme_custom_320x240, &theme_custom_480x320},
 #endif
 	{NULL, NULL, NULL}
+};
+
+
+#include "logos/default.h"
+#if FANPICO_CUSTOM_LOGO > 0
+#include "logos/custom.h"
+#endif
+
+const display_logo_t* logos[] = {
+	&default_lcd_logo_entry,
+#if FANPICO_CUSTOM_LOGO > 0
+	&custom_lcd_logo_entry,
+#endif
+	NULL
 };
 
 const struct display_theme *theme = NULL;
@@ -345,14 +362,27 @@ void lcd_display_init()
 		lcd_name,
 		lcd.iCurrentWidth, lcd.iCurrentHeight);
 
-	/* Draw logo screen */
+
+	/* Draw logo to screen */
+	const display_logo_t *logo = logos[0]; /* Default logo */
+	if (strlen(cfg->display_logo) > 0) {
+		int idx = 0;
+		while (logos[idx]) {
+			if (!strncmp(cfg->display_logo, logos[idx]->name, sizeof(cfg->display_logo))) {
+				logo = logos[idx];
+				break;
+			}
+			idx++;
+		}
+	}
+
 	int w_c = lcd.iCurrentWidth / 2;
 	int h_c = lcd.iCurrentHeight / 2;
-	spilcdDrawBMP(&lcd, fanpico_lcd_logo_bmp,
-		w_c - (LCD_LOGO_WIDTH / 2),
-		h_c - ((LCD_LOGO_HEIGHT + 80) / 2),
+	spilcdDrawBMP(&lcd, logo->bmp,
+		w_c - (logo->width / 2),
+		h_c - ((logo->height + 80) / 2),
 		0, -1, DRAW_TO_LCD);
-	h_c += LCD_LOGO_HEIGHT / 2;
+	h_c += logo->height / 2;
 	spilcdWriteString(&lcd, w_c - 100, h_c, "FanPico-" FANPICO_MODEL, text_color, 0, FONT_16x16, DRAW_TO_LCD);
 	spilcdWriteString(&lcd, w_c - 40, h_c + 25, "v" FANPICO_VERSION, text_color, 0, FONT_16x16, DRAW_TO_LCD);
 	spilcdWriteString(&lcd, w_c - 50, h_c + 55, "Initializing...", text_color, 0, FONT_8x8, DRAW_TO_LCD);

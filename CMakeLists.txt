@@ -18,6 +18,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(FANPICO_BOARD 0804D CACHE STRING "Fanpico Board Model")
 #set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0803D)
 set(FANPICO_CUSTOM_THEME 0 CACHE STRING "Fanpico LCD Custom Theme")
+set(FANPICO_CUSTOM_LOGO 0 CACHE STRING "Fanpico LCD Custom Logo")
 set(TLS_SUPPORT 0 CACHE STRING "TLS Support")
 
 #set(CMAKE_BUILD_TYPE Debug)
@@ -26,6 +27,7 @@ message("---------------------------------")
 message("       FANPICO_BOARD: ${FANPICO_BOARD}")
 message("          PICO_BOARD: ${PICO_BOARD}")
 message("FANPICO_CUSTOM_THEME: ${FANPICO_CUSTOM_THEME}")
+message(" FANPICO_CUSTOM_LOGO: ${FANPICO_CUSTOM_LOGO}")
 message("    CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message("---------------------------------")
 
@@ -92,7 +94,7 @@ add_executable(fanpico
   src/crc32.c
   src/default_config.s
   src/credits.s
-  src/lcd-logo.s
+  src/logos/default.s
   src/themes/lcd-background.s
   )
 
@@ -102,8 +104,15 @@ if (FANPICO_CUSTOM_THEME)
   set_property(SOURCE src/themes/custom.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src/themes)
 endif()
 
+if (FANPICO_CUSTOM_LOGO)
+  message("Enable custom logo...")
+  target_sources(fanpico PRIVATE src/logos/custom.s)
+  set_property(SOURCE src/logos/custom.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src/logos)
+endif()
+
 set_property(SOURCE src/*.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src)
 set_property(SOURCE src/themes/lcd-background.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src/themes)
+set_property(SOURCE src/logos/default.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR}/src/logos)
 set_property(SOURCE src/credits.s APPEND PROPERTY COMPILE_OPTIONS -I${CMAKE_CURRENT_LIST_DIR})
 
 pico_generate_pio_header(fanpico ${CMAKE_CURRENT_LIST_DIR}/src/square_wave_gen.pio)
