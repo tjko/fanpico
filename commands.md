@@ -97,6 +97,8 @@ Fanpico supports following commands:
 * [SYStem:DISPlay?](#systemdisplay)
 * [SYStem:DISPlay:LAYOUTR](#systemdisplaylayoutr)
 * [SYStem:DISPlay:LAYOUTR?](#systemdisplaylayoutr-1)
+* [SYStem:DISPlay:LOGO](#systemdisplaylogo)
+* [SYStem:DISPlay:LOGO?](#systemdisplaylogo-1)
 * [SYStem:DISPlay:THEMe](#systemdisplaytheme)
 * [SYStem:DISPlay:THEMe?](#systemdisplaytheme-1)
 * [SYStem:ECHO](#systemecho)
@@ -1433,7 +1435,7 @@ display on each row (8 rows available if using 128x64 OLEd module, 10 rows avail
 
 Syntax: <R1>,<R2>,...<R8>
 
-Wehre tow specifications can be one of the following:
+Where tow specifications can be one of the following:
 
 Type|Description|Notes
 ----|-----------|-----
@@ -1459,13 +1461,38 @@ Example: configure custom theme (for 128x64 display):
 SYS:DISP:LAYOUTR M1,M2,-,S1,S2,S3,V1,V2
 ```
 
-#### SYStem:DISPlay:THEMe?
+#### SYStem:DISPlay:LAYOUTR?
 Display currently configured (OLED) Display layout for the right side of the screen.
 
 Example:
 ```
 SYS:DISP:THEME?
 M1,M2,-,S1,S2,S3,V1,V2
+```
+
+
+#### SYStem:DISPlay:LOGO
+Configure (LCD) Display boot logo.
+
+Currently available logos:
+
+Name|Description
+----|-----------
+default|Default FanPico boot logo.
+custom|Custom boot logo (only available if firmware has been compiled with custom logo included).
+
+Example: configure custom logo
+```
+SYS:DISP:LOGO custom
+```
+
+#### SYStem:DISPlay:LOGO?
+Display currently configured (LCD) Display boot logo.
+
+Example:
+```
+SYS:DISP:LOGO?
+default
 ```
 
 

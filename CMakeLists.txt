@@ -27,6 +27,7 @@ message("---------------------------------")
 message("       FANPICO_BOARD: ${FANPICO_BOARD}")
 message("          PICO_BOARD: ${PICO_BOARD}")
 message("FANPICO_CUSTOM_THEME: ${FANPICO_CUSTOM_THEME}")
+message(" FANPICO_CUSTOM_LOGO: ${FANPICO_CUSTOM_LOGO}")
 message("    CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message("---------------------------------")
 
