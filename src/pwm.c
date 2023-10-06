@@ -261,7 +261,7 @@ double pwm_map(const struct pwm_map *map, double val)
 
 	// find the map points that the value falls in between of...
 	i = 1;
-	while(i < map->points && map->pwm[i][0] < val)
+	while(i < map->points-1 && map->pwm[i][0] < val)
 		i++;
 
 	// value is larger or equal than last map point
