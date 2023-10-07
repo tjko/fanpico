@@ -108,7 +108,7 @@ double sensor_get_duty(const struct temp_map *map, double temp)
 		return map->temp[0][1];
 
 	i = 1;
-	while (i < map->points && map->temp[i][0] < t)
+	while (i < map->points-1 && map->temp[i][0] < t)
 		i++;
 
 	if (t >= map->temp[i][0])

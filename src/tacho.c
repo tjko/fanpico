@@ -344,7 +344,7 @@ double tacho_map(const struct tacho_map *map, double val)
 
 	/* Find the map points that the value falls in between of... */
 	i = 1;
-	while(i < map->points && map->tacho[i][0] < val)
+	while(i < map->points-1 && map->tacho[i][0] < val)
 		i++;
 
 	/* Value is larger or equal than last map point */
