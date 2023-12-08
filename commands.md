@@ -563,11 +563,11 @@ Source types:
 
 Type|Parameters|Description|Example
 ----|----------|-----------|------
-FAN|<n>|Return tachometer signal of FAN number <n> (where n = 1..8)|FAN,1
-FIXED|<rpm>|Return static tachometer signal of <n> RPM|FIXED,1500
-MIN|<n>,<n>,...|Return slowest FAN speed acros specified fans|MIN,2,7,8
-MAX|<n>,<n>,...|Return fastest FAN speed acros specified fans|MAX,2,7,8
-AVG|<n>,<n>,...|Return average FAN speed acros specified fans|AVG,2,7,8
+FAN|n|Return tachometer signal of a specified fan|FAN,1
+FIXED|rpm|Return static tachometer signal at specified rpm|FIXED,1500
+MIN|n1,n2,...|Return slowest FAN speed acros specified fans|MIN,2,7,8
+MAX|n1,n2,...|Return fastest FAN speed acros specified fans|MAX,2,7,8
+AVG|n1,n2,...|Return average FAN speed acros specified fans|AVG,2,7,8
 
 Defaults:
 MBFAN|SOURCE
