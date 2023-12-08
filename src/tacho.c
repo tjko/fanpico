@@ -1,5 +1,5 @@
 /* tacho.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -372,6 +372,8 @@ double calculate_tacho_freq(struct fanpico_state *state, const struct fanpico_co
 		break;
 	case TACHO_FAN:
 		val = state->fan_freq[mbfan->s_id] * 60.0 / config->fans[mbfan->s_id].rpm_factor;
+		break;
+	case TACHO_MIN:
 		break;
 	}
 

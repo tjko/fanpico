@@ -81,6 +81,9 @@ enum signal_filter_types {
 enum tacho_source_types {
 	TACHO_FIXED  = 0,     /* Fixed speed set by s_id */
 	TACHO_FAN    = 1,     /* Fan tacho signal */
+	TACHO_MIN    = 2,     /* Slowest tacho signal from a group of fans. */
+	TACHO_MAX    = 3,     /* Fastest tacho signal from a group of fans. */
+	TACHO_AVG    = 4,     /* Average tacho signal from a group of fans. */
 };
 #define TACHO_ENUM_MAX 1
 
@@ -141,6 +144,7 @@ struct mb_input {
 	uint8_t rpm_factor;
 	enum tacho_source_types s_type;
 	uint16_t s_id;
+	uint8_t sources[FAN_MAX_COUNT];
 	struct tacho_map map;
 
 	/* input PWM signal settings */

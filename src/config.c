@@ -142,6 +142,12 @@ int str2tacho_source(const char *s)
 			ret = TACHO_FIXED;
 		else if (!strncasecmp(s, "fan", 3))
 			ret = TACHO_FAN;
+		else if (!strncasecmp(s, "min", 3))
+			ret = TACHO_MIN;
+		else if (!strncasecmp(s, "max", 3))
+			ret = TACHO_MAX;
+		else if (!strncasecmp(s, "avg", 3))
+			ret = TACHO_AVG;
 	}
 
 	return ret;
@@ -152,6 +158,12 @@ const char* tacho_source2str(enum tacho_source_types source)
 {
 	if (source == TACHO_FAN)
 		return "fan";
+	else if (source == TACHO_MIN)
+		return "min";
+	else if (source == TACHO_MAX)
+		return "max";
+	else if (source == TACHO_AVG)
+		return "avg";
 
 	return "fixed";
 }
@@ -167,6 +179,9 @@ int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id)
 		break;
 		;;
 	case TACHO_FAN:
+	case TACHO_MIN:
+	case TACHO_MAX:
+	case TACHO_AVG:
 		ret = (s_id >= 0 && s_id < FAN_MAX_COUNT ? 1 : 0);
 		break;
 	}
@@ -253,7 +268,6 @@ void json2tacho_map(cJSON *item, struct tacho_map *map)
 	map->points = c;
 }
 
-
 cJSON* tacho_map2json(const struct tacho_map *map)
 {
 	int i;
@@ -272,6 +286,36 @@ cJSON* tacho_map2json(const struct tacho_map *map)
 	return o;
 }
 
+void json2tacho_sources(cJSON *item, uint8_t *sources)
+{
+	int i;
+	cJSON *o;
+
+	for (i = 0; i < FAN_MAX_COUNT; i++)
+		sources[i] = 0;
+
+	cJSON_ArrayForEach(o, item) {
+		i = cJSON_GetNumberValue(o) - 1;
+		if (i >= 0 && i < FAN_MAX_COUNT)
+			sources[i] = 1;
+	}
+}
+
+cJSON* tacho_sources2json(const uint8_t *sources)
+{
+	int i;
+	cJSON *o;
+
+	if ((o = cJSON_CreateArray()) == NULL)
+		return NULL;
+
+	for (i = 0; i < FAN_COUNT; i++) {
+		if (sources[i])
+			cJSON_AddItemToArray(o, cJSON_CreateNumber(i + 1));
+	}
+
+	return o;
+}
 
 void json2temp_map(cJSON *item, struct temp_map *map)
 {
@@ -418,6 +462,8 @@ void clear_config(struct fanpico_config *cfg)
 		m->map.points = 0;
 		m->filter = FILTER_NONE;
 		m->filter_ctx = NULL;
+		for (j = 0; j < FAN_MAX_COUNT; j++)
+			m->sources[j] = 0;
 	}
 
 	cfg->local_echo = false;
@@ -545,6 +591,8 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(o, "rpm_factor", cJSON_CreateNumber(m->rpm_factor));
 		cJSON_AddItemToObject(o, "source_type", cJSON_CreateString(tacho_source2str(m->s_type)));
 		cJSON_AddItemToObject(o, "source_id", cJSON_CreateNumber(m->s_id));
+		if (m->s_type == TACHO_MIN || m->s_type == TACHO_MAX || m->s_type == TACHO_AVG)
+			cJSON_AddItemToObject(o, "sources", tacho_sources2json(m->sources));
 		cJSON_AddItemToObject(o, "rpm_map", tacho_map2json(&m->map));
 		cJSON_AddItemToObject(o, "filter", filter2json(m->filter, m->filter_ctx));
 		cJSON_AddItemToArray(mbfans, o);
@@ -753,6 +801,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			m->s_type = str2tacho_source(cJSON_GetStringValue(
 							cJSON_GetObjectItem(item, "source_type")));
 			m->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));
+			if ((r = cJSON_GetObjectItem(item, "sources")))
+				json2tacho_sources(r, m->sources);
 			if ((r = cJSON_GetObjectItem(item, "rpm_map")))
 				json2tacho_map(r, &m->map);
 			if ((r = cJSON_GetObjectItem(item, "filter")))
