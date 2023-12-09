@@ -560,9 +560,14 @@ CONF:MBFAN1:RPMF?
 Configure source for the Tachometer (RPM) signal for a motheboard fan (output) port.
 
 Source types:
-* FAN (signal received from a fan)
-* FIXED (static signal at given RPM)
 
+Type|Parameters|Description|Example
+----|----------|-----------|------
+FAN|n|Return tachometer signal of a specified fan|FAN,1
+FIXED|rpm|Return static tachometer signal at specified rpm|FIXED,1500
+MIN|n1,n2,...|Return slowest FAN speed acros specified fans|MIN,2,7,8
+MAX|n1,n2,...|Return fastest FAN speed acros specified fans|MAX,2,7,8
+AVG|n1,n2,...|Return average FAN speed acros specified fans|AVG,2,7,8
 
 Defaults:
 MBFAN|SOURCE
@@ -580,6 +585,11 @@ CONF:MBFAN2:SOURCE FAN,8
 Example: Set MBFAN 4 to see fixed 1500 RPM tachometer signal
 ```
 CONF:MBFAN4:SOURCE FIXED,1500
+```
+
+Example: Set MBFAN 1 to return slowest fan speed from FAN1, FAN2, and FAN3
+```
+CONF:MBFAN1:SOURCE MIN,1,2,3
 ```
 
 #### CONFigure:MBFANx:SOUrce?
@@ -615,7 +625,7 @@ Example: Assuming we have configured FAN1 to only run above 30% PWM signal, but 
 motherboard sets alarm when it doesn't detect fan running, we can provide 'fake' 500RPM
 speed to the motherboard until fan is actually running at least 500 RPM...
 ```
-CONF:MBFAN1:PWMMAP 0,500,500,500,10000,10000
+CONF:MBFAN1:RPMMAP 0,500,500,500,10000,10000
 ```
 
 #### CONFigure:MBFANx:RPMMap?

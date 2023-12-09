@@ -1,5 +1,5 @@
 /* tacho.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -362,7 +362,9 @@ double tacho_map(const struct tacho_map *map, double val)
 double calculate_tacho_freq(struct fanpico_state *state, const struct fanpico_config *config, int i)
 {
 	const struct mb_input *mbfan;
+	int count = 0;
 	double val = 0;
+	double sum = 0;
 
 	mbfan = &config->mbfans[i];
 
@@ -372,6 +374,38 @@ double calculate_tacho_freq(struct fanpico_state *state, const struct fanpico_co
 		break;
 	case TACHO_FAN:
 		val = state->fan_freq[mbfan->s_id] * 60.0 / config->fans[mbfan->s_id].rpm_factor;
+		break;
+	case TACHO_MIN:
+	case TACHO_MAX:
+	case TACHO_AVG:
+		for (int i = 0; i < FAN_COUNT; i++) {
+			if (mbfan->sources[i]) {
+				val = state->fan_freq[i] * 60.0 / config->fans[i].rpm_factor;
+				if (count == 0) {
+					sum = val;
+				} else {
+					if (mbfan->s_type == TACHO_MIN) {
+						if (val < sum)
+							sum = val;
+					}
+					else if (mbfan->s_type == TACHO_MAX) {
+						if (val > sum)
+							sum = val;
+					}
+					else { /* average */
+						sum += val;
+					}
+				}
+				count++;
+			}
+		}
+		if (count >= 1) {
+			if (mbfan->s_type == TACHO_AVG) {
+				val = sum / count;
+			} else {
+				val = sum;
+			}
+		}
 		break;
 	}
 

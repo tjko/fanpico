@@ -936,40 +936,90 @@ int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, char *prev_c
 int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int fan;
-	int type, val, d_o, d_n;
+	int type, val, d_o, d_n, ocount;
 	char *tok, *saveptr, *param;
+	uint8_t new_sources[FAN_MAX_COUNT];
+	enum tacho_source_types s_type;
 	int ret = 0;
+
+	memset(new_sources, 0, sizeof(new_sources));
 
 	fan = atoi(&prev_cmd[5]) - 1;
 	if (fan < 0 || fan >= MBFAN_COUNT)
 		return 1;
 
+	s_type = conf->mbfans[fan].s_type;
+
 	if (query) {
-		val = conf->mbfans[fan].s_id;
-		if (conf->mbfans[fan].s_type != TACHO_FIXED)
-			val++;
-		printf("%s,%u\n",
-			tacho_source2str(conf->mbfans[fan].s_type),
-			val);
+		printf("%s,", tacho_source2str(s_type));
+		switch (s_type) {
+
+		case TACHO_FIXED:
+		case TACHO_FAN:
+			val = conf->mbfans[fan].s_id;
+			if (s_type != TACHO_FIXED)
+				val++;
+			printf("%u", val);
+			break;
+
+		case TACHO_MIN:
+		case TACHO_MAX:
+		case TACHO_AVG:
+			ocount = 0;
+			for (int i = 0; i < FAN_COUNT; i++) {
+				if (conf->mbfans[fan].sources[i]) {
+					if (ocount > 0)
+						printf(",");
+					printf("%u", i + 1);
+					ocount++;
+				}
+			}
+			break;
+		}
+		printf("\n");
 	} else {
 		param = strdup(args);
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			type = str2tacho_source(tok);
 			d_n = (type != TACHO_FIXED ? 1 : 0);
-			if ((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
+			while ((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
 				val = atoi(tok) - d_n;
 				if (valid_tacho_source_ref(type, val)) {
-					d_o = (conf->mbfans[fan].s_type != TACHO_FIXED ? 1 : 0);
-					log_msg(LOG_NOTICE, "mbfan%d: change source %s,%u --> %s,%u",
-						fan + 1,
-						tacho_source2str(conf->mbfans[fan].s_type),
-						conf->mbfans[fan].s_id + d_o,
-						tacho_source2str(type),
-						val + d_n);
-					conf->mbfans[fan].s_type = type;
-					conf->mbfans[fan].s_id = val;
+					if (type == TACHO_FIXED || type == TACHO_FAN) {
+						d_o = (conf->mbfans[fan].s_type != TACHO_FIXED ? 1 : 0);
+						log_msg(LOG_NOTICE, "mbfan%d: change source %s,%u --> %s,%u",
+							fan + 1,
+							tacho_source2str(conf->mbfans[fan].s_type),
+							conf->mbfans[fan].s_id + d_o,
+							tacho_source2str(type),
+							val + d_n);
+						conf->mbfans[fan].s_type = type;
+						conf->mbfans[fan].s_id = val;
+						break;
+					}
+					new_sources[val] = 1;
 				} else {
 					log_msg(LOG_WARNING, "mbfan%d: invalid source: %s",
+						fan + 1, args);
+					ret = 2;
+					break;
+				}
+			}
+
+			if (type == TACHO_MIN || type == TACHO_MAX || type == TACHO_AVG) {
+				int scount = 0;
+				for (int i = 0; i < FAN_COUNT; i++) {
+					if (new_sources[i])
+						scount++;
+				}
+				if (scount >= 2) {
+					log_msg(LOG_NOTICE, "mbfan%d: new source %s", fan + 1, args);
+					conf->mbfans[fan].s_type = type;
+					conf->mbfans[fan].s_id = 0;
+					memcpy(conf->mbfans[fan].sources, new_sources,
+						sizeof(conf->mbfans[fan].sources));
+				} else {
+					log_msg(LOG_WARNING, "mbfan%d: too few parameters: %s",
 						fan + 1, args);
 					ret = 2;
 				}
