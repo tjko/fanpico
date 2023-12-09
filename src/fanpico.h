@@ -188,6 +188,7 @@ struct fanpico_config {
 	char display_logo[16];
 	char display_layout_r[64];
 	char name[32];
+	char timezone[64];
 	bool spi_active;
 	bool serial_active;
 #ifdef WIFI_SUPPORT

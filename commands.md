@@ -116,6 +116,8 @@ Fanpico supports following commands:
 * [SYStem:SPI?](#systemspi-1)
 * [SYStem:TIME](#systemtime)
 * [SYStem:TIME?](#systemtime-1)
+* [SYStem:TIMEZONE](#systemtimezone)
+* [SYStem:TIMEZONE?](#systemtimezone-1)
 * [SYStem:UPTIme?](#systemuptime)
 * [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
@@ -1708,6 +1710,36 @@ Example:
 SYS:TIME?
 2022-09-19 18:55:42
 ```
+
+#### SYStem:TIMEZONE
+Set POSIX timezone to use when getting time from a NTP server.
+If DHCP server does not supply POSIX Timezone (DHCP Option 100), then this
+command can be used to specify local timezone.
+
+This command takes POSIX timezone string as argument (or if argument is blank,
+then it clears existinh timezone setting).
+
+Example (set Pacific Standard time as local timezone):
+```
+SYS:TIMEZONE PST8PDT7,M3.2.0/2,M11.1.0/02:00:00
+```
+
+Example (clear timezone setting):
+```
+SYS:TIMEZONE
+```
+
+#### SYStem:TIMEZONE?
+Return current POSIX timezone setting.
+
+Command returns nothing if no timezone has been set.
+
+Example:
+```
+SYS:TIMEZONE?
+PST8PDT7,M3.2.0/2,M11.1.0/02:00:00
+```
+
 
 #### SYStem:UPTIme?
 Return time elapsed since unit was last rebooted.
