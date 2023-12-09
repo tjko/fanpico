@@ -323,7 +323,7 @@ void pico_dhcp_option_add_hook(struct netif *netif, struct dhcp *dhcp, u8_t stat
 void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t state, struct dhcp_msg *msg,
              u8_t msg_type, u8_t option, u8_t option_len, struct pbuf *pbuf, u16_t option_value_offset)
 {
-	static char timezone[64];
+	char dhcp_timezone[64];
 	ip4_addr_t log_ip;
 
 	if (msg_type != DHCP_ACK)
@@ -343,11 +343,16 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 		}
 	}
 	else if (option == 100 && option_len > 0) {
-		memcpy(timezone, pbuf->payload + option_value_offset, option_len);
-		timezone[option_len] = 0;
-		setenv("TZ", timezone, 1);
-		tzset();
-		log_msg(LOG_INFO, "Set (POSIX) Timezone from DHCP: %s", timezone);
+		int  len = (option_len < sizeof(dhcp_timezone) ? option_len : sizeof(dhcp_timezone) - 1);
+		memcpy(dhcp_timezone, pbuf->payload + option_value_offset, len);
+		dhcp_timezone[len] = 0;
+		if (strlen(cfg->timezone) < 1) {
+			log_msg(LOG_INFO, "Set (POSIX) Timezone from DHCP: %s", dhcp_timezone);
+			setenv("TZ", dhcp_timezone, 1);
+			tzset();
+		} else {
+			log_msg(LOG_INFO, "Ignore (POSIX) Timezone from DHCP: %s", dhcp_timezone);
+		}
 	}
 }
 
@@ -362,6 +367,7 @@ void pico_set_system_time(long int sec)
 	datetime_t t;
 	struct tm *ntp;
 	time_t ntp_time = sec;
+
 
 	if (!(ntp = localtime(&ntp_time)))
 		return;

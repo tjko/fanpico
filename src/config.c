@@ -475,6 +475,7 @@ void clear_config(struct fanpico_config *cfg)
 	strncopy(cfg->display_theme, "default", sizeof(cfg->display_theme));
 	strncopy(cfg->display_logo, "default", sizeof(cfg->display_logo));
 	strncopy(cfg->display_layout_r, "", sizeof(cfg->display_layout_r));
+	strncopy(cfg->timezone, "", sizeof(cfg->timezone));
 #ifdef WIFI_SUPPORT
 	cfg->wifi_ssid[0] = 0;
 	cfg->wifi_passwd[0] = 0;
@@ -519,6 +520,8 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "display_layout_r", cJSON_CreateString(cfg->display_layout_r));
 	if (strlen(cfg->name) > 0)
 		cJSON_AddItemToObject(config, "name", cJSON_CreateString(cfg->name));
+	if (strlen(cfg->timezone) > 0)
+		cJSON_AddItemToObject(config, "timezone", cJSON_CreateString(cfg->timezone));
 
 #ifdef WIFI_SUPPORT
 	if (strlen(cfg->hostname) > 0)
@@ -709,6 +712,10 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "name"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->name, val, sizeof(cfg->name));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "timezone"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->timezone, val, sizeof(cfg->timezone));
 	}
 
 #ifdef WIFI_SUPPORT

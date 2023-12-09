@@ -1950,6 +1950,25 @@ int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 2;
 }
 
+int cmd_timezone(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", conf->timezone);
+		return 0;
+	}
+
+	const char *tz = args;
+	while (iswspace(*tz))
+		tz++;
+	strncopy(conf->timezone, tz, sizeof(conf->timezone));
+	if (strlen(tz) > 0) {
+		log_msg(LOG_NOTICE, "Set timezone: %s", conf->timezone);
+	} else {
+		log_msg(LOG_NOTICE, "Clear timezone setting.");
+	}
+	return 0;
+}
+
 int cmd_uptime(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
@@ -2107,6 +2126,7 @@ struct cmd_t system_commands[] = {
 	{ "SERIAL",    6, NULL,              cmd_serial },
 	{ "SPI",       3, NULL,              cmd_spi },
 	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
+	{ "TIMEZONE",  8, NULL,              cmd_timezone },
 	{ "TIME",      4, NULL,              cmd_time },
 	{ "TLS",       3, tls_commands,      NULL },
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
