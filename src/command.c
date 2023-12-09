@@ -959,7 +959,7 @@ int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cm
 			val = conf->mbfans[fan].s_id;
 			if (s_type != TACHO_FIXED)
 				val++;
-			printf("%u\n", val);
+			printf("%u", val);
 			break;
 
 		case TACHO_MIN:
@@ -976,6 +976,7 @@ int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cm
 			}
 			break;
 		}
+		printf("\n");
 	} else {
 		param = strdup(args);
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
