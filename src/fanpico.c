@@ -23,6 +23,7 @@
 #include <string.h>
 #include <math.h>
 #include <malloc.h>
+#include <stdlib.h>
 #include "pico/stdlib.h"
 #include "pico/mutex.h"
 #include "pico/multicore.h"
