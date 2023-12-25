@@ -34,8 +34,8 @@
 #define LWIP_ETHERNET               1
 #define LWIP_ICMP                   1
 #define LWIP_RAW                    1
-#define TCP_WND                     (12 * TCP_MSS)
 #define TCP_MSS                     1460
+#define TCP_WND                     (12 * TCP_MSS)
 #define TCP_SND_BUF                 (8 * TCP_MSS)
 #define TCP_SND_QUEUELEN            ((4 * (TCP_SND_BUF) + (TCP_MSS - 1)) / (TCP_MSS))
 #define LWIP_NETIF_STATUS_CALLBACK  1
@@ -70,6 +70,7 @@ void pico_set_system_time(long int sec);
 #define LWIP_HOOK_DHCP_APPEND_OPTIONS   pico_dhcp_option_add_hook
 #define LWIP_HOOK_DHCP_PARSE_OPTION     pico_dhcp_option_parse_hook
 
+#define MQTT_OUTPUT_RINGBUF_SIZE        1024
 #define HTTPD_FSDATA_FILE               "fanpico_fsdata.c"
 #define HTTPD_USE_MEM_POOL              0
 #define LWIP_HTTPD_SSI                  1
@@ -122,6 +123,7 @@ void pico_set_system_time(long int sec);
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 #define SNTP_DEBUG                  LWIP_DBG_OFF
 #define HTTPD_DEBUG                 LWIP_DBG_OFF
+#define MQTT_DEBUG                  LWIP_DBG_OFF
 #define ALTCP_MBEDTLS_DEBUG         LWIP_DBG_ON
 #define ALTCP_MBEDTLS_MEM_DEBUG     LWIP_DBG_ON
 #define ALTCP_MBEDTLS_LIB_DEBUG     LWIP_DBG_ON

@@ -94,6 +94,77 @@ int valid_wifi_country(const char *country)
 	return 0;
 }
 
+int string_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+	char *var, size_t var_len, const char *name)
+{
+	if (query) {
+		printf("%s\n", var);
+	} else {
+		if (strcmp(var, args)) {
+			log_msg(LOG_NOTICE, "%s change '%s' --> '%s'", name, var, args);
+			strncopy(var, args, var_len);
+		}
+	}
+	return 0;
+}
+
+int uint32_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+		uint32_t *var, uint32_t min_val, uint32_t max_val, const char *name)
+{
+	uint32_t val;
+	int v;
+
+	if (query) {
+		printf("%lu\n", *var);
+		return 0;
+	}
+
+	if (str_to_int(args, &v, 10)) {
+		val = v;
+		if (val >= min_val && val <= max_val) {
+			if (*var != val) {
+				log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
+				*var = val;
+			}
+		} else {
+			log_msg(LOG_WARNING, "Invalid %s value: %s", name, args);
+			return 2;
+		}
+		return 0;
+	}
+	return 1;
+}
+
+int bool_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+		bool *var, const char *name)
+{
+	bool val;
+
+	if (query) {
+		printf("%s\n", (*var ? "ON" : "OFF"));
+		return 0;
+	}
+
+	if ((args[0] == '1' && args[1] == 0) || !strncasecmp(args, "true", 5)
+		|| !strncasecmp(args, "on", 3)) {
+		val = true;
+	}
+	else if ((args[0] == '0' && args[1] == 0) || !strncasecmp(args, "false", 6)
+		|| !strncasecmp(args, "off", 4)) {
+		val =  false;
+	} else {
+		log_msg(LOG_WARNING, "Invalid %s value: %s", name, args);
+		return 2;
+	}
+
+	if (*var != val) {
+		log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
+		*var = val;
+	}
+	return 0;
+}
+
+
 int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int i;
@@ -1817,7 +1888,88 @@ int cmd_wifi_mode(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
+int cmd_mqtt_server(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_server, sizeof(conf->mqtt_server), "MQTT Server");
+}
+
+int cmd_mqtt_port(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_port, 0, 65535, "MQTT Port");
+}
+
+int cmd_mqtt_user(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_user, sizeof(conf->mqtt_user), "MQTT User");
+}
+
+int cmd_mqtt_pass(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_pass, sizeof(conf->mqtt_pass), "MQTT Password");
+}
+
+int cmd_mqtt_status_interval(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_status_interval, 0, (86400 * 30), "MQTT Publish Status Interval");
+}
+
+int cmd_mqtt_allow_scpi(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_allow_scpi, "MQTT Allow SCPI Commands");
+}
+
+int cmd_mqtt_status_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_status_topic, sizeof(conf->mqtt_status_topic), "MQTT Status Topic");
+}
+
+int cmd_mqtt_cmd_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_cmd_topic, sizeof(conf->mqtt_cmd_topic), "MQTT Command Topic");
+}
+
+int cmd_mqtt_resp_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_resp_topic, sizeof(conf->mqtt_resp_topic), "MQTT Response Topic");
+}
+
+
 #if TLS_SUPPORT
+int cmd_mqtt_tls(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int val = -1;
+
+	if (query) {
+		printf("%s\n", conf->mqtt_tls ? "ON" : "OFF");
+		return 0;
+	}
+
+	if (!strncasecmp(args, "ON", 3))
+		val = 1;
+	else if (!strncasecmp(args, "OFF", 4))
+		val = 0;
+
+	if (val >= 0) {
+		if (conf->mqtt_tls != val) {
+			log_msg(LOG_NOTICE, "MQTT TLS mode %s", val ? "ON" : "OFF");
+			conf->mqtt_tls = val;
+		}
+	} else {
+		log_msg(LOG_WARNING, "Invalid MQTT TLS mode: %s", args);
+		return 2;
+	}
+	return 0;
+}
+
 int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	char *buf;
@@ -2101,6 +2253,24 @@ struct cmd_t wifi_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+struct cmd_t mqtt_commands[] = {
+#ifdef WIFI_SUPPORT
+	{ "SERVer",    4, NULL,              cmd_mqtt_server },
+	{ "PORT",      4, NULL,              cmd_mqtt_port },
+	{ "USER",      4, NULL,              cmd_mqtt_user },
+	{ "PASSword",  4, NULL,              cmd_mqtt_pass },
+	{ "INTerval",  3, NULL,              cmd_mqtt_status_interval },
+	{ "SCPI",      4, NULL,              cmd_mqtt_allow_scpi },
+	{ "STATus",    4, NULL,              cmd_mqtt_status_topic },
+	{ "COMMand",   4, NULL,              cmd_mqtt_cmd_topic },
+	{ "RESPonse",  4, NULL,              cmd_mqtt_resp_topic },
+#if TLS_SUPPORT
+	{ "TLS",       3, NULL,              cmd_mqtt_tls },
+#endif
+#endif
+	{ 0, 0, 0, 0 }
+};
+
 struct cmd_t tls_commands[] = {
 #ifdef WIFI_SUPPORT
 #if TLS_SUPPORT
@@ -2121,6 +2291,7 @@ struct cmd_t system_commands[] = {
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
 	{ "MEMory",    3, NULL,              cmd_memory },
+	{ "MQTT",      4, mqtt_commands,     NULL },
 	{ "NAME",      4, NULL,              cmd_name },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "SERIAL",    6, NULL,              cmd_serial },
@@ -2344,4 +2515,9 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 		}
 		cmd = strtok_r(NULL, ";", &saveptr);
 	}
+}
+
+int last_command_status()
+{
+	return last_error_num;
 }

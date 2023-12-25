@@ -3,4 +3,9 @@
 
 #define TLS_SUPPORT @TLS_SUPPORT@
 
+#ifdef NDEBUG
+#define ALTCP_MBEDTLS_ENTROPY_PTR (const unsigned char*)"@EXTRA_ENTROPY@"
+#define ALTCP_MBEDTLS_ENTROPY_LEN @EXTRA_ENTROPY_LEN@
+#endif
+
 #endif /* FANPICO_COMPILE_H */

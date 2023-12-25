@@ -8,7 +8,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.5.2
+  VERSION 1.6.0
   LANGUAGES C CXX ASM
   )
 set(CMAKE_C_STANDARD 11)
@@ -19,7 +19,11 @@ set(FANPICO_BOARD 0804D CACHE STRING "Fanpico Board Model")
 #set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0803D)
 set(FANPICO_CUSTOM_THEME 0 CACHE STRING "Fanpico LCD Custom Theme")
 set(FANPICO_CUSTOM_LOGO 0 CACHE STRING "Fanpico LCD Custom Logo")
-set(TLS_SUPPORT 0 CACHE STRING "TLS Support")
+
+set(TLS_SUPPORT 1 CACHE STRING "TLS Support")
+# Generate some "random" data for mbedtls (better than nothing...)
+set(EXTRA_ENTROPY_LEN 64)
+string(RANDOM LENGTH ${EXTRA_ENTROPY_LEN} EXTRA_ENTROPY)
 
 #set(CMAKE_BUILD_TYPE Debug)
 
@@ -28,6 +32,7 @@ message("       FANPICO_BOARD: ${FANPICO_BOARD}")
 message("          PICO_BOARD: ${PICO_BOARD}")
 message("FANPICO_CUSTOM_THEME: ${FANPICO_CUSTOM_THEME}")
 message(" FANPICO_CUSTOM_LOGO: ${FANPICO_CUSTOM_LOGO}")
+message("         TLS_SUPPORT: ${TLS_SUPPORT}")
 message("    CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message("---------------------------------")
 
@@ -149,11 +154,13 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
   target_sources(fanpico PRIVATE
     src/syslog.c
     src/httpd.c
+    src/mqtt.c
     )
   target_link_libraries(fanpico PRIVATE
     pico_cyw43_arch_lwip_threadsafe_background
     pico_lwip_sntp
     pico_lwip_http
+    pico_lwip_mqtt
     )
   if (TLS_SUPPORT)
     target_link_libraries(fanpico PRIVATE
@@ -176,9 +183,11 @@ target_compile_definitions(fanpico PRIVATE USBD_DESC_STR_MAX=32)
 target_compile_definitions(fanpico PRIVATE PARAM_ASSERTIONS_ENABLE_ALL=1)
 target_compile_definitions(fanpico PRIVATE PICO_MALLOC_PANIC=0)
 target_compile_definitions(fanpico PRIVATE PICO_DEBUG_MALLOC=0)
-target_compile_definitions(fanpico PRIVATE PICO_DEOPTIMIZED_DEBUG=0)
-target_compile_definitions(fanpico PRIVATE PICO_STACK_SIZE=0x1000)
+target_compile_definitions(fanpico PRIVATE PICO_DEOPTIMIZED_DEBUG=1)
+target_compile_definitions(fanpico PRIVATE PICO_STACK_SIZE=0x2000)
 target_compile_definitions(fanpico PRIVATE PICO_USE_STACK_GUARDS=1)
 target_compile_definitions(fanpico PRIVATE PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
+
+pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom.ld)
 
 # eof :-)

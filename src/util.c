@@ -31,6 +31,7 @@
 #include "pico/stdlib.h"
 #include "pico/mutex.h"
 #include "pico/unique_id.h"
+#include "pico/multicore.h"
 #include "pico/util/datetime.h"
 #include "hardware/watchdog.h"
 #include "b64/cencode.h"
@@ -447,6 +448,52 @@ int clamp_int(int val, int min, int max)
 		res = max;
 
 	return res;
+}
+
+
+void* memmem(const void *haystack, size_t haystacklen,
+	const void *needle, size_t needlelen)
+{
+	const uint8_t *h = (const uint8_t *) haystack;
+	const uint8_t *n = (const uint8_t *) needle;
+
+	if (haystacklen == 0 || needlelen == 0 || haystacklen < needlelen)
+		return NULL;
+
+	if (needlelen == 1)
+		return memchr(haystack, (int)n[0], haystacklen);
+
+	const uint8_t *search_end = h + haystacklen - needlelen;
+
+	for (const uint8_t *p = h; p <= search_end; p++) {
+		if (*p == *n) {
+			if (!memcmp(p, n, needlelen)) {
+				return (void *)p;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+inline uint32_t get_stack_pointer() {
+	uint32_t sp;
+
+	asm volatile("mov %0, sp" : "=r"(sp));
+
+	return sp;
+}
+
+
+extern char __StackBottom;
+extern char __StackOneBottom;
+
+inline uint32_t get_stack_free()
+{
+	uint32_t sp = get_stack_pointer();
+	uint32_t end = get_core_num() ? (uint32_t)&__StackOneBottom : (uint32_t)&__StackBottom;
+
+	return (sp > end ? sp - end : 0);
 }
 
 /* eof */

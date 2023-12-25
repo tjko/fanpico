@@ -56,9 +56,12 @@
 #define WIFI_PASSWD_MAX_LEN  64
 #define WIFI_COUNTRY_MAX_LEN 3
 
+#define MQTT_MAX_TOPIC_LEN   32
+#define DEFAULT_MQTT_STATUS_INTERVAL 600
+
 #ifdef NDEBUG
 #define WATCHDOG_ENABLED      1
-#define WATCHDOG_REBOOT_DELAY 5000
+#define WATCHDOG_REBOOT_DELAY 15000
 #endif
 
 
@@ -202,6 +205,16 @@ struct fanpico_config {
 	ip_addr_t ip;
 	ip_addr_t netmask;
 	ip_addr_t gateway;
+	char mqtt_server[32];
+	uint32_t mqtt_port;
+	bool mqtt_tls;
+	bool mqtt_allow_scpi;
+	char mqtt_user[32];
+	char mqtt_pass[64];
+	char mqtt_status_topic[MQTT_MAX_TOPIC_LEN];
+	uint32_t mqtt_status_interval;
+	char mqtt_cmd_topic[MQTT_MAX_TOPIC_LEN];
+	char mqtt_resp_topic[MQTT_MAX_TOPIC_LEN];
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
@@ -239,6 +252,7 @@ void set_binary_info();
 /* command.c */
 void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command);
 int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd);
+int last_command_status();
 
 /* config.c */
 extern mutex_t *config_mutex;
@@ -286,11 +300,21 @@ void network_poll();
 void network_status();
 void set_pico_system_time(long unsigned int sec);
 const char *network_ip();
+const char *network_hostname();
 
 /* httpd.c */
 #if WIFI_SUPPORT
 u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 			u16_t current_tag_part, u16_t *next_tag_part);
+#endif
+
+/* mqtt.c */
+#if WIFI_SUPPORT
+void fanpico_setup_mqtt_client();
+int fanpico_mqtt_client_active();
+void fanpico_mqtt_reconnect();
+void fanpico_mqtt_publish();
+void fanpico_mqtt_scpi_command();
 #endif
 
 /* tls.c */
@@ -370,6 +394,9 @@ time_t datetime_to_time(const datetime_t *datetime);
 void watchdog_disable();
 int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
 int clamp_int(int val, int min, int max);
+void* memmem(const void *haystack, size_t haystacklen, const void *needle, size_t needlelen);
+uint32_t get_stack_pointer();
+uint32_t get_stack_free();
 
 /* crc32.c */
 unsigned int xcrc32 (const unsigned char *buf, int len, unsigned int init);
