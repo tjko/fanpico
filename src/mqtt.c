@@ -39,7 +39,6 @@
 
 #ifdef WIFI_SUPPORT
 
-#define MQTTS_PORT 8883
 #define MQTT_CMD_MAX_LEN 100
 
 mqtt_client_t *mqtt_client = NULL;
@@ -367,7 +366,7 @@ void mqtt_connect(mqtt_client_t *client)
 		cyw43_arch_lwip_begin();
 		ci.tls_config = altcp_tls_create_config_client(NULL, 0);
 		cyw43_arch_lwip_end();
-		port = MQTTS_PORT;;
+		port = MQTT_TLS_PORT;
 	}
 #endif
 	if (cfg->mqtt_port > 0)
@@ -495,7 +494,6 @@ void fanpico_mqtt_scpi_command()
 
 	mqtt_scpi_cmd[0] = 0;
 	mqtt_scpi_cmd_queued = false;
-	//update_core1_state();
 }
 
 #endif /* WIFI_SUPPORT */
