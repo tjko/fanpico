@@ -46,7 +46,7 @@
 struct cmd_t {
 	const char   *cmd;
 	uint8_t       min_match;
-	struct cmd_t *subcmds;
+	const struct cmd_t *subcmds;
 	int (*func)(const char *cmd, const char *args, int query, char *prev_cmd);
 };
 
@@ -2228,13 +2228,14 @@ int cmd_spi(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 
 
-struct cmd_t display_commands[] = {
+const struct cmd_t display_commands[] = {
 	{ "LAYOUTR",   7, NULL,              cmd_display_layout_r },
 	{ "LOGO",      4, NULL,              cmd_display_logo },
 	{ "THEMe",     4, NULL,              cmd_display_theme },
 	{ 0, 0, 0, 0 }
 };
-struct cmd_t wifi_commands[] = {
+
+const struct cmd_t wifi_commands[] = {
 #ifdef WIFI_SUPPORT
 	{ "COUntry",   3, NULL,              cmd_wifi_country },
 	{ "GATEway",   4, NULL,              cmd_wifi_gateway },
@@ -2253,7 +2254,7 @@ struct cmd_t wifi_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t mqtt_commands[] = {
+const struct cmd_t mqtt_commands[] = {
 #ifdef WIFI_SUPPORT
 	{ "SERVer",    4, NULL,              cmd_mqtt_server },
 	{ "PORT",      4, NULL,              cmd_mqtt_port },
@@ -2271,7 +2272,7 @@ struct cmd_t mqtt_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t tls_commands[] = {
+const struct cmd_t tls_commands[] = {
 #ifdef WIFI_SUPPORT
 #if TLS_SUPPORT
 	{ "CERT",      4, NULL,              cmd_tls_cert },
@@ -2281,7 +2282,7 @@ struct cmd_t tls_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t system_commands[] = {
+const struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
 	{ "DISPlay",   4, display_commands,  cmd_display_type },
 	{ "ECHO",      4, NULL,              cmd_echo },
@@ -2308,7 +2309,7 @@ struct cmd_t system_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t fan_c_commands[] = {
+const struct cmd_t fan_c_commands[] = {
 	{ "FILTER",    6, NULL,              cmd_fan_filter },
 	{ "MAXpwm",    3, NULL,              cmd_fan_max_pwm },
 	{ "MINpwm",    3, NULL,              cmd_fan_min_pwm },
@@ -2320,7 +2321,7 @@ struct cmd_t fan_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t mbfan_c_commands[] = {
+const struct cmd_t mbfan_c_commands[] = {
 	{ "FILTER",    6, NULL,              cmd_mbfan_filter },
 	{ "MAXrpm",    3, NULL,              cmd_mbfan_max_rpm },
 	{ "MINrpm",    3, NULL,              cmd_mbfan_min_rpm },
@@ -2332,7 +2333,7 @@ struct cmd_t mbfan_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t sensor_c_commands[] = {
+const struct cmd_t sensor_c_commands[] = {
 	{ "BETAcoeff",   4, NULL,            cmd_sensor_beta_coef },
 	{ "FILTER",      6, NULL,            cmd_sensor_filter },
 	{ "NAME",        4, NULL,            cmd_sensor_name },
@@ -2344,7 +2345,7 @@ struct cmd_t sensor_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t vsensor_c_commands[] = {
+const struct cmd_t vsensor_c_commands[] = {
 	{ "FILTER",      6, NULL,            cmd_vsensor_filter },
 	{ "NAME",        4, NULL,            cmd_vsensor_name },
 	{ "SOUrce",      3, NULL,            cmd_vsensor_source },
@@ -2352,7 +2353,7 @@ struct cmd_t vsensor_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t config_commands[] = {
+const struct cmd_t config_commands[] = {
 	{ "DELete",    3, NULL,              cmd_delete_config },
 	{ "FAN",       3, fan_c_commands,    NULL },
 	{ "MBFAN",     5, mbfan_c_commands,  NULL },
@@ -2363,7 +2364,7 @@ struct cmd_t config_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t fan_commands[] = {
+const struct cmd_t fan_commands[] = {
 	{ "PWM",       3, NULL,              cmd_fan_pwm },
 	{ "Read",      1, NULL,              cmd_fan_read },
 	{ "RPM",       3, NULL,              cmd_fan_rpm },
@@ -2371,7 +2372,7 @@ struct cmd_t fan_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t mbfan_commands[] = {
+const struct cmd_t mbfan_commands[] = {
 	{ "PWM",       3, NULL,              cmd_mbfan_pwm },
 	{ "Read",      1, NULL,              cmd_mbfan_read },
 	{ "RPM",       3, NULL,              cmd_mbfan_rpm },
@@ -2379,19 +2380,19 @@ struct cmd_t mbfan_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t sensor_commands[] = {
+const struct cmd_t sensor_commands[] = {
 	{ "Read",      1, NULL,              cmd_sensor_temp },
 	{ "TEMP",      4, NULL,              cmd_sensor_temp },
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t vsensor_commands[] = {
+const struct cmd_t vsensor_commands[] = {
 	{ "Read",      1, NULL,              cmd_vsensor_temp },
 	{ "TEMP",      4, NULL,              cmd_vsensor_temp },
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t measure_commands[] = {
+const struct cmd_t measure_commands[] = {
 	{ "FAN",       3, fan_commands,      cmd_fan_read },
 	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read },
 	{ "Read",      1, NULL,              cmd_read },
@@ -2400,12 +2401,12 @@ struct cmd_t measure_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t write_commands[] = {
+const struct cmd_t write_commands[] = {
 	{ "VSENSOR",   7, NULL,              cmd_vsensor_write },
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t commands[] = {
+const struct cmd_t commands[] = {
 	{ "*CLS",      4, NULL,              cmd_null },
 	{ "*ESE",      4, NULL,              cmd_null },
 	{ "*ESR",      4, NULL,              cmd_zero },
@@ -2426,7 +2427,7 @@ struct cmd_t commands[] = {
 
 
 
-struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level, char **prev_subcmd)
+const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, char **prev_subcmd)
 {
 	int i, query, cmd_len, total_len;
 	char *saveptr1, *saveptr2, *t, *sub, *s, *arg;
@@ -2498,7 +2499,7 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 {
 	char *saveptr, *cmd;
 	char *prev_subcmd = NULL;
-	struct cmd_t *cmd_level = commands;
+	const struct cmd_t *cmd_level = commands;
 
 	if (!state || !config || !command)
 		return;
