@@ -40,10 +40,25 @@
 #include "fanpico.h"
 
 
+extern char __StackTop;
+extern char __StackOneTop;
+extern char __StackBottom;
+extern char __StackOneBottom;
+extern char __StackLimit;
+extern char __HeapLimit;
+
 void print_mallinfo()
 {
 	struct mallinfo mi = mallinfo();
 
+	printf("test\n");
+	printf("core0 stack size:                      %d\n",
+		&__StackTop - &__StackBottom);
+	printf("core1 stack size:                      %d\n",
+		&__StackOneTop - &__StackOneBottom);
+	printf("Heap size:                             %d\n",
+		&__StackLimit - &__HeapLimit);
+	printf("\n");
 	printf("Total non-mmapped bytes (arena):       %d\n", mi.arena);
 	printf("# of free chunks (ordblks):            %d\n", mi.ordblks);
 	printf("# of free fastbin blocks (smblks):     %d\n", mi.smblks);
@@ -483,10 +498,6 @@ inline uint32_t get_stack_pointer() {
 
 	return sp;
 }
-
-
-extern char __StackBottom;
-extern char __StackOneBottom;
 
 inline uint32_t get_stack_free()
 {
