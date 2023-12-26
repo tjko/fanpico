@@ -28,37 +28,17 @@
 #include <assert.h>
 #include <malloc.h>
 #include <time.h>
-#include "pico/stdlib.h"
-#include "pico/mutex.h"
-#include "pico/unique_id.h"
-#include "pico/multicore.h"
-#include "pico/util/datetime.h"
-#include "hardware/watchdog.h"
 #include "b64/cencode.h"
 #include "b64/cdecode.h"
 
 #include "fanpico.h"
 
 
-extern char __StackTop;
-extern char __StackOneTop;
-extern char __StackBottom;
-extern char __StackOneBottom;
-extern char __StackLimit;
-extern char __HeapLimit;
 
 void print_mallinfo()
 {
 	struct mallinfo mi = mallinfo();
 
-	printf("test\n");
-	printf("core0 stack size:                      %d\n",
-		&__StackTop - &__StackBottom);
-	printf("core1 stack size:                      %d\n",
-		&__StackOneTop - &__StackOneBottom);
-	printf("Heap size:                             %d\n",
-		&__StackLimit - &__HeapLimit);
-	printf("\n");
 	printf("Total non-mmapped bytes (arena):       %d\n", mi.arena);
 	printf("# of free chunks (ordblks):            %d\n", mi.ordblks);
 	printf("# of free fastbin blocks (smblks):     %d\n", mi.smblks);
@@ -71,17 +51,6 @@ void print_mallinfo()
 	printf("Topmost releasable block (keepcost):   %d\n", mi.keepcost);
 }
 
-void print_irqinfo()
-{
-	uint core = get_core_num();
-	uint enabled, shared;
-
-	for(uint i = 0; i < 32; i++) {
-		enabled = irq_is_enabled(i);
-		shared = (enabled ? irq_has_shared_handler(i) : 0);
-		printf("core%u: IRQ%-2u: enabled=%u, shared=%u\n", core, i, enabled, shared);
-	}
-}
 
 char *trim_str(char *s)
 {
@@ -123,6 +92,7 @@ int str_to_float(const char *str, float *val)
 
 	return (str == endptr ? 0 : 1);
 }
+
 
 #define GET_DIGITS(buf, n, s, dest) {		\
 		count = 0;			\
@@ -180,39 +150,48 @@ int str_to_datetime(const char *str, datetime_t *t)
 	return 1;
 }
 
-const char *rp2040_model_str()
+
+datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t)
 {
-	static char buf[32];
-	uint8_t version = 0;
-	uint8_t known_chip = 0;
-	uint8_t chip_version = rp2040_chip_version();
-	uint8_t rom_version = rp2040_rom_version();
+	if (!tm || !t)
+		return NULL;
 
+	t->year = tm->tm_year + 1900;
+	t->month = tm->tm_mon + 1;
+	t->day = tm->tm_mday;
+	t->dotw = tm->tm_wday;
+	t->hour = tm->tm_hour;
+	t->min = tm->tm_min;
+	t->sec = tm->tm_sec;
 
-	if (chip_version <= 2 && rom_version <= 3)
-		known_chip = 1;
-
-	version = rom_version - 1;
-
-	snprintf(buf, sizeof(buf), "RP2040-B%d%s",
-		version,
-		(known_chip ? "" : " (?)"));
-
-	return buf;
+	return t;
 }
 
 
-const char *pico_serial_str()
+struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm)
 {
-	static char buf[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
-	pico_unique_board_id_t board_id;
+	if (!t || !tm)
+		return NULL;
 
-	memset(&board_id, 0, sizeof(board_id));
-	pico_get_unique_board_id(&board_id);
-	for (int i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
-		snprintf(&buf[i*2], 3,"%02x", board_id.id[i]);
+	tm->tm_year = t->year - 1900;
+	tm->tm_mon = t->month -1;
+	tm->tm_mday = t->day;
+	tm->tm_wday = t->dotw;
+	tm->tm_hour = t->hour;
+	tm->tm_min = t->min;
+	tm->tm_sec = t->sec;
+	tm->tm_isdst = -1;
 
-	return buf;
+	return tm;
+}
+
+
+time_t datetime_to_time(const datetime_t *datetime)
+{
+	struct tm tm;
+
+	datetime_to_tm(datetime, &tm);
+	return mktime(&tm);
 }
 
 
@@ -226,29 +205,13 @@ const char *mac_address_str(const uint8_t *mac)
 	return buf;
 }
 
+
 int check_for_change(double oldval, double newval, double threshold)
 {
 	double delta = fabs(oldval - newval);
 
 	if (delta >= threshold)
 		return 1;
-
-	return 0;
-}
-
-
-int time_passed(absolute_time_t *t, uint32_t ms)
-{
-	absolute_time_t t_now = get_absolute_time();
-
-	if (t == NULL)
-		return -1;
-
-	if (to_us_since_boot(*t) == 0 ||
-	    to_us_since_boot(delayed_by_ms(*t, ms)) < to_us_since_boot(t_now)) {
-		*t = t_now;
-		return 1;
-	}
 
 	return 0;
 }
@@ -282,11 +245,13 @@ int64_t pow_i64(int64_t x, uint8_t y)
 	return res;
 }
 
+
 double round_decimal(double val, unsigned int decimal)
 {
 	double f = pow_i64(10, decimal);
 	return round(val * f) / f;
 }
+
 
 char* base64encode(const char *input)
 {
@@ -369,90 +334,6 @@ char *strncatenate(char *dst, const char *src, size_t size)
 }
 
 
-datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t)
-{
-	if (!tm || !t)
-		return NULL;
-
-	t->year = tm->tm_year + 1900;
-	t->month = tm->tm_mon + 1;
-	t->day = tm->tm_mday;
-	t->dotw = tm->tm_wday;
-	t->hour = tm->tm_hour;
-	t->min = tm->tm_min;
-	t->sec = tm->tm_sec;
-
-	return t;
-}
-
-
-struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm)
-{
-	if (!t || !tm)
-		return NULL;
-
-	tm->tm_year = t->year - 1900;
-	tm->tm_mon = t->month -1;
-	tm->tm_mday = t->day;
-	tm->tm_wday = t->dotw;
-	tm->tm_hour = t->hour;
-	tm->tm_min = t->min;
-	tm->tm_sec = t->sec;
-	tm->tm_isdst = -1;
-
-	return tm;
-}
-
-
-time_t datetime_to_time(const datetime_t *datetime)
-{
-	struct tm tm;
-
-	datetime_to_tm(datetime, &tm);
-	return mktime(&tm);
-}
-
-
-void watchdog_disable()
-{
-	hw_clear_bits(&watchdog_hw->ctrl, WATCHDOG_CTRL_ENABLE_BITS);
-}
-
-
-int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout)
-{
-	absolute_time_t t_timeout = get_absolute_time();
-	char *p;
-	int res = 0;
-	int len;
-
-	if (!str || maxlen < 2)
-		return -1;
-
-	len = strnlen(str, maxlen);
-	if (len >= maxlen)
-		return -2;
-	p = str + len;
-
-	while ((p - str) < (maxlen - 1) ) {
-		if (time_passed(&t_timeout, timeout)) {
-			break;
-		}
-		int c = getchar_timeout_us(1);
-		if (c == PICO_ERROR_TIMEOUT)
-			continue;
-		if (c == 10 || c == 13) {
-			res = 1;
-			break;
-		}
-		*p++ = c;
-	}
-	*p = 0;
-
-	return res;
-}
-
-
 int clamp_int(int val, int min, int max)
 {
 	int res = val;
@@ -491,20 +372,5 @@ void* memmem(const void *haystack, size_t haystacklen,
 	return NULL;
 }
 
-inline uint32_t get_stack_pointer() {
-	uint32_t sp;
-
-	asm volatile("mov %0, sp" : "=r"(sp));
-
-	return sp;
-}
-
-inline uint32_t get_stack_free()
-{
-	uint32_t sp = get_stack_pointer();
-	uint32_t end = get_core_num() ? (uint32_t)&__StackOneBottom : (uint32_t)&__StackBottom;
-
-	return (sp > end ? sp - end : 0);
-}
 
 /* eof */

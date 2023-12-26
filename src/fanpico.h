@@ -372,31 +372,35 @@ void debug(int debug_level, const char *fmt, ...);
 
 /* util.c */
 void print_mallinfo();
-void print_irqinfo();
 char *trim_str(char *s);
 int str_to_int(const char *str, int *val, int base);
 int str_to_float(const char *str, float *val);
 int str_to_datetime(const char *str, datetime_t *t);
-const char *rp2040_model_str();
-const char *pico_serial_str();
+datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t);
+struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
+time_t datetime_to_time(const datetime_t *datetime);
 const char *mac_address_str(const uint8_t *mac);
 int check_for_change(double oldval, double newval, double threshold);
-int time_passed(absolute_time_t *t, uint32_t us);
 int64_t pow_i64(int64_t x, uint8_t y);
 double round_decimal(double val, unsigned int decimal);
 char* base64encode(const char *input);
 char* base64decode(const char *input);
 char *strncopy(char *dst, const char *src, size_t size);
 char *strncatenate(char *dst, const char *src, size_t size);
-datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t);
-struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
-time_t datetime_to_time(const datetime_t *datetime);
-void watchdog_disable();
-int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
 int clamp_int(int val, int min, int max);
 void* memmem(const void *haystack, size_t haystacklen, const void *needle, size_t needlelen);
+
+/* util_rp2040.c */
 uint32_t get_stack_pointer();
 uint32_t get_stack_free();
+void print_rp2040_meminfo();
+void print_irqinfo();
+void watchdog_disable();
+const char *rp2040_model_str();
+const char *pico_serial_str();
+int time_passed(absolute_time_t *t, uint32_t us);
+int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
+
 
 /* crc32.c */
 unsigned int xcrc32 (const unsigned char *buf, int len, unsigned int init);
