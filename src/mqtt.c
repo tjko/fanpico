@@ -54,67 +54,6 @@ u16_t mqtt_reconnect = 0;
 void mqtt_connect(mqtt_client_t *client);
 
 
-int process_mqtt_command(const char *cmd)
-{
-//	const struct fanpico_state *st = fanpico_state;
-	char buf[MQTT_CMD_MAX_LEN], *saveptr, *tok;
-	int output = 0;
-	int pwr = -1;
-	int pwm = -1;
-
-	if (!cmd)
-		return -1;
-
-	strncopy(buf, cmd, sizeof(buf));
-
-	if (!(tok = strtok_r(buf, ":", &saveptr)))
-		return -2;
-
-	if (!strncasecmp(tok, "ALL", 4)) {
-		output = -1;
-	} else {
-		int tmp;
-		if (str_to_int(tok, &tmp, 10)) {
-			if (tmp >= 1 && tmp <= FAN_COUNT)
-				output = tmp;
-		}
-	}
-	if (output == 0)
-		return -3;
-
-	if ((tok = strtok_r(NULL, ":", &saveptr))) {
-		if (!strncasecmp(tok, "ON", 3)) {
-			pwr = 1;
-		}
-		else if (!strncasecmp(tok, "OFF", 4)) {
-			pwr = 0;
-		}
-		else if (!strncasecmp(tok, "PWM", 4)) {
-			if ((tok = strtok_r(NULL, ":", &saveptr))) {
-				int tmp;
-				if (str_to_int(tok, &tmp, 10)) {
-					if (tmp >= 0 && tmp <= 100)
-						pwm = tmp;
-				}
-			}
-			if (pwm < 0)
-				return -4;
-		}
-	}
-
-	for (int i = 0; i < FAN_COUNT; i++) {
-		if (output == i + 1 || output == -1) {
-#if 0
-			if (pwr >= 0)
-				st->pwr[i] = pwr;
-			if (pwm >= 0)
-				st->pwm[i] = pwm;
-#endif
-		}
-	}
-
-	return 0;
-}
 
 static void mqtt_pub_request_cb(void *arg, err_t result)
 {
@@ -205,67 +144,52 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
 static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags)
 {
 	char cmd[MQTT_CMD_MAX_LEN];
-	u8_t *end, *p;
-	u32_t l;
-	int res, mode;
+	const u8_t *end, *start;
+	int l;
+
 
 	log_msg(LOG_DEBUG, "MQTT incoming publish payload with length %d, flags %u\n",
 		len, (unsigned int)flags);
 
-	if (incoming_topic != 1)
+	if (incoming_topic != 1 || len < 1)
 		return;
 
-	/* Search for a command we recognize */
-	if ((p = memmem(data, len, "CMD:", 4))) {
-		mode = 0;
-		p += 4;
+	/* Check for command prefix, if found skip past prefix */
+	if ((start = memmem(data, len, "CMD:", 4))) {
+		start += 4;
+		l = len - (start - data);
+		if (l < 1)
+			return;
+	} else {
+		start = data;
+		l = len;
 	}
-	else if ((p = memmem(data, len, "SCPI:", 5))) {
-		mode = 1;
-		p += 5;
-	}
-	else {
+	/* Check for command suffix, if found ignore anything past it */
+	if (!(end = memchr(start, ';', l)))
+		end = start + l;
+	if ((l = end - start) < 1)
 		return;
-	}
-
-	l = len - (p - data);
-	if (l < 1)
-		return;
-
-	if (!(end = memchr(p, ';', l))) {
-		log_msg(LOG_INFO, "MQTT ignore non-terminated command.");
-		return;
-	}
-	l = end - p;
 	if (l >= sizeof(cmd))
 		l = sizeof(cmd) - 1;
-	memcpy(cmd, p, l);
+	memcpy(cmd, start, l);
 	cmd[l] = 0;
 
-	/* Process command */
-	if (mode ==  1) {
-		if (!cfg->mqtt_allow_scpi) {
+
+	/* Check if should be command allowed */
+	if (!cfg->mqtt_allow_scpi) {
+		if (strncasecmp(cmd, "WRITE:", 6)) {
 			log_msg(LOG_NOTICE, "MQTT SCPI commands not allowed: '%s'", cmd);
 			return;
 		}
-		if (mqtt_scpi_cmd_queued) {
-			log_msg(LOG_NOTICE, "MQTT SCPI command queue full: '%s'", cmd);
-			send_mqtt_command_response(cmd, 1, "SCPI command queue full");
-		} else {
-			log_msg(LOG_NOTICE, "MQTT SCPI command queued: '%s'", cmd);
-			strncopy(mqtt_scpi_cmd, cmd, sizeof(mqtt_scpi_cmd));
-			mqtt_scpi_cmd_queued = true;
-		}
+	}
+
+	if (mqtt_scpi_cmd_queued) {
+		log_msg(LOG_NOTICE, "MQTT SCPI command queue full: '%s'", cmd);
+		send_mqtt_command_response(cmd, 1, "SCPI command queue full");
 	} else {
-		res = process_mqtt_command(cmd);
-		if (res == 0) {
-			log_msg(LOG_NOTICE, "MQTT command processed: '%s'", cmd);
-			send_mqtt_command_response(cmd, res, "command successfull");
-		}
-		else {
-			log_msg(LOG_NOTICE, "MQTT invalid command: '%s' (%d)", cmd, res);
-			send_mqtt_command_response(cmd, res, "invalid command");
-		}
+		log_msg(LOG_NOTICE, "MQTT SCPI command queued: '%s'", cmd);
+		strncopy(mqtt_scpi_cmd, cmd, sizeof(mqtt_scpi_cmd));
+		mqtt_scpi_cmd_queued = true;
 	}
 
 }
