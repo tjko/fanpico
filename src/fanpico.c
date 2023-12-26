@@ -175,7 +175,7 @@ void clear_state(struct fanpico_state *s)
 	for (i = 0; i < VSENSOR_MAX_COUNT; i++) {
 		s->vtemp[i] = 0.0;
 		s->vtemp_prev[i] = 0.0;
-		s->vtemp_updated[i] = 0;
+		s->vtemp_updated[i] = from_us_since_boot(0);
 	}
 }
 

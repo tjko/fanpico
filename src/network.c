@@ -1,5 +1,5 @@
 /* network.c
-   Copyright (C) 2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2022-2023 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -198,11 +198,13 @@ void wifi_init()
 	/* Enable HTTP server */
 	httpd_init();
 #if TLS_SUPPORT
+#if TLS_HTTPD_ENABLED
 	struct altcp_tls_config *tls_config = tls_server_config();
 	if (tls_config) {
 		log_msg(LOG_NOTICE, "HTTPS/TLS enabled");
 		httpd_inits(tls_config);
 	}
+#endif
 #endif
 	http_set_ssi_handler(fanpico_ssi_handler, NULL, 0);
 
@@ -234,6 +236,9 @@ void wifi_status()
 void wifi_poll()
 {
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(test_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(command_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(reconnect_t, 0);
 	static bool init_msg_sent = false;
 
 	if (!wifi_initialized)
@@ -243,23 +248,44 @@ void wifi_poll()
 	cyw43_arch_poll();
 #endif
 
-	if (network_initialized) {
-		if (!init_msg_sent) {
-			if (time_passed(&t_network_initialized, 2000)) {
-				log_msg(LOG_INFO, "Network initialization complete.%s",
-					(rebooted_by_watchdog ? " [Rebooted by watchdog]" : ""));
-				init_msg_sent = true;
+	if (!network_initialized)
+		return;
+
+	if (!init_msg_sent) {
+		if (time_passed(&t_network_initialized, 2000)) {
+			init_msg_sent = true;
+			log_msg(LOG_INFO, "Network initialization complete.%s",
+				(rebooted_by_watchdog ? " [Rebooted by watchdog]" : ""));
+			if (strlen(cfg->mqtt_server) > 0) {
+				fanpico_setup_mqtt_client();
 			}
 		}
-		if (time_passed(&test_t, 3600 * 1000)) {
-			uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
-			uint32_t mins =  secs / 60;
-			uint32_t hours = mins / 60;
-			uint32_t days = hours / 24;
+	}
+	if (time_passed(&test_t, 3600 * 1000)) {
+		uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
+		uint32_t mins =  secs / 60;
+		uint32_t hours = mins / 60;
+		uint32_t days = hours / 24;
 
-			syslog_msg(LOG_INFO, "Uptime: %lu days %02lu:%02lu:%02lu%s",
-				days, hours % 24, mins % 60, secs % 60,
-				(rebooted_by_watchdog ? " [Rebooted by watchdog]" : ""));
+		syslog_msg(LOG_INFO, "Uptime: %lu days %02lu:%02lu:%02lu%s",
+			days, hours % 24, mins % 60, secs % 60,
+			(rebooted_by_watchdog ? " [Rebooted by watchdog]" : ""));
+	}
+	if (fanpico_mqtt_client_active()) {
+		/* Check for pending SCPI command received via MQTT */
+		if (time_passed(&command_t, 250)) {
+			fanpico_mqtt_scpi_command();
+		}
+
+		/* Publish status update to MQTT status topic */
+		if (cfg->mqtt_status_interval > 0) {
+			if (time_passed(&publish_t, cfg->mqtt_status_interval * 1000)) {
+				fanpico_mqtt_publish();
+			}
+		}
+
+		if (time_passed(&reconnect_t, 1000)) {
+			fanpico_mqtt_reconnect();
 		}
 	}
 
@@ -413,5 +439,15 @@ const char *network_ip()
 	return wifi_ip();
 #else
 	return NULL;
+#endif
+}
+
+
+const char *network_hostname()
+{
+#ifdef WIFI_SUPPORT
+	return wifi_hostname;
+#else
+	return "";
 #endif
 }

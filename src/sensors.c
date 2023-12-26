@@ -127,7 +127,7 @@ double get_vsensor(uint8_t i, struct fanpico_config *config,
 
 	if (s->mode == VSMODE_MANUAL) {
 		/* Copy over values from WRITE:VSENSORx commands ... */
-		if (config->vtemp_updated[i] != state->vtemp_updated[i]) {
+		if (absolute_time_diff_us(config->vtemp_updated[i], state->vtemp_updated[i]) != 0) {
 			t = config->vtemp[i];
 			state->vtemp_updated[i] = config->vtemp_updated[i];
 		}

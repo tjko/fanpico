@@ -46,7 +46,7 @@
 struct cmd_t {
 	const char   *cmd;
 	uint8_t       min_match;
-	struct cmd_t *subcmds;
+	const struct cmd_t *subcmds;
 	int (*func)(const char *cmd, const char *args, int query, char *prev_cmd);
 };
 
@@ -93,6 +93,77 @@ int valid_wifi_country(const char *country)
 
 	return 0;
 }
+
+int string_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+	char *var, size_t var_len, const char *name)
+{
+	if (query) {
+		printf("%s\n", var);
+	} else {
+		if (strcmp(var, args)) {
+			log_msg(LOG_NOTICE, "%s change '%s' --> '%s'", name, var, args);
+			strncopy(var, args, var_len);
+		}
+	}
+	return 0;
+}
+
+int uint32_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+		uint32_t *var, uint32_t min_val, uint32_t max_val, const char *name)
+{
+	uint32_t val;
+	int v;
+
+	if (query) {
+		printf("%lu\n", *var);
+		return 0;
+	}
+
+	if (str_to_int(args, &v, 10)) {
+		val = v;
+		if (val >= min_val && val <= max_val) {
+			if (*var != val) {
+				log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
+				*var = val;
+			}
+		} else {
+			log_msg(LOG_WARNING, "Invalid %s value: %s", name, args);
+			return 2;
+		}
+		return 0;
+	}
+	return 1;
+}
+
+int bool_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+		bool *var, const char *name)
+{
+	bool val;
+
+	if (query) {
+		printf("%s\n", (*var ? "ON" : "OFF"));
+		return 0;
+	}
+
+	if ((args[0] == '1' && args[1] == 0) || !strncasecmp(args, "true", 5)
+		|| !strncasecmp(args, "on", 3)) {
+		val = true;
+	}
+	else if ((args[0] == '0' && args[1] == 0) || !strncasecmp(args, "false", 6)
+		|| !strncasecmp(args, "off", 4)) {
+		val =  false;
+	} else {
+		log_msg(LOG_WARNING, "Invalid %s value: %s", name, args);
+		return 2;
+	}
+
+	if (*var != val) {
+		log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
+		*var = val;
+	}
+	return 0;
+}
+
 
 int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 {
@@ -1817,7 +1888,88 @@ int cmd_wifi_mode(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
+int cmd_mqtt_server(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_server, sizeof(conf->mqtt_server), "MQTT Server");
+}
+
+int cmd_mqtt_port(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_port, 0, 65535, "MQTT Port");
+}
+
+int cmd_mqtt_user(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_user, sizeof(conf->mqtt_user), "MQTT User");
+}
+
+int cmd_mqtt_pass(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_pass, sizeof(conf->mqtt_pass), "MQTT Password");
+}
+
+int cmd_mqtt_status_interval(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_status_interval, 0, (86400 * 30), "MQTT Publish Status Interval");
+}
+
+int cmd_mqtt_allow_scpi(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_allow_scpi, "MQTT Allow SCPI Commands");
+}
+
+int cmd_mqtt_status_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_status_topic, sizeof(conf->mqtt_status_topic), "MQTT Status Topic");
+}
+
+int cmd_mqtt_cmd_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_cmd_topic, sizeof(conf->mqtt_cmd_topic), "MQTT Command Topic");
+}
+
+int cmd_mqtt_resp_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_resp_topic, sizeof(conf->mqtt_resp_topic), "MQTT Response Topic");
+}
+
+
 #if TLS_SUPPORT
+int cmd_mqtt_tls(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int val = -1;
+
+	if (query) {
+		printf("%s\n", conf->mqtt_tls ? "ON" : "OFF");
+		return 0;
+	}
+
+	if (!strncasecmp(args, "ON", 3))
+		val = 1;
+	else if (!strncasecmp(args, "OFF", 4))
+		val = 0;
+
+	if (val >= 0) {
+		if (conf->mqtt_tls != val) {
+			log_msg(LOG_NOTICE, "MQTT TLS mode %s", val ? "ON" : "OFF");
+			conf->mqtt_tls = val;
+		}
+	} else {
+		log_msg(LOG_WARNING, "Invalid MQTT TLS mode: %s", args);
+		return 2;
+	}
+	return 0;
+}
+
 int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	char *buf;
@@ -2012,30 +2164,59 @@ int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+#define TEST_MEM_SIZE (264*1024)
+
 int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int blocksize;
 
 	if (query) {
+		print_rp2040_meminfo();
+		printf("mallinfo:\n");
 		print_mallinfo();
 		return 0;
 	}
-	if (str_to_int(args, &blocksize, 10)) {
-		if (blocksize >= 512) {
-			void *buf = NULL;
-			size_t bufsize = blocksize;
-			do {
-				if (buf) {
-					free(buf);
-					bufsize += blocksize;
-				}
-				buf = malloc(bufsize);
-			} while (buf);
-			printf("Maximum available memory: %u bytes\n", bufsize - blocksize);
+
+	if (!str_to_int(args, &blocksize, 10))
+		return 1;
+	if (blocksize < 512)
+		return 2;
+
+	/* Test for largest available memory block... */
+	void *buf = NULL;
+	size_t bufsize = blocksize;
+	do {
+		if (buf) {
+			free(buf);
+			bufsize += blocksize;
 		}
-		return 0;
+		buf = malloc(bufsize);
+	} while (buf && bufsize < TEST_MEM_SIZE);
+	printf("Largest available memory block:        %u bytes\n",
+		bufsize - blocksize);
+
+	/* Test how much memory available in 'blocksize' blocks... */
+	int i = 0;
+	int max = TEST_MEM_SIZE / blocksize + 1;
+	void **refbuf = malloc(max * sizeof(void*));
+	if (refbuf) {
+		memset(refbuf, 0, max * sizeof(void*));
+		while (i < max) {
+			if (!(refbuf[i] = malloc(blocksize)))
+				break;
+			i++;
+		}
 	}
-	return 1;
+	printf("Total available memory:                %u bytes (%d x %dbytes)\n",
+		i * blocksize, i, blocksize);
+	if (refbuf) {
+		i = 0;
+		while (i < max && refbuf[i]) {
+			free(refbuf[i++]);
+		}
+		free(refbuf);
+	}
+	return 0;
 }
 
 int cmd_serial(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -2048,7 +2229,8 @@ int cmd_serial(const char *cmd, const char *args, int query, char *prev_cmd)
 	}
 	if (str_to_int(args, &val, 10)) {
 		if (val >= 0 && val <= 1) {
-			log_msg(LOG_NOTICE, "Serial console active: %d -> %d", conf->serial_active, val);
+			log_msg(LOG_NOTICE, "Serial console active: %d -> %d",
+				conf->serial_active, val);
 			conf->serial_active = val;
 			return 0;
 		}
@@ -2076,13 +2258,14 @@ int cmd_spi(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 
 
-struct cmd_t display_commands[] = {
+const struct cmd_t display_commands[] = {
 	{ "LAYOUTR",   7, NULL,              cmd_display_layout_r },
 	{ "LOGO",      4, NULL,              cmd_display_logo },
 	{ "THEMe",     4, NULL,              cmd_display_theme },
 	{ 0, 0, 0, 0 }
 };
-struct cmd_t wifi_commands[] = {
+
+const struct cmd_t wifi_commands[] = {
 #ifdef WIFI_SUPPORT
 	{ "COUntry",   3, NULL,              cmd_wifi_country },
 	{ "GATEway",   4, NULL,              cmd_wifi_gateway },
@@ -2101,7 +2284,25 @@ struct cmd_t wifi_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t tls_commands[] = {
+const struct cmd_t mqtt_commands[] = {
+#ifdef WIFI_SUPPORT
+	{ "SERVer",    4, NULL,              cmd_mqtt_server },
+	{ "PORT",      4, NULL,              cmd_mqtt_port },
+	{ "USER",      4, NULL,              cmd_mqtt_user },
+	{ "PASSword",  4, NULL,              cmd_mqtt_pass },
+	{ "INTerval",  3, NULL,              cmd_mqtt_status_interval },
+	{ "SCPI",      4, NULL,              cmd_mqtt_allow_scpi },
+	{ "STATus",    4, NULL,              cmd_mqtt_status_topic },
+	{ "COMMand",   4, NULL,              cmd_mqtt_cmd_topic },
+	{ "RESPonse",  4, NULL,              cmd_mqtt_resp_topic },
+#if TLS_SUPPORT
+	{ "TLS",       3, NULL,              cmd_mqtt_tls },
+#endif
+#endif
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t tls_commands[] = {
 #ifdef WIFI_SUPPORT
 #if TLS_SUPPORT
 	{ "CERT",      4, NULL,              cmd_tls_cert },
@@ -2111,7 +2312,7 @@ struct cmd_t tls_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t system_commands[] = {
+const struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
 	{ "DISPlay",   4, display_commands,  cmd_display_type },
 	{ "ECHO",      4, NULL,              cmd_echo },
@@ -2121,6 +2322,7 @@ struct cmd_t system_commands[] = {
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
 	{ "MEMory",    3, NULL,              cmd_memory },
+	{ "MQTT",      4, mqtt_commands,     NULL },
 	{ "NAME",      4, NULL,              cmd_name },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "SERIAL",    6, NULL,              cmd_serial },
@@ -2137,7 +2339,7 @@ struct cmd_t system_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t fan_c_commands[] = {
+const struct cmd_t fan_c_commands[] = {
 	{ "FILTER",    6, NULL,              cmd_fan_filter },
 	{ "MAXpwm",    3, NULL,              cmd_fan_max_pwm },
 	{ "MINpwm",    3, NULL,              cmd_fan_min_pwm },
@@ -2149,7 +2351,7 @@ struct cmd_t fan_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t mbfan_c_commands[] = {
+const struct cmd_t mbfan_c_commands[] = {
 	{ "FILTER",    6, NULL,              cmd_mbfan_filter },
 	{ "MAXrpm",    3, NULL,              cmd_mbfan_max_rpm },
 	{ "MINrpm",    3, NULL,              cmd_mbfan_min_rpm },
@@ -2161,7 +2363,7 @@ struct cmd_t mbfan_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t sensor_c_commands[] = {
+const struct cmd_t sensor_c_commands[] = {
 	{ "BETAcoeff",   4, NULL,            cmd_sensor_beta_coef },
 	{ "FILTER",      6, NULL,            cmd_sensor_filter },
 	{ "NAME",        4, NULL,            cmd_sensor_name },
@@ -2173,7 +2375,7 @@ struct cmd_t sensor_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t vsensor_c_commands[] = {
+const struct cmd_t vsensor_c_commands[] = {
 	{ "FILTER",      6, NULL,            cmd_vsensor_filter },
 	{ "NAME",        4, NULL,            cmd_vsensor_name },
 	{ "SOUrce",      3, NULL,            cmd_vsensor_source },
@@ -2181,7 +2383,7 @@ struct cmd_t vsensor_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t config_commands[] = {
+const struct cmd_t config_commands[] = {
 	{ "DELete",    3, NULL,              cmd_delete_config },
 	{ "FAN",       3, fan_c_commands,    NULL },
 	{ "MBFAN",     5, mbfan_c_commands,  NULL },
@@ -2192,7 +2394,7 @@ struct cmd_t config_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t fan_commands[] = {
+const struct cmd_t fan_commands[] = {
 	{ "PWM",       3, NULL,              cmd_fan_pwm },
 	{ "Read",      1, NULL,              cmd_fan_read },
 	{ "RPM",       3, NULL,              cmd_fan_rpm },
@@ -2200,7 +2402,7 @@ struct cmd_t fan_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t mbfan_commands[] = {
+const struct cmd_t mbfan_commands[] = {
 	{ "PWM",       3, NULL,              cmd_mbfan_pwm },
 	{ "Read",      1, NULL,              cmd_mbfan_read },
 	{ "RPM",       3, NULL,              cmd_mbfan_rpm },
@@ -2208,19 +2410,19 @@ struct cmd_t mbfan_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t sensor_commands[] = {
+const struct cmd_t sensor_commands[] = {
 	{ "Read",      1, NULL,              cmd_sensor_temp },
 	{ "TEMP",      4, NULL,              cmd_sensor_temp },
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t vsensor_commands[] = {
+const struct cmd_t vsensor_commands[] = {
 	{ "Read",      1, NULL,              cmd_vsensor_temp },
 	{ "TEMP",      4, NULL,              cmd_vsensor_temp },
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t measure_commands[] = {
+const struct cmd_t measure_commands[] = {
 	{ "FAN",       3, fan_commands,      cmd_fan_read },
 	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read },
 	{ "Read",      1, NULL,              cmd_read },
@@ -2229,12 +2431,12 @@ struct cmd_t measure_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t write_commands[] = {
+const struct cmd_t write_commands[] = {
 	{ "VSENSOR",   7, NULL,              cmd_vsensor_write },
 	{ 0, 0, 0, 0 }
 };
 
-struct cmd_t commands[] = {
+const struct cmd_t commands[] = {
 	{ "*CLS",      4, NULL,              cmd_null },
 	{ "*ESE",      4, NULL,              cmd_null },
 	{ "*ESR",      4, NULL,              cmd_zero },
@@ -2255,7 +2457,7 @@ struct cmd_t commands[] = {
 
 
 
-struct cmd_t* run_cmd(char *cmd, struct cmd_t *cmd_level, char **prev_subcmd)
+const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, char **prev_subcmd)
 {
 	int i, query, cmd_len, total_len;
 	char *saveptr1, *saveptr2, *t, *sub, *s, *arg;
@@ -2327,7 +2529,7 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 {
 	char *saveptr, *cmd;
 	char *prev_subcmd = NULL;
-	struct cmd_t *cmd_level = commands;
+	const struct cmd_t *cmd_level = commands;
 
 	if (!state || !config || !command)
 		return;
@@ -2344,4 +2546,9 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 		}
 		cmd = strtok_r(NULL, ";", &saveptr);
 	}
+}
+
+int last_command_status()
+{
+	return last_error_num;
 }

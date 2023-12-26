@@ -107,6 +107,26 @@ Fanpico supports following commands:
 * [SYStem:LED](#systemled)
 * [SYStem:LED?](#systemled-1)
 * [SYStem:MBFANS?](#systemmbfans)
+* [SYStem:MQTT:SERVer](#systemmqttserver)
+* [SYStem:MQTT:SERVer?](#systemmqttserver-1)
+* [SYStem:MQTT:PORT](#systemmqttport)
+* [SYStem:MQTT:PORT?](#systemmqttport-1)
+* [SYStem:MQTT:USER](#systemmqttuser)
+* [SYStem:MQTT:USER?](#systemmqttuser-1)
+* [SYStem:MQTT:PASSword](#systemmqttpassword)
+* [SYStem:MQTT:PASSword?](#systemmqttpassword-1)
+* [SYStem:MQTT:INTerval](#systemmqttinterval)
+* [SYStem:MQTT:INTerval?](#systemmqttinterval-1)
+* [SYStem:MQTT:SCPI](#systemmqttscpi)
+* [SYStem:MQTT:SCPI?](#systemmqttscpi-1)
+* [SYStem:MQTT:STATus](#systemmqttstatus)
+* [SYStem:MQTT:STATus?](#systemmqttstatus-1)
+* [SYStem:MQTT:COMMand](#systemmqttcommand)
+* [SYStem:MQTT:COMMand?](#systemmqttcommand-1)
+* [SYStem:MQTT:RESPonse](#systemmqttresponse)
+* [SYStem:MQTT:RESPonse?](#systemmqtresponse-1)
+* [SYStem:MQTT:TLS](#systemmqtttls)
+* [SYStem:MQTT:TLS?](#systemmqtttls-1)
 * [SYStem:NAME](#systemname)
 * [SYStem:NAME?](#systemname-1)
 * [SYStem:SENSORS?](#systemsensors)
@@ -1606,6 +1626,247 @@ Example:
 SYS:MBFANS?
 4
 ```
+
+### SYStem:MQTT Commands
+FanPico has MQTT Client that can be confiugred to publish (send) periodic status
+updates to a topic.
+Additionally MQTT Client support subscribing to a "command" topic to listen for commands.
+This allows remotely controlling BrickPico.
+
+To enable MQTT at minimum server must be configured. To explicitly disbable MQTT set server
+to empty string.
+
+
+#### SYStem:MQTT:SERVer
+Set MQTT server to connect to. This parameter expects a DNS name as argument.
+
+Default: <empty>   (when this setting is empty string, MQTT is explicitly disabled)
+
+Example (configure MQTT server name):
+```
+SYS:MQTT:SERVER io.adafruit.com
+```
+
+Example (disable MQTT):
+```
+SYS:MQTT:SERVER
+```
+
+#### SYStem:MQTT:SERVer?
+Query currently set MQTT server name.
+
+Example:
+```
+SYS:MQTT:SERVER?
+io.adafruit.com
+```
+
+
+#### SYStem:MQTT:PORT
+Set MQTT server (TCP) port. This setting is needed when MQTT server is not using standard port.
+If this setting is not set (value is left to default "0"), then standard MQTT port is used.
+
+- Secure (TLS) Port = 8883
+- Insecure Port = 1883
+
+Default: 0   (when this setting is 0 use default MQTT ports)
+
+Example:
+```
+SYS:MQTT:PORT 9883
+```
+
+
+#### SYStem:MQTT:PORT?
+Query currently set MQTT (TCP) port.
+
+If return value is zero (0), then default MQTT port is being used.
+
+Example:
+```
+SYS:MQTT:PORT?
+0
+```
+
+
+#### SYStem:MQTT:USER
+Set MQTT username to use when connecting to MQTT server.
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:USER myusername
+```
+
+
+#### SYStem:MQTT:USER?
+Query currently set MQTT username.
+
+Example:
+```
+SYS:MQTT:USER?
+myusername
+```
+
+
+#### SYStem:MQTT:PASS
+Set MQTT password to use when connecting to MQTT server.
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:PASS mymqttpassword
+```
+
+
+#### SYStem:MQTT:PASS?
+Query currently set MQTT password.
+
+Example:
+```
+SYS:MQTT:PASS?
+mymqttpassword
+```
+
+
+#### SYStem:MQTT:STATus
+Configure topic to publish unit status information periodically.
+If this is left to empty (string), then no status information is published to MQTT server.
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:STATUS musername/feeds/brickpico1
+```
+
+
+#### SYStem:MQTT:STATus?
+Query currently set topic for publishing unit status information to.
+
+Example:
+```
+SYS:MQTT:STATUS?
+myusername/feeds/fanpico1
+```
+
+
+#### SYStem:MQTT:INTerval
+Configure how often unit will publish (send) status message to status topic.
+Set this to 0 (seconds) to disable publishing status updates.
+Recommended values are 60 (seconds) or higher.
+
+Default: 600  (every 10 minutes)
+
+Example:
+```
+SYS:MQTT:INTERVAL 3600
+```
+
+
+#### SYStem:MQTT:INTerval?
+Query currently set topic for publishing unit status information to.
+
+Example:
+```
+SYS:MQTT:INTERVAL?
+3600
+```
+
+
+#### SYStem:MQTT:SCPI
+Configure if SCPI all commands will be accepted via MQTT.
+If this is not enabled then only "WRITE" commands are allowed.
+
+This is potentially "dangerous" feature, so only enable if you understand
+the potential risks allowing device to be remotely configured.
+
+Default: OFF
+
+Example:
+```
+SYS:MQTT:SCPI ON
+```
+
+
+#### SYStem:MQTT:SCPI?
+Query whether all SCPI commands are allowed via MQTT.
+
+
+Example:
+```
+SYS:MQTT:SCPI?
+OFF
+```
+
+
+#### SYStem:MQTT:COMMand
+Configure topic to subscribe to to wait for commands to control outputs.
+If this is left to empty (string), then unit won't subcrible (and accept) any commands from MQTT.
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:STATUS musername/feeds/cmd
+```
+
+
+#### SYStem:MQTT:COMMand?
+Query currently set topic for subscribing to wait for commands.
+
+Example:
+```
+SYS:MQTT:STATUS?
+myusername/feeds/cmd
+```
+
+
+#### SYStem:MQTT:RESPonse
+Configure topic to publish responses to commands received from the command topic.
+If this is left to empty, then unit won't send response to any commands.
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:STATUS musername/feeds/response
+```
+
+
+#### SYStem:MQTT:RESPonse?
+Query currently set topic for publishing reponses to commands.
+
+Example:
+```
+SYS:MQTT:STATUS?
+myusername/feeds/response
+```
+
+
+#### SYStem:MQTT:TLS
+Enable/disable use of secure connection mode (TLS/SSL) when connecting to MQTT server.
+Default is TLS on to protect MQTT credentials (usename/password).
+
+Default: ON
+
+Example:
+```
+SYS:MQTT:TLS OFF
+```
+
+
+#### SYStem:MQTT:TLS?
+Query whether TLS is enabled or disabled for MQTT.
+
+Example:
+```
+SYS:MQTT:TLS?
+ON
+```
+
 
 
 #### SYStem:NAME
