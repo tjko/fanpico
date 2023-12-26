@@ -2164,16 +2164,21 @@ int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+#define TEST_MEM_SIZE (264*1024)
+
 int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int blocksize;
 
 	if (query) {
+		print_rp2040_meminfo();
+		printf("mallinfo:\n");
 		print_mallinfo();
 		return 0;
 	}
 	if (str_to_int(args, &blocksize, 10)) {
 		if (blocksize >= 512) {
+			/* Test for largest available memory block... */
 			void *buf = NULL;
 			size_t bufsize = blocksize;
 			do {
@@ -2183,9 +2188,31 @@ int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
 				}
 				buf = malloc(bufsize);
 			} while (buf);
-			printf("Maximum available memory: %u bytes\n", bufsize - blocksize);
+			printf("Largest available memory block:        %u bytes\n",
+				bufsize - blocksize);
+
+			/* Test how much memory available in separaet blocks... */
+			int max = TEST_MEM_SIZE / blocksize;
+			void **refbuf = malloc(max * sizeof(void*));
+			if (refbuf) {
+				memset(refbuf, 0, max * sizeof(void*));
+				int i = 0;
+				while (i < max) {
+					if (!(refbuf[i] = malloc(blocksize)))
+						break;
+					i++;
+				}
+				printf("Total available memory:                %u bytes (%d x %d)\n",
+					i * blocksize, i, blocksize);
+				i = 0;
+				while (i < max && refbuf[i]) {
+					free(refbuf[i]);
+					i++;
+				}
+				free(refbuf);
+			}
+			return 0;
 		}
-		return 0;
 	}
 	return 1;
 }
@@ -2200,7 +2227,8 @@ int cmd_serial(const char *cmd, const char *args, int query, char *prev_cmd)
 	}
 	if (str_to_int(args, &val, 10)) {
 		if (val >= 0 && val <= 1) {
-			log_msg(LOG_NOTICE, "Serial console active: %d -> %d", conf->serial_active, val);
+			log_msg(LOG_NOTICE, "Serial console active: %d -> %d",
+				conf->serial_active, val);
 			conf->serial_active = val;
 			return 0;
 		}

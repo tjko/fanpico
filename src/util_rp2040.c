@@ -61,9 +61,9 @@ inline uint32_t get_stack_free()
 
 void print_rp2040_meminfo()
 {
-	printf("core0 stack size:                      %d\n",
+	printf("Core0 stack size:                      %d\n",
 		&__StackTop - &__StackBottom);
-	printf("core1 stack size:                      %d\n",
+	printf("Core1 stack size:                      %d\n",
 		&__StackOneTop - &__StackOneBottom);
 	printf("Heap size:                             %d\n",
 		&__StackLimit - &__end__);
