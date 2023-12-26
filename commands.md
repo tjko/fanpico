@@ -1777,8 +1777,10 @@ SYS:MQTT:INTERVAL?
 
 
 #### SYStem:MQTT:SCPI
-Configure if SCPI commands will be accepted via MQTT.
-This is potentially "dangerous" feature so only enable if you understand
+Configure if SCPI all commands will be accepted via MQTT.
+If this is not enabled then only "WRITE" commands are allowed.
+
+This is potentially "dangerous" feature, so only enable if you understand
 the potential risks allowing device to be remotely configured.
 
 Default: OFF
@@ -1790,7 +1792,7 @@ SYS:MQTT:SCPI ON
 
 
 #### SYStem:MQTT:SCPI?
-Query whether SCPI commands are allowed via MQTT.
+Query whether all SCPI commands are allowed via MQTT.
 
 
 Example:
