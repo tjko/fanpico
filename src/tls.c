@@ -107,7 +107,7 @@ struct altcp_tls_config* tls_server_config()
 	if (cert)
 		free(cert);
 
-	log_msg(LOG_DEBUG, "tls_server_config(): finished (%lx)", c);
+	log_msg(LOG_DEBUG, "tls_server_config(): finished (%lx)", (uint32_t)c);
 	return c;
 }
 #endif
