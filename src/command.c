@@ -2090,10 +2090,14 @@ int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
 		return 0;
 	}
 
-	if (!str_to_int(args, &blocksize, 10))
-		return 1;
-	if (blocksize < 512)
-		return 2;
+	if (str_to_int(args, &blocksize, 10)) {
+		if (blocksize < 512)
+			blocksize = 512;
+		if (blocksize > 8192)
+			blocksize= 8192;
+	} else {
+		blocksize = 1024;
+	}
 
 	/* Test for largest available memory block... */
 	void *buf = NULL;
