@@ -206,6 +206,29 @@ const char *mac_address_str(const uint8_t *mac)
 }
 
 
+int valid_wifi_country(const char *country)
+{
+	if (!country)
+		return 0;
+
+	if (strlen(country) < 2)
+		return 0;
+
+	if (!(country[0] >= 'A' && country[0] <= 'Z'))
+		return 0;
+	if (!(country[1] >= 'A' && country[1] <= 'Z'))
+		return 0;
+
+	if (strlen(country) == 2)
+		return 1;
+
+	if (country[2] >= '1' && country[2] <= '9')
+		return 1;
+
+	return 0;
+}
+
+
 int check_for_change(double oldval, double newval, double threshold)
 {
 	double delta = fabs(oldval - newval);

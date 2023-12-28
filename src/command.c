@@ -56,7 +56,7 @@ struct error_t {
 };
 
 /* For now, mimic some actual instrument error codes/responses... */
-struct error_t error_codes[] = {
+const struct error_t error_codes[] = {
 	{ "No Error", 0 },
 	{ "Command Error", -100 },
 	{ "Syntax Error", -102 },
@@ -73,27 +73,7 @@ struct fanpico_config *conf = NULL;
 extern const char fanpico_credits_text[];
 
 
-int valid_wifi_country(const char *country)
-{
-	if (!country)
-		return 0;
-
-	if (strlen(country) < 2)
-		return 0;
-
-	if (!(country[0] >= 'A' && country[0] <= 'Z'))
-		return 0;
-	if (!(country[1] >= 'A' && country[1] <= 'Z'))
-		return 0;
-
-	if (strlen(country) == 2)
-		return 1;
-
-	if (country[2] >= '1' && country[2] <= '9')
-		return 1;
-
-	return 0;
-}
+/* Helper functions for commands */
 
 int string_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 	char *var, size_t var_len, const char *name)
@@ -165,6 +145,25 @@ int bool_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 	return 0;
 }
 
+#ifdef WIFI_SUPPORT
+int ip_change(const char *cmd, const char *args, int query, char *prev_cmd, const char *name, ip_addr_t *ip)
+{
+	ip_addr_t tmpip;
+
+	if (query) {
+		printf("%s\n", ipaddr_ntoa(ip));
+	} else {
+		if (!ipaddr_aton(args, &tmpip))
+			return 2;
+		log_msg(LOG_NOTICE, "%s change '%s' --> %s'", name, ipaddr_ntoa(ip), args);
+		ip_addr_copy(*ip, tmpip);
+	}
+	return 0;
+}
+#endif
+
+
+/* Command functions */
 
 int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 {
@@ -1721,21 +1720,6 @@ int cmd_wifi(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 
 #ifdef WIFI_SUPPORT
-int ip_change(const char *cmd, const char *args, int query, char *prev_cmd, const char *name, ip_addr_t *ip)
-{
-	ip_addr_t tmpip;
-
-	if (query) {
-		printf("%s\n", ipaddr_ntoa(ip));
-	} else {
-		if (!ipaddr_aton(args, &tmpip))
-			return 2;
-		log_msg(LOG_NOTICE, "%s change '%s' --> %s'", name, ipaddr_ntoa(ip), args);
-		ip_addr_copy(*ip, tmpip);
-	}
-	return 0;
-}
-
 int cmd_wifi_ip(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return ip_change(cmd, args, query, prev_cmd, "IP", &conf->ip);
