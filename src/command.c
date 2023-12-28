@@ -55,7 +55,8 @@ struct error_t {
 	int            error_num;
 };
 
-struct error_t error_codes[] = {
+/* For now, mimic some actual instrument error codes/responses... */
+const struct error_t error_codes[] = {
 	{ "No Error", 0 },
 	{ "Command Error", -100 },
 	{ "Syntax Error", -102 },
@@ -72,27 +73,7 @@ struct fanpico_config *conf = NULL;
 extern const char fanpico_credits_text[];
 
 
-int valid_wifi_country(const char *country)
-{
-	if (!country)
-		return 0;
-
-	if (strlen(country) < 2)
-		return 0;
-
-	if (!(country[0] >= 'A' && country[0] <= 'Z'))
-		return 0;
-	if (!(country[1] >= 'A' && country[1] <= 'Z'))
-		return 0;
-
-	if (strlen(country) == 2)
-		return 1;
-
-	if (country[2] >= '1' && country[2] <= '9')
-		return 1;
-
-	return 0;
-}
+/* Helper functions for commands */
 
 int string_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 	char *var, size_t var_len, const char *name)
@@ -164,6 +145,25 @@ int bool_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 	return 0;
 }
 
+#ifdef WIFI_SUPPORT
+int ip_change(const char *cmd, const char *args, int query, char *prev_cmd, const char *name, ip_addr_t *ip)
+{
+	ip_addr_t tmpip;
+
+	if (query) {
+		printf("%s\n", ipaddr_ntoa(ip));
+	} else {
+		if (!ipaddr_aton(args, &tmpip))
+			return 2;
+		log_msg(LOG_NOTICE, "%s change '%s' --> %s'", name, ipaddr_ntoa(ip), args);
+		ip_addr_copy(*ip, tmpip);
+	}
+	return 0;
+}
+#endif
+
+
+/* Command functions */
 
 int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 {
@@ -349,55 +349,33 @@ int cmd_syslog_level(const char *cmd, const char *args, int query, char *prev_cm
 
 int cmd_echo(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int val;
-
-	if (query) {
-		printf("%u\n", conf->local_echo);
-	} else if (str_to_int(args, &val, 10)) {
-		conf->local_echo = (val > 0 ? true : false);
-	}
-	return 0;
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->local_echo, "Command Echo");
 }
-
 
 int cmd_display_type(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->display_type);
-	} else {
-		strncopy(conf->display_type, args, sizeof(conf->display_type));
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->display_type, sizeof(conf->display_type), "Display Type");
 }
 
 int cmd_display_theme(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->display_theme);
-	} else {
-		strncopy(conf->display_theme, args, sizeof(conf->display_theme));
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->display_theme, sizeof(conf->display_theme), "Display Theme");
 }
 
 int cmd_display_logo(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->display_logo);
-	} else {
-		strncopy(conf->display_logo, args, sizeof(conf->display_logo));
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->display_logo, sizeof(conf->display_logo), "Display Logo");
 }
 
 int cmd_display_layout_r(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->display_layout_r);
-	} else {
-		strncopy(conf->display_layout_r, args, sizeof(conf->display_layout_r));
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->display_layout_r, sizeof(conf->display_layout_r),
+			"Display Layout (Right)");
 }
 
 int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1742,21 +1720,6 @@ int cmd_wifi(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 
 #ifdef WIFI_SUPPORT
-int ip_change(const char *cmd, const char *args, int query, char *prev_cmd, const char *name, ip_addr_t *ip)
-{
-	ip_addr_t tmpip;
-
-	if (query) {
-		printf("%s\n", ipaddr_ntoa(ip));
-	} else {
-		if (!ipaddr_aton(args, &tmpip))
-			return 2;
-		log_msg(LOG_NOTICE, "%s change '%s' --> %s'", name, ipaddr_ntoa(ip), args);
-		ip_addr_copy(*ip, tmpip);
-	}
-	return 0;
-}
-
 int cmd_wifi_ip(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return ip_change(cmd, args, query, prev_cmd, "IP", &conf->ip);
@@ -1793,14 +1756,8 @@ int cmd_wifi_mac(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_wifi_ssid(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->wifi_ssid);
-	} else {
-		log_msg(LOG_NOTICE, "Wi-Fi SSID change '%s' --> '%s'",
-			conf->wifi_ssid, args);
-		strncopy(conf->wifi_ssid, args, sizeof(conf->wifi_ssid));
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->wifi_ssid, sizeof(conf->wifi_ssid), "WiFi SSID");
 }
 
 int cmd_wifi_status(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1840,14 +1797,8 @@ int cmd_wifi_country(const char *cmd, const char *args, int query, char *prev_cm
 
 int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->wifi_passwd);
-	} else {
-		log_msg(LOG_NOTICE, "Wi-Fi Password change '%s' --> '%s'",
-			conf->wifi_passwd, args);
-		strncopy(conf->wifi_passwd, args, sizeof(conf->wifi_passwd));
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->wifi_passwd, sizeof(conf->wifi_passwd), "WiFi Password");
 }
 
 int cmd_wifi_hostname(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1946,28 +1897,8 @@ int cmd_mqtt_resp_topic(const char *cmd, const char *args, int query, char *prev
 #if TLS_SUPPORT
 int cmd_mqtt_tls(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int val = -1;
-
-	if (query) {
-		printf("%s\n", conf->mqtt_tls ? "ON" : "OFF");
-		return 0;
-	}
-
-	if (!strncasecmp(args, "ON", 3))
-		val = 1;
-	else if (!strncasecmp(args, "OFF", 4))
-		val = 0;
-
-	if (val >= 0) {
-		if (conf->mqtt_tls != val) {
-			log_msg(LOG_NOTICE, "MQTT TLS mode %s", val ? "ON" : "OFF");
-			conf->mqtt_tls = val;
-		}
-	} else {
-		log_msg(LOG_WARNING, "Invalid MQTT TLS mode: %s", args);
-		return 2;
-	}
-	return 0;
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_tls, "MQTT TLS Mode");
 }
 
 int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -2104,21 +2035,8 @@ int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_timezone(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->timezone);
-		return 0;
-	}
-
-	const char *tz = args;
-	while (iswspace(*tz))
-		tz++;
-	strncopy(conf->timezone, tz, sizeof(conf->timezone));
-	if (strlen(tz) > 0) {
-		log_msg(LOG_NOTICE, "Set timezone: %s", conf->timezone);
-	} else {
-		log_msg(LOG_NOTICE, "Clear timezone setting.");
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->timezone, sizeof(conf->timezone), "Timezone");
 }
 
 int cmd_uptime(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -2155,13 +2073,8 @@ int cmd_err(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->name);
-	} else {
-		log_msg(LOG_NOTICE, "System name change '%s' --> '%s'", conf->name, args);
-		strncopy(conf->name, args, sizeof(conf->name));
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->name, sizeof(conf->name), "System Name");
 }
 
 #define TEST_MEM_SIZE (264*1024)
@@ -2221,40 +2134,14 @@ int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_serial(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int val;
-
-	if (query) {
-		printf("%d\n", conf->serial_active);
-		return 0;
-	}
-	if (str_to_int(args, &val, 10)) {
-		if (val >= 0 && val <= 1) {
-			log_msg(LOG_NOTICE, "Serial console active: %d -> %d",
-				conf->serial_active, val);
-			conf->serial_active = val;
-			return 0;
-		}
-	}
-	return 1;
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->serial_active, "Serial Console status");
 }
-
 
 int cmd_spi(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int val;
-
-	if (query) {
-		printf("%d\n", conf->spi_active);
-		return 0;
-	}
-	if (str_to_int(args, &val, 10)) {
-		if (val >= 0 && val <= 1) {
-			log_msg(LOG_NOTICE, "SPI (LCD Display) active: %d -> %d", conf->spi_active, val);
-			conf->spi_active = val;
-			return 0;
-		}
-	}
-	return 1;
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->spi_active, "SPI (LCD Display) status");
 }
 
 
