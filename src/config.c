@@ -493,10 +493,23 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->mqtt_allow_scpi = false;
 	cfg->mqtt_user[0] = 0;
 	cfg->mqtt_pass[0] = 0;
-	cfg->mqtt_status_interval = DEFAULT_MQTT_STATUS_INTERVAL;
 	cfg->mqtt_status_topic[0] = 0;
 	cfg->mqtt_cmd_topic[0] = 0;
 	cfg->mqtt_resp_topic[0] = 0;
+	cfg->mqtt_temp_mask = 0;
+	cfg->mqtt_fan_rpm_mask = 0;
+	cfg->mqtt_fan_duty_mask = 0;
+	cfg->mqtt_mbfan_rpm_mask = 0;
+	cfg->mqtt_mbfan_duty_mask = 0;
+	cfg->mqtt_temp_topic[0] = 0;
+	cfg->mqtt_fan_rpm_topic[0] = 0;
+	cfg->mqtt_fan_duty_topic[0] = 0;
+	cfg->mqtt_mbfan_rpm_topic[0] = 0;
+	cfg->mqtt_mbfan_duty_topic[0] = 0;
+	cfg->mqtt_status_interval = DEFAULT_MQTT_STATUS_INTERVAL;
+	cfg->mqtt_temp_interval = DEFAULT_MQTT_TEMP_INTERVAL;
+	cfg->mqtt_rpm_interval = DEFAULT_MQTT_RPM_INTERVAL;
+	cfg->mqtt_duty_interval = DEFAULT_MQTT_DUTY_INTERVAL;
 #endif
 
 	mutex_exit(config_mutex);
@@ -590,6 +603,55 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	if (cfg->mqtt_status_interval != DEFAULT_MQTT_STATUS_INTERVAL)
 		cJSON_AddItemToObject(config, "mqtt_status_interval",
 				cJSON_CreateNumber(cfg->mqtt_status_interval));
+	if (cfg->mqtt_temp_interval != DEFAULT_MQTT_TEMP_INTERVAL)
+		cJSON_AddItemToObject(config, "mqtt_temp_interval",
+				cJSON_CreateNumber(cfg->mqtt_temp_interval));
+	if (cfg->mqtt_rpm_interval != DEFAULT_MQTT_RPM_INTERVAL)
+		cJSON_AddItemToObject(config, "mqtt_rpm_interval",
+				cJSON_CreateNumber(cfg->mqtt_rpm_interval));
+	if (cfg->mqtt_duty_interval != DEFAULT_MQTT_DUTY_INTERVAL)
+		cJSON_AddItemToObject(config, "mqtt_duty_interval",
+				cJSON_CreateNumber(cfg->mqtt_duty_interval));
+	if (cfg->mqtt_temp_mask)
+		cJSON_AddItemToObject(config, "mqtt_temp_mask",
+				cJSON_CreateString(
+					bitmask_to_str(cfg->mqtt_temp_mask, SENSOR_MAX_COUNT,
+						1, true)));
+	if (cfg->mqtt_fan_rpm_mask)
+		cJSON_AddItemToObject(config, "mqtt_fan_rpm_mask",
+				cJSON_CreateString(
+					bitmask_to_str(cfg->mqtt_fan_rpm_mask, FAN_MAX_COUNT,
+						1, true)));
+	if (cfg->mqtt_fan_duty_mask)
+		cJSON_AddItemToObject(config, "mqtt_fan_duty_mask",
+				cJSON_CreateString(
+					bitmask_to_str(cfg->mqtt_fan_duty_mask, FAN_MAX_COUNT,
+						1, true)));
+	if (cfg->mqtt_mbfan_rpm_mask)
+		cJSON_AddItemToObject(config, "mqtt_mbfan_rpm_mask",
+				cJSON_CreateString(
+					bitmask_to_str(cfg->mqtt_mbfan_rpm_mask, MBFAN_MAX_COUNT,
+						1, true)));
+	if (cfg->mqtt_mbfan_duty_mask)
+		cJSON_AddItemToObject(config, "mqtt_mbfan_duty_mask",
+				cJSON_CreateString(
+					bitmask_to_str(cfg->mqtt_mbfan_duty_mask, MBFAN_MAX_COUNT,
+						1, true)));
+	if (strlen(cfg->mqtt_temp_topic) > 0)
+		cJSON_AddItemToObject(config, "mqtt_temp_topic",
+				cJSON_CreateString(cfg->mqtt_temp_topic));
+	if (strlen(cfg->mqtt_fan_rpm_topic) > 0)
+		cJSON_AddItemToObject(config, "mqtt_fan_rpm_topic",
+				cJSON_CreateString(cfg->mqtt_fan_rpm_topic));
+	if (strlen(cfg->mqtt_fan_duty_topic) > 0)
+		cJSON_AddItemToObject(config, "mqtt_fan_duty_topic",
+				cJSON_CreateString(cfg->mqtt_fan_duty_topic));
+	if (strlen(cfg->mqtt_mbfan_rpm_topic) > 0)
+		cJSON_AddItemToObject(config, "mqtt_mbfan_rpm_topic",
+				cJSON_CreateString(cfg->mqtt_mbfan_rpm_topic));
+	if (strlen(cfg->mqtt_mbfan_duty_topic) > 0)
+		cJSON_AddItemToObject(config, "mqtt_mbfan_duty_topic",
+				cJSON_CreateString(cfg->mqtt_mbfan_duty_topic));
 #endif
 
 	/* Fan outputs */
@@ -709,6 +771,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	cJSON *ref, *item, *r;
 	int id;
 	const char *name, *val;
+	uint32_t m;
 
 	if (!config || !cfg)
 		return -1;
@@ -843,6 +906,55 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	}
 	if ((ref = cJSON_GetObjectItem(config, "mqtt_status_interval"))) {
 		cfg->mqtt_status_interval = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_temp_interval"))) {
+		cfg->mqtt_temp_interval = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_rpm_interval"))) {
+		cfg->mqtt_rpm_interval = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_duty_interval"))) {
+		cfg->mqtt_duty_interval = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_temp_mask"))) {
+		if (!str_to_bitmask(cJSON_GetStringValue(ref), SENSOR_MAX_COUNT, &m, 1))
+			cfg->mqtt_temp_mask = m;
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_fan_rpm_mask"))) {
+		if (!str_to_bitmask(cJSON_GetStringValue(ref), FAN_MAX_COUNT, &m, 1))
+			cfg->mqtt_fan_rpm_mask = m;
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_fan_duty_mask"))) {
+		if (!str_to_bitmask(cJSON_GetStringValue(ref), FAN_MAX_COUNT, &m, 1))
+			cfg->mqtt_fan_duty_mask = m;
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_mbfan_rpm_mask"))) {
+		if (!str_to_bitmask(cJSON_GetStringValue(ref), MBFAN_MAX_COUNT, &m, 1))
+			cfg->mqtt_mbfan_rpm_mask = m;
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_mbfan_duty_mask"))) {
+		if (!str_to_bitmask(cJSON_GetStringValue(ref), MBFAN_MAX_COUNT, &m, 1))
+			cfg->mqtt_mbfan_duty_mask = m;
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_temp_topic"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->mqtt_temp_topic, val, sizeof(cfg->mqtt_temp_topic));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_fan_rpm_topic"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->mqtt_fan_rpm_topic, val, sizeof(cfg->mqtt_fan_rpm_topic));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_fan_duty_topic"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->mqtt_fan_duty_topic, val, sizeof(cfg->mqtt_fan_duty_topic));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_mbfan_rpm_topic"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->mqtt_mbfan_rpm_topic, val, sizeof(cfg->mqtt_mbfan_rpm_topic));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_mbfan_duty_topic"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->mqtt_mbfan_duty_topic, val, sizeof(cfg->mqtt_mbfan_duty_topic));
 	}
 #endif
 

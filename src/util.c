@@ -396,4 +396,109 @@ void* memmem(const void *haystack, size_t haystacklen,
 }
 
 
+char *bitmask_to_str(uint32_t mask, uint16_t len, uint8_t base, bool range)
+{
+	static char buf[96 + 16];
+	int state = 0;
+	int prev = -2;
+	char *s = buf;
+	int i, w, last;
+
+	buf[0] = 0;
+
+	if (len < 1 || len > 32)
+		return buf;
+
+	if (!range && mask == (1 << len) - 1) {
+		buf[0] = '*';
+		buf[1] = 0;
+		return buf;
+	}
+
+	for (i = 0; i < len; i++) {
+		if (mask & (1 << i)) {
+			int consecutive = (i - prev == 1 ? 1 : 0);
+			if (state == 0) {
+				w = snprintf(s, 3, "%d", i + base);
+				if (w > 2) w = 2;
+				s += w;
+				state = 1;
+			}
+			else if (state == 1) {
+				if (range && consecutive) {
+					last = i;
+					state = 2;
+				} else {
+					w = snprintf(s, 4, ",%d", i + base);
+					if (w > 3) w = 3;
+					s += w;
+				}
+			}
+			else if (state == 2) {
+				if (consecutive) {
+					last = i;
+				} else {
+					w = snprintf(s, 7, "-%d,%d", last + base, i + base);
+					if (w > 6) w = 6;
+					s += w;
+					state = 1;
+				}
+			}
+			prev = i;
+		}
+	}
+	if (range && state == 2) {
+		snprintf(s , 12, "-%d", last + base);
+	}
+
+	return buf;
+}
+
+
+int str_to_bitmask(const char *str, uint16_t len, uint32_t *mask, uint8_t base)
+{
+	char *s, *tok, *saveptr, *saveptr2;
+
+	if (!str || !mask)
+		return -1;
+	*mask = 0;
+
+	if (len < 1 || len > 32)
+		return -2;
+
+	if (!strncmp(str, "*", 2)) {
+		*mask = (1 << len) - 1;
+		return 0;
+	}
+
+	if ((s = strdup(str)) == NULL)
+		return -3;
+
+	tok = strtok_r(s, ",", &saveptr);
+	while (tok) {
+		int a, b;
+		tok = strtok_r(tok, "-", &saveptr2);
+		if (str_to_int(tok, &a, 10)) {
+			a -= base;
+			if (a >= 0 && a < len) {
+				*mask |= (1 << a);
+			}
+			tok = strtok_r(NULL, "-", &saveptr2);
+			if (str_to_int(tok, &b, 10)) {
+				b -= base;
+				if (b > a && b < len) {
+					while (++a <= b) {
+						*mask |= (1 << a);
+					}
+				}
+			}
+		}
+		tok = strtok_r(NULL, ",", &saveptr);
+	}
+
+	free(s);
+	return 0;
+}
+
+
 /* eof */
