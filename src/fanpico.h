@@ -52,15 +52,17 @@
 #define MAX_MAP_POINTS 32
 #define MAX_GPIO_PINS  32
 
-#define WIFI_SSID_MAX_LEN    32
-#define WIFI_PASSWD_MAX_LEN  64
-#define WIFI_COUNTRY_MAX_LEN 3
+#define WIFI_SSID_MAX_LEN     32
+#define WIFI_PASSWD_MAX_LEN   64
+#define WIFI_COUNTRY_MAX_LEN  3
 
-#define MQTT_MAX_TOPIC_LEN   32
-#define DEFAULT_MQTT_STATUS_INTERVAL 600
-#define DEFAULT_MQTT_TEMP_INTERVAL 60
-#define DEFAULT_MQTT_RPM_INTERVAL  60
-#define DEFAULT_MQTT_DUTY_INTERVAL 60
+#define MQTT_MAX_TOPIC_LEN            32
+#define MQTT_MAX_USERNAME_LEN         80
+#define MQTT_MAX_PASSWORD_LEN         64
+#define DEFAULT_MQTT_STATUS_INTERVAL  600
+#define DEFAULT_MQTT_TEMP_INTERVAL    60
+#define DEFAULT_MQTT_RPM_INTERVAL     60
+#define DEFAULT_MQTT_DUTY_INTERVAL    60
 
 #ifdef NDEBUG
 #define WATCHDOG_ENABLED      1
@@ -212,8 +214,8 @@ struct fanpico_config {
 	uint32_t mqtt_port;
 	bool mqtt_tls;
 	bool mqtt_allow_scpi;
-	char mqtt_user[32];
-	char mqtt_pass[64];
+	char mqtt_user[MQTT_MAX_USERNAME_LEN];
+	char mqtt_pass[MQTT_MAX_PASSWORD_LEN];
 	char mqtt_status_topic[MQTT_MAX_TOPIC_LEN];
 	uint32_t mqtt_status_interval;
 	char mqtt_cmd_topic[MQTT_MAX_TOPIC_LEN];
