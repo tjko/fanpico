@@ -27,7 +27,7 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * SCPI "like" programming interface (see [Command Reference](commands.md))
 * Monitor each fan and motherboard output signals as well as temperatures.
 * WiFi support if opting to mount Pico W on the board. This turns fanpico to "IoT" device with basic web interface.
-* MQTT client (with TLS support) for loggin data and to receive commands.
+* MQTT client (with TLS support) for loggin data and to receive commands (see [Wiki](https://github.com/tjko/fanpico/wiki/FanPico-MQTT-Tutorial) for more information).
 
 ### Interfaces
 
