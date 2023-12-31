@@ -117,18 +117,44 @@ Fanpico supports following commands:
 * [SYStem:MQTT:USER?](#systemmqttuser-1)
 * [SYStem:MQTT:PASSword](#systemmqttpassword)
 * [SYStem:MQTT:PASSword?](#systemmqttpassword-1)
-* [SYStem:MQTT:INTerval](#systemmqttinterval)
-* [SYStem:MQTT:INTerval?](#systemmqttinterval-1)
 * [SYStem:MQTT:SCPI](#systemmqttscpi)
 * [SYStem:MQTT:SCPI?](#systemmqttscpi-1)
-* [SYStem:MQTT:STATus](#systemmqttstatus)
-* [SYStem:MQTT:STATus?](#systemmqttstatus-1)
-* [SYStem:MQTT:COMMand](#systemmqttcommand)
-* [SYStem:MQTT:COMMand?](#systemmqttcommand-1)
-* [SYStem:MQTT:RESPonse](#systemmqttresponse)
-* [SYStem:MQTT:RESPonse?](#systemmqtresponse-1)
 * [SYStem:MQTT:TLS](#systemmqtttls)
 * [SYStem:MQTT:TLS?](#systemmqtttls-1)
+* [SYStem:MQTT:INTerval:STATUS](#systemmqttintervalstatus)
+* [SYStem:MQTT:INTerval:STATUS?](#systemmqttintervalstatus-1)
+* [SYStem:MQTT:INTerval:TEMP](#systemmqttintervaltemp)
+* [SYStem:MQTT:INTerval:TEMP?](#systemmqttintervaltemp-1)
+* [SYStem:MQTT:INTerval:RPM](#systemmqttintervalrpm)
+* [SYStem:MQTT:INTerval:RPM?](#systemmqttintervalrpm-1)
+* [SYStem:MQTT:INTerval:PWM](#systemmqttintervalpwm)
+* [SYStem:MQTT:INTerval:PWM?](#systemmqttintervalpwm-1)
+* [SYStem:MQTT:MASK:TEMP](#systemmqttmasktemp)
+* [SYStem:MQTT:MASK:TEMP?](#systemmqttmasktemp-1)
+* [SYStem:MQTT:MASK:FANRPM](#systemmqttmaskfanrpm)
+* [SYStem:MQTT:MASK:FANRPM?](#systemmqttmaskfanrpm-1)
+* [SYStem:MQTT:MASK:FANPWM](#systemmqttmaskfanpwm)
+* [SYStem:MQTT:MASK:FANPWM?](#systemmqttmaskfanpwm-1)
+* [SYStem:MQTT:MASK:MBFANRPM](#systemmqttmaskmbfanrpm)
+* [SYStem:MQTT:MASK:MBFANRPM?](#systemmqttmaskmbfanrpm-1)
+* [SYStem:MQTT:MASK:MBFANPWM](#systemmqttmaskmbfanpwm)
+* [SYStem:MQTT:MASK:MBFANPWM?](#systemmqttmaskmbfanpwm-1)
+* [SYStem:MQTT:TOPIC:STATus](#systemmqtttopicstatus)
+* [SYStem:MQTT:TOPIC:STATus?](#systemmqtttopicstatus-1)
+* [SYStem:MQTT:TOPIC:COMMand](#systemmqtttopiccommand)
+* [SYStem:MQTT:TOPIC:COMMand?](#systemmqtttopiccommand-1)
+* [SYStem:MQTT:TOPIC:RESPonse](#systemmqtttopicresponse)
+* [SYStem:MQTT:TOPIC:RESPonse?](#systemmqttopicresponse-1)
+* [SYStem:MQTT:TOPIC:TEMP](#systemmqtttopictemp)
+* [SYStem:MQTT:TOPIC:TEMP?](#systemmqttopictemp-1)
+* [SYStem:MQTT:TOPIC:FANRPM](#systemmqtttopicfanrpm)
+* [SYStem:MQTT:TOPIC:FANRPM?](#systemmqttopicfanrpm-1)
+* [SYStem:MQTT:TOPIC:FANPWM](#systemmqtttopicfanpwm)
+* [SYStem:MQTT:TOPIC:FANPWM?](#systemmqttopicfanpwm-1)
+* [SYStem:MQTT:TOPIC:MBFANRPM](#systemmqtttopicmbfanrpm)
+* [SYStem:MQTT:TOPIC:MBFANRPM?](#systemmqttopicmbfanrpm-1)
+* [SYStem:MQTT:TOPIC:MBFANPWM](#systemmqtttopicmbfanpwm)
+* [SYStem:MQTT:TOPIC:MBFANPWM?](#systemmqttopicmbfanpwm-1)
 * [SYStem:NAME](#systemname)
 * [SYStem:NAME?](#systemname-1)
 * [SYStem:SENSORS?](#systemsensors)
@@ -1681,7 +1707,7 @@ updates to a topic.
 Additionally MQTT Client support subscribing to a "command" topic to listen for commands.
 This allows remotely controlling BrickPico.
 
-To enable MQTT at minimum server must be configured. To explicitly disbable MQTT set server
+To enable MQTT at minimum server and user must be configured. To explicitly disbable MQTT set server
 to empty string.
 
 
@@ -1779,51 +1805,6 @@ mymqttpassword
 ```
 
 
-#### SYStem:MQTT:STATus
-Configure topic to publish unit status information periodically.
-If this is left to empty (string), then no status information is published to MQTT server.
-
-Default: <empty>
-
-Example:
-```
-SYS:MQTT:STATUS musername/feeds/brickpico1
-```
-
-
-#### SYStem:MQTT:STATus?
-Query currently set topic for publishing unit status information to.
-
-Example:
-```
-SYS:MQTT:STATUS?
-myusername/feeds/fanpico1
-```
-
-
-#### SYStem:MQTT:INTerval
-Configure how often unit will publish (send) status message to status topic.
-Set this to 0 (seconds) to disable publishing status updates.
-Recommended values are 60 (seconds) or higher.
-
-Default: 600  (every 10 minutes)
-
-Example:
-```
-SYS:MQTT:INTERVAL 3600
-```
-
-
-#### SYStem:MQTT:INTerval?
-Query currently set topic for publishing unit status information to.
-
-Example:
-```
-SYS:MQTT:INTERVAL?
-3600
-```
-
-
 #### SYStem:MQTT:SCPI
 Configure if SCPI all commands will be accepted via MQTT.
 If this is not enabled then only "WRITE" commands are allowed.
@@ -1850,50 +1831,6 @@ OFF
 ```
 
 
-#### SYStem:MQTT:COMMand
-Configure topic to subscribe to to wait for commands to control outputs.
-If this is left to empty (string), then unit won't subcrible (and accept) any commands from MQTT.
-
-Default: <empty>
-
-Example:
-```
-SYS:MQTT:STATUS musername/feeds/cmd
-```
-
-
-#### SYStem:MQTT:COMMand?
-Query currently set topic for subscribing to wait for commands.
-
-Example:
-```
-SYS:MQTT:STATUS?
-myusername/feeds/cmd
-```
-
-
-#### SYStem:MQTT:RESPonse
-Configure topic to publish responses to commands received from the command topic.
-If this is left to empty, then unit won't send response to any commands.
-
-Default: <empty>
-
-Example:
-```
-SYS:MQTT:STATUS musername/feeds/response
-```
-
-
-#### SYStem:MQTT:RESPonse?
-Query currently set topic for publishing reponses to commands.
-
-Example:
-```
-SYS:MQTT:STATUS?
-myusername/feeds/response
-```
-
-
 #### SYStem:MQTT:TLS
 Enable/disable use of secure connection mode (TLS/SSL) when connecting to MQTT server.
 Default is TLS on to protect MQTT credentials (usename/password).
@@ -1915,6 +1852,414 @@ SYS:MQTT:TLS?
 ON
 ```
 
+
+#### SYStem:MQTT:INTerval:STATUS
+Configure how often unit will publish (send) status message to status topic.
+Set this to 0 (seconds) to disable publishing status updates.
+Recommended values are 60 (seconds) or higher.
+
+Default: 600  (every 10 minutes)
+
+Example:
+```
+SYS:MQTT:INT:STATUS 3600
+```
+
+
+#### SYStem:MQTT:INTerval:STATUS?
+Query how often unit is setup to publish data to status topic.
+
+Example:
+```
+SYS:MQTT:INT:STATUS?
+3600
+```
+
+
+#### SYStem:MQTT:INTerval:TEMP
+Configure how often unit will publish (send) status temperature sensor
+status messages.
+Set this to 0 (seconds) to disable publishing status updates.
+Recommended values are 60 (seconds) or higher.
+
+Default: 0  (disabled)
+
+Example:
+```
+SYS:MQTT:INT:TEMP 60
+```
+
+
+#### SYStem:MQTT:INTerval:TEMP?
+Query how often unit is setup to publish temperature status messages.
+
+Example:
+```
+SYS:MQTT:INT:TEMP?
+60
+```
+
+
+#### SYStem:MQTT:INTerval:RPM
+Configure how often unit will publish (send) RPM status updates for
+fans (and mbfans).
+
+Set this to 0 (seconds) to disable publishing status updates.
+Recommended values are 60 (seconds) or higher.
+
+Default: 0  (disabled)
+
+Example:
+```
+SYS:MQTT:INT:RPM 60
+```
+
+
+#### SYStem:MQTT:INTerval:RPM?
+Query how often unit is setup to publish fan/mbfan RPM status messages.
+
+Example:
+```
+SYS:MQTT:INT:RPM?
+60
+```
+
+
+#### SYStem:MQTT:INTerval:PWM
+Configure how often unit will publish (send) PWM (duty cycle) status updates for
+fans/mbfans.
+
+Set this to 0 (seconds) to disable publishing status updates.
+Recommended values are 60 (seconds) or higher.
+
+Default: 0  (disabled)
+
+Example:
+```
+SYS:MQTT:INT:PWM 60
+```
+
+
+#### SYStem:MQTT:INTerval:PWM?
+Query how often unit is setup to publish fan/mbfan PWM (duty cycle) status messages.
+
+Example:
+```
+SYS:MQTT:INT:PWM?
+60
+```
+
+
+#### SYStem:MQTT:MASK:TEMP
+Configure which temperature sensors should publish (send) data to MQTT server.
+
+Sensors can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any sensor)
+
+Example:
+```
+SYS:MQTT:MASK:TEMP 1,3
+```
+
+
+#### SYStem:MQTT:MASK:TEMP?
+Query which sensors are configured to publish (send) data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:TEMP?
+1,3
+```
+
+
+#### SYStem:MQTT:MASK:FANRPM
+Configure which fan ports should publish (send) RPM data to MQTT server.
+
+Ports can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any port)
+
+Example:
+```
+SYS:MQTT:MASK:FANRPM 1,3,5-8
+```
+
+
+#### SYStem:MQTT:MASK:FANRPM?
+Query which fans are configured to publish (send) RPM data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:FANRPM?
+1-8
+```
+
+
+#### SYStem:MQTT:MASK:FANPWM
+Configure which fan ports should publish (send) PWM data to MQTT server.
+
+Ports can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any port)
+
+Example:
+```
+SYS:MQTT:MASK:FANPWM 1-4
+```
+
+
+#### SYStem:MQTT:MASK:FANPWM?
+Query which fans are configured to publish (send) PWM data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:FANPWM?
+1-4
+```
+
+
+#### SYStem:MQTT:MASK:MBFANRPM
+Configure which mbfan ports should publish (send) RPM data to MQTT server.
+
+Ports can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any port)
+
+Example:
+```
+SYS:MQTT:MASK:MBFANRPM 1,4
+```
+
+
+#### SYStem:MQTT:MASK:MBFANRPM?
+Query which mbfans are configured to publish (send) RPM data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:MBFANRPM?
+1,4
+```
+
+
+#### SYStem:MQTT:MASK:MBFANPWM
+Configure which mbfan ports should publish (send) PWM data to MQTT server.
+
+Ports can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any port)
+
+Example:
+```
+SYS:MQTT:MASK:MBFANPWM 1-2
+```
+
+
+#### SYStem:MQTT:MASK:MBFANPWM?
+Query which mbfans are configured to publish (send) PWM data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:MBFANPWM?
+1-2
+```
+
+
+#### SYStem:MQTT:TOPIC:STATus
+Configure topic to publish unit status information periodically.
+If this is left to empty (string), then no status information is published to MQTT server.
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:STATUS musername/feeds/fanpico1
+```
+
+
+#### SYStem:MQTT:TOPIC:STATus?
+Query currently set topic for publishing unit status information to.
+
+Example:
+```
+SYS:MQTT:TOPIC:STATUS?
+myusername/feeds/fanpico1
+```
+
+
+
+#### SYStem:MQTT:TOPIC:COMMand
+Configure topic to subscribe to to wait for commands to control outputs.
+If this is left to empty (string), then unit won't subcrible (and accept) any commands from MQTT.
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:COMM musername/feeds/cmd
+```
+
+
+#### SYStem:MQTT:TOPIC:COMMand?
+Query currently set topic for subscribing to wait for commands.
+
+Example:
+```
+SYS:MQTT:TOPIC:COMM?
+myusername/feeds/cmd
+```
+
+
+#### SYStem:MQTT:TOPIC:RESPonse
+Configure topic to publish responses to commands received from the command topic.
+If this is left to empty, then unit won't send response to any commands.
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:RESP musername/feeds/response
+```
+
+
+#### SYStem:MQTT:TOPIC:RESPonse?
+Query currently set topic for publishing reponses to commands.
+
+Example:
+```
+SYS:MQTT:TOPIC:RESP?
+myusername/feeds/response
+```
+
+
+#### SYStem:MQTT:TOPIC:TEMP
+Configure topic template for publishing temperature sensor data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:TEMP musername/feeds/temp%d
+```
+
+
+#### SYStem:MQTT:TOPIC:TEMP?
+Query currently set topic template for temperature sensor data.
+
+Example:
+```
+SYS:MQTT:TOPIC:TEMP?
+myusername/feeds/temp%d
+```
+
+
+#### SYStem:MQTT:TOPIC:FANRPM
+Configure topic template for publishing fan RPM data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:FANRPM musername/feeds/fanrpm%d
+```
+
+
+#### SYStem:MQTT:TOPIC:FANRPM?
+Query currently set topic template for fan RPM data.
+
+Example:
+```
+SYS:MQTT:TOPIC:FANRPM?
+myusername/feeds/fanrpm%d
+```
+
+
+#### SYStem:MQTT:TOPIC:FANPWM
+Configure topic template for publishing fan PWM data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:FANPWM musername/feeds/fanpwm%d
+```
+
+
+#### SYStem:MQTT:TOPIC:FANPWM?
+Query currently set topic template for fan PWM data.
+
+Example:
+```
+SYS:MQTT:TOPIC:FANPWM?
+myusername/feeds/fanpwm%d
+```
+
+
+#### SYStem:MQTT:TOPIC:MBFANRPM
+Configure topic template for publishing mbfan RPM data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:MBFANRPM musername/feeds/mbfanrpm%d
+```
+
+
+#### SYStem:MQTT:TOPIC:MBFANRPM?
+Query currently set topic template for mbfan RPM data.
+
+Example:
+```
+SYS:MQTT:TOPIC:MBFANRPM?
+myusername/feeds/mbfanrpm%d
+```
+
+
+#### SYStem:MQTT:TOPIC:MBFANPWM
+Configure topic template for publishing mbfan PWM data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:MBFANPWM musername/feeds/mbfanpwm%d
+```
+
+
+#### SYStem:MQTT:TOPIC:MBFANPWM?
+Query currently set topic template for mbfan PWM data.
+
+Example:
+```
+SYS:MQTT:TOPIC:MBFANPWM?
+myusername/feeds/mbfanpwm%d
+```
 
 
 #### SYStem:NAME

@@ -89,6 +89,27 @@ int string_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 	return 0;
 }
 
+int bitmask16_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+		uint16_t *mask, uint16_t len, uint8_t base, const char *name)
+{
+	uint32_t old = *mask;
+	uint32_t new;
+
+	if (query) {
+		printf("%s\n", bitmask_to_str(old, len, base, true));
+		return 0;
+	}
+
+	if (!str_to_bitmask(args, len, &new, base)) {
+		if (old != new) {
+			log_msg(LOG_NOTICE, "%s change 0x%lx --> 0x%lx", name, old, new);
+			*mask = new;
+		}
+		return 0;
+	}
+	return 1;
+}
+
 int uint32_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 		uint32_t *var, uint32_t min_val, uint32_t max_val, const char *name)
 {
@@ -1869,6 +1890,24 @@ int cmd_mqtt_status_interval(const char *cmd, const char *args, int query, char 
 			&conf->mqtt_status_interval, 0, (86400 * 30), "MQTT Publish Status Interval");
 }
 
+int cmd_mqtt_temp_interval(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_temp_interval, 0, (86400 * 30), "MQTT Publish Temp Interval");
+}
+
+int cmd_mqtt_rpm_interval(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_rpm_interval, 0, (86400 * 30), "MQTT Publish RPM Interval");
+}
+
+int cmd_mqtt_duty_interval(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_duty_interval, 0, (86400 * 30), "MQTT Publish PWM Interval");
+}
+
 int cmd_mqtt_allow_scpi(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
@@ -1893,6 +1932,75 @@ int cmd_mqtt_resp_topic(const char *cmd, const char *args, int query, char *prev
 			conf->mqtt_resp_topic, sizeof(conf->mqtt_resp_topic), "MQTT Response Topic");
 }
 
+int cmd_mqtt_temp_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_temp_topic,
+			sizeof(conf->mqtt_temp_topic), "MQTT Temperature Topic");
+}
+
+int cmd_mqtt_fan_rpm_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_fan_rpm_topic,
+			sizeof(conf->mqtt_fan_rpm_topic), "MQTT Fan RPM Topic");
+}
+
+int cmd_mqtt_fan_duty_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_fan_duty_topic,
+			sizeof(conf->mqtt_fan_duty_topic), "MQTT Fan PWM Topic");
+}
+
+int cmd_mqtt_mbfan_rpm_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_mbfan_rpm_topic,
+			sizeof(conf->mqtt_mbfan_rpm_topic), "MQTT MBFan RPM Topic");
+}
+
+int cmd_mqtt_mbfan_duty_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_mbfan_duty_topic,
+			sizeof(conf->mqtt_mbfan_duty_topic), "MQTT MBFan PWM Topic");
+}
+
+int cmd_mqtt_mask_temp(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->mqtt_temp_mask, SENSOR_MAX_COUNT,
+				1, "MQTT Temperature Mask");
+}
+
+int cmd_mqtt_mask_fan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->mqtt_fan_rpm_mask, FAN_MAX_COUNT,
+				1, "MQTT Fan RPM Mask");
+}
+
+int cmd_mqtt_mask_fan_duty(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->mqtt_fan_duty_mask, FAN_MAX_COUNT,
+				1, "MQTT Fan PWM Mask");
+}
+
+int cmd_mqtt_mask_mbfan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->mqtt_mbfan_rpm_mask, MBFAN_MAX_COUNT,
+				1, "MQTT MBFan RPM Mask");
+}
+
+int cmd_mqtt_mask_mbfan_duty(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->mqtt_mbfan_duty_mask, MBFAN_MAX_COUNT,
+				1, "MQTT MBFan PWM Mask");
+}
 
 #if TLS_SUPPORT
 int cmd_mqtt_tls(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -2175,23 +2283,51 @@ const struct cmd_t wifi_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-const struct cmd_t mqtt_commands[] = {
 #ifdef WIFI_SUPPORT
+const struct cmd_t mqtt_mask_commands[] = {
+	{ "TEMP",      4, NULL,              cmd_mqtt_mask_temp },
+	{ "FANRPM",    6, NULL,              cmd_mqtt_mask_fan_rpm },
+	{ "FANPWM",    6, NULL,              cmd_mqtt_mask_fan_duty },
+	{ "MBFANRPM",  8, NULL,              cmd_mqtt_mask_mbfan_rpm },
+	{ "MBFANPWM",  8, NULL,              cmd_mqtt_mask_mbfan_duty },
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t mqtt_interval_commands[] = {
+	{ "STATUS",    6, NULL,              cmd_mqtt_status_interval },
+	{ "TEMP",      4, NULL,              cmd_mqtt_temp_interval },
+	{ "RPM",       3, NULL,              cmd_mqtt_rpm_interval },
+	{ "PWM",       3, NULL,              cmd_mqtt_duty_interval },
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t mqtt_topic_commands[] = {
+	{ "STATus",    4, NULL,              cmd_mqtt_status_topic },
+	{ "COMMand",   4, NULL,              cmd_mqtt_cmd_topic },
+	{ "RESPonse",  4, NULL,              cmd_mqtt_resp_topic },
+	{ "TEMP",      4, NULL,              cmd_mqtt_temp_topic },
+	{ "FANRPM",    6, NULL,              cmd_mqtt_fan_rpm_topic },
+	{ "FANPWM",    6, NULL,              cmd_mqtt_fan_duty_topic },
+	{ "MBFANRPM",  8, NULL,              cmd_mqtt_mbfan_rpm_topic },
+	{ "MBFANPWM",  8, NULL,              cmd_mqtt_mbfan_duty_topic },
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t mqtt_commands[] = {
 	{ "SERVer",    4, NULL,              cmd_mqtt_server },
 	{ "PORT",      4, NULL,              cmd_mqtt_port },
 	{ "USER",      4, NULL,              cmd_mqtt_user },
 	{ "PASSword",  4, NULL,              cmd_mqtt_pass },
-	{ "INTerval",  3, NULL,              cmd_mqtt_status_interval },
 	{ "SCPI",      4, NULL,              cmd_mqtt_allow_scpi },
-	{ "STATus",    4, NULL,              cmd_mqtt_status_topic },
-	{ "COMMand",   4, NULL,              cmd_mqtt_cmd_topic },
-	{ "RESPonse",  4, NULL,              cmd_mqtt_resp_topic },
 #if TLS_SUPPORT
 	{ "TLS",       3, NULL,              cmd_mqtt_tls },
 #endif
-#endif
+	{ "INTerval",  3, mqtt_interval_commands, NULL },
+	{ "MASK",      4, mqtt_mask_commands, NULL },
+	{ "TOPIC",     5, mqtt_topic_commands, NULL },
 	{ 0, 0, 0, 0 }
 };
+#endif
 
 const struct cmd_t tls_commands[] = {
 #ifdef WIFI_SUPPORT
@@ -2213,7 +2349,9 @@ const struct cmd_t system_commands[] = {
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
 	{ "MEMory",    3, NULL,              cmd_memory },
+#ifdef WIFI_SUPPORT
 	{ "MQTT",      4, mqtt_commands,     NULL },
+#endif
 	{ "NAME",      4, NULL,              cmd_name },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "SERIAL",    6, NULL,              cmd_serial },

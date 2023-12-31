@@ -45,6 +45,7 @@ mqtt_client_t *mqtt_client = NULL;
 ip_addr_t mqtt_server_ip = IPADDR4_INIT_BYTES(0, 0, 0, 0);
 u16_t mqtt_server_port = 0;
 int incoming_topic = 0;
+int mqtt_qos = 1;
 char mqtt_scpi_cmd[MQTT_CMD_MAX_LEN];
 bool mqtt_scpi_cmd_queued = false;
 absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_mqtt_disconnect, 0);
@@ -126,7 +127,7 @@ void send_mqtt_command_response(const char *cmd, int result, const char *msg)
 		log_msg(LOG_WARNING,"json_response_message(): failed");
 		return;
 	}
-	mqtt_publish_message(cfg->mqtt_resp_topic, buf, strlen(buf), 2, 0);
+	mqtt_publish_message(cfg->mqtt_resp_topic, buf, strlen(buf), mqtt_qos, 0);
 	free(buf);
 }
 
@@ -345,8 +346,9 @@ char* json_status_message()
 {
 	const struct fanpico_state *st = fanpico_state;
 	char *buf;
-	cJSON *json, *outputs, *o;
+	cJSON *json, *l, *o;
 	int i;
+	float rpm;
 
 	if (!(json = cJSON_CreateObject()))
 		goto panic;
@@ -355,17 +357,47 @@ char* json_status_message()
 	cJSON_AddItemToObject(json, "hostname", cJSON_CreateString(network_hostname()));
 	if (network_ip())
 		cJSON_AddItemToObject(json, "ip", cJSON_CreateString(network_ip()));
-	if (!(outputs = cJSON_CreateArray()))
+
+	/* fans */
+	if (!(l = cJSON_CreateArray()))
 		goto panic;
-	cJSON_AddItemToObject(json, "fans", outputs);
+	cJSON_AddItemToObject(json, "fans", l);
 	for (i = 0; i < FAN_COUNT; i++) {
+		rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
 		if (!(o = cJSON_CreateObject()))
 			goto panic;
 		cJSON_AddItemToObject(o, "id", cJSON_CreateNumber(i + 1));
-		cJSON_AddItemToObject(o, "pwm", cJSON_CreateNumber(round_decimal(st->fan_duty[i], 1)));
-		cJSON_AddItemToObject(o, "freq", cJSON_CreateNumber(round_decimal(st->fan_freq[i], 1)));
-		cJSON_AddItemToArray(outputs, o);
+		cJSON_AddItemToObject(o, "rpm", cJSON_CreateNumber(rpm));
+		cJSON_AddItemToObject(o, "pwm", cJSON_CreateNumber(st->fan_duty[i]));
+		cJSON_AddItemToArray(l, o);
 	}
+
+	/* mbfans */
+	if (!(l = cJSON_CreateArray()))
+		goto panic;
+	cJSON_AddItemToObject(json, "mbfans", l);
+	for (i = 0; i < MBFAN_COUNT; i++) {
+		rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
+		if (!(o = cJSON_CreateObject()))
+			goto panic;
+		cJSON_AddItemToObject(o, "id", cJSON_CreateNumber(i + 1));
+		cJSON_AddItemToObject(o, "rpm", cJSON_CreateNumber(rpm));
+		cJSON_AddItemToObject(o, "pwm", cJSON_CreateNumber(st->mbfan_duty[i]));
+		cJSON_AddItemToArray(l, o);
+	}
+
+	/* sensors */
+	if (!(l = cJSON_CreateArray()))
+		goto panic;
+	cJSON_AddItemToObject(json, "sensors", l);
+	for (i = 0; i < SENSOR_COUNT; i++) {
+		if (!(o = cJSON_CreateObject()))
+			goto panic;
+		cJSON_AddItemToObject(o, "id", cJSON_CreateNumber(i + 1));
+		cJSON_AddItemToObject(o, "temp", cJSON_CreateNumber(round_decimal(st->temp[i], 1)));
+		cJSON_AddItemToArray(l, o);
+	}
+
 
 	if (!(buf = cJSON_Print(json)))
 		goto panic;
@@ -390,8 +422,86 @@ void fanpico_mqtt_publish()
 		log_msg(LOG_WARNING,"json_status_message(): failed");
 		return;
 	}
-	mqtt_publish_message(cfg->mqtt_status_topic, buf, strlen(buf), 2 , 0);
+	mqtt_publish_message(cfg->mqtt_status_topic, buf, strlen(buf), mqtt_qos, 0);
 	free(buf);
+}
+
+void fanpico_mqtt_publish_temp()
+{
+	const struct fanpico_state *st = fanpico_state;
+	char topic[MQTT_MAX_TOPIC_LEN + 8];
+	char buf[64];
+
+	if (!mqtt_client || strlen(cfg->mqtt_temp_topic) < 1)
+		return;
+
+	for (int i = 0; i < SENSOR_COUNT; i++) {
+		if (cfg->mqtt_temp_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), cfg->mqtt_temp_topic, i + 1);
+			snprintf(buf, sizeof(buf), "%.1f", st->temp[i]);
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+		}
+	}
+}
+
+void fanpico_mqtt_publish_rpm()
+{
+	const struct fanpico_state *st = fanpico_state;
+	char topic[MQTT_MAX_TOPIC_LEN + 8];
+	char buf[64];
+
+	if (!mqtt_client)
+		return;
+
+	if (strlen(cfg->mqtt_fan_rpm_topic) > 0) {
+		for (int i = 0; i < FAN_COUNT; i++) {
+			if (cfg->mqtt_fan_rpm_mask & (1 << i)) {
+				float rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
+				snprintf(topic, sizeof(topic), cfg->mqtt_fan_rpm_topic, i + 1);
+				snprintf(buf, sizeof(buf), "%.0f", rpm);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+			}
+		}
+	}
+	if (strlen(cfg->mqtt_mbfan_rpm_topic) > 0) {
+		for (int i = 0; i < MBFAN_COUNT; i++) {
+			if (cfg->mqtt_mbfan_rpm_mask & (1 << i)) {
+				float rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
+				snprintf(topic, sizeof(topic), cfg->mqtt_mbfan_rpm_topic, i + 1);
+				snprintf(buf, sizeof(buf), "%.0f", rpm);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+			}
+		}
+	}
+}
+
+void fanpico_mqtt_publish_duty()
+{
+	const struct fanpico_state *st = fanpico_state;
+	char topic[MQTT_MAX_TOPIC_LEN + 8];
+	char buf[64];
+
+	if (!mqtt_client)
+		return;
+
+	if (strlen(cfg->mqtt_fan_duty_topic) > 0) {
+		for (int i = 0; i < FAN_COUNT; i++) {
+			if (cfg->mqtt_fan_duty_mask & (1 << i)) {
+				snprintf(topic, sizeof(topic), cfg->mqtt_fan_duty_topic, i + 1);
+				snprintf(buf, sizeof(buf), "%.1f", st->fan_duty[i]);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+			}
+		}
+	}
+	if (strlen(cfg->mqtt_mbfan_duty_topic) > 0) {
+		for (int i = 0; i < MBFAN_COUNT; i++) {
+			if (cfg->mqtt_mbfan_duty_mask & (1 << i)) {
+				snprintf(topic, sizeof(topic), cfg->mqtt_mbfan_duty_topic, i + 1);
+				snprintf(buf, sizeof(buf), "%.1f", st->mbfan_duty[i]);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+			}
+		}
+	}
 }
 
 void fanpico_mqtt_scpi_command()

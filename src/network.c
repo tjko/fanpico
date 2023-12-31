@@ -236,7 +236,10 @@ void wifi_status()
 void wifi_poll()
 {
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(test_t, 0);
-	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_status_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_temp_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_rpm_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_duty_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(command_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(reconnect_t, 0);
 	static bool init_msg_sent = false;
@@ -279,8 +282,23 @@ void wifi_poll()
 
 		/* Publish status update to MQTT status topic */
 		if (cfg->mqtt_status_interval > 0) {
-			if (time_passed(&publish_t, cfg->mqtt_status_interval * 1000)) {
+			if (time_passed(&publish_status_t, cfg->mqtt_status_interval * 1000)) {
 				fanpico_mqtt_publish();
+			}
+		}
+		if (cfg->mqtt_temp_interval > 0) {
+			if (time_passed(&publish_temp_t, cfg->mqtt_temp_interval * 1000)) {
+				fanpico_mqtt_publish_temp();
+			}
+		}
+		if (cfg->mqtt_rpm_interval > 0) {
+			if (time_passed(&publish_rpm_t, cfg->mqtt_rpm_interval * 1000)) {
+				fanpico_mqtt_publish_rpm();
+			}
+		}
+		if (cfg->mqtt_duty_interval > 0) {
+			if (time_passed(&publish_duty_t, cfg->mqtt_duty_interval * 1000)) {
+				fanpico_mqtt_publish_duty();
 			}
 		}
 

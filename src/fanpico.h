@@ -52,12 +52,17 @@
 #define MAX_MAP_POINTS 32
 #define MAX_GPIO_PINS  32
 
-#define WIFI_SSID_MAX_LEN    32
-#define WIFI_PASSWD_MAX_LEN  64
-#define WIFI_COUNTRY_MAX_LEN 3
+#define WIFI_SSID_MAX_LEN     32
+#define WIFI_PASSWD_MAX_LEN   64
+#define WIFI_COUNTRY_MAX_LEN  3
 
-#define MQTT_MAX_TOPIC_LEN   32
-#define DEFAULT_MQTT_STATUS_INTERVAL 600
+#define MQTT_MAX_TOPIC_LEN            33
+#define MQTT_MAX_USERNAME_LEN         81
+#define MQTT_MAX_PASSWORD_LEN         65
+#define DEFAULT_MQTT_STATUS_INTERVAL  600
+#define DEFAULT_MQTT_TEMP_INTERVAL    60
+#define DEFAULT_MQTT_RPM_INTERVAL     60
+#define DEFAULT_MQTT_DUTY_INTERVAL    60
 
 #ifdef NDEBUG
 #define WATCHDOG_ENABLED      1
@@ -209,12 +214,25 @@ struct fanpico_config {
 	uint32_t mqtt_port;
 	bool mqtt_tls;
 	bool mqtt_allow_scpi;
-	char mqtt_user[32];
-	char mqtt_pass[64];
+	char mqtt_user[MQTT_MAX_USERNAME_LEN];
+	char mqtt_pass[MQTT_MAX_PASSWORD_LEN];
 	char mqtt_status_topic[MQTT_MAX_TOPIC_LEN];
 	uint32_t mqtt_status_interval;
 	char mqtt_cmd_topic[MQTT_MAX_TOPIC_LEN];
 	char mqtt_resp_topic[MQTT_MAX_TOPIC_LEN];
+	uint16_t mqtt_temp_mask;
+	uint16_t mqtt_fan_rpm_mask;
+	uint16_t mqtt_fan_duty_mask;
+	uint16_t mqtt_mbfan_rpm_mask;
+	uint16_t mqtt_mbfan_duty_mask;
+	char mqtt_temp_topic[MQTT_MAX_TOPIC_LEN];
+	char mqtt_fan_rpm_topic[MQTT_MAX_TOPIC_LEN];
+	char mqtt_fan_duty_topic[MQTT_MAX_TOPIC_LEN];
+	char mqtt_mbfan_rpm_topic[MQTT_MAX_TOPIC_LEN];
+	char mqtt_mbfan_duty_topic[MQTT_MAX_TOPIC_LEN];
+	uint32_t mqtt_temp_interval;
+	uint32_t mqtt_rpm_interval;
+	uint32_t mqtt_duty_interval;
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
@@ -314,6 +332,9 @@ void fanpico_setup_mqtt_client();
 int fanpico_mqtt_client_active();
 void fanpico_mqtt_reconnect();
 void fanpico_mqtt_publish();
+void fanpico_mqtt_publish_temp();
+void fanpico_mqtt_publish_rpm();
+void fanpico_mqtt_publish_duty();
 void fanpico_mqtt_scpi_command();
 #endif
 
@@ -390,6 +411,8 @@ char *strncopy(char *dst, const char *src, size_t size);
 char *strncatenate(char *dst, const char *src, size_t size);
 int clamp_int(int val, int min, int max);
 void* memmem(const void *haystack, size_t haystacklen, const void *needle, size_t needlelen);
+char *bitmask_to_str(uint32_t mask, uint16_t len, uint8_t base, bool range);
+int str_to_bitmask(const char *str, uint16_t len, uint32_t *mask, uint8_t base);
 
 /* util_rp2040.c */
 uint32_t get_stack_pointer();
