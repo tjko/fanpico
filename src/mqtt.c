@@ -45,6 +45,7 @@ mqtt_client_t *mqtt_client = NULL;
 ip_addr_t mqtt_server_ip = IPADDR4_INIT_BYTES(0, 0, 0, 0);
 u16_t mqtt_server_port = 0;
 int incoming_topic = 0;
+int mqtt_qos = 1;
 char mqtt_scpi_cmd[MQTT_CMD_MAX_LEN];
 bool mqtt_scpi_cmd_queued = false;
 absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_mqtt_disconnect, 0);
@@ -126,7 +127,7 @@ void send_mqtt_command_response(const char *cmd, int result, const char *msg)
 		log_msg(LOG_WARNING,"json_response_message(): failed");
 		return;
 	}
-	mqtt_publish_message(cfg->mqtt_resp_topic, buf, strlen(buf), 2, 0);
+	mqtt_publish_message(cfg->mqtt_resp_topic, buf, strlen(buf), mqtt_qos, 0);
 	free(buf);
 }
 
@@ -421,7 +422,7 @@ void fanpico_mqtt_publish()
 		log_msg(LOG_WARNING,"json_status_message(): failed");
 		return;
 	}
-	mqtt_publish_message(cfg->mqtt_status_topic, buf, strlen(buf), 2 , 0);
+	mqtt_publish_message(cfg->mqtt_status_topic, buf, strlen(buf), mqtt_qos, 0);
 	free(buf);
 }
 
@@ -438,7 +439,7 @@ void fanpico_mqtt_publish_temp()
 		if (cfg->mqtt_temp_mask & (1 << i)) {
 			snprintf(topic, sizeof(topic), cfg->mqtt_temp_topic, i + 1);
 			snprintf(buf, sizeof(buf), "%.1f", st->temp[i]);
-			mqtt_publish_message(topic, buf, strlen(buf), 2 , 0);
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
 		}
 	}
 }
@@ -458,7 +459,7 @@ void fanpico_mqtt_publish_rpm()
 				float rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
 				snprintf(topic, sizeof(topic), cfg->mqtt_fan_rpm_topic, i + 1);
 				snprintf(buf, sizeof(buf), "%.0f", rpm);
-				mqtt_publish_message(topic, buf, strlen(buf), 2 , 0);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
 			}
 		}
 	}
@@ -468,7 +469,7 @@ void fanpico_mqtt_publish_rpm()
 				float rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
 				snprintf(topic, sizeof(topic), cfg->mqtt_mbfan_rpm_topic, i + 1);
 				snprintf(buf, sizeof(buf), "%.0f", rpm);
-				mqtt_publish_message(topic, buf, strlen(buf), 2 , 0);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
 			}
 		}
 	}
@@ -488,7 +489,7 @@ void fanpico_mqtt_publish_duty()
 			if (cfg->mqtt_fan_duty_mask & (1 << i)) {
 				snprintf(topic, sizeof(topic), cfg->mqtt_fan_duty_topic, i + 1);
 				snprintf(buf, sizeof(buf), "%.1f", st->fan_duty[i]);
-				mqtt_publish_message(topic, buf, strlen(buf), 2 , 0);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
 			}
 		}
 	}
@@ -497,7 +498,7 @@ void fanpico_mqtt_publish_duty()
 			if (cfg->mqtt_mbfan_duty_mask & (1 << i)) {
 				snprintf(topic, sizeof(topic), cfg->mqtt_mbfan_duty_topic, i + 1);
 				snprintf(buf, sizeof(buf), "%.1f", st->mbfan_duty[i]);
-				mqtt_publish_message(topic, buf, strlen(buf), 2 , 0);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
 			}
 		}
 	}
