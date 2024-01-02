@@ -89,7 +89,7 @@ Model "0804" without display (with straight connectors):
 
 Model "0840D" with (with right-angle connectors):
 
-[![Fanpico-0804D](images/fanpico-0804D-v1.2b.jpg)](images/fanpico-0804D-v1.2b-large.jpg)
+[![Fanpico-0804D](images/fanpico-0804D-v1.2b.jpg)](images/fanpico-0804D-v1.2b-large.jpg?raw=true)
 
 
 ### Hardware Design
