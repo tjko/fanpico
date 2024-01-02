@@ -87,9 +87,9 @@ Model "0804" without display (with straight connectors):
 
 ![Fanpico-0804](images/fanpico-0804.jpg)
 
-Model "0840D" with 1.3" OLED display directly mounted (with right-angle connectors):
+Model "0840D" with (with right-angle connectors):
 
-[![Fanpico-0804D](images/fanpico-0804D.jpg)](images/fanpico-0804D-large.jpg)
+[![Fanpico-0804D](images/fanpico-0804D-v1.2b.jpg)](images/fanpico-0804D-v1.2b-large.jpg)
 
 
 ### Hardware Design
