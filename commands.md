@@ -166,6 +166,10 @@ Fanpico supports following commands:
 * [SYStem:TIME?](#systemtime-1)
 * [SYStem:TIMEZONE](#systemtimezone)
 * [SYStem:TIMEZONE?](#systemtimezone-1)
+* [SYStem:TLS:CERT](#systemtlscert)
+* [SYStem:TLS:CERT?](#systemtlscert-1)
+* [SYStem:TLS:PKEY](#systemtlspkey)
+* [SYStem:TLS:PKEY?](#systemtlspkey-1)
 * [SYStem:UPTIme?](#systemuptime)
 * [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
@@ -2392,6 +2396,72 @@ Example:
 ```
 SYS:TIMEZONE?
 PST8PDT7,M3.2.0/2,M11.1.0/02:00:00
+```
+
+#### SYStem:TLS:CERT
+Upload or delete TLS certificate for the HTTP server.
+Note, both certificate and private key must be installed before HTTPS server will
+activate (when system is restarted next time).
+
+When run withouth arguments this will prompt to paste TLS (X.509) certificate
+in PEM format.  When run with "DELETE" argument currently installed certificate
+will be deleted.
+
+Example (upload/paste certificate):
+```
+SYS:TLS:CERT
+Paste certificate in PEM format:
+
+```
+
+Example (delete existing certificate from flash memory):
+```
+SYS:TLS:CERT DELETE
+```
+
+#### SYStem:TLS:CERT?
+Display currently installed certificate.
+
+Example:
+```
+SYS:TLS:CERT?
+```
+
+
+#### SYStem:TLS:PKEY
+Upload or delete (TLS Certificate) Private key for the HTTP server.
+Note, both certificate and private key must be installed before HTTPS server will
+activate (when system is restarted next time).
+
+When run withouth arguments this will prompt to paste private key
+in PEM format.  When run with "DELETE" argument currently installed private key
+will be deleted.
+
+Example (upload/paste private key):
+```
+SYS:TLS:PKEY
+Paste private key in PEM format:
+
+```
+
+Examnple (upload/paste EC private key and EC parameters):
+```
+SYS:TLS:PKEY 2
+Paste private key in PEM format:
+
+```
+
+Example (delete existing private key from flash memory):
+```
+SYS:TLS:PKEY DELETE
+```
+
+#### SYStem:TLS:PKEY?
+Display currently installed private key.
+
+Example:
+```
+SYS:TLS:CERT?
 ```
 
 

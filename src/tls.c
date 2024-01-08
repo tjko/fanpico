@@ -33,7 +33,7 @@
 #endif
 
 
-int read_pem_file(char *buf, uint32_t size, uint32_t timeout)
+int read_pem_file(char *buf, uint32_t size, uint32_t timeout, bool append)
 {
 	absolute_time_t t_timeout = get_absolute_time();
 	char tmp[128], *line;
@@ -44,7 +44,8 @@ int read_pem_file(char *buf, uint32_t size, uint32_t timeout)
 		return -1;
 
 	tmp[0] = 0;
-	buf[0] = 0;
+	if (!append)
+		buf[0] = 0;
 
 	while (1) {
 		r = getstring_timeout_ms(tmp, sizeof(tmp), 100);
