@@ -1,5 +1,5 @@
 /* fanpico.c
-   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2024 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -272,7 +272,7 @@ void core1_main()
 			log_msg(LOG_DEBUG, "Read PWM inputs");
 			for (int i = 0; i < MBFAN_COUNT; i++) {
 				state->mbfan_duty[i] = roundf(mbfan_pwm_duty[i]);
-				if (check_for_change(state->mbfan_duty_prev[i], state->mbfan_duty[i], 1.0)) {
+				if (check_for_change(state->mbfan_duty_prev[i], state->mbfan_duty[i], 1.5)) {
 					log_msg(LOG_INFO, "mbfan%d: Input PWM change %.1f%% --> %.1f%%",
 						i+1,
 						state->mbfan_duty_prev[i],
