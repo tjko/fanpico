@@ -1,5 +1,5 @@
 /* mqtt.c
-   Copyright (C) 2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2023-2024 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -58,13 +58,24 @@ void mqtt_connect(mqtt_client_t *client);
 
 static void mqtt_pub_request_cb(void *arg, err_t result)
 {
-	if (result != ERR_OK) {
-		log_msg(LOG_NOTICE, "MQTT failed to publish to topic: %d", result);
+	const char *topic = (const char*)arg;
+
+	if (!topic)
+		topic = "NULL";
+
+	if (result == ERR_OK) {
+		log_msg(LOG_DEBUG, "MQTT publish successful (%s)", topic);
+	}
+	else if (result == ERR_TIMEOUT) {
+		log_msg(LOG_NOTICE, "MQTT publish failed: timeout (%s)", topic);
+	}
+	else {
+		log_msg(LOG_NOTICE, "MQTT publish failed: %d (%s)", result, topic);
 	}
 }
 
 int mqtt_publish_message(const char *topic, const char *buf, u16_t buf_len,
-			u8_t qos, u8_t retain)
+			u8_t qos, u8_t retain, const char *arg)
 {
 	if (!topic || !buf || buf_len == 0)
 		return -1;
@@ -83,7 +94,7 @@ int mqtt_publish_message(const char *topic, const char *buf, u16_t buf_len,
 	/* Publish message to a MQTT topic */
 	cyw43_arch_lwip_begin();
 	err_t err = mqtt_publish(mqtt_client, topic, buf, buf_len,
-				qos, retain, mqtt_pub_request_cb, NULL);
+				qos, retain, mqtt_pub_request_cb, (void*)arg);
 	cyw43_arch_lwip_end();
 	if (err != ERR_OK) {
 		log_msg(LOG_NOTICE, "mqtt_publish_message(): failed %d (topic=%s, buf_len=%u)",
@@ -127,7 +138,8 @@ void send_mqtt_command_response(const char *cmd, int result, const char *msg)
 		log_msg(LOG_WARNING,"json_response_message(): failed");
 		return;
 	}
-	mqtt_publish_message(cfg->mqtt_resp_topic, buf, strlen(buf), mqtt_qos, 0);
+	mqtt_publish_message(cfg->mqtt_resp_topic, buf, strlen(buf), mqtt_qos, 0,
+			cfg->mqtt_resp_topic);
 	free(buf);
 }
 
@@ -232,7 +244,7 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
 	}
 	else if (status == MQTT_CONNECT_REFUSED_NOT_AUTHORIZED_) {
 		log_msg(LOG_WARNING, "MQTT connect: not authorized (%s)", ipaddr_ntoa(&mqtt_server_ip));
-		mqtt_reconnect = 90;
+		mqtt_reconnect = 180;
 	}
 	else {
 		log_msg(LOG_WARNING, "MQTT connect: refused (status=%d) (%s)", status, ipaddr_ntoa(&mqtt_server_ip));
@@ -263,6 +275,8 @@ void mqtt_connect(mqtt_client_t *client)
 	if (!client)
 		return;
 
+	mqtt_reconnect = 0;
+
 	/* Resolve domain name */
 	cyw43_arch_lwip_begin();
 	err = dns_gethostbyname(cfg->mqtt_server, &mqtt_server_ip, mqtt_dns_resolve_cb, NULL);
@@ -292,6 +306,8 @@ void mqtt_connect(mqtt_client_t *client)
 		cyw43_arch_lwip_begin();
 		ci.tls_config = altcp_tls_create_config_client(NULL, 0);
 		cyw43_arch_lwip_end();
+		if (!ci.tls_config)
+			log_msg(LOG_WARNING, "altcp_tls_create_config_client(): failed");
 		port = MQTT_TLS_PORT;
 	}
 #endif
@@ -300,7 +316,7 @@ void mqtt_connect(mqtt_client_t *client)
 	mqtt_server_port = port;
 
 	/* Connect to MQTT Server */
-	log_msg(LOG_INFO, "MQTT Connecting to %s:%u%s",	cfg->mqtt_server, mqtt_server_port,
+	log_msg(LOG_NOTICE, "MQTT Connecting to %s:%u%s", cfg->mqtt_server, mqtt_server_port,
 		cfg->mqtt_tls ? " (TLS)" : "");
 	cyw43_arch_lwip_begin();
 	err = mqtt_client_connect(mqtt_client, &mqtt_server_ip, mqtt_server_port,
@@ -313,9 +329,12 @@ void mqtt_connect(mqtt_client_t *client)
 
 void fanpico_setup_mqtt_client()
 {
-	ip_addr_set_zero(&mqtt_server_ip);
+	if (mqtt_client)
+		return;
 
+	ip_addr_set_zero(&mqtt_server_ip);
 	mqtt_reconnect = 0;
+
 	cyw43_arch_lwip_begin();
 	mqtt_client = mqtt_client_new();
 	cyw43_arch_lwip_end();
@@ -339,6 +358,15 @@ void fanpico_mqtt_reconnect()
 
 	if (time_passed(&t_mqtt_disconnect, mqtt_reconnect * 1000)) {
 		log_msg(LOG_INFO, "MQTT attempt reconnecting to server");
+		cyw43_arch_lwip_begin();
+		u8_t connected = mqtt_client_is_connected(mqtt_client);
+		cyw43_arch_lwip_end();
+		if (connected) {
+			log_msg(LOG_INFO, "MQTT attempt disconnecting existing connection");
+			cyw43_arch_lwip_begin();
+			mqtt_disconnect(mqtt_client);
+			cyw43_arch_lwip_end();
+		}
 		mqtt_connect(mqtt_client);
 	}
 }
@@ -423,7 +451,8 @@ void fanpico_mqtt_publish()
 		log_msg(LOG_WARNING,"json_status_message(): failed");
 		return;
 	}
-	mqtt_publish_message(cfg->mqtt_status_topic, buf, strlen(buf), mqtt_qos, 0);
+	mqtt_publish_message(cfg->mqtt_status_topic, buf, strlen(buf), mqtt_qos, 0,
+			cfg->mqtt_status_topic);
 	free(buf);
 }
 
@@ -440,7 +469,8 @@ void fanpico_mqtt_publish_temp()
 		if (cfg->mqtt_temp_mask & (1 << i)) {
 			snprintf(topic, sizeof(topic), cfg->mqtt_temp_topic, i + 1);
 			snprintf(buf, sizeof(buf), "%.1f", st->temp[i]);
-			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0,
+					cfg->mqtt_temp_topic);
 		}
 	}
 }
@@ -460,7 +490,8 @@ void fanpico_mqtt_publish_rpm()
 				float rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
 				snprintf(topic, sizeof(topic), cfg->mqtt_fan_rpm_topic, i + 1);
 				snprintf(buf, sizeof(buf), "%.0f", rpm);
-				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0,
+						cfg->mqtt_fan_rpm_topic);
 			}
 		}
 	}
@@ -470,7 +501,8 @@ void fanpico_mqtt_publish_rpm()
 				float rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
 				snprintf(topic, sizeof(topic), cfg->mqtt_mbfan_rpm_topic, i + 1);
 				snprintf(buf, sizeof(buf), "%.0f", rpm);
-				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0,
+						cfg->mqtt_mbfan_rpm_topic);
 			}
 		}
 	}
@@ -490,7 +522,8 @@ void fanpico_mqtt_publish_duty()
 			if (cfg->mqtt_fan_duty_mask & (1 << i)) {
 				snprintf(topic, sizeof(topic), cfg->mqtt_fan_duty_topic, i + 1);
 				snprintf(buf, sizeof(buf), "%.1f", st->fan_duty[i]);
-				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0,
+						cfg->mqtt_fan_duty_topic);
 			}
 		}
 	}
@@ -499,7 +532,8 @@ void fanpico_mqtt_publish_duty()
 			if (cfg->mqtt_mbfan_duty_mask & (1 << i)) {
 				snprintf(topic, sizeof(topic), cfg->mqtt_mbfan_duty_topic, i + 1);
 				snprintf(buf, sizeof(buf), "%.1f", st->mbfan_duty[i]);
-				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0);
+				mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0,
+						cfg->mqtt_mbfan_duty_topic);
 			}
 		}
 	}

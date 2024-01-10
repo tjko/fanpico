@@ -71,7 +71,7 @@ void pico_set_system_time(long int sec);
 #define LWIP_HOOK_DHCP_PARSE_OPTION     pico_dhcp_option_parse_hook
 
 #define MQTT_OUTPUT_RINGBUF_SIZE        4096
-#define MQTT_REQ_MAX_IN_FLIGHT          16
+#define MQTT_REQ_MAX_IN_FLIGHT          32
 #define HTTPD_FSDATA_FILE               "fanpico_fsdata.c"
 #define HTTPD_USE_MEM_POOL              0
 #define LWIP_HTTPD_SSI                  1

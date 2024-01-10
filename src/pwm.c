@@ -158,7 +158,7 @@ void get_pwm_duty_cycles(const struct fanpico_config *config)
 
 		float max_count = pwm_in_count_rate * ((t_end - t_start) / 1000000.0);
 		if (max_count >= 65535) {
-			log_msg(LOG_WARNING, "get_pwm_duty_cycles(): counter overflow: %f (%llu)",
+			log_msg(LOG_INFO, "get_pwm_duty_cycles(): counter overflow: %f (%llu)",
 				max_count, (t_end - t_start));
 			return;
 		}
