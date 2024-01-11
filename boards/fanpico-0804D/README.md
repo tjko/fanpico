@@ -6,6 +6,9 @@ PCB Size: 135mm x 81.5mm
 
 ## Change Log
 
+v1.2c
+- Add support for using either SN74AHCT125 or SN74AHCT126 (as U1 and U2).
+
 v1.2b
 - C5 was not derated correctly. Replace with 25V part for proper derating.
 
