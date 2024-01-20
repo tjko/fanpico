@@ -1,5 +1,5 @@
 /* fanpico.h
-   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2024 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -257,12 +257,22 @@ struct fanpico_state {
 	float mbfan_freq_prev[MBFAN_MAX_COUNT];
 };
 
+struct persistent_memory_block {
+	uint32_t id;
+	datetime_t saved_time;
+	uint64_t uptime;
+	uint64_t prev_uptime;
+	uint32_t crc32;
+};
+
 
 /* fanpico.c */
+extern struct persistent_memory_block *persistent_mem;
 extern const struct fanpico_state *fanpico_state;
 extern bool rebooted_by_watchdog;
 extern mutex_t *state_mutex;
 void update_display_state();
+void update_persistent_memory();
 
 /* bi_decl.c */
 void set_binary_info();
@@ -397,6 +407,7 @@ char *trim_str(char *s);
 int str_to_int(const char *str, int *val, int base);
 int str_to_float(const char *str, float *val);
 int str_to_datetime(const char *str, datetime_t *t);
+char* datetime_str(char *buf, size_t size, const datetime_t *t);
 datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t);
 struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
 time_t datetime_to_time(const datetime_t *datetime);
@@ -417,6 +428,7 @@ int str_to_bitmask(const char *str, uint16_t len, uint32_t *mask, uint8_t base);
 /* util_rp2040.c */
 uint32_t get_stack_pointer();
 uint32_t get_stack_free();
+void print_rp2040_flashinfo();
 void print_rp2040_meminfo();
 void print_irqinfo();
 void watchdog_disable();

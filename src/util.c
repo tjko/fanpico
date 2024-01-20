@@ -1,5 +1,5 @@
 /* util.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2024 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -148,6 +148,18 @@ int str_to_datetime(const char *str, datetime_t *t)
 	t->dotw = 0;
 
 	return 1;
+}
+
+
+char* datetime_str(char *buf, size_t size, const datetime_t *t)
+{
+	if (!t || !buf)
+		return NULL;
+
+	snprintf(buf, size, "%04d-%02d-%02d %02d:%02d:%02d",
+		t->year, t->month, t->day, t->hour, t->min, t->sec);
+
+	return buf;
 }
 
 

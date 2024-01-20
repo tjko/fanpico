@@ -1,5 +1,5 @@
 /* command.c
-   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2024 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -410,6 +410,7 @@ int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
 
 	log_msg(LOG_ALERT, "Initiating reboot...");
 	display_message(1, msg);
+	update_persistent_memory();
 
 	watchdog_disable();
 	sleep_ms(500);
@@ -2232,6 +2233,17 @@ int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 			conf->name, sizeof(conf->name), "System Name");
 }
 
+
+int cmd_flash(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	print_rp2040_flashinfo();
+	return 0;
+}
+
+
 #define TEST_MEM_SIZE (264*1024)
 
 int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -2392,6 +2404,7 @@ const struct cmd_t system_commands[] = {
 	{ "ECHO",      4, NULL,              cmd_echo },
 	{ "ERRor",     3, NULL,              cmd_err },
 	{ "FANS",      4, NULL,              cmd_fans },
+	{ "FLASH",     5, NULL,              cmd_flash },
 	{ "LED",       3, NULL,              cmd_led },
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
