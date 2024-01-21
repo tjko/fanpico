@@ -551,8 +551,8 @@ void fanpico_mqtt_scpi_command()
 	strncopy(cmd, mqtt_scpi_cmd, sizeof(cmd));
 	process_command(st, (struct fanpico_config *)cfg, cmd);
 	if ((res = last_command_status()) == 0) {
-		log_msg(LOG_INFO, "MQTT SCPI command successfull: '%s'", mqtt_scpi_cmd);
-		send_mqtt_command_response(mqtt_scpi_cmd, res, "SCPI command successfull");
+		log_msg(LOG_INFO, "MQTT SCPI command successful: '%s'", mqtt_scpi_cmd);
+		send_mqtt_command_response(mqtt_scpi_cmd, res, "SCPI command successful");
 	} else {
 		log_msg(LOG_NOTICE, "MQTT SCPI command failed: '%s' (%d)", mqtt_scpi_cmd, res);
 		if (res == -113)

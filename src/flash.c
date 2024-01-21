@@ -117,7 +117,7 @@ int flash_write_file(const char *buf, uint32_t size, const char *filename)
 				filename, wrote);
 			res = -3;
 		} else {
-			log_msg(LOG_INFO, "File \"%s\" sucfessfully created: %li bytes",
+			log_msg(LOG_INFO, "File \"%s\" successfully created: %li bytes",
 				filename, wrote);
 			res = 0;
 		}

@@ -160,7 +160,7 @@ void wifi_init()
 								cfg->wifi_passwd,
 								CYW43_AUTH_WPA2_AES_PSK);
 			} else {
-				/* If "SYS:WIFI:MODE 1" has been used, attemp synchronous connection
+				/* If "SYS:WIFI:MODE 1" has been used, attempt synchronous connection
 				   as connection to some buggy(?) APs don't seem to always work with
 				   asynchronouse connection... */
 				int retries = 2;

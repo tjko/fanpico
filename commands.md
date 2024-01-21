@@ -104,6 +104,7 @@ Fanpico supports following commands:
 * [SYStem:ECHO](#systemecho)
 * [SYStem:ECHO?](#systemecho)
 * [SYStem:FANS?](#systemfans)
+* [SYStem:FLASH?](#systemflash)
 * [SYStem:LED](#systemled)
 * [SYStem:LED?](#systemled-1)
 * [SYStem:MBFANS?](#systemmbfans)
@@ -1618,6 +1619,19 @@ Example:
 ```
 SYS:FANS?
 8
+```
+
+
+### SYStem:FLASH?
+Returns information about Pico flash memory usage.
+
+Example:
+```
+SYS:FLASH?
+Flash memory size:                     2097152
+Binary size:                           683520
+LittleFS size:                         262144
+Unused flash memory:                   1151488
 ```
 
 
