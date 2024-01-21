@@ -2053,7 +2053,7 @@ int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
 			printf("Failed to delete private key: %d\n", res);
 			res = 2;
 		} else {
-			printf("Private key succesfully deleted.\n");
+			printf("Private key successfully deleted.\n");
 		}
 	}
 	else {
@@ -2078,7 +2078,7 @@ int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
 				printf("Failed to save private key.\n");
 				res = 2;
 			} else {
-				printf("Private key succesfully saved. (length=%u)\n",
+				printf("Private key successfully saved. (length=%u)\n",
 					strlen(buf));
 				res = 0;
 			}
@@ -2134,7 +2134,7 @@ int cmd_tls_cert(const char *cmd, const char *args, int query, char *prev_cmd)
 			printf("Failed to delete certificate: %d\n", res);
 			res = 2;
 		} else {
-			printf("Certificate succesfully deleted.\n");
+			printf("Certificate successfully deleted.\n");
 		}
 	}
 	else {
@@ -2151,7 +2151,7 @@ int cmd_tls_cert(const char *cmd, const char *args, int query, char *prev_cmd)
 				printf("Failed to save certificate.\n");
 				res = 2;
 			} else {
-				printf("Certificate succesfully saved. (length=%u)\n",
+				printf("Certificate successfully saved. (length=%u)\n",
 					strlen(buf));
 				res = 0;
 			}
