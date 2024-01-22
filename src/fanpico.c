@@ -324,7 +324,7 @@ void core1_main()
 		delta = absolute_time_diff_us(t_last, t_now);
 		t_last = t_now;
 
-		if (delta > max_delta || delta > 1000000) {
+		if (delta > max_delta) {
 			max_delta = delta;
 			log_msg(LOG_INFO, "core1: max_loop_time=%lld", max_delta);
 		}
@@ -391,7 +391,7 @@ void core1_main()
 				memcpy(config, cfg, sizeof(*config));
 				mutex_exit(config_mutex);
 			} else {
-				log_msg(LOG_INFO, "failed to get config_mutex");
+				log_msg(LOG_DEBUG, "failed to get config_mutex");
 			}
 		}
 		if (time_passed(&t_state, 500)) {
@@ -400,7 +400,7 @@ void core1_main()
 				memcpy(&transfer_state, state, sizeof(transfer_state));
 				mutex_exit(state_mutex);
 			} else {
-				log_msg(LOG_INFO, "failed to get state_mutex");
+				log_msg(LOG_DEBUG, "failed to get state_mutex");
 			}
 		}
 
@@ -450,7 +450,7 @@ int main()
 		delta = absolute_time_diff_us(t_last, t_now);
 		t_last = t_now;
 
-		if (delta > max_delta || delta > 1000000) {
+		if (delta > max_delta) {
 			max_delta = delta;
 			log_msg(LOG_INFO, "core0: max_loop_time=%lld", max_delta);
 		}
@@ -484,7 +484,6 @@ int main()
 
 		/* Update display every 1000ms */
 		if (time_passed(&t_display, 1000)) {
-			log_msg(LOG_DEBUG, "Update display");
 			update_system_state();
 			display_status(fanpico_state, cfg);
 		}
