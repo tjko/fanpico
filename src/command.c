@@ -2234,6 +2234,26 @@ int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 
 
+int cmd_littlefs(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	size_t size, free, used, files, dirs;
+
+	if (!query)
+		return 1;
+	if (flash_get_fs_info(&size, &free, &files, &dirs, NULL) < 0)
+		return 2;
+
+	used = size - free;
+	printf("Filesystem size:                       %u\n", size);
+	printf("Filesystem used:                       %u\n", used);
+	printf("Filesystem free:                       %u\n", free);
+	printf("Number of files:                       %u\n", files);
+	printf("Number of subdirectories:              %u\n", dirs);
+
+	return 0;
+}
+
+
 int cmd_flash(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	if (!query)
@@ -2406,6 +2426,7 @@ const struct cmd_t system_commands[] = {
 	{ "FANS",      4, NULL,              cmd_fans },
 	{ "FLASH",     5, NULL,              cmd_flash },
 	{ "LED",       3, NULL,              cmd_led },
+	{ "LFS",       3, NULL,              cmd_littlefs },
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
 	{ "MEMory",    3, NULL,              cmd_memory },

@@ -320,6 +320,9 @@ void oled_display_message(int rows, const char **text_lines);
 int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int init_flash);
 int flash_write_file(const char *buf, uint32_t size, const char *filename);
 int flash_delete_file(const char *filename);
+int flash_get_fs_info(size_t *size, size_t *free, size_t *files,
+		size_t *directories, size_t *filesizetotal);
+
 
 /* network.c */
 void network_init();

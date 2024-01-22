@@ -28,6 +28,8 @@
 
 #include "fanpico.h"
 
+extern struct lfs_config pico_cfg;
+
 
 int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int init_flash)
 {
@@ -166,3 +168,118 @@ int flash_delete_file(const char *filename)
 	return ret;
 }
 
+
+int littlefs_scan_dir(const char *path, size_t *files, size_t *dirs, size_t *used)
+{
+	lfs_dir_t dir;
+	struct lfs_info info;
+	char *dirname = NULL;
+	char separator[2] = "/";
+	int res;
+	size_t f_count = 0;
+	size_t d_count = 0;
+	size_t total = 0;
+	size_t path_len;
+
+	if (!path)
+		return -1;
+
+	/* Check if path ends with "/"... */
+	path_len = strnlen(path, LFS_NAME_MAX);
+	if (path_len > 0) {
+		if (path[path_len - 1] == '/')
+			separator[0] = 0;
+	}
+
+	log_msg(LOG_DEBUG, "littlefs_scan_dir(%s)", path);
+	if ((res = lfs_dir_open(&dir, path)) < 0)
+		return res;
+
+	while ((res = lfs_dir_read(&dir, &info) > 0)) {
+		if (info.type == LFS_TYPE_REG) {
+			f_count++;
+			total += info.size;
+			log_msg(LOG_DEBUG, "lfs: File '%s%s%s': size=%u",
+				path, separator, info.name, info.size);
+		}
+		else if (info.type == LFS_TYPE_DIR) {
+			/* Skip special directories ("." and "..") */
+			if (info.name[0] == '.') {
+				if (info.name[1] == 0)
+					continue;
+				if (info.name[1] == '.' && info.name[2] == 0)
+						continue;
+			}
+			d_count++;
+			log_msg(LOG_DEBUG, "lfs: Directory '%s%s%s'",
+				path, separator, info.name);
+			if ((dirname = malloc(LFS_NAME_MAX + 1))) {
+				res = snprintf(dirname, LFS_NAME_MAX + 1, "%s%s%s",
+					path, separator, info.name);
+				if (res > LFS_NAME_MAX)
+					log_msg(LOG_WARNING, "lfs: filename truncated '%s'", dirname);
+				littlefs_scan_dir(dirname, files, dirs, used);
+				free(dirname);
+			} else {
+				log_msg(LOG_WARNING, "littlefs_scan_dir: malloc failed");
+			}
+		}
+		else {
+			log_msg(LOG_NOTICE, "lfs: Unknown directory entry %s%s%s: type=%u, size=%u",
+				path, separator, info.name, info.type, info.size);
+		}
+	}
+
+	if (files)
+		*files += f_count;
+	if (dirs)
+		*dirs += d_count;
+	if (used)
+		*used += total;
+	log_msg(LOG_DEBUG, "littlefs_scan_dir(%s): files=%u (total size=%u), dirs=%u",
+		path, f_count, total, d_count);
+
+	return 0;
+}
+
+
+int flash_get_fs_info(size_t *size, size_t *free, size_t *files,
+		size_t *directories, size_t *filesizetotal)
+{
+	int res;
+	size_t fs_dirs = 0;
+	size_t fs_files = 0;
+	size_t fs_total = 0;
+	size_t used, used_blocks, fs_size;
+
+	if (!size || !free)
+		return -1;
+
+	/* Mount flash filesystem... */
+	if ((res = pico_mount(false)) < 0) {
+		log_msg(LOG_ERR, "pico_mount() failed: %d (%s)", res, pico_errmsg(res));
+		return -2;
+	}
+
+	used_blocks = lfs_fs_size();
+	used = used_blocks * pico_cfg.block_size;
+	fs_size = pico_cfg.block_count * pico_cfg.block_size;
+
+	if ((res = littlefs_scan_dir("/", &fs_files, &fs_dirs, &fs_total)) < 0)
+		log_msg(LOG_ERR, "little_fs_scan_dir() failed: %d", res);
+
+	if (size)
+		*size = fs_size;
+	if (free)
+		*free = fs_size - used;
+	if (files)
+		*files = fs_files;
+	if (directories)
+		*directories = fs_dirs;
+	if (filesizetotal)
+		*filesizetotal = fs_total;
+
+	pico_unmount();
+
+	return 0;
+}

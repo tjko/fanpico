@@ -26,8 +26,8 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * Configuration stored on the device itself (in the flash memory).
 * SCPI "like" programming interface (see [Command Reference](commands.md))
 * Monitor each fan and motherboard output signals as well as temperatures.
-* WiFi support if opting to mount Pico W on the board. This turns fanpico to "IoT" device with basic web interface.
-* MQTT client (with TLS support) for loggin data and to receive commands (see [Wiki](https://github.com/tjko/fanpico/wiki/FanPico-MQTT-Tutorial) for more information).
+* [WiFi support](https://github.com/tjko/fanpico/wiki/FanPico-Web-Interface) if opting to mount Pico W on the board. This turns fanpico into small "IoT" device with basic web interface.
+* [MQTT client](https://github.com/tjko/fanpico/wiki/FanPico-MQTT-Tutorial) with TLS support for logging data and to receive commands.
 
 ### Interfaces
 
@@ -107,6 +107,9 @@ Fanpico (reference design) utilizes all available I/O pins on a Raspberry Pi Pic
 To help design and test Fanpico couple other projects were born:
 * [Tiny PicoProbe](https://github.com/tjko/tiny-picoprobe/) - tiny PicoProbe implementation.
 * [Fan Test Adapter](https://github.com/tjko/fan-test-adapter/) - adapter to help simulate motherboard fan outputs.
+
+Projects based on FanPico firmware:
+* [BrickPico](https://github.com/tjko/brickpico/) - (LEGO) LED Light Kit Controller.
 
 ### Models (PCB designs)
 Currently following models are available:

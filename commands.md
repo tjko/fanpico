@@ -107,6 +107,7 @@ Fanpico supports following commands:
 * [SYStem:FLASH?](#systemflash)
 * [SYStem:LED](#systemled)
 * [SYStem:LED?](#systemled-1)
+* [SYStem:LFS?](#systemlfs)
 * [SYStem:MBFANS?](#systemmbfans)
 * [SYStem:MEM](#systemmem)
 * [SYStem:MEM?](#systemmem-1)
@@ -1661,6 +1662,20 @@ Example:
 ```
 SYS:LED?
 0
+```
+
+
+#### SYStem:LFS?
+Display information about the LittleFS filesystem in the flash memory.
+
+Example:
+```
+SYS:LFS?
+Filesystem size:                       262144
+Filesystem used:                       24576
+Filesystem free:                       237568
+Number of files:                       3
+Number of subdirectories:              0
 ```
 
 
