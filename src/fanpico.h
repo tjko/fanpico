@@ -233,6 +233,12 @@ struct fanpico_config {
 	uint32_t mqtt_temp_interval;
 	uint32_t mqtt_rpm_interval;
 	uint32_t mqtt_duty_interval;
+	bool telnet_active;
+	bool telnet_auth;
+	bool telnet_raw_mode;
+	uint32_t telnet_port;
+	char telnet_user[16 + 1];
+	char telnet_pwhash[128 + 1];
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
@@ -333,14 +339,11 @@ void set_pico_system_time(long unsigned int sec);
 const char *network_ip();
 const char *network_hostname();
 
-/* httpd.c */
 #if WIFI_SUPPORT
+/* httpd.c */
 u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 			u16_t current_tag_part, u16_t *next_tag_part);
-#endif
-
 /* mqtt.c */
-#if WIFI_SUPPORT
 void fanpico_setup_mqtt_client();
 int fanpico_mqtt_client_active();
 void fanpico_mqtt_reconnect();
@@ -349,6 +352,11 @@ void fanpico_mqtt_publish_temp();
 void fanpico_mqtt_publish_rpm();
 void fanpico_mqtt_publish_duty();
 void fanpico_mqtt_scpi_command();
+
+/* telnetd.c */
+void telnetserver_init();
+
+
 #endif
 
 /* tls.c */

@@ -13,3 +13,6 @@
 [submodule "libs/bb_spi_lcd-lib"]
 	path = libs/bb_spi_lcd-lib
 	url = https://github.com/tjko/bb_spi_lcd-lib.git
+[submodule "libs/pico-telnetd"]
+	path = libs/pico-telnetd
+	url = https://github.com/tjko/pico-telnetd.git

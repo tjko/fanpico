@@ -164,6 +164,18 @@ Fanpico supports following commands:
 * [SYStem:SERIAL?](#systemserial-1)
 * [SYStem:SPI](#systemspi)
 * [SYStem:SPI?](#systemspi-1)
+* [SYStem:TELNET:SERVer](#systemtelnetserver)
+* [SYStem:TELNET:SERVer?](#systemtelnetserver-1)
+* [SYStem:TELNET:AUTH](#systemtelnetauth)
+* [SYStem:TELNET:AUTH?](#systemtelnetauth-1)
+* [SYStem:TELNET:PORT](#systemtelnetport)
+* [SYStem:TELNET:PORT?](#systemtelnetport-1)
+* [SYStem:TELNET:RAWmode](#systemtelnetrawmode)
+* [SYStem:TELNET:RAWmode?](#systemtelnetrawmode-1)
+* [SYStem:TELNET:USER](#systemtelnetuser)
+* [SYStem:TELNET:USER?](#systemtelnetuser-1)
+* [SYStem:TELNET:PASSword](#systemtelnetpassword)
+* [SYStem:TELNET:PASSword?](#systemtelnetpassword-1)
 * [SYStem:TIME](#systemtime)
 * [SYStem:TIME?](#systemtime-1)
 * [SYStem:TIMEZONE](#systemtimezone)
@@ -2370,6 +2382,131 @@ Example:
 ```
 SYS:SPI?
 0
+```
+
+
+#### SYStem:TELNET:SERVer
+Control whether Telnet server is enabled or not.
+After making change configuration needs to be saved and unit reset.
+
+Default: OFF
+
+Example:
+```
+SYS:TELNET:SERV ON
+```
+
+#### SYStem:TELNET:SERVer?
+Display whether Telnet server status.
+
+Example:
+```
+SYS:TELNET:SERV?
+OFF
+```
+
+
+#### SYStem:TELNET:AUTH
+Toggle Telnet server authentication mode. When enabled then Telnet server will
+prompt user for login/password. When off, no authentication is needed.
+
+Default: ON
+
+Example:
+```
+SYS:TELNET:AUTH OFF
+```
+
+#### SYStem:TELNET:AUTH?
+Display whether Telnet server authentication is enabled or not.
+
+Example:
+```
+SYS:TELNET:AUTH?
+ON
+```
+
+
+#### SYStem:TELNET:PORT
+Set TCP port where Telnet server will listen on.
+If this setting is not set then default port will be used.
+
+Default: 23 (default Telnet port)
+
+Example:
+```
+SYS:TELNET:PORT 8000
+```
+
+#### SYStem:TELNET:PORT?
+Display currently configured port for Telnet server.
+
+(if port is set to 0, then default Telnet port will be used)
+
+Example:
+```
+SYS:TELNET:PORT?
+8000
+```
+
+
+#### SYStem:TELNET:RAWmode
+Configure Telnet server mode. By default Telnet server uses Telnet protocol, but
+setting this option causes Telnet protocol to be disabled. And server uses "raw TCP" mode.
+
+Default: OFF
+
+Example:
+```
+SYS:TELNET:RAW ON
+```
+
+#### SYStem:TELNET:RAWmode?
+Display if "raw TCP" mode is enabled or not.
+
+Example:
+```
+SYS:TELNET:RAW?
+OFF
+```
+
+#### SYStem:TELNET:USER
+Configure username that is allowed to login to this server using Telnet.
+
+Default: <none>
+
+Example:
+```
+SYS:TELNET:USER admin
+```
+
+#### SYStem:TELNET:USER?
+Display currently configured telnet user (login) name.
+
+Example:
+```
+SYS:TELNET:USER?
+admin
+```
+
+
+#### SYStem:TELNET:PASSword
+Configure password for the telnet user. Password is hashed using SHA-512 Crypt algorithm.
+
+Default: <none>
+
+Example:
+```
+SYS:TELNET:PASS mypassword
+```
+
+#### SYStem:TELNET:PASSword?
+Display currently configured telnet user password hash.
+
+Example:
+```
+SYS:TELNET:PASS?
+$6$QvD5AkWSuydeH/EB$UsYA0cymsCRSse78fN4bMb5q0hM5B7YUNSFd3zJfMDbTG7DOH8iuMufVjsvqBOxR9YCJYSHno4CFeOhLtTGLx.
 ```
 
 
