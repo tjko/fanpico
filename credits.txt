@@ -36,3 +36,7 @@ libb64
 Created by Chris Venter
 https://github.com/libb64/libb64
 
+pico-telnetd
+Copryight (c) 2024 Timo Kokkonen (tjko@iki.fi)
+https://github.com/tjko/pico-telnetd
+

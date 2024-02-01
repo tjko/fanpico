@@ -8,7 +8,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.6.0
+  VERSION 1.6.1
   LANGUAGES C CXX ASM
   )
 set(CMAKE_C_STANDARD 11)
@@ -72,6 +72,8 @@ target_sources(libb64 INTERFACE
   libs/libb64/src/cencode.c
   )
 
+# pico-telnetd
+add_subdirectory(libs/pico-telnetd)
 
 # fanpico firmware
 
@@ -156,12 +158,14 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
     src/syslog.c
     src/httpd.c
     src/mqtt.c
+    src/telnetd.c
     )
   target_link_libraries(fanpico PRIVATE
     pico_cyw43_arch_lwip_threadsafe_background
     pico_lwip_sntp
     pico_lwip_http
     pico_lwip_mqtt
+    pico-telnetd-lib
     )
   if (TLS_SUPPORT)
     target_link_libraries(fanpico PRIVATE

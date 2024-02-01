@@ -510,6 +510,12 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->mqtt_temp_interval = DEFAULT_MQTT_TEMP_INTERVAL;
 	cfg->mqtt_rpm_interval = DEFAULT_MQTT_RPM_INTERVAL;
 	cfg->mqtt_duty_interval = DEFAULT_MQTT_DUTY_INTERVAL;
+	cfg->telnet_active = false;
+	cfg->telnet_auth = true;
+	cfg->telnet_raw_mode = false;
+	cfg->telnet_port = 0;
+	cfg->telnet_user[0] = 0;
+	cfg->telnet_pwhash[0] = 0;
 #endif
 
 	mutex_exit(config_mutex);
@@ -652,6 +658,18 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	if (strlen(cfg->mqtt_mbfan_duty_topic) > 0)
 		cJSON_AddItemToObject(config, "mqtt_mbfan_duty_topic",
 				cJSON_CreateString(cfg->mqtt_mbfan_duty_topic));
+	if (cfg->telnet_active)
+		cJSON_AddItemToObject(config, "telnet_active", cJSON_CreateNumber(cfg->telnet_active));
+	if (cfg->telnet_auth != true)
+		cJSON_AddItemToObject(config, "telnet_auth", cJSON_CreateNumber(cfg->telnet_auth));
+	if (cfg->telnet_raw_mode)
+		cJSON_AddItemToObject(config, "telnet_raw_mode", cJSON_CreateNumber(cfg->telnet_raw_mode));
+	if (cfg->telnet_port > 0)
+		cJSON_AddItemToObject(config, "telnet_port", cJSON_CreateNumber(cfg->telnet_port));
+	if (strlen(cfg->telnet_user) > 0)
+		cJSON_AddItemToObject(config, "telnet_user", cJSON_CreateString(cfg->telnet_user));
+	if (strlen(cfg->telnet_pwhash) > 0)
+		cJSON_AddItemToObject(config, "telnet_pwhash", cJSON_CreateString(cfg->telnet_pwhash));
 #endif
 
 	/* Fan outputs */
@@ -955,6 +973,26 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "mqtt_mbfan_duty_topic"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->mqtt_mbfan_duty_topic, val, sizeof(cfg->mqtt_mbfan_duty_topic));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "telnet_active"))) {
+		cfg->telnet_active = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "telnet_auth"))) {
+		cfg->telnet_auth = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "telnet_raw_mode"))) {
+		cfg->telnet_raw_mode = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "telnet_port"))) {
+		cfg->telnet_port = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "telnet_user"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->telnet_user, val, sizeof(cfg->telnet_user));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "telnet_pwhash"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->telnet_pwhash, val, sizeof(cfg->telnet_pwhash));
 	}
 #endif
 

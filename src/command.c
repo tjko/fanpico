@@ -40,6 +40,7 @@
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
 #include "lwip/stats.h"
+#include "pico_telnetd/util.h"
 #endif
 
 
@@ -75,12 +76,20 @@ extern const char fanpico_credits_text[];
 
 /* Helper functions for commands */
 
+typedef int (*validate_str_func_t)(const char *args);
+
 int string_setting(const char *cmd, const char *args, int query, char *prev_cmd,
-	char *var, size_t var_len, const char *name)
+		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
 {
 	if (query) {
 		printf("%s\n", var);
 	} else {
+		if (validate_func) {
+			if (!validate_func(args)) {
+				log_msg(LOG_WARNING, "%s invalid argument: '%s'", name, args);
+				return 2;
+			}
+		}
 		if (strcmp(var, args)) {
 			log_msg(LOG_NOTICE, "%s change '%s' --> '%s'", name, var, args);
 			strncopy(var, args, var_len);
@@ -377,26 +386,26 @@ int cmd_echo(const char *cmd, const char *args, int query, char *prev_cmd)
 int cmd_display_type(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->display_type, sizeof(conf->display_type), "Display Type");
+			conf->display_type, sizeof(conf->display_type), "Display Type", NULL);
 }
 
 int cmd_display_theme(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->display_theme, sizeof(conf->display_theme), "Display Theme");
+			conf->display_theme, sizeof(conf->display_theme), "Display Theme", NULL);
 }
 
 int cmd_display_logo(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->display_logo, sizeof(conf->display_logo), "Display Logo");
+			conf->display_logo, sizeof(conf->display_logo), "Display Logo", NULL);
 }
 
 int cmd_display_layout_r(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->display_layout_r, sizeof(conf->display_layout_r),
-			"Display Layout (Right)");
+			"Display Layout (Right)", NULL);
 }
 
 int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1779,7 +1788,7 @@ int cmd_wifi_mac(const char *cmd, const char *args, int query, char *prev_cmd)
 int cmd_wifi_ssid(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->wifi_ssid, sizeof(conf->wifi_ssid), "WiFi SSID");
+			conf->wifi_ssid, sizeof(conf->wifi_ssid), "WiFi SSID", NULL);
 }
 
 int cmd_wifi_status(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1820,7 +1829,7 @@ int cmd_wifi_country(const char *cmd, const char *args, int query, char *prev_cm
 int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->wifi_passwd, sizeof(conf->wifi_passwd), "WiFi Password");
+			conf->wifi_passwd, sizeof(conf->wifi_passwd), "WiFi Password", NULL);
 }
 
 int cmd_wifi_hostname(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1864,7 +1873,7 @@ int cmd_wifi_mode(const char *cmd, const char *args, int query, char *prev_cmd)
 int cmd_mqtt_server(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->mqtt_server, sizeof(conf->mqtt_server), "MQTT Server");
+			conf->mqtt_server, sizeof(conf->mqtt_server), "MQTT Server", NULL);
 }
 
 int cmd_mqtt_port(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1876,13 +1885,13 @@ int cmd_mqtt_port(const char *cmd, const char *args, int query, char *prev_cmd)
 int cmd_mqtt_user(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->mqtt_user, sizeof(conf->mqtt_user), "MQTT User");
+			conf->mqtt_user, sizeof(conf->mqtt_user), "MQTT User", NULL);
 }
 
 int cmd_mqtt_pass(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->mqtt_pass, sizeof(conf->mqtt_pass), "MQTT Password");
+			conf->mqtt_pass, sizeof(conf->mqtt_pass), "MQTT Password", NULL);
 }
 
 int cmd_mqtt_status_interval(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1918,54 +1927,57 @@ int cmd_mqtt_allow_scpi(const char *cmd, const char *args, int query, char *prev
 int cmd_mqtt_status_topic(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->mqtt_status_topic, sizeof(conf->mqtt_status_topic), "MQTT Status Topic");
+			conf->mqtt_status_topic, sizeof(conf->mqtt_status_topic),
+			"MQTT Status Topic", NULL);
 }
 
 int cmd_mqtt_cmd_topic(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->mqtt_cmd_topic, sizeof(conf->mqtt_cmd_topic), "MQTT Command Topic");
+			conf->mqtt_cmd_topic, sizeof(conf->mqtt_cmd_topic),
+			"MQTT Command Topic", NULL);
 }
 
 int cmd_mqtt_resp_topic(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->mqtt_resp_topic, sizeof(conf->mqtt_resp_topic), "MQTT Response Topic");
+			conf->mqtt_resp_topic,
+			sizeof(conf->mqtt_resp_topic), "MQTT Response Topic", NULL);
 }
 
 int cmd_mqtt_temp_topic(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_temp_topic,
-			sizeof(conf->mqtt_temp_topic), "MQTT Temperature Topic");
+			sizeof(conf->mqtt_temp_topic), "MQTT Temperature Topic", NULL);
 }
 
 int cmd_mqtt_fan_rpm_topic(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_fan_rpm_topic,
-			sizeof(conf->mqtt_fan_rpm_topic), "MQTT Fan RPM Topic");
+			sizeof(conf->mqtt_fan_rpm_topic), "MQTT Fan RPM Topic", NULL);
 }
 
 int cmd_mqtt_fan_duty_topic(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_fan_duty_topic,
-			sizeof(conf->mqtt_fan_duty_topic), "MQTT Fan PWM Topic");
+			sizeof(conf->mqtt_fan_duty_topic), "MQTT Fan PWM Topic", NULL);
 }
 
 int cmd_mqtt_mbfan_rpm_topic(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_mbfan_rpm_topic,
-			sizeof(conf->mqtt_mbfan_rpm_topic), "MQTT MBFan RPM Topic");
+			sizeof(conf->mqtt_mbfan_rpm_topic), "MQTT MBFan RPM Topic", NULL);
 }
 
 int cmd_mqtt_mbfan_duty_topic(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_mbfan_duty_topic,
-			sizeof(conf->mqtt_mbfan_duty_topic), "MQTT MBFan PWM Topic");
+			sizeof(conf->mqtt_mbfan_duty_topic), "MQTT MBFan PWM Topic", NULL);
 }
 
 int cmd_mqtt_mask_temp(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -2165,6 +2177,54 @@ int cmd_tls_cert(const char *cmd, const char *args, int query, char *prev_cmd)
 	return res;
 }
 #endif /* TLS_SUPPORT */
+
+int cmd_telnet_auth(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->telnet_auth, "Telnet Server Authentication");
+}
+
+int cmd_telnet_rawmode(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->telnet_raw_mode, "Telnet Server Raw Mode");
+}
+
+int cmd_telnet_server(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->telnet_active, "Telnet Server");
+}
+
+int cmd_telnet_port(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->telnet_port, 0, 65535, "Telnet Port");
+}
+
+int cmd_telnet_user(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->telnet_user, sizeof(conf->telnet_user),
+			"Telnet Username", NULL);
+}
+
+int cmd_telnet_pass(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", cfg->telnet_pwhash);
+		return 0;
+	}
+
+	if (strlen(args) > 0) {
+		strncopy(conf->telnet_pwhash, generate_sha512crypt_pwhash(args),
+			sizeof(conf->telnet_pwhash));
+	} else {
+		conf->telnet_pwhash[0] = 0;
+		log_msg(LOG_NOTICE, "Telnet password removed.");
+	}
+	return 0;
+}
 #endif /* WIFI_SUPPOERT */
 
 int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -2192,7 +2252,7 @@ int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 int cmd_timezone(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->timezone, sizeof(conf->timezone), "Timezone");
+			conf->timezone, sizeof(conf->timezone), "Timezone", NULL);
 }
 
 int cmd_uptime(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -2230,7 +2290,7 @@ int cmd_err(const char *cmd, const char *args, int query, char *prev_cmd)
 int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
-			conf->name, sizeof(conf->name), "System Name");
+			conf->name, sizeof(conf->name), "System Name", NULL);
 }
 
 
@@ -2418,6 +2478,18 @@ const struct cmd_t tls_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t telnet_commands[] = {
+#ifdef WIFI_SUPPORT
+	{ "AUTH",      4, NULL,              cmd_telnet_auth },
+	{ "PORT",      4, NULL,              cmd_telnet_port },
+	{ "RAWmode",   3, NULL,              cmd_telnet_rawmode },
+	{ "SERVer",    4, NULL,              cmd_telnet_server },
+	{ "PASSword",  4, NULL,              cmd_telnet_pass },
+	{ "USER",      4, NULL,              cmd_telnet_user },
+#endif
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
 	{ "DISPlay",   4, display_commands,  cmd_display_type },
@@ -2438,6 +2510,7 @@ const struct cmd_t system_commands[] = {
 	{ "SERIAL",    6, NULL,              cmd_serial },
 	{ "SPI",       3, NULL,              cmd_spi },
 	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
+	{ "TELNET",    6, telnet_commands,   NULL },
 	{ "TIMEZONE",  8, NULL,              cmd_timezone },
 	{ "TIME",      4, NULL,              cmd_time },
 	{ "TLS",       3, tls_commands,      NULL },

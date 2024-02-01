@@ -206,6 +206,12 @@ void wifi_init()
 #endif
 	http_set_ssi_handler(fanpico_ssi_handler, NULL, 0);
 
+	/* Enable Telnet server */
+	if (cfg->telnet_active) {
+		log_msg(LOG_NOTICE, "Telnet Server enabled");
+		telnetserver_init();
+	}
+
 	cyw43_arch_lwip_end();
 
 	ip_addr_copy(syslog_server, cfg->syslog_server);
