@@ -8,7 +8,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.6.0
+  VERSION 1.6.1
   LANGUAGES C CXX ASM
   )
 set(CMAKE_C_STANDARD 11)
