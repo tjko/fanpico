@@ -42,30 +42,31 @@ static const char *telnet_banner = "\r\n"
 	" |_|  \\__,_|_| |_|_|   |_|\\___\\___/ \r\n"
 	"                                     \r\n";
 
-static user_pwhash_entry_t users[] = {
+static user_pwhash_entry_t telnet_users[] = {
 	{ NULL, NULL },
 	{ NULL, NULL }
 };
 
+static tcp_server_t *telnet_srv = NULL;
+
 void telnetserver_init()
 {
-	tcp_server_t *srv = telnet_server_init(4096, 10240);
-
-	if (!srv)
+	telnet_srv = telnet_server_init(4096, 10240);
+	if (!telnet_srv)
 		return;
 
-	users[0].login = cfg->telnet_user;
-	users[0].hash = cfg->telnet_pwhash;
-	srv->mode = (cfg->telnet_raw_mode ? RAW_MODE : TELNET_MODE);
+	telnet_users[0].login = cfg->telnet_user;
+	telnet_users[0].hash = cfg->telnet_pwhash;
+	telnet_srv->mode = (cfg->telnet_raw_mode ? RAW_MODE : TELNET_MODE);
 	if (cfg->telnet_port > 0)
-		srv->port = cfg->telnet_port;
+		telnet_srv->port = cfg->telnet_port;
 	if (cfg->telnet_auth) {
-		srv->auth_cb = sha512crypt_auth_cb;
-		srv->auth_cb_param = (void*)users;
+		telnet_srv->auth_cb = sha512crypt_auth_cb;
+		telnet_srv->auth_cb_param = (void*)telnet_users;
 	}
-	srv->log_cb = log_msg;
-	srv->banner = telnet_banner;
+	telnet_srv->log_cb = log_msg;
+	telnet_srv->banner = telnet_banner;
 
-	telnet_server_start(srv, true);
+	telnet_server_start(telnet_srv, true);
 }
 
