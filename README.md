@@ -1,3 +1,5 @@
+<a href="https://certification.oshwa.org/us002599.html" title="Open Source Hardware Association Certificate"><img align="right" width="20%" src="images/fanpico-oshw.svg" alt="[OSHW] US002599 | Certified open source hardware | oshwa.org/cert"></a>
+
 # Fanpico: Smart PWM (PC) Fan Controller
 [![CI](https://github.com/tjko/fanpico/actions/workflows/cmake.yml/badge.svg)](https://github.com/tjko/fanpico/actions/workflows/cmake.yml)
 [![CodeQL](https://github.com/tjko/fanpico/actions/workflows/codeql.yml/badge.svg)](https://github.com/tjko/fanpico/actions/workflows/codeql.yml)
