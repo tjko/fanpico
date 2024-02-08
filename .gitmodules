@@ -16,3 +16,6 @@
 [submodule "libs/pico-telnetd"]
 	path = libs/pico-telnetd
 	url = https://github.com/tjko/pico-telnetd.git
+[submodule "libs/pico-lfs"]
+	path = libs/pico-lfs
+	url = https://github.com/tjko/pico-lfs.git

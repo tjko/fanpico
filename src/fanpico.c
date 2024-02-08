@@ -133,8 +133,8 @@ void setup()
 		sleep_ms(50);
 	}
 
-
-	read_config(false);
+	lfs_setup();
+	read_config();
 
 #if TTL_SERIAL
 	/* Initialize serial console if configured... */

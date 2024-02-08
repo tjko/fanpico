@@ -15,9 +15,9 @@ cJSON
 Copyright (c) 2009-2017 Dave Gamble and cJSON contributors
 https://github.com/DaveGamble/cJSON
 
-pico-littlefs
-Copyright (c) 2021, lurk101
-https://github.com/lurk101/pico-littlefs
+pico-lfs
+Copyright (c) 2024 Timo Kokkonen (tjko@iki.fi)
+https://github.com/tjko/pico-lfs
 
 The little filesystem
 Copyright (c) 2017, Arm Limited. All rights reserved.

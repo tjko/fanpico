@@ -23,7 +23,6 @@
 #include <string.h>
 #include <malloc.h>
 #include "pico/stdlib.h"
-#include "pico/multicore.h"
 #include "fanpico.h"
 
 #if WIFI_SUPPORT
@@ -91,10 +90,10 @@ struct altcp_tls_config* tls_server_config()
 	int res;
 
 	log_msg(LOG_DEBUG, "tls_server_config(): started");
-	res = flash_read_file(&cert, &cert_size, "cert.pem", false);
+	res = flash_read_file(&cert, &cert_size, "cert.pem");
 	if (res == 0) {
 		//printf("cert:\n%s\n", cert);
-		res = flash_read_file(&key, &key_size, "key.pem", false);
+		res = flash_read_file(&key, &key_size, "key.pem");
 		if (res == 0) {
 			//printf("key:\n%s\n", key);
 			c = altcp_tls_create_config_server_privkey_cert((const u8_t*)key, key_size,

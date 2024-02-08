@@ -1,7 +1,7 @@
 # CMakeLists.txt for fanpico
 #
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.18)
 
 # Include Pico-SDK ($PICO_SDK_PATH must be set)
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
@@ -41,11 +41,12 @@ pico_sdk_init()
 
 # External libaries
 
-# littlefs-lib
-add_subdirectory(libs/littlefs-lib)
+
+# pico-lfs
+add_subdirectory(libs/pico-lfs)
 # prevent warnings from littlefs...
 set_source_files_properties(
-  libs/littlefs-lib/lfs.c
+  libs/pico-lfs/libs/littlefs/lfs.c
   PROPERTIES
   COMPILE_OPTIONS "-Wno-unused-function"
   )
@@ -146,7 +147,7 @@ target_link_libraries(fanpico PRIVATE
   hardware_adc
   hardware_i2c
   hardware_rtc
-  littlefs-lib
+  pico-lfs
   cJSON
   ss_oled-lib
   bb_spi_lcd-lib
@@ -194,6 +195,13 @@ target_compile_definitions(fanpico PRIVATE PICO_STACK_SIZE=0x2000)
 target_compile_definitions(fanpico PRIVATE PICO_CORE1_STACK_SIZE=0x1000)
 target_compile_definitions(fanpico PRIVATE PICO_USE_STACK_GUARDS=1)
 target_compile_definitions(fanpico PRIVATE PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
+
+target_compile_definitions(fanpico PRIVATE
+  LFS_THREADSAFE=1
+  LFS_NO_DEBUG=1
+#  LFS_YES_TRACE=1
+  )
+
 
 pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom.ld)
 
