@@ -48,7 +48,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         path: main
-        submodules: true
+        submodules: recursive
     
     - name: Configure CMake
       run: cmake -S main -B ${{github.workspace}}/main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=${{matrix.pico_board}} -DFANPICO_BOARD=${{matrix.fanpico_board}}
