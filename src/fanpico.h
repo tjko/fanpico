@@ -299,7 +299,7 @@ int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id);
 int str2tacho_source(const char *s);
 const char* tacho_source2str(enum tacho_source_types source);
 int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id);
-void read_config(bool multicore);
+void read_config();
 void save_config();
 void delete_config();
 void print_config();
@@ -323,11 +323,13 @@ void oled_display_status(const struct fanpico_state *state, const struct fanpico
 void oled_display_message(int rows, const char **text_lines);
 
 /* flash.h */
-int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int init_flash);
+void lfs_setup();
+int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename);
 int flash_write_file(const char *buf, uint32_t size, const char *filename);
 int flash_delete_file(const char *filename);
 int flash_get_fs_info(size_t *size, size_t *free, size_t *files,
 		size_t *directories, size_t *filesizetotal);
+void print_rp2040_flashinfo();
 
 
 /* network.c */
@@ -439,7 +441,6 @@ int str_to_bitmask(const char *str, uint16_t len, uint32_t *mask, uint8_t base);
 /* util_rp2040.c */
 uint32_t get_stack_pointer();
 uint32_t get_stack_free();
-void print_rp2040_flashinfo();
 void print_rp2040_meminfo();
 void print_irqinfo();
 void watchdog_disable();

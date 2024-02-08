@@ -21,11 +21,10 @@
 
 #include <stdio.h>
 #include <malloc.h>
+#include <string.h>
 #include "pico/stdlib.h"
-#include "pico/multicore.h"
 #include "pico/mutex.h"
 #include "cJSON.h"
-#include "pico_hal.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
 #endif
@@ -1110,7 +1109,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 }
 
 
-void read_config(bool multicore)
+void read_config()
 {
 	const char *default_config = fanpico_default_config;
 	uint32_t default_config_size = strlen(default_config);
@@ -1122,10 +1121,7 @@ void read_config(bool multicore)
 
 	log_msg(LOG_INFO, "Reading configuration...");
 
-	if (multicore)
-		multicore_lockout_start_blocking();
-
-	res = flash_read_file(&buf, &file_size, "fanpico.cfg", true);
+	res = flash_read_file(&buf, &file_size, "fanpico.cfg");
 	if (res == 0 && buf != NULL) {
 		/* parse saved config... */
 		config = cJSON_Parse(buf);
@@ -1136,9 +1132,6 @@ void read_config(bool multicore)
 		}
 		free(buf);
 	}
-
-	if (multicore)
-		multicore_lockout_end_blocking();
 
 	if (!config) {
 		log_msg(LOG_NOTICE, "Using default configuration...");
@@ -1180,9 +1173,7 @@ void save_config()
 		log_msg(LOG_ERR, "Failed to generate JSON output");
 	} else {
 		uint32_t config_size = strlen(str) + 1;
-		multicore_lockout_start_blocking();
 		flash_write_file(str, config_size, "fanpico.cfg");
-		multicore_lockout_end_blocking();
 		free(str);
 	}
 
@@ -1216,10 +1207,7 @@ void delete_config()
 {
 	int res;
 
-	multicore_lockout_start_blocking();
 	res = flash_delete_file("fanpico.cfg");
-	multicore_lockout_end_blocking();
-
 	if (res) {
 		log_msg(LOG_ERR, "Failed to delete configuration.");
 	}

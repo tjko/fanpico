@@ -31,7 +31,6 @@
 #include "pico/bootrom.h"
 #include "pico/util/datetime.h"
 #include "pico/rand.h"
-#include "pico/multicore.h"
 #include "hardware/watchdog.h"
 #include "hardware/rtc.h"
 #include "cJSON.h"
@@ -2031,9 +2030,7 @@ int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
 	int res = 0;
 
 	if (query) {
-		multicore_lockout_start_blocking();
-		res = flash_read_file(&buf, &file_size, "key.pem", false);
-		multicore_lockout_end_blocking();
+		res = flash_read_file(&buf, &file_size, "key.pem");
 		if (res == 0 && buf != NULL) {
 			printf("%s\n", buf);
 			free(buf);
@@ -2054,9 +2051,7 @@ int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
 	watchdog_disable();
 #endif
 	if (!strncasecmp(args, "DELETE", 7)) {
-		multicore_lockout_start_blocking();
 		res = flash_delete_file("key.pem");
-		multicore_lockout_end_blocking();
 		if (res == -2) {
 			printf("No private key present.\n");
 			res = 0;
@@ -2083,9 +2078,7 @@ int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
 			}
 		}
 		if (res == 0) {
-			multicore_lockout_start_blocking();
 			res = flash_write_file(buf, strlen(buf) + 1, "key.pem");
-			multicore_lockout_end_blocking();
 			if (res) {
 				printf("Failed to save private key.\n");
 				res = 2;
@@ -2112,9 +2105,7 @@ int cmd_tls_cert(const char *cmd, const char *args, int query, char *prev_cmd)
 	int res = 0;
 
 	if (query) {
-		multicore_lockout_start_blocking();
-		res = flash_read_file(&buf, &file_size, "cert.pem", false);
-		multicore_lockout_end_blocking();
+		res = flash_read_file(&buf, &file_size, "cert.pem");
 		if (res == 0 && buf != NULL) {
 			printf("%s\n", buf);
 			free(buf);
@@ -2135,9 +2126,7 @@ int cmd_tls_cert(const char *cmd, const char *args, int query, char *prev_cmd)
 	watchdog_disable();
 #endif
 	if (!strncasecmp(args, "DELETE", 7)) {
-		multicore_lockout_start_blocking();
 		res = flash_delete_file("cert.pem");
-		multicore_lockout_end_blocking();
 		if (res == -2) {
 			printf("No certificate present.\n");
 			res = 0;
@@ -2156,9 +2145,7 @@ int cmd_tls_cert(const char *cmd, const char *args, int query, char *prev_cmd)
 			printf("Invalid private key!\n");
 			res = 2;
 		} else {
-			multicore_lockout_start_blocking();
 			res = flash_write_file(buf, strlen(buf) + 1, "cert.pem");
-			multicore_lockout_end_blocking();
 			if (res) {
 				printf("Failed to save certificate.\n");
 				res = 2;

@@ -22,18 +22,48 @@
 #include <stdio.h>
 #include <malloc.h>
 #include "pico/stdlib.h"
-#include "pico/multicore.h"
 #include "pico/mutex.h"
-#include "pico_hal.h"
+#include "pico_lfs.h"
 
 #include "fanpico.h"
 
-extern struct lfs_config pico_cfg;
+extern char __flash_binary_start;
+extern char __flash_binary_end;
 
 
-int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int init_flash)
+#define FS_SIZE  (256*1024)
+
+static struct lfs_config *lfs_cfg;
+static lfs_t lfs;
+static lfs_file_t lfs_file;
+
+void lfs_setup()
 {
-	int res, fd;
+	int err;
+
+	//printf("lfs_setup\n");
+	lfs_cfg = pico_lfs_init(PICO_FLASH_SIZE_BYTES - FS_SIZE, FS_SIZE);
+	if (!lfs_cfg)
+		panic("lfs_setup: not enough memory!");
+
+	/* Check if we need to initialize/format filesystem... */
+	err = lfs_mount(&lfs, lfs_cfg);
+	if (err != LFS_ERR_OK) {
+		log_msg(LOG_NOTICE, "Trying to initialize a new filesystem...");
+		if ((err = lfs_format(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+			log_msg(LOG_ERR, "Unable to initialize flash filesystem: %d", err);
+			return;
+		}
+		log_msg(LOG_NOTICE, "Filesystem successfully initialized: %d", err);
+	} else {
+		lfs_unmount(&lfs);
+	}
+}
+
+
+int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename)
+{
+	int res;
 
 	if (!bufptr || !sizeptr || !filename)
 		return -42;
@@ -42,17 +72,8 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int 
 	*sizeptr = 0;
 
 	/* Mount flash filesystem... */
-	if ((res = pico_mount(false)) < 0) {
-		log_msg(LOG_NOTICE, "pico_mount() failed: %d (%s)", res, pico_errmsg(res));
-		if (init_flash) {
-			log_msg(LOG_NOTICE, "Trying to initialize a new filesystem...");
-			if ((res = pico_mount(true)) < 0) {
-				log_msg(LOG_ERR, "Unable to initialize flash filesystem!");
-				return -2;
-			}
-			log_msg(LOG_NOTICE, "Filesystem successfully initialized. (%d)", res);
-			pico_unmount();
-		}
+	if ((res = lfs_mount(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+		log_msg(LOG_NOTICE, "lfs_mount() failed: %d", res);
 		return -1;
 	}
 	log_msg(LOG_DEBUG, "Filesystem mounted OK");
@@ -60,14 +81,13 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int 
 	res = 0;
 
 	/* Open file */
-	if ((fd = pico_open(filename, LFS_O_RDONLY)) < 0) {
-		log_msg(LOG_DEBUG, "Cannot open file \"%s\": %d (%s)",
-			filename, fd, pico_errmsg(fd));
+	if ((res = lfs_file_open(&lfs, &lfs_file, filename, LFS_O_RDONLY)) != LFS_ERR_OK) {
+		log_msg(LOG_DEBUG, "Cannot open file \"%s\": %d", filename, res);
 		res = -3;
 	} else {
 		/* Check file size */
-		uint32_t file_size = pico_size(fd);
-		log_msg(LOG_DEBUG, "File \"%s\" opened ok: %li bytes", filename, file_size);
+		uint32_t file_size = lfs_file_size(&lfs, &lfs_file);
+		log_msg(LOG_DEBUG, "File \"%s\" opened ok: %u bytes", filename, file_size);
 		if (file_size > 0) {
 			*bufptr = malloc(file_size);
 			if (!*bufptr) {
@@ -77,7 +97,7 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int 
 			} else {
 				/* Read file... */
 				log_msg(LOG_DEBUG, "Reading file \"%s\"...", filename);
-				*sizeptr = pico_read(fd, *bufptr, file_size);
+				*sizeptr = lfs_file_read(&lfs, &lfs_file, *bufptr, file_size);
 				if (*sizeptr < file_size) {
 					log_msg(LOG_ERR, "Error reading file \"%s\": %lu",
 						filename, *sizeptr);
@@ -85,9 +105,9 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int 
 				}
 			}
 		}
-		pico_close(fd);
+		lfs_file_close(&lfs, &lfs_file);
 	}
-	pico_unmount();
+	lfs_unmount(&lfs);
 
 	return res;
 }
@@ -95,25 +115,24 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename, int 
 
 int flash_write_file(const char *buf, uint32_t size, const char *filename)
 {
-	int res, fd;
+	int res;
 
 	if (!buf || !filename)
 		return -42;
 
 	/* Mount flash filesystem... */
-	if ((res = pico_mount(false)) < 0) {
-		log_msg(LOG_ERR, "pico_mount() failed: %d (%s)", res, pico_errmsg(res));
+	if ((res = lfs_mount(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "lfs_mount() failed: %d", res);
 		return -1;
 	}
 
 	/* Create file */
-	if ((fd = pico_open(filename, LFS_O_WRONLY | LFS_O_CREAT)) < 0) {
-		log_msg(LOG_ERR, "Failed to create file \"%s\": %d (%s)",
-			filename, fd, pico_errmsg(fd));
+	if ((res = lfs_file_open(&lfs, &lfs_file, filename, LFS_O_WRONLY | LFS_O_CREAT)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "Failed to create file \"%s\": %d", filename, res);
 		res = -2;
 	} else {
 		/* Write to file */
-		lfs_size_t wrote = pico_write(fd, buf, size);
+		lfs_size_t wrote = lfs_file_write(&lfs, &lfs_file, buf, size);
 		if (wrote < size) {
 			log_msg(LOG_ERR, "Failed to write to file \"%s\": %li",
 				filename, wrote);
@@ -123,11 +142,11 @@ int flash_write_file(const char *buf, uint32_t size, const char *filename)
 				filename, wrote);
 			res = 0;
 		}
-		pico_close(fd);
+		lfs_file_close(&lfs, &lfs_file);
 	}
 
 	/* Unmount flash filesystem */
-	pico_unmount();
+	lfs_unmount(&lfs);
 
 	return res;
 }
@@ -143,33 +162,31 @@ int flash_delete_file(const char *filename)
 		return -42;
 
 	/* Mount flash filesystem... */
-	if ((res = pico_mount(false)) < 0) {
-		log_msg(LOG_ERR, "pico_mount() failed: %d (%s)", res, pico_errmsg(res));
+	if ((res = lfs_mount(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "lfs_mount() failed: %d", res);
 		return -1;
 	}
 
 	/* Check if file exists... */
-	if ((res = pico_stat(filename, &stat)) < 0) {
-		log_msg(LOG_ERR, "File \"%s\" not found: %d (%s)",
-			filename, res, pico_errmsg(res));
+	if ((res = lfs_stat(&lfs, filename, &stat)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "File \"%s\" not found: %d", filename, res);
 		ret = -2;
 	} else {
 		/* Remove configuration file...*/
 		log_msg(LOG_INFO, "Removing file \"%s\" (%lu bytes)",
 			filename, stat.size);
-		if ((res = pico_remove(filename)) < 0) {
-			log_msg(LOG_ERR, "Failed to remove file \"%s\": %d (%s)",
-				filename, res, pico_errmsg(res));
+		if ((res = lfs_remove(&lfs, filename)) != LFS_ERR_OK) {
+			log_msg(LOG_ERR, "Failed to remove file \"%s\": %d", filename, res);
 			ret = -3;
 		}
 	}
-	pico_unmount();
+	lfs_unmount(&lfs);
 
 	return ret;
 }
 
 
-int littlefs_scan_dir(const char *path, size_t *files, size_t *dirs, size_t *used)
+static int littlefs_scan_dir(const char *path, size_t *files, size_t *dirs, size_t *used)
 {
 	lfs_dir_t dir;
 	struct lfs_info info;
@@ -192,10 +209,10 @@ int littlefs_scan_dir(const char *path, size_t *files, size_t *dirs, size_t *use
 	}
 
 	log_msg(LOG_DEBUG, "littlefs_scan_dir(%s)", path);
-	if ((res = lfs_dir_open(&dir, path)) < 0)
+	if ((res = lfs_dir_open(&lfs, &dir, path)) != LFS_ERR_OK)
 		return res;
 
-	while ((res = lfs_dir_read(&dir, &info) > 0)) {
+	while ((res = lfs_dir_read(&lfs, &dir, &info) > 0)) {
 		if (info.type == LFS_TYPE_REG) {
 			f_count++;
 			total += info.size;
@@ -229,6 +246,7 @@ int littlefs_scan_dir(const char *path, size_t *files, size_t *dirs, size_t *use
 				path, separator, info.name, info.type, info.size);
 		}
 	}
+	lfs_dir_close(&lfs, &dir);
 
 	if (files)
 		*files += f_count;
@@ -256,14 +274,14 @@ int flash_get_fs_info(size_t *size, size_t *free, size_t *files,
 		return -1;
 
 	/* Mount flash filesystem... */
-	if ((res = pico_mount(false)) < 0) {
-		log_msg(LOG_ERR, "pico_mount() failed: %d (%s)", res, pico_errmsg(res));
+	if ((res = lfs_mount(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "lfs_mount() failed: %d", res);
 		return -2;
 	}
 
-	used_blocks = lfs_fs_size();
-	used = used_blocks * pico_cfg.block_size;
-	fs_size = pico_cfg.block_count * pico_cfg.block_size;
+	used_blocks = lfs_fs_size(&lfs);
+	used = used_blocks * lfs_cfg->block_size;
+	fs_size = lfs_cfg->block_count * lfs_cfg->block_size;
 
 	if ((res = littlefs_scan_dir("/", &fs_files, &fs_dirs, &fs_total)) < 0)
 		log_msg(LOG_ERR, "little_fs_scan_dir() failed: %d", res);
@@ -279,7 +297,22 @@ int flash_get_fs_info(size_t *size, size_t *free, size_t *files,
 	if (filesizetotal)
 		*filesizetotal = fs_total;
 
-	pico_unmount();
+	lfs_unmount(&lfs);
 
 	return 0;
 }
+
+
+void print_rp2040_flashinfo()
+{
+	size_t binary_size = &__flash_binary_end - &__flash_binary_start;
+	size_t fs_size = lfs_cfg->block_count * lfs_cfg->block_size;
+
+	printf("Flash memory size:                     %u\n", PICO_FLASH_SIZE_BYTES);
+	printf("Binary size:                           %u\n", binary_size);
+	printf("LittleFS size:                         %u\n", fs_size);
+	printf("Unused flash memory:                   %u\n",
+		PICO_FLASH_SIZE_BYTES - binary_size - fs_size);
+
+}
+
