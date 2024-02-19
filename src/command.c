@@ -1510,7 +1510,7 @@ int cmd_vsensor_name(const char *cmd, const char *args, int query, char *prev_cm
 int cmd_vsensor_source(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int sensor, val, i;
-	uint8_t vsmode, selected[SENSOR_MAX_COUNT];
+	uint8_t vsmode, selected[VSENSOR_SOURCE_MAX_COUNT];
 	float default_temp;
 	int timeout;
 	char *tok, *saveptr, *param, temp_str[32], tmp[8];
@@ -1529,7 +1529,7 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, char *prev_
 				conf->vsensors[sensor].default_temp,
 				conf->vsensors[sensor].timeout);
 		} else {
-			for(i = 0; i < SENSOR_COUNT; i++) {
+			for(i = 0; i < VSENSOR_SOURCE_MAX_COUNT; i++) {
 				if (conf->vsensors[sensor].sensors[i]) {
 					printf(",%d", conf->vsensors[sensor].sensors[i]);
 				}
@@ -1563,11 +1563,12 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, char *prev_
 				}
 			} else {
 				temp_str[0] = 0;
-				for(i = 0; i < SENSOR_MAX_COUNT; i++)
+				for(i = 0; i < VSENSOR_SOURCE_MAX_COUNT; i++)
 					selected[i] = 0;
 				while((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
-					if (count < SENSOR_MAX_COUNT && str_to_int(tok, &val, 10)) {
-						if (val >= 1 && val <= SENSOR_COUNT) {
+					if (count < VSENSOR_SOURCE_MAX_COUNT && str_to_int(tok, &val, 10)) {
+						if ((val >= 1 && val <= SENSOR_COUNT)
+							|| (val >= 101 && val <= 100 + VSENSOR_COUNT)) {
 							selected[count++] = val;
 							snprintf(tmp, sizeof(tmp), ",%d", val);
 							strncatenate(temp_str, tmp, sizeof(temp_str));

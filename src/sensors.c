@@ -143,8 +143,13 @@ double get_vsensor(uint8_t i, struct fanpico_config *config,
 		int count = 0;
 		t = 0.0;
 
-		for (int j = 0; j < SENSOR_COUNT && s->sensors[j]; j++) {
-			float val = state->temp[s->sensors[j] - 1];
+		for (int j = 0; j < VSENSOR_SOURCE_MAX_COUNT && s->sensors[j]; j++) {
+			float val;
+
+			if (s->sensors[j] > 100)
+				val = state->vtemp[s->sensors[j] - 101];
+			else
+				val = state->temp[s->sensors[j] - 1];
 			count++;
 
 			if (s->mode == VSMODE_MAX) {
