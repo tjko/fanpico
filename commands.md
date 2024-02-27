@@ -986,6 +986,10 @@ DELTA|Temperature delta between to source sensors|2|sensor_a, sensor_b
 Note, in "manual" mode if timeout_ms is set to zero, then sensor's temperature reading
 will never revert back to default value (if no updates are being received).
 
+Sensor numbering:
+ - SENSORS: 1, 2, ...
+ - VSENSORS: 101, 102, ...
+
 
 Defaults:
 
@@ -1003,14 +1007,14 @@ Example: Set VSENSOR1 to report temperature that is updated by external program.
 CONF:VSENSOR2:SOURCE manual,99,5
 ```
 
-Example: Set VSENSOR2 to follow report temperature delta between SENSOR1 and  SENSOR2.
+Example: Set VSENSOR2 to follow report temperature delta between SENSOR1 and SENSOR2.
 ```
 CONF:VSENSOR2:SOURCE delta,1,2
 ```
 
-Example: Set VSENSOR3 to report average temperature between SENSOR1 through SENSOR3.
+Example: Set VSENSOR3 to report average temperature between SENSOR1, SENSOR2, and VSENSOR1
 ```
-CONF:VSENSOR3:SOURCE avg,1,2,3
+CONF:VSENSOR3:SOURCE avg,1,2,101
 ```
 
 #### CONFigure:VSENSORx:SOUrce?

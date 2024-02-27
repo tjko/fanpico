@@ -40,6 +40,7 @@
 #define SENSOR_MAX_COUNT  3   /* Max number of sensor inputs on the board */
 #define VSENSOR_MAX_COUNT 8   /* Max number of virtual sensors */
 
+#define VSENSOR_SOURCE_MAX_COUNT 8
 #define VSENSOR_COUNT 8
 
 #define SENSOR_SERIES_RESISTANCE 10000.0
@@ -178,7 +179,7 @@ struct vsensor_input {
 	uint8_t mode;
 	float default_temp;
 	int32_t timeout;
-	uint8_t sensors[SENSOR_MAX_COUNT];
+	uint8_t sensors[VSENSOR_SOURCE_MAX_COUNT];
 	struct temp_map map;
 	enum signal_filter_types filter;
 	void *filter_ctx;
