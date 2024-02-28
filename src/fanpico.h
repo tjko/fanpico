@@ -427,6 +427,7 @@ struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
 time_t datetime_to_time(const datetime_t *datetime);
 const char *mac_address_str(const uint8_t *mac);
 int valid_wifi_country(const char *country);
+int valid_hostname(const char *name);
 int check_for_change(double oldval, double newval, double threshold);
 int64_t pow_i64(int64_t x, uint8_t y);
 double round_decimal(double val, unsigned int decimal);

@@ -145,6 +145,33 @@ int uint32_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 	return 1;
 }
 
+int uint8_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+		uint8_t *var, uint8_t min_val, uint8_t max_val, const char *name)
+{
+	uint8_t val;
+	int v;
+
+	if (query) {
+		printf("%u\n", *var);
+		return 0;
+	}
+
+	if (str_to_int(args, &v, 10)) {
+		val = v;
+		if (val >= min_val && val <= max_val) {
+			if (*var != val) {
+				log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
+				*var = val;
+			}
+		} else {
+			log_msg(LOG_WARNING, "Invalid %s value: %s", name, args);
+			return 2;
+		}
+		return 0;
+	}
+	return 1;
+}
+
 int bool_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 		bool *var, const char *name)
 {
@@ -1811,19 +1838,9 @@ int cmd_wifi_stats(const char *cmd, const char *args, int query, char *prev_cmd)
 
 int cmd_wifi_country(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->wifi_country);
-	} else {
-		if (valid_wifi_country(args)) {
-			log_msg(LOG_NOTICE, "Wi-Fi Country change '%s' --> '%s'",
-				conf->wifi_country, args);
-			strncopy(conf->wifi_country, args, sizeof(conf->wifi_country));
-		} else {
-			log_msg(LOG_WARNING, "Invalid Wi-Fi country: %s", args);
-			return 2;
-		}
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->wifi_country, sizeof(conf->wifi_country),
+			"WiFi Country", valid_wifi_country);
 }
 
 int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -1834,40 +1851,15 @@ int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_c
 
 int cmd_wifi_hostname(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	if (query) {
-		printf("%s\n", conf->hostname);
-	} else {
-		for (int i = 0; i < strlen(args); i++) {
-			if (!(isalpha((int)args[i]) || args[i] == '-')) {
-				return 1;
-			}
-		}
-		log_msg(LOG_NOTICE, "System hostname change '%s' --> '%s'", conf->hostname, args);
-		strncopy(conf->hostname, args, sizeof(conf->hostname));
-	}
-	return 0;
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->hostname, sizeof(conf->hostname),
+			"WiFi Hostname", valid_hostname);
 }
 
 int cmd_wifi_mode(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int val;
-
-	if (query) {
-		printf("%u\n", conf->wifi_mode);
-		return 0;
-	}
-
-	if (str_to_int(args, &val, 10)) {
-		if (val >= 0 && val <= 1) {
-			log_msg(LOG_NOTICE, "WiFi mode change %d --> %d", cfg->wifi_mode, val);
-			conf->wifi_mode = val;
-		} else {
-			log_msg(LOG_WARNING, "Invalid WiFi mode: %s", args);
-			return 2;
-		}
-		return 0;
-	}
-	return 1;
+	return uint8_setting(cmd, args, query, prev_cmd,
+			&conf->wifi_mode, 0, 1, "WiFi Mode");
 }
 
 int cmd_mqtt_server(const char *cmd, const char *args, int query, char *prev_cmd)

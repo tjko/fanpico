@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 #include <math.h>
 #include <wctype.h>
 #include <assert.h>
@@ -238,6 +239,21 @@ int valid_wifi_country(const char *country)
 		return 1;
 
 	return 0;
+}
+
+
+int valid_hostname(const char *name)
+{
+	if (!name)
+		return 0;
+
+	for (int i = 0; i < strlen(name); i++) {
+		if (!(isalnum((int)name[i]) || name[i] == '-')) {
+			return 0;
+		}
+	}
+
+	return 1;
 }
 
 
