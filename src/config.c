@@ -788,7 +788,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	cJSON *ref, *item, *r;
 	int id;
 	const char *name, *val;
-	uint32_t m;
+
 
 	if (!config || !cfg)
 		return -1;
@@ -839,6 +839,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	}
 
 #ifdef WIFI_SUPPORT
+	uint32_t m;
+
 	if ((ref = cJSON_GetObjectItem(config, "hostname"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->hostname, val, sizeof(cfg->hostname));
