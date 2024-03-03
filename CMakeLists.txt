@@ -184,6 +184,8 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
 endif()
 
 target_compile_options(fanpico PRIVATE -Wall)
+target_compile_options(fanpico PRIVATE -fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=)
+
 target_compile_definitions(fanpico PRIVATE USBD_MANUFACTURER="TJKO Industries")
 target_compile_definitions(fanpico PRIVATE USBD_PRODUCT="FanPico-${FANPICO_BOARD} Fan Controller")
 target_compile_definitions(fanpico PRIVATE USBD_DESC_STR_MAX=32)
