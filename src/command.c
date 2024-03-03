@@ -34,7 +34,6 @@
 #include "hardware/watchdog.h"
 #include "hardware/rtc.h"
 #include "cJSON.h"
-#include "lfs.h"
 #include "fanpico.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
@@ -2274,7 +2273,7 @@ int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 
 
-int cmd_littlefs(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_lfs(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	size_t size, free, used, files, dirs;
 
@@ -2293,6 +2292,18 @@ int cmd_littlefs(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_lfs_format(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	if (query)
+		return 1;
+
+	printf("Formatting flash filesystem...\n");
+	if (flash_format())
+		return 2;
+	printf("Filesystem successfully formatted.\n");
+
+	return 0;
+}
 
 int cmd_flash(const char *cmd, const char *args, int query, char *prev_cmd)
 {
@@ -2380,6 +2391,11 @@ const struct cmd_t display_commands[] = {
 	{ "LAYOUTR",   7, NULL,              cmd_display_layout_r },
 	{ "LOGO",      4, NULL,              cmd_display_logo },
 	{ "THEMe",     4, NULL,              cmd_display_theme },
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t lfs_commands[] = {
+	{ "FORMAT",    6, NULL,              cmd_lfs_format },
 	{ 0, 0, 0, 0 }
 };
 
@@ -2478,7 +2494,7 @@ const struct cmd_t system_commands[] = {
 	{ "FANS",      4, NULL,              cmd_fans },
 	{ "FLASH",     5, NULL,              cmd_flash },
 	{ "LED",       3, NULL,              cmd_led },
-	{ "LFS",       3, NULL,              cmd_littlefs },
+	{ "LFS",       3, lfs_commands,      cmd_lfs },
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
 	{ "MEMory",    3, NULL,              cmd_memory },

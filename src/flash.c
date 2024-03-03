@@ -50,16 +50,25 @@ void lfs_setup()
 	err = lfs_mount(&lfs, lfs_cfg);
 	if (err != LFS_ERR_OK) {
 		log_msg(LOG_NOTICE, "Trying to initialize a new filesystem...");
-		if ((err = lfs_format(&lfs, lfs_cfg)) != LFS_ERR_OK) {
-			log_msg(LOG_ERR, "Unable to initialize flash filesystem: %d", err);
+		if (flash_format())
 			return;
-		}
 		log_msg(LOG_NOTICE, "Filesystem successfully initialized: %d", err);
 	} else {
 		lfs_unmount(&lfs);
 	}
 }
 
+int flash_format()
+{
+	int err;
+
+	if ((err = lfs_format(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "Unable to format flash filesystem: %d", err);
+		return 1;
+	}
+
+	return 0;
+}
 
 int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename)
 {
