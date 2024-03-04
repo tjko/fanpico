@@ -108,6 +108,7 @@ Fanpico supports following commands:
 * [SYStem:LED](#systemled)
 * [SYStem:LED?](#systemled-1)
 * [SYStem:LFS?](#systemlfs)
+* [SYStem:LFS:FORMAT](#systemlfsformat)
 * [SYStem:MBFANS?](#systemmbfans)
 * [SYStem:MEM](#systemmem)
 * [SYStem:MEM?](#systemmem-1)
@@ -1512,7 +1513,7 @@ SYS:DISP?
 #### SYStem:DISPlay:LAYOUTR
 Configure (OLED) Display layout for the right side of the screen.
 
-Layout is specified as a comma delimited string descibing what to
+Layout is specified as a comma delimited string describing what to
 display on each row (8 rows available if using 128x64 OLEd module, 10 rows available with 128x128 pixel modules).
 
 Syntax: <R1>,<R2>,...<R8>
@@ -1525,7 +1526,7 @@ Mn|MBFan input n|n=1..4
 Sn|Sensor input n|n=1..3
 Vn|Virtual Sensor input n|n=1..8
 -|Horizontal Line|
-Ltext|Line with "text"|Max lenght 9 characters.
+Ltext|Line with "text"|Max length 9 characters.
 
 
 Default: <not set>
@@ -1695,6 +1696,16 @@ Number of subdirectories:              0
 ```
 
 
+#### SYStem:LFS:FORMAT
+Format flash filesystem. This will erase current configuration (including any TLS certificates saved in flash).
+
+Example (format filesystem and save current configuration):
+```
+SYS:LFS:FORMAT
+CONF:SAVE
+```
+
+
 #### SYStem:MBFANS?
 Display number of MBFAN input ports available.
 
@@ -1706,10 +1717,10 @@ SYS:MBFANS?
 
 
 ### SYStem:MEM
-Test how much availble (heap) memory system currently has.
+Test how much available (heap) memory system currently has.
 This does simple test to try to determine what is the largest
 block of heap memory that is currently available as well as
-try allocating as many as possible small block of memory to determin
+try allocating as many as possible small block of memory to determine
 roughly the total available heap memory.
 
 This command takes optional 'blocksize' parameter to specify the memory
@@ -1727,7 +1738,7 @@ Total available memory:                111104 bytes (217 x 512bytes)
 Returns information about heap and stack size. As well as information
 about current (heap) memory usage as returned by _mallinfo()_ system call.
 
-Note,  _mallinfo()_ doesnt "see" all of the available heap memory, unless ```SYS:MEM``` command
+Note,  _mallinfo()_ does not always "see" all of the available heap memory, unless ```SYS:MEM``` command
 has been run first.
 
 Example:
@@ -1751,7 +1762,7 @@ Topmost releasable block (keepcost):   114808
 
 
 ### SYStem:MQTT Commands
-FanPico has MQTT Client that can be confiugred to publish (send) periodic status
+FanPico has MQTT Client that can be configured to publish (send) periodic status
 updates to a topic.
 Additionally MQTT Client support subscribing to a "command" topic to listen for commands.
 This allows remotely controlling BrickPico.
@@ -2177,7 +2188,7 @@ SYS:MQTT:TOPIC:RESP musername/feeds/response
 
 
 #### SYStem:MQTT:TOPIC:RESPonse?
-Query currently set topic for publishing reponses to commands.
+Query currently set topic for publishing responses to commands.
 
 Example:
 ```
@@ -2573,7 +2584,7 @@ Upload or delete TLS certificate for the HTTP server.
 Note, both certificate and private key must be installed before HTTPS server will
 activate (when system is restarted next time).
 
-When run withouth arguments this will prompt to paste TLS (X.509) certificate
+When run without arguments this will prompt to paste TLS (X.509) certificate
 in PEM format.  When run with "DELETE" argument currently installed certificate
 will be deleted.
 
@@ -2603,7 +2614,7 @@ Upload or delete (TLS Certificate) Private key for the HTTP server.
 Note, both certificate and private key must be installed before HTTPS server will
 activate (when system is restarted next time).
 
-When run withouth arguments this will prompt to paste private key
+When run without arguments this will prompt to paste private key
 in PEM format.  When run with "DELETE" argument currently installed private key
 will be deleted.
 
@@ -2614,7 +2625,7 @@ Paste private key in PEM format:
 
 ```
 
-Examnple (upload/paste EC private key and EC parameters):
+Example (upload/paste EC private key and EC parameters):
 ```
 SYS:TLS:PKEY 2
 Paste private key in PEM format:
@@ -2773,7 +2784,7 @@ SYS:WIFI:IP?
 Set WiFi connection mode. Normally this setting is not needed with modern APs.
 
 However, if FanPico is failing to connect to WiFi network, this couldbe
-due to old firmware on the AP (upgrading to latest firmare typically helps).
+due to old firmware on the AP (upgrading to latest firmware typically helps).
 If firmware update did not help or there is no updated firmware available, setting
 connection mode to synchronous can help (however this could cause FanPico to "hang" for up to 60 seconds
 during boot up).
@@ -2794,7 +2805,7 @@ SYS:WIFI:MODE 1
 ```
 
 #### SYStem:WIFI:MODE?
-Display currently configured WiFi connection mdoe?
+Display currently configured WiFi connection mode?
 
 Example:
 

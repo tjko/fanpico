@@ -324,7 +324,8 @@ void oled_display_status(const struct fanpico_state *state, const struct fanpico
 void oled_display_message(int rows, const char **text_lines);
 
 /* flash.h */
-void lfs_setup();
+void lfs_setup(bool multicore);
+int flash_format(bool multicore);
 int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename);
 int flash_write_file(const char *buf, uint32_t size, const char *filename);
 int flash_delete_file(const char *filename);
