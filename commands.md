@@ -108,6 +108,7 @@ Fanpico supports following commands:
 * [SYStem:LED](#systemled)
 * [SYStem:LED?](#systemled-1)
 * [SYStem:LFS?](#systemlfs)
+* [SYStem:LFS:FORMAT](#systemlfsformat)
 * [SYStem:MBFANS?](#systemmbfans)
 * [SYStem:MEM](#systemmem)
 * [SYStem:MEM?](#systemmem-1)

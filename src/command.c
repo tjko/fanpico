@@ -2298,7 +2298,7 @@ int cmd_lfs_format(const char *cmd, const char *args, int query, char *prev_cmd)
 		return 1;
 
 	printf("Formatting flash filesystem...\n");
-	if (flash_format())
+	if (flash_format(true))
 		return 2;
 	printf("Filesystem successfully formatted.\n");
 

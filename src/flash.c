@@ -37,7 +37,7 @@ static struct lfs_config *lfs_cfg;
 static lfs_t lfs;
 static lfs_file_t lfs_file;
 
-void lfs_setup()
+void lfs_setup(bool multicore)
 {
 	int err;
 
@@ -49,25 +49,31 @@ void lfs_setup()
 	/* Check if we need to initialize/format filesystem... */
 	err = lfs_mount(&lfs, lfs_cfg);
 	if (err != LFS_ERR_OK) {
-		log_msg(LOG_NOTICE, "Trying to initialize a new filesystem...");
-		if (flash_format())
+		log_msg(LOG_ERR, "Trying to initialize a new filesystem...");
+		if (flash_format(false))
 			return;
-		log_msg(LOG_NOTICE, "Filesystem successfully initialized: %d", err);
+		log_msg(LOG_ERR, "Filesystem successfully initialized.");
 	} else {
 		lfs_unmount(&lfs);
 	}
 }
 
-int flash_format()
+int flash_format(bool multicore)
 {
+	struct pico_lfs_context *ctx = (struct pico_lfs_context*)lfs_cfg;
 	int err;
+	bool saved;
+
+	saved = ctx->multicore_lockout_enabled;
+	ctx->multicore_lockout_enabled = (multicore ? true : false);
 
 	if ((err = lfs_format(&lfs, lfs_cfg)) != LFS_ERR_OK) {
 		log_msg(LOG_ERR, "Unable to format flash filesystem: %d", err);
-		return 1;
 	}
 
-	return 0;
+	ctx->multicore_lockout_enabled = saved;
+
+	return  (err == LFS_ERR_OK ? 0 : 1);
 }
 
 int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename)

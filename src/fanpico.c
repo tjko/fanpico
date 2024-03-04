@@ -133,7 +133,7 @@ void setup()
 		sleep_ms(50);
 	}
 
-	lfs_setup();
+	lfs_setup(false);
 	read_config();
 
 #if TTL_SERIAL
