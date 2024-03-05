@@ -1,8 +1,11 @@
-<a href="https://certification.oshwa.org/us002599.html" title="Open Source Hardware Association Certificate"><img align="right" width="20%" src="images/fanpico-oshw.svg" alt="[OSHW] US002599 | Certified open source hardware | oshwa.org/cert"></a>
 
 # Fanpico: Smart PWM (PC) Fan Controller
+
 [![CI](https://github.com/tjko/fanpico/actions/workflows/cmake.yml/badge.svg)](https://github.com/tjko/fanpico/actions/workflows/cmake.yml)
 [![CodeQL](https://github.com/tjko/fanpico/actions/workflows/codeql.yml/badge.svg)](https://github.com/tjko/fanpico/actions/workflows/codeql.yml)
+
+<p><a href="https://certification.oshwa.org/us002599.html" title="Open Source Hardware Association Certificate"><img align="right" width="10%" src="images/fanpico-oshw.svg" alt="[OSHW] US002599 | Certified open source hardware | oshwa.org/cert"></a></p>
+
 
 Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html) (RP2040 MCU). Fanpico operates as standalone controller that can be configured and left running. It does not require any drivers and doesn't care what OS is being used. FanPico is an Open-source hardware (OSHW) project.
 
