@@ -405,14 +405,14 @@ CONF:FAN1:RPMF?
 ```
 
 #### CONFigure:FANx:RPMMOde
-Configure what type tachometer signal the fan is sending.
+Configure what type tachometer signal fan is sending.
 
 Supported signal types:
 
 Signal Type|Setting|Notes
 -----------|-------|-----
 Tachometer|TACHO|Fan is sending normal tachometer pulses to indicate rotation speed.
-Locked Rotor (Alarm)|LRA,<low rpm>,<high rpm>|Parameters indicate mapping from LRA to RPM speeds (corresponding to LOW and HIGH signal received from the fan).
+Locked Rotor (Alarm)|LRA,low_rpm,high_rpm|Parameters indicate mapping from LRA to RPM speeds (corresponding to LOW and HIGH signal received from the fan).
 
 Default: TACHO  (fan sends standard tachometer pulses to indicate rotation speed)
 
@@ -670,7 +670,9 @@ Supported signal types:
 Signal Type|Setting|Notes
 -----------|-------|-----
 Tachometer|TACHO|Send normal tachometer pulses to indicate rotation speed.
-Locked Rotor (Alarm)|LRA,<treshold rpm>,<locked signal>|Send Locked Rotor Alarm signal, when RPM is below treshold RPM speed send the indicated signal (HIGH/LOW).
+Locked Rotor (Alarm)|LRA,treshold_rpm,locked_signal_level|Send Locked Rotor Alarm signal, when RPM is below treshold RPM speed send the indicated signal (HIGH or LOW).
+
+*NOTE!* When changing RPM Mode for a mbfan (output), system must be reset before change takes effect.
 
 Default: TACHO  (standard tachometer pulses to indicate rotation speed)
 
