@@ -87,4 +87,4 @@ jobs:
       with:
         name: fanpico-firmware-${{github.run_number}}-${{github.sha}}
         pattern: firmware-*
-	delete-merged: true
+        delete-merged: true
