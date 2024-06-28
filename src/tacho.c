@@ -156,6 +156,7 @@ void read_tacho_inputs()
 		} else {
 			bool lra = gpio_get(fan_gpio_tacho_map[i]);
 			f = lra ? cfg->fans[i].lra_high : cfg->fans[i].lra_low;
+			f = f / 60.0 * cfg->fans[i].rpm_factor;
 		}
 		fan_tacho_freq[i] = f;
 	}
@@ -228,6 +229,7 @@ void read_tacho_inputs()
 		} else {
 			bool lra = gpio_get(FAN_TACHO_READ_PIN);
 			f = lra ? cfg->fans[i].lra_high : cfg->fans[i].lra_low;
+			f = f / 60.0 * cfg->fans[i].rpm_factor;
 		}
 
 		fan_tacho_freq[i] = f;
