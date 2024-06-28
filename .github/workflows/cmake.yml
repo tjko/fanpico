@@ -19,37 +19,37 @@ jobs:
       matrix:
         fanpico_board: ["0804", "0804D"]
         pico_board: ["pico", "pico_w"]
-    
+
     steps:
     - name: Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
-       
+
     - name: Cache Pico-SDK
       id: cache-pico-sdk
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: pico-sdk
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
-    
+
     - if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
       name: Checkout Pico-SDK
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: raspberrypi/pico-sdk
         ref: ${{env.PICO_SDK_REF}}
         path: pico-sdk
         submodules: true
-        
+
     - name: Add PICO_SDK_PATH to Environment
       run: |
         echo "PICO_SDK_PATH=${{github.workspace}}/pico-sdk" >> $GITHUB_ENV
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: main
         submodules: recursive
-    
+
     - name: Configure CMake
       run: cmake -S main -B ${{github.workspace}}/main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=${{matrix.pico_board}} -DFANPICO_BOARD=${{matrix.fanpico_board}}
 
@@ -71,10 +71,9 @@ jobs:
         cp -av fanpico.uf2 dist/fanpico-${{matrix.fanpico_board}}-${{matrix.pico_board}}.uf2
         cp -av fanpico.elf dist/fanpico-${{matrix.fanpico_board}}-${{matrix.pico_board}}.elf
         cp -av fanpico.elf.map dist/fanpico-${{matrix.fanpico_board}}-${{matrix.pico_board}}.elf.map
-        
+
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: fanpico-firmware-${{github.run_number}}-${{github.sha}}
         path: main/build/dist
-                    
