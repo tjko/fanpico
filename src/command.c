@@ -758,7 +758,7 @@ int cmd_fan_rpm_mode(const char *cmd, const char *args, int query, char *prev_cm
 	if (query) {
 		printf("%s", rpm_mode2str(f->rpm_mode));
 		if (f->rpm_mode == RMODE_LRA)
-			printf("%d,%d", f->lra_low, f->lra_high);
+			printf(",%d,%d", f->lra_low, f->lra_high);
 		printf("\n");
 	} else {
 		param = strdup(args);
@@ -1100,7 +1100,7 @@ int cmd_mbfan_rpm_mode(const char *cmd, const char *args, int query, char *prev_
 	if (query) {
 		printf("%s", rpm_mode2str(m->rpm_mode));
 		if (m->rpm_mode == RMODE_LRA)
-			printf("%d,%s", m->lra_treshold, (m->lra_invert ? "HIGH" : "LOW"));
+			printf(",%d,%s", m->lra_treshold, (m->lra_invert ? "HIGH" : "LOW"));
 		printf("\n");
 	} else {
 		param = strdup(args);
@@ -2633,8 +2633,8 @@ const struct cmd_t mbfan_c_commands[] = {
 	{ "NAME",      4, NULL,              cmd_mbfan_name },
 	{ "RPMCoeff",  4, NULL,              cmd_mbfan_rpm_coef },
 	{ "RPMFactor", 4, NULL,              cmd_mbfan_rpm_factor },
-	{ "RPMMap",    4, NULL,              cmd_mbfan_rpm_map },
 	{ "RPMMOde",   5, NULL,              cmd_mbfan_rpm_mode },
+	{ "RPMMap",    4, NULL,              cmd_mbfan_rpm_map },
 	{ "SOUrce",    3, NULL,              cmd_mbfan_source },
 	{ 0, 0, 0, 0 }
 };
