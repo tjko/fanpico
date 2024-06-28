@@ -82,8 +82,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4
-	with:
-	  name: fanpico-firmware-${{github.run_number}}-${{github.sha}}
-	  pattern: firmware-*
+    - name: Merge Artifacts
+      uses: actions/upload-artifact/merge@v4
+      with:
+        name: fanpico-firmware-${{github.run_number}}-${{github.sha}}
+        pattern: firmware-*
