@@ -75,7 +75,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: firmware-${{matrix.fanpico_board}}-${{matrix.pico_board}}-${{github.run_number}}-${{github.sha}}
+        name: firmware-${{matrix.fanpico_board}}-${{matrix.pico_board}}
         path: main/build/dist
 
   merge:
@@ -87,3 +87,4 @@ jobs:
       with:
         name: fanpico-firmware-${{github.run_number}}-${{github.sha}}
         pattern: firmware-*
+	delete-merged: true
