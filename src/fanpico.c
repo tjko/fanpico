@@ -291,7 +291,13 @@ void update_outputs(struct fanpico_state *state, const struct fanpico_config *co
 				state->mbfan_freq_prev[i],
 				state->mbfan_freq[i]);
 			state->mbfan_freq_prev[i] = state->mbfan_freq[i];
-			set_tacho_output_freq(i, state->mbfan_freq[i]);
+			if (cfg->mbfans[i].rpm_mode == RMODE_TACHO) {
+				set_tacho_output_freq(i, state->mbfan_freq[i]);
+			} else {
+				int rpm = state->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
+				bool lra = (rpm < cfg->mbfans[i].lra_treshold ? true : false);
+				set_lra_output(i, cfg->mbfans[i].lra_invert ? !lra : lra);
+			}
 		}
 	}
 }

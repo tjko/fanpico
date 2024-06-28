@@ -132,6 +132,26 @@ const char* vsmode2str(enum vsensor_modes mode)
 	return "manual";
 }
 
+int str2rpm_mode(const char *s)
+{
+	int ret = RMODE_TACHO;
+
+	if (s) {
+		if (!strncasecmp(s, "lra", 5))
+			ret = RMODE_LRA;
+	}
+
+	return ret;
+}
+
+const char* rpm_mode2str(enum rpm_modes mode)
+{
+	if (mode == RMODE_LRA)
+		return "lra";
+
+	return "tacho";
+}
+
 int str2tacho_source(const char *s)
 {
 	int ret = 0;
@@ -443,6 +463,9 @@ void clear_config(struct fanpico_config *cfg)
 		f->s_type = PWM_FIXED;
 		f->s_id = 0;
 		f->map.points = 0;
+		f->rpm_mode = RMODE_TACHO;
+		f->lra_low = 0;
+		f->lra_high = 1000;
 		f->rpm_factor = 2;
 		f->filter = FILTER_NONE;
 		f->filter_ctx = NULL;
@@ -454,6 +477,9 @@ void clear_config(struct fanpico_config *cfg)
 		m->name[0] = 0;
 		m->min_rpm = 0;
 		m->max_rpm = 0;
+		m->rpm_mode = RMODE_TACHO;
+		m->lra_treshold = 200;
+		m->lra_invert = false;
 		m->rpm_coefficient = 0.0;
 		m->rpm_factor = 2;
 		m->s_type = TACHO_FIXED;
@@ -689,8 +715,11 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(o, "source_type", cJSON_CreateString(pwm_source2str(f->s_type)));
 		cJSON_AddItemToObject(o, "source_id", cJSON_CreateNumber(f->s_id));
 		cJSON_AddItemToObject(o, "pwm_map", pwm_map2json(&f->map));
-		cJSON_AddItemToObject(o, "rpm_factor", cJSON_CreateNumber(f->rpm_factor));
 		cJSON_AddItemToObject(o, "filter", filter2json(f->filter, f->filter_ctx));
+		cJSON_AddItemToObject(o, "rpm_mode", cJSON_CreateString(rpm_mode2str(f->rpm_mode)));
+		cJSON_AddItemToObject(o, "rpm_factor", cJSON_CreateNumber(f->rpm_factor));
+		cJSON_AddItemToObject(o, "lra_low", cJSON_CreateNumber(f->lra_low));
+		cJSON_AddItemToObject(o, "lra_high", cJSON_CreateNumber(f->lra_high));
 		cJSON_AddItemToArray(fans, o);
 	}
 	cJSON_AddItemToObject(config, "fans", fans);
@@ -709,8 +738,12 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(o, "name", cJSON_CreateString(m->name));
 		cJSON_AddItemToObject(o, "min_rpm", cJSON_CreateNumber(m->min_rpm));
 		cJSON_AddItemToObject(o, "max_rpm", cJSON_CreateNumber(m->max_rpm));
+		cJSON_AddItemToObject(o, "rpm_mode", cJSON_CreateString(rpm_mode2str(m->rpm_mode)));
 		cJSON_AddItemToObject(o, "rpm_coefficient", cJSON_CreateNumber(m->rpm_coefficient));
 		cJSON_AddItemToObject(o, "rpm_factor", cJSON_CreateNumber(m->rpm_factor));
+		cJSON_AddItemToObject(o, "lra_treshold", cJSON_CreateNumber(m->lra_treshold));
+		if (m->lra_invert != false)
+			cJSON_AddItemToObject(o, "lra_invert", cJSON_CreateNumber(m->lra_invert));
 		cJSON_AddItemToObject(o, "source_type", cJSON_CreateString(tacho_source2str(m->s_type)));
 		cJSON_AddItemToObject(o, "source_id", cJSON_CreateNumber(m->s_id));
 		if (m->s_type == TACHO_MIN || m->s_type == TACHO_MAX || m->s_type == TACHO_AVG)
@@ -1007,16 +1040,25 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
 			if (name) strncopy(f->name, name ,sizeof(f->name));
 
-			f->min_pwm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "min_pwm"));
-			f->max_pwm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "max_pwm"));
-			f->pwm_coefficient = cJSON_GetNumberValue(
-				cJSON_GetObjectItem(item,"pwm_coefficient"));
+			if ((r = cJSON_GetObjectItem(item, "min_pwm")))
+				f->min_pwm = cJSON_GetNumberValue(r);
+			if ((r = cJSON_GetObjectItem(item, "max_pwm")))
+				f->max_pwm = cJSON_GetNumberValue(r);
+			if ((r = cJSON_GetObjectItem(item, "pwm_coefficient")))
+				f->pwm_coefficient = cJSON_GetNumberValue(r);
 			f->s_type = str2pwm_source(cJSON_GetStringValue(
 							cJSON_GetObjectItem(item, "source_type")));
 			f->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));
 			if ((r = cJSON_GetObjectItem(item, "pwm_map")))
 				json2pwm_map(r, &f->map);
-			f->rpm_factor = cJSON_GetNumberValue(cJSON_GetObjectItem(item,"rpm_factor"));
+			f->rpm_mode = str2rpm_mode(cJSON_GetStringValue(
+							cJSON_GetObjectItem(item, "rpm_mode")));;
+			if ((r = cJSON_GetObjectItem(item,"rpm_factor")))
+				f->rpm_factor = cJSON_GetNumberValue(r);
+			if ((r = cJSON_GetObjectItem(item,"lra_low")))
+				f->lra_low = cJSON_GetNumberValue(r);
+			if ((r = cJSON_GetObjectItem(item,"lra_high")))
+				f->lra_high = cJSON_GetNumberValue(r);
 			if ((r = cJSON_GetObjectItem(item, "filter")))
 				json2filter(r, &f->filter, &f->filter_ctx);
 		}
@@ -1032,11 +1074,20 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
 			if (name) strncopy(m->name, name ,sizeof(m->name));
 
-			m->min_rpm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "min_rpm"));
-			m->max_rpm = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "max_rpm"));
-			m->rpm_coefficient = cJSON_GetNumberValue(
-				cJSON_GetObjectItem(item, "rpm_coefficient"));
-			m->rpm_factor = cJSON_GetNumberValue(cJSON_GetObjectItem(item,"rpm_factor"));
+			if ((r = cJSON_GetObjectItem(item, "min_rpm")))
+				m->min_rpm = cJSON_GetNumberValue(r);
+			if ((r = cJSON_GetObjectItem(item, "max_rpm")))
+				m->max_rpm = cJSON_GetNumberValue(r);
+			m->rpm_mode = str2rpm_mode(cJSON_GetStringValue(
+							cJSON_GetObjectItem(item, "rpm_mode")));;
+			if ((r = cJSON_GetObjectItem(item, "rpm_coefficient")))
+				m->rpm_coefficient = cJSON_GetNumberValue(r);
+			if ((r = cJSON_GetObjectItem(item,"rpm_factor")))
+				m->rpm_factor = cJSON_GetNumberValue(r);
+			if ((r = cJSON_GetObjectItem(item,"lra_treshold")))
+				m->lra_treshold = cJSON_GetNumberValue(r);
+			if ((r = cJSON_GetObjectItem(item,"lra_invert")))
+				m->lra_invert = cJSON_GetNumberValue(r);
 			m->s_type = str2tacho_source(cJSON_GetStringValue(
 							cJSON_GetObjectItem(item, "source_type")));
 			m->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));

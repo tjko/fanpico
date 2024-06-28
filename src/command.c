@@ -743,6 +743,52 @@ int cmd_fan_rpm_factor(const char *cmd, const char *args, int query, char *prev_
 	return 1;
 }
 
+int cmd_fan_rpm_mode(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int ret = 0;
+	int fan, val;
+	struct fan_output *f;
+	char *tok, *saveptr, *param;
+
+	fan = atoi(&prev_cmd[3]) - 1;
+	if (fan < 0 || fan >= FAN_COUNT)
+		return 1;
+	f = &conf->fans[fan];
+
+	if (query) {
+		printf("%s", rpm_mode2str(f->rpm_mode));
+		if (f->rpm_mode == RMODE_LRA)
+			printf(",%d,%d", f->lra_low, f->lra_high);
+		printf("\n");
+	} else {
+		param = strdup(args);
+		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
+			val = str2rpm_mode(tok);
+			if (val != f->rpm_mode) {
+				log_msg(LOG_NOTICE, "fan%d: rpm_mode change '%s' --> '%s'",
+					fan + 1, rpm_mode2str(f->rpm_mode), rpm_mode2str(val));
+				f->rpm_mode = val;
+			}
+			if (f->rpm_mode == RMODE_LRA) {
+				if ((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
+					if (str_to_int(tok, &val, 10)) {
+						f->lra_low = clamp_int(val, 0, 100000);
+					}
+					if ((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
+						if (str_to_int(tok, &val, 10)) {
+							f->lra_high = clamp_int(val, 0, 100000);
+						}
+					}
+				}
+			}
+		} else {
+			ret = 2;
+		}
+		free(param);
+	}
+	return ret;
+}
+
 int cmd_fan_source(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int fan;
@@ -1033,6 +1079,55 @@ int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, char *prev_c
 			ret = 2;
 		}
 		free(arg);
+	}
+
+	return ret;
+}
+
+int cmd_mbfan_rpm_mode(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int ret = 0;
+	int fan, val;
+	char *tok, *saveptr, *param;
+	struct mb_input *m;
+
+	fan = atoi(&prev_cmd[5]) - 1;
+	if (fan < 0 || fan >= MBFAN_COUNT)
+		return 1;
+	m = &conf->mbfans[fan];
+
+
+	if (query) {
+		printf("%s", rpm_mode2str(m->rpm_mode));
+		if (m->rpm_mode == RMODE_LRA)
+			printf(",%d,%s", m->lra_treshold, (m->lra_invert ? "HIGH" : "LOW"));
+		printf("\n");
+	} else {
+		param = strdup(args);
+		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
+			val = str2rpm_mode(tok);
+			if (val != m->rpm_mode) {
+				log_msg(LOG_NOTICE, "mbfan%d: rpm_mode change '%s' -> '%s'",
+					fan + 1, rpm_mode2str(m->rpm_mode), rpm_mode2str(val));
+				m->rpm_mode = val;
+			}
+			if (m->rpm_mode == RMODE_LRA) {
+				if ((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
+					if (str_to_int(tok, &val, 10)) {
+						m->lra_treshold = clamp_int(val, 0, 100000);
+					}
+					if ((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
+						bool invert = false;
+						if (!strncasecmp(tok, "HIGH", 1))
+							invert = true;
+						m->lra_invert = invert;
+					}
+				}
+			}
+		} else {
+			ret = 2;
+		}
+		free(param);
 	}
 
 	return ret;
@@ -2526,6 +2621,7 @@ const struct cmd_t fan_c_commands[] = {
 	{ "PWMCoeff",  4, NULL,              cmd_fan_pwm_coef },
 	{ "PWMMap",    4, NULL,              cmd_fan_pwm_map },
 	{ "RPMFactor", 4, NULL,              cmd_fan_rpm_factor },
+	{ "RPMMOde",   5, NULL,              cmd_fan_rpm_mode },
 	{ "SOUrce",    3, NULL,              cmd_fan_source },
 	{ 0, 0, 0, 0 }
 };
@@ -2537,6 +2633,7 @@ const struct cmd_t mbfan_c_commands[] = {
 	{ "NAME",      4, NULL,              cmd_mbfan_name },
 	{ "RPMCoeff",  4, NULL,              cmd_mbfan_rpm_coef },
 	{ "RPMFactor", 4, NULL,              cmd_mbfan_rpm_factor },
+	{ "RPMMOde",   5, NULL,              cmd_mbfan_rpm_mode },
 	{ "RPMMap",    4, NULL,              cmd_mbfan_rpm_map },
 	{ "SOUrce",    3, NULL,              cmd_mbfan_source },
 	{ 0, 0, 0, 0 }

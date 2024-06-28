@@ -22,6 +22,8 @@ Fanpico supports following commands:
 * [CONFigure:FANx:PWMCoeff?](#configurefanxpwmcoeff-1)
 * [CONFigure:FANx:RPMFactor](#configurefanxrpmfactor)
 * [CONFigure:FANx:RPMFactor?](#configurefanxrpmfactor-1)
+* [CONFigure:FANx:RPMMOde](#configurefanxrpmmode)
+* [CONFigure:FANx:RPMMOde?](#configurefanxrpmmode-1)
 * [CONFigure:FANx:SOUrce](#configurefanxsource)
 * [CONFigure:FANx:SOUrce?](#configurefanxsource-1)
 * [CONFigure:FANx:PWMMap](#configurefanxpwmmap)
@@ -38,6 +40,8 @@ Fanpico supports following commands:
 * [CONFigure:MBFANx:RPMCoeff?](#configurembfanxrpmcoeff-1)
 * [CONFigure:MBFANx:RPMFactor](#configurembfanxrpmfactor)
 * [CONFigure:MBFANx:RPMFactor?](#configurembfanxrpmfactor-1)
+* [CONFigure:MBFANx:RPMMOde](#configurembfanxrpmmode)
+* [CONFigure:MBFANx:RPMMOde?](#configurembfanxrpmmode-1)
 * [CONFigure:MBFANx:SOUrce](#configurembfanxsource)
 * [CONFigure:MBFANx:SOUrce?](#configurembfanxsource-1)
 * [CONFigure:MBFANx:RPMMap](#configurembfanxrpmmap)
@@ -400,6 +404,39 @@ CONF:FAN1:RPMF?
 4
 ```
 
+#### CONFigure:FANx:RPMMOde
+Configure what type tachometer signal fan is sending.
+
+Supported signal types:
+
+Signal Type|Setting|Notes
+-----------|-------|-----
+Tachometer|TACHO|Fan is sending normal tachometer pulses to indicate rotation speed.
+Locked Rotor (Alarm)|LRA,low_rpm,high_rpm|Parameters indicate mapping from LRA to RPM speeds (corresponding to LOW and HIGH signal received from the fan).
+
+Default: TACHO  (fan sends standard tachometer pulses to indicate rotation speed)
+
+Example: Fan is not sending tachometer signal but Locked Rotor Alam signal (LRA) on tachometer pin (we map LOW signal to mean 0 RPM and HIGH signal to mean 2000 RPM)
+```
+CONF:FAN1:RPMMODE LRA,0,2000
+```
+
+Example: Fan is sending Locked Rotor (Alarm) signal (LRA), where polarity in reversed (HIGH signal indicates lockup/failure):
+```
+CONF:FAN2:RPMMODE LRA,2000,0
+```
+
+#### CONFigure:FANx:RPMMOde?
+Query current RPM tachometer signal settings for a fan.
+
+Example:
+```
+CONF:FAN1:RPMMODE?
+TACHO
+CONF:FAN2:RPMMODE?
+LRA,0,2000
+```
+
 #### CONFigure:FANx:SOUrce
 Configure source for the PWM signal of a fan.
 
@@ -623,6 +660,41 @@ Example:
 ```
 CONF:MBFAN1:RPMF?
 4
+```
+
+#### CONFigure:MBFANx:RPMMOde
+Configure what type tachometer signal is sent (out) to motherboard.
+
+Supported signal types:
+
+Signal Type|Setting|Notes
+-----------|-------|-----
+Tachometer|TACHO|Send normal tachometer pulses to indicate rotation speed.
+Locked Rotor (Alarm)|LRA,treshold_rpm,locked_signal_level|Send Locked Rotor Alarm signal, when RPM is below treshold RPM speed send the indicated signal (HIGH or LOW).
+
+*NOTE!* When changing RPM Mode for a mbfan (output), system must be reset before change takes effect.
+
+Default: TACHO  (standard tachometer pulses to indicate rotation speed)
+
+Example: Send 'LOW' Locked Rotor (Alarm) signal (when RPM drops below 200 RPM)
+```
+CONF:MBFAN1:RPMMODE LRA,200,LOW
+```
+
+Example: Send 'HIGH' Locked Rotor (Alarm) signal (when RPM drops below 500 RPM)
+```
+CONF:MBFAN2:RPMMODE LRA,500,HIGH
+```
+
+#### CONFigure:FANx:RPMMOde?
+Query current RPM tachometer signal settings for a fan.
+
+Example:
+```
+CONF:FAN1:RPMMODE?
+TACHO
+CONF:FAN2:RPMMODE?
+LRA,0,2000
 ```
 
 #### CONFigure:MBFANx:SOUrce

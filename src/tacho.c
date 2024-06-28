@@ -150,8 +150,14 @@ void read_tacho_inputs()
 
 	s = delta / 1000000.0;
 	for (i = 0; i < FAN_COUNT; i++) {
-		pulses = counters[i] - fan_tacho_counters_last[i];
-		f = pulses / s;
+		if (cfg->fans[i].rpm_mode == RMODE_TACHO) {
+			pulses = counters[i] - fan_tacho_counters_last[i];
+			f = pulses / s;
+		} else {
+			bool lra = gpio_get(fan_gpio_tacho_map[i]);
+			f = lra ? cfg->fans[i].lra_high : cfg->fans[i].lra_low;
+			f = f / 60.0 * cfg->fans[i].rpm_factor;
+		}
 		fan_tacho_freq[i] = f;
 	}
 
@@ -196,30 +202,35 @@ void read_tacho_inputs()
 	}
 	else if (state == 1) {
 		// Measure pulse up to 600ms (down to 50 RPM)...
-		//t = pulse_measure(FAN_TACHO_READ_PIN, 1, 0, 600);
 
-		t = pulse_interval();
-		if (t == 0) {
-			if (!time_passed(&start_t, 600))
-				return;
+		if (cfg->fans[i].rpm_mode == RMODE_TACHO) {
+			t = pulse_interval();
+			if (t == 0) {
+				if (!time_passed(&start_t, 600))
+					return;
+			}
+
+			if (t > 0) {
+				/* Fan is spinning, make sure fan is in the first queue... */
+				if (queue[i] != 0)
+					queue[i] = 0;
+
+				f = 1 / (t / 1000000.0);
+			}
+			else {
+				/* Fan not spinning, put this fan into second queue */
+				if (queue[i] != 1)
+					queue[i] = 1;
+
+				f = 0;
+			}
+
+			log_msg(LOG_DEBUG + 0, "fan%d: pulse len=%llu", i+1, t);
+		} else {
+			bool lra = gpio_get(FAN_TACHO_READ_PIN);
+			f = lra ? cfg->fans[i].lra_high : cfg->fans[i].lra_low;
+			f = f / 60.0 * cfg->fans[i].rpm_factor;
 		}
-
-		if (t > 0) {
-			/* Fan is spinning, make sure fan is in the first queue... */
-			if (queue[i] != 0)
-				queue[i] = 0;
-
-			f = 1 / (t / 1000000.0);
-		}
-		else {
-			/* Fan not spinning, put this fan into second queue */
-			if (queue[i] != 1)
-				queue[i] = 1;
-
-			f = 0;
-		}
-
-		log_msg(LOG_DEBUG + 0, "fan%d: pulse len=%llu", i+1, t);
 
 		fan_tacho_freq[i] = f;
 		state = 0;
@@ -301,12 +312,23 @@ void setup_tacho_input_interrupts()
 #endif
 }
 
+
 /* Function to set output frequency for tachometer output pin.
  */
 void set_tacho_output_freq(uint fan, double frequency)
 {
 	assert(fan < MBFAN_COUNT);
 	square_wave_gen_set_freq(pio, fan, frequency);
+}
+
+
+/* Function to set output (high/low) for locked rotor alarm pin.
+ */
+void set_lra_output(uint fan, bool lra)
+{
+	assert(fan < MBFAN_COUNT);
+	uint pin = mbfan_gpio_tacho_map[fan];
+	gpio_put(pin, lra);
 }
 
 
@@ -324,10 +346,18 @@ void setup_tacho_outputs()
 	/* Initialize PIO State machines for each tachometer output pin. */
 	for (i = 0; i < MBFAN_COUNT; i++) {
 		uint pin = mbfan_gpio_tacho_map[i];
-		uint sm = i;
-		square_wave_gen_program_init(pio, sm, pio_program_addr, pin);
-		square_wave_gen_set_period(pio, sm, 0);
-		square_wave_gen_enabled(pio, sm, true);
+		if (cfg->mbfans[i].rpm_mode == RMODE_TACHO) {
+			/* Configure PIO square wave generator output... */
+			uint sm = i;
+			square_wave_gen_program_init(pio, sm, pio_program_addr, pin);
+			square_wave_gen_set_period(pio, sm, 0);
+			square_wave_gen_enabled(pio, sm, true);
+		} else {
+			/* Otherwise assume locked rotor alarm signal output... */
+			gpio_init(pin);
+			gpio_set_dir(pin, GPIO_OUT);
+			gpio_put(pin, (cfg->mbfans[i].lra_invert ? 0 : 1));
+		}
 	}
 
 }

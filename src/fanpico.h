@@ -111,6 +111,13 @@ enum vsensor_modes {
 };
 #define VSMODE_ENUM_MAX 4
 
+enum rpm_modes {
+	RMODE_TACHO = 0,  /* Normal Tachometer signal */
+	RMODE_LRA = 1,    /* Locked Rotor Alarm signal */
+};
+#define RPMMODE_ENUM_MAX 1
+
+
 struct pwm_map {
 	uint8_t points;
 	uint8_t pwm[MAX_MAP_POINTS][2];
@@ -140,17 +147,23 @@ struct fan_output {
 	void *filter_ctx;
 
 	/* input Tacho signal settings */
+	uint8_t rpm_mode;
 	uint8_t rpm_factor;
+	uint16_t lra_low;
+	uint16_t lra_high;
 };
 
 struct mb_input {
 	char name[MAX_NAME_LEN];
 
 	/* output Tacho signal settings */
+	uint8_t rpm_mode;
 	uint16_t min_rpm;
 	uint16_t max_rpm;
 	float rpm_coefficient;
 	uint8_t rpm_factor;
+	uint16_t lra_treshold;
+	bool lra_invert;
 	enum tacho_source_types s_type;
 	uint16_t s_id;
 	uint8_t sources[FAN_MAX_COUNT];
@@ -296,6 +309,8 @@ int str2pwm_source(const char *s);
 const char* pwm_source2str(enum pwm_source_types source);
 int str2vsmode(const char *s);
 const char* vsmode2str(enum vsensor_modes mode);
+int str2rpm_mode(const char *s);
+const char* rpm_mode2str(enum rpm_modes mode);
 int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id);
 int str2tacho_source(const char *s);
 const char* tacho_source2str(enum tacho_source_types source);
@@ -399,6 +414,7 @@ void setup_tacho_outputs();
 void read_tacho_inputs();
 void update_tacho_input_freq(struct fanpico_state *state);
 void set_tacho_output_freq(uint fan, double frequency);
+void set_lra_output(uint fan, bool lra);
 double tacho_map(const struct tacho_map *map, double val);
 double calculate_tacho_freq(struct fanpico_state *state, const struct fanpico_config *config, int i);
 
