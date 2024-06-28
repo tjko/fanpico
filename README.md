@@ -26,6 +26,7 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * Can be powered from motherboard fan outputs or using (AUX) 4-pin floppy connector.
 * Ability to define custom fan "curves" for each fan.
 * Ability to provide custom tachometer (fan RPM) output signal back to motherboard.
+* Support for Locked Rotor (Alarm) signal fans (allows using regular tachometer fans with system expecting Locked Rotor Alarm fans and vice versa).
 * Control fans from any motherboard PWM signal or from temperature sensors.
 * OS Independent, no drivers or software needed.
 * Configuration stored on the device itself (in the flash memory).
