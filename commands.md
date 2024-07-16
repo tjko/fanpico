@@ -416,14 +416,14 @@ Locked Rotor (Alarm)|LRA,low_rpm,high_rpm|Parameters indicate mapping from LRA t
 
 Default: TACHO  (fan sends standard tachometer pulses to indicate rotation speed)
 
-Example: Fan is not sending tachometer signal but Locked Rotor Alam signal (LRA) on tachometer pin (we map LOW signal to mean 0 RPM and HIGH signal to mean 2000 RPM)
+Example: Fan is not sending tachometer signal but Locked Rotor Alam signal (LRA) on tachometer pin (we map HIGH signal to mean 0 RPM and LOW signal to mean 2000 RPM)
 ```
-CONF:FAN1:RPMMODE LRA,0,2000
+CONF:FAN1:RPMMODE LRA,2000,0
 ```
 
-Example: Fan is sending Locked Rotor (Alarm) signal (LRA), where polarity in reversed (HIGH signal indicates lockup/failure):
+Example: Fan is sending Locked Rotor (Alarm) signal (LRA), where polarity in reversed (LOW signal indicates lockup/failure):
 ```
-CONF:FAN2:RPMMODE LRA,2000,0
+CONF:FAN2:RPMMODE LRA,0,2000
 ```
 
 #### CONFigure:FANx:RPMMOde?
@@ -676,14 +676,14 @@ Locked Rotor (Alarm)|LRA,treshold_rpm,locked_signal_level|Send Locked Rotor Alar
 
 Default: TACHO  (standard tachometer pulses to indicate rotation speed)
 
-Example: Send 'LOW' Locked Rotor (Alarm) signal (when RPM drops below 200 RPM)
+Example: Send 'HIGH' Locked Rotor (Alarm) signal (when RPM drops below 200 RPM)
 ```
-CONF:MBFAN1:RPMMODE LRA,200,LOW
+CONF:MBFAN1:RPMMODE LRA,200,HIGH
 ```
 
-Example: Send 'HIGH' Locked Rotor (Alarm) signal (when RPM drops below 500 RPM)
+Example: Send 'LOW' Locked Rotor (Alarm) signal (when RPM drops below 500 RPM)
 ```
-CONF:MBFAN2:RPMMODE LRA,500,HIGH
+CONF:MBFAN2:RPMMODE LRA,500,LOW
 ```
 
 #### CONFigure:FANx:RPMMOde?

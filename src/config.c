@@ -464,8 +464,8 @@ void clear_config(struct fanpico_config *cfg)
 		f->s_id = 0;
 		f->map.points = 0;
 		f->rpm_mode = RMODE_TACHO;
-		f->lra_low = 0;
-		f->lra_high = 1000;
+		f->lra_low = 1000;
+		f->lra_high = 0;
 		f->rpm_factor = 2;
 		f->filter = FILTER_NONE;
 		f->filter_ctx = NULL;
