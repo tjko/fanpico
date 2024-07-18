@@ -8,7 +8,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.6.3
+  VERSION 1.6.4
   LANGUAGES C CXX ASM
   )
 set(CMAKE_C_STANDARD 11)
@@ -16,7 +16,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 set(FANPICO_BOARD 0804D CACHE STRING "Fanpico Board Model")
-#set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0803D)
+#set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0804D 0401D)
 set(FANPICO_CUSTOM_THEME 0 CACHE STRING "Fanpico LCD Custom Theme")
 set(FANPICO_CUSTOM_LOGO 0 CACHE STRING "Fanpico LCD Custom Logo")
 

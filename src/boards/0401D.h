@@ -1,10 +1,10 @@
-/* boards/0804D.h */
+/* boards/0401D.h */
 
 
-#define FANPICO_MODEL     "0804D"
+#define FANPICO_MODEL     "0401D"
 
-#define FAN_COUNT     8   /* Number of Fan outputs on the board */
-#define MBFAN_COUNT   4   /* Number of (Motherboard) Fan inputs on the board */
+#define FAN_COUNT     4   /* Number of Fan outputs on the board */
+#define MBFAN_COUNT   1   /* Number of (Motherboard) Fan inputs on the board */
 #define SENSOR_COUNT  3   /* Number of sensor inputs on the board */
 
 #ifdef LIB_PICO_CYW43_ARCH
@@ -15,44 +15,44 @@
 
 /* Pins for Fan Signals */
 
-#define TACHO_READ_MULTIPLEX 1
+#define TACHO_READ_MULTIPLEX 0
 
 /* pins for multiplexed read */
-#define FAN_TACHO_READ_PIN    26
-#define FAN_TACHO_READ_S0_PIN 22
-#define FAN_TACHO_READ_S1_PIN 21
-#define FAN_TACHO_READ_S2_PIN 20
+#define FAN_TACHO_READ_PIN    -1
+#define FAN_TACHO_READ_S0_PIN -1
+#define FAN_TACHO_READ_S1_PIN -1
+#define FAN_TACHO_READ_S2_PIN -1
 /* pins for direct read / multiplexer ports (if multiplexer in use) */
-#define FAN1_TACHO_READ_PIN 7
-#define FAN2_TACHO_READ_PIN 5
-#define FAN3_TACHO_READ_PIN 3
-#define FAN4_TACHO_READ_PIN 0
-#define FAN5_TACHO_READ_PIN 1
-#define FAN6_TACHO_READ_PIN 2
-#define FAN7_TACHO_READ_PIN 6
-#define FAN8_TACHO_READ_PIN 4
+#define FAN1_TACHO_READ_PIN 18
+#define FAN2_TACHO_READ_PIN 19
+#define FAN3_TACHO_READ_PIN 20
+#define FAN4_TACHO_READ_PIN 21
+#define FAN5_TACHO_READ_PIN -1
+#define FAN6_TACHO_READ_PIN -1
+#define FAN7_TACHO_READ_PIN -1
+#define FAN8_TACHO_READ_PIN -1
 
 #define FAN1_PWM_GEN_PIN 4  /* PWM2A */
 #define FAN2_PWM_GEN_PIN 5  /* PWM2B */
 #define FAN3_PWM_GEN_PIN 6  /* PWM3A */
 #define FAN4_PWM_GEN_PIN 7  /* PWM3B */
-#define FAN5_PWM_GEN_PIN 8  /* PWM4A */
-#define FAN6_PWM_GEN_PIN 9  /* PWM4B */
-#define FAN7_PWM_GEN_PIN 10 /* PWM5A */
-#define FAN8_PWM_GEN_PIN 11 /* PWM5B */
+#define FAN5_PWM_GEN_PIN -1
+#define FAN6_PWM_GEN_PIN -1
+#define FAN7_PWM_GEN_PIN -1
+#define FAN8_PWM_GEN_PIN -1
 
 
 /* Pins for Motherboar Fan Connector Signals */
 
-#define MBFAN1_TACHO_GEN_PIN 12
-#define MBFAN2_TACHO_GEN_PIN 14
-#define MBFAN3_TACHO_GEN_PIN 16
-#define MBFAN4_TACHO_GEN_PIN 18
+#define MBFAN1_TACHO_GEN_PIN 16
+#define MBFAN2_TACHO_GEN_PIN -1
+#define MBFAN3_TACHO_GEN_PIN -1
+#define MBFAN4_TACHO_GEN_PIN -1
 
 #define MBFAN1_PWM_READ_PIN 13 /* PWM6B */
-#define MBFAN2_PWM_READ_PIN 15 /* PWM7B */
-#define MBFAN3_PWM_READ_PIN 17 /* PWM0B */
-#define MBFAN4_PWM_READ_PIN 19 /* PWM1B */
+#define MBFAN2_PWM_READ_PIN -1
+#define MBFAN3_PWM_READ_PIN -1
+#define MBFAN4_PWM_READ_PIN -1
 
 
 /* Pins for temperature sensors */
@@ -77,15 +77,15 @@
 #define RX_PIN    1
 
 /* SPI */
-#define SCK_PIN        2
-#define MOSI_PIN       3
+#define SCK_PIN        10
+#define MOSI_PIN       11
 #define MISO_PIN      -1
-#define CS_PIN         1
+#define CS_PIN         9
 
-#define DC_PIN         0
-#define LCD_RESET_PIN -1
+#define DC_PIN         8
+#define LCD_RESET_PIN  12
 #define LCD_LIGHT_PIN -1
-#define ONEWIRE_PIN   -1
+#define ONEWIRE_PIN    15
 
 
 #define OLED_DISPLAY 1

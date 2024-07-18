@@ -82,3 +82,8 @@
 #define MOSI_PIN -1
 #define MISO_PIN -1
 #define CS_PIN   -1
+
+#define DC_PIN        -1
+#define LCD_RESET_PIN -1
+#define LCD_LIGHT_PIN -1
+#define ONEWIRE_PIN   -1
