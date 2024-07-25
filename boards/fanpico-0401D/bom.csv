@@ -14,7 +14,7 @@
 "F2","Polyfuse 0.5A","~","Fuse:Fuse_1206_3216Metric_Pad1.42x1.75mm_HandSolder","1","","530-0ZCJ0050AF2E","C70072"
 "F3","Polyfuse 1.5A","~","Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder","1","","","C70138 or C22447157"
 "H1,H2,H3,H4","MountingHole_Pad","~","MountingHole:MountingHole_3.2mm_M3_Pad_Via","4","","N/A","N/A"
-"J1","Floppy Power Connector","~","FanPico:TE 171826-4 Floppy 4-pin Combo","1","","571-1718264","C590635 / C720558"
+"J1","Floppy Power Connector","~","FanPico:TE 171826-4 Floppy 4-pin Combo","1","","571-1718264","C590635 / C381115"
 "J2","I2C (OLED ALT)","~","Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Vertical","1","","",""
 "J3","I2C (OLED)","~","Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Vertical","1","","",""
 "J4","MB Fan1 Input","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","538-47053-1000","C240840"
