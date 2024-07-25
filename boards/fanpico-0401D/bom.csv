@@ -18,7 +18,7 @@
 "J2","I2C (OLED ALT)","~","Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Vertical","1","","",""
 "J3","I2C (OLED)","~","Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Vertical","1","","",""
 "J4","MB Fan1 Input","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","538-47053-1000","C240840"
-"J5","1-Wire","~","TerminalBlock_TE-Connectivity:TerminalBlock_TE_282834-3_1x03_P2.54mm_Horizontal","1","","","C1509679"
+"J5","1-Wire","~","TerminalBlock_TE-Connectivity:TerminalBlock_TE_282834-3_1x03_P2.54mm_Horizontal","1","","","C68305 or C5188443"
 "J6","QWIIC","~","Connector_JST:JST_SH_SM04B-SRSS-TB_1x04-1MP_P1.00mm_Horizontal","1","","","C160404"
 "J8","Fan1 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","538-47053-1000","C240840"
 "J12","Fan2 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","538-47053-1000","C240840"
