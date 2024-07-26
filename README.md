@@ -124,7 +124,8 @@ Currently following models are available:
 |Model|Fans (Outputs)|MB Fan (Inputs)|External Temperature Sensors|Display|Notes|
 |-----|--------------|---------------|-------------------|--------|-----|
 |[FANPICO-0804](boards/fanpico-0804/)|8|4|2|N|First publicly available board (reference design).|
-|[FANPICO-0804D](boards/fanpico-0804D/)|8|4|2|Y|Support for OLED (128x64) displays. PCB Under development.|
+|[FANPICO-0804D](boards/fanpico-0804D/)|8|4|2|Y|Support for OLED (128x64 or 128x128) displays|
+|[FANPICO-0401D](boards/fanpico-0401D/)|4|1|2|Y|Adds QWIIC and 1-Wire connectors. PCB under development|
 
 (all boards have one additional 'on-board' temperature sensor on the RP2040 MCU itself)
 
@@ -155,6 +156,8 @@ Make sure to select firmware for the board you're using and for the pico model (
 
 Firmware file names have format: fanpico-<board_model>-<pico_model>.uf2
 ```
+fanpico-0401D-pico.uf2
+fanpico-0401D-pico_w.uf2
 fanpico-0804-pico.uf2
 fanpico-0804-pico_w.uf2
 fanpico-0804D-pico.uf2
