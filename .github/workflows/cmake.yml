@@ -92,15 +92,15 @@ jobs:
     - name: Download All Artifacts
       uses: actions/download-artifact@v4
       with:
-	path: bundle
+        path: bundle
         pattern: firmware-*
-	merge-multiple: true
+        merge-multiple: true
 
     - name: Check Final Artifact Contents
       working-directory: bundle
       run: |
         ls -la
-	sha256sum *
+        sha256sum *
 
     - name: Upload Final Artifact
       uses: actions/upload-artifact@v4
