@@ -126,13 +126,7 @@ jobs:
     - name: Merge Artifacts
       uses: actions/upload-artifact/merge@v4
       with:
-        name: fanpico-firmware-${{env.FANPICO_VERSION}}-build${{github.run_number}}-${{env.BUILD_DATE}}
+        name: fanpico-firmware-${{env.BUILD_DATE}}-${{env.FANPICO_VERSION}}-build${{github.run_number}}
         pattern: firmware-*
         delete-merged: true
-
-#    - name: Upload Final Artifact
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: fanpico-firmware-${{env.FANPICO_VERSION}}-build${{github.run_number}}-${{env.BUILD_DATE}}
-#        path: bundle
 
