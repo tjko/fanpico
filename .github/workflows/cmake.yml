@@ -14,6 +14,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      fanpico_version: ${{steps.version-check.outputs.FANPICO_VERSION}}
+      build_date: ${{steps.version-check.outputs.BUILD_DATE}}
 
     strategy:
       matrix:
@@ -53,6 +56,16 @@ jobs:
     - name: Configure CMake
       run: cmake -S main -B ${{github.workspace}}/main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=${{matrix.pico_board}} -DFANPICO_BOARD=${{matrix.fanpico_board}}
 
+    - name: Check Source Version
+      id: version-check
+      run: |
+        ver=$(awk '/FANPICO_VERSION[[:space:]]/ { gsub(/"/,""); print $3; exit; }' main/build/config.h)
+        echo "FANPICO_VERSION=$ver" >> $GITHUB_ENV
+        echo "FANPICO_VERSION=$ver" >> $GITHUB_OUTPUT
+        date=$(date +%Y%m%d)
+        echo "BUILD_DATE=$date" >> $GITHUB_ENV
+        echo "BUILD_DATE=$date" >> $GITHUB_OUTPUT
+
     - name: Build
       run: cmake --build ${{github.workspace}}/main/build --config ${{env.BUILD_TYPE}}
 
@@ -75,21 +88,17 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: firmware-${{matrix.fanpico_board}}-${{matrix.pico_board}}
+        name: firmware-${{matrix.fanpico_board}}-${{matrix.pico_board}}-build${{github.run_number}}-${{env.BUILD_DATE}}
         path: main/build/dist
 
   merge:
     runs-on: ubuntu-latest
     needs: build
+    env:
+      FANPICO_VERSION: ${{needs.build.outputs.fanpico_version}}
+      BUILD_DATE: ${{needs.build.outputs.build_date}}
 
     steps:
-
-#    - name: Merge Artifacts
-#      uses: actions/upload-artifact/merge@v4
-#      with:
-#        name: fanpico-firmware-${{github.run_number}}-${{github.sha}}
-#        pattern: firmware-*
-#        delete-merged: true
 
     - name: Download All Artifacts
       uses: actions/download-artifact@v4
@@ -103,11 +112,21 @@ jobs:
       run: |
         sha256sum * > sha256sums.txt
         ls -la
-        cat sha256sums.txt
+        echo "### Generated firmware files" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat sha256sums.txt >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
 
-    - name: Upload Final Artifact
+    - name: Upload checksum artifact
       uses: actions/upload-artifact@v4
       with:
-        name: fanpico-firmware-${{github.run_number}}-${{github.sha}}
-        path: bundle
+        name: firmware-checksums
+        path: bundle/*.txt
+
+    - name: Merge Artifacts
+      uses: actions/upload-artifact/merge@v4
+      with:
+        name: fanpico-firmware-${{env.BUILD_DATE}}-${{env.FANPICO_VERSION}}-build${{github.run_number}}
+        pattern: firmware-*
+        delete-merged: true
 
