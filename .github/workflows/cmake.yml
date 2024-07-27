@@ -113,9 +113,9 @@ jobs:
         sha256sum * > sha256sums.txt
         ls -la
         echo "### Generated firmware files" >> $GITHUB_STEP_SUMMARY
-        echo "```" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
         cat sha256sums.txt >> $GITHUB_STEP_SUMMARY
-        echo "```" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
 
     - name: Upload checksum artifact
       uses: actions/upload-artifact@v4
