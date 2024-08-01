@@ -318,6 +318,13 @@ void oled_display_status(const struct fanpico_state *state,
 		}
 	}
 
+
+	/* Uptime & NTP time */
+	uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
+	uint32_t mins =  secs / 60;
+	uint32_t hours = mins / 60;
+	uint32_t days = hours / 24;
+
 	if (oled_height > 64) {
 		/* IP */
 		const char *ip = network_ip();
@@ -331,14 +338,9 @@ void oled_display_status(const struct fanpico_state *state,
 			snprintf(buf + offset, sizeof(buf), " %s", ip);
 			oledWriteString(&oled, 0, 10 + (delta % 2 ? 3 : 0), 15, buf, FONT_6x8, 0, 1);
 		}
-
-		/* Uptime & NTP time */
-		uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
-		uint32_t mins =  secs / 60;
-		uint32_t hours = mins / 60;
-		uint32_t days = hours / 24;
+		/* Uptime / Clock */
 		snprintf(buf, sizeof(buf), "%03lu+%02lu:%02lu:%02lu",
-			days,
+			days % 1000,
 			hours % 24,
 			mins % 60,
 			secs % 60);
@@ -348,6 +350,19 @@ void oled_display_status(const struct fanpico_state *state,
 			oledWriteString(&oled, 0, 16, 11, buf, FONT_12x16, 0, 1);
 		} else {
 			oledWriteString(&oled, 0, 28, 12, buf, FONT_6x8, 0, 1);
+		}
+	}
+	else if (FAN_COUNT <= 4) {
+		/* Uptime / Clock */
+		snprintf(buf, sizeof(buf), "%02lu+%02lu:%02lu:%02lu",
+			days % 100,
+			hours % 24,
+			mins % 60,
+			secs % 60);
+		oledWriteString(&oled, 0, 0, 7, buf, FONT_6x8, 0, 1);
+		if (rtc_get_datetime(&t)) {
+			snprintf(buf, sizeof(buf), "%02d:%02d", t.hour, t.min);
+			oledWriteString(&oled, 0, 3, 5, buf, FONT_12x16, 0, 1);
 		}
 	}
 }
