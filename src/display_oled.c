@@ -1,5 +1,5 @@
 /* display_oled.c
-   Copyright (C) 2022-2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2022-2024 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -60,8 +60,12 @@ static struct layout_item r_layout[R_LAYOUT_MAX];
 
 
 /* Default screen layouts for inputs/sensors */
+#ifndef R_LAYOUT_128x64
 #define R_LAYOUT_128x64  "M1,M2,M3,M4,-,S1,S2,S3"
+#endif
+#ifndef R_LAYOUT_128x128
 #define R_LAYOUT_128x128 "LMB Inputs,M1,M2,M3,M4,-,LSensors,S1,S2,S3"
+#endif
 
 
 void parse_r_layout(const char *layout)
@@ -175,7 +179,7 @@ void oled_display_init()
 	do {
 		sleep_ms(50);
 		res = oledInit(&oled, dtype, -1, flip, invert, I2C_HW,
-			SDA_PIN, SCL_PIN, -1, 1000000L);
+			SDA_PIN, SCL_PIN, LCD_RESET_PIN, 1000000L);
 	} while (res == OLED_NOT_FOUND && retries++ < 10);
 
 	if (res == OLED_NOT_FOUND) {
@@ -305,6 +309,12 @@ void oled_display_status(const struct fanpico_state *state,
 				buf[8] = (counter++ % 2 == 0 ? '*' : ' ');
 			}
 			oledWriteString(&oled, 0 , h_pos + 2, i, buf, FONT_6x8, 0, 1);
+		}
+		else if (i == 0 && oled_height <= 64) {
+			/* Handle case where first row has static content... */
+			buf[0] = (counter++ % 2 == 0 ? '*' : ' ');
+			buf[1] = 0;
+			oledWriteString(&oled, 0, h_pos + 2 + (8*6), i, buf, FONT_6x8, 0, 1);
 		}
 	}
 
