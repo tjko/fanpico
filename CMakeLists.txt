@@ -102,7 +102,7 @@ add_executable(fanpico
   src/util_rp2040.c
   src/log.c
   src/crc32.c
-  src/default_config.s
+  src/default_config.S
   src/credits.s
   src/logos/default.s
   src/themes/lcd-background.s

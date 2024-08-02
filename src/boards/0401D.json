@@ -1,0 +1,215 @@
+{
+    "id": "fanpico-config-v1",
+    "debug": 0,
+    "local_echo": false,
+    "led_mode": 0,
+    "spi_active": 0,
+    "serial_active": 1,
+    "sensors": [
+	{
+	    "id": 0,
+	    "name": "sensor1",
+	    "sensor_type": 1,
+	    "series_resistance": 10000,
+	    "thermistor_nominal": 10000,
+	    "temperature_nominal": 25.0,
+	    "beta_coefficient": 3950,
+	    "temp_offset": 0.0,
+	    "temp_coefficient": 1.0,
+	    "temp_map": [
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id": 1,
+	    "name": "sensor2",
+	    "sensor_type": 1,
+	    "series_resistance": 10000,
+	    "thermistor_nominal": 10000,
+	    "temperature_nominal": 25.0,
+	    "beta_coefficient": 3950,
+	    "temp_offset": 0.0,
+	    "temp_coefficient": 1.0,
+	    "temp_map": [
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id": 2,
+	    "name": "pico_temp",
+	    "sensor_type": 0,
+	    "temp_offset": 0.0,
+	    "temp_coefficient": 1.0,
+	    "temp_map": [
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	}
+    ],
+    "vsensors": [
+	{
+	    "id":	0,
+	    "name":	"vsensor1",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout":		30,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	1,
+	    "name":	"vsensor2",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout":		30,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	2,
+	    "name":	"vsensor3",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout":		30,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	3,
+	    "name":	"vsensor4",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout":		30,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	4,
+	    "name":	"vsensor5",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout":		30,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	5,
+	    "name":	"vsensor6",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout":		30,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	6,
+	    "name":	"vsensor7",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout":		30,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	},
+	{
+	    "id":	7,
+	    "name":	"vsensor8",
+	    "mode":	"manual",
+	    "default_temp":	0,
+	    "timeout":		30,
+	    "temp_map":	[
+		[ 20, 0 ],
+		[ 50, 100 ]
+	    ]
+	}
+    ],
+    "fans": [
+	{
+	    "id": 0,
+	    "name": "fan1",
+	    "min_pwm": 0,
+	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
+	    "source_type": "mbfan",
+	    "source_id": 0,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ],
+	    "rpm_factor": 2
+	},
+	{
+	    "id": 1,
+	    "name": "fan2",
+	    "min_pwm": 0,
+	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
+	    "source_type": "mbfan",
+	    "source_id": 0,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ],
+	    "rpm_factor": 2
+	},
+	{
+	    "id": 2,
+	    "name": "fan3",
+	    "min_pwm": 0,
+	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
+	    "source_type": "mbfan",
+	    "source_id": 0,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ],
+	    "rpm_factor": 2
+	},
+	{
+	    "id": 3,
+	    "name": "fan4",
+	    "min_pwm": 0,
+	    "max_pwm": 100,
+	    "pwm_coefficient": 1.0,
+	    "source_type": "mbfan",
+	    "source_id": 0,
+	    "pwm_map": [
+		[ 0, 0	],
+		[ 100, 100 ]
+	    ],
+	    "rpm_factor": 2
+	}
+    ],
+    "mbfans": [
+	{
+	    "id": 0,
+	    "name": "mbfan1",
+	    "min_rpm": 0,
+	    "max_rpm": 10000,
+	    "rpm_coefficient": 1.0,
+	    "rpm_factor": 2,
+	    "source_type": "fan",
+	    "source_id": 0,
+	    "rpm_map": [
+		[ 0, 0 ],
+		[ 10000, 10000 ]
+	    ]
+	}
+    ]
+}

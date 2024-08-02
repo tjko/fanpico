@@ -78,10 +78,11 @@
 #define RX_PIN   -1
 
 /* SPI */
-#define SCK_PIN  -1
-#define MOSI_PIN -1
-#define MISO_PIN -1
-#define CS_PIN   -1
+#define SPI_SHARED     1 /* 0 = dedicated pins, 1 = shared with serial/i2c */
+#define SCK_PIN       -1
+#define MOSI_PIN      -1
+#define MISO_PIN      -1
+#define CS_PIN        -1
 
 #define DC_PIN        -1
 #define LCD_RESET_PIN -1
