@@ -138,7 +138,7 @@ void setup()
 
 #if TTL_SERIAL
 	/* Initialize serial console if configured... */
-	if(cfg->serial_active && !cfg->spi_active) {
+	if(cfg->serial_active && (!cfg->spi_active || !SPI_SHARED)) {
 		stdio_uart_init_full(TTL_SERIAL_UART,
 				TTL_SERIAL_SPEED, TX_PIN, RX_PIN);
 	}

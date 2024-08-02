@@ -77,6 +77,7 @@
 #define RX_PIN    1
 
 /* SPI */
+#define SPI_SHARED     1 /* 0 = dedicated pins, 1 = shared with serial/i2c */
 #define SCK_PIN        2
 #define MOSI_PIN       3
 #define MISO_PIN      -1

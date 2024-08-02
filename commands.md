@@ -2448,9 +2448,12 @@ SYS:SERIAL?
 ```
 
 #### SYStem:SPI
-Enable or disable SPI bus (on connector J18). When SPI bus is enabled I22 (OLED display) and Serial TTL connectors cannot be used
-as these share pins with the SPI bus. 
-Reason to enable SPI bus would be to connect LCD panel on the J18 connector.
+Enable or disable SPI bus (on boards that have "SPI" connector).
+Reason to enable SPI bus would be to connect LCD panel on the SPI connector.
+
+NOTE! On 0804D boards, when SPI bus is enabled I2C (OLED display) and Serial (TTL) connectors cannot be used
+as these share pins with the SPI bus.
+
 
 Example (enable SPI bus):
 ```

@@ -77,6 +77,7 @@
 #define RX_PIN    1
 
 /* SPI */
+#define SPI_SHARED     0 /* 0 = dedicated pins, 1 = shared with serial/i2c */
 #define SCK_PIN        10
 #define MOSI_PIN       11
 #define MISO_PIN      -1
@@ -94,3 +95,7 @@
 #define TTL_SERIAL   1
 #define TTL_SERIAL_UART uart0
 #define TTL_SERIAL_SPEED 115200
+
+/* Use non-default OLED layouts for this board */
+#define R_LAYOUT_128x64 "LMB Input,M1,-,LSensors,S1,S2,S3,V1"
+#define R_LAYOUT_128x128 "LMB Input,M1,-,LSensors,S1,S2,S3,V1,V2,V3"

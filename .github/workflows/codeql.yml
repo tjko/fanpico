@@ -46,36 +46,36 @@ jobs:
     steps:
     - name: Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
-       
+
     - name: Cache Pico-SDK
       id: cache-pico-sdk
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: pico-sdk
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
-    
+
     - if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
       name: Checkout Pico-SDK
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: raspberrypi/pico-sdk
         ref: ${{env.PICO_SDK_REF}}
         path: pico-sdk
         submodules: true
-        
+
     - name: Add PICO_SDK_PATH to Environment
       run: |
         echo "PICO_SDK_PATH=${{github.workspace}}/pico-sdk" >> $GITHUB_ENV
 
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: main
         submodules: recursive
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -105,9 +105,9 @@ jobs:
       run: cmake -S main -B main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=pico_w -DFANPICO_BOARD=0804D
 
     - name: Build
-      run: cmake --build main/build --config ${{env.BUILD_TYPE}}    
-    
+      run: cmake --build main/build --config ${{env.BUILD_TYPE}}
+
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
