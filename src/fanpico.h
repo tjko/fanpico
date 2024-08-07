@@ -372,6 +372,9 @@ void fanpico_mqtt_publish_rpm();
 void fanpico_mqtt_publish_duty();
 void fanpico_mqtt_scpi_command();
 
+/* onewire.c */
+void setup_onewire_bus();
+
 /* telnetd.c */
 void telnetserver_init();
 

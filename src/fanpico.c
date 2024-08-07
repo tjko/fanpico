@@ -41,6 +41,7 @@
 
 #include "fanpico.h"
 
+
 static struct fanpico_state core1_state;
 static struct fanpico_config core1_config;
 static struct fanpico_state transfer_state;
@@ -211,6 +212,9 @@ void setup()
 	/* Configure Tacho pins... */
 	setup_tacho_outputs();
 	setup_tacho_inputs();
+
+	/* Configure 1-Wire pins... */
+	setup_onewire_bus();
 
 	/* Setup timezone */
 	if (strlen(cfg->timezone) > 1) {

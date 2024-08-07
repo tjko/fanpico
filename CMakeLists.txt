@@ -76,6 +76,9 @@ target_sources(libb64 INTERFACE
 # pico-telnetd
 add_subdirectory(libs/pico-telnetd)
 
+# pico-1wire-libe
+add_subdirectory(libs/pico-1wire-lib)
+
 
 # fanpico firmware
 
@@ -93,6 +96,7 @@ add_executable(fanpico
   src/pwm.c
   src/tacho.c
   src/sensors.c
+  src/onewire.c
   src/filters.c
   src/filter_lossypeak.c
   src/filter_sma.c
@@ -152,6 +156,7 @@ target_link_libraries(fanpico PRIVATE
   ss_oled-lib
   bb_spi_lcd-lib
   libb64
+  pico_1wire_lib
   )
 
 if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
