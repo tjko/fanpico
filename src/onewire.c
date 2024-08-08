@@ -75,7 +75,7 @@ void onewire_scan_bus()
 	}
 
 	if (onewire_bus->devices != count) {
-		log_msg(LOG_INFO, "1-Wire device count change detected: %u -> %u",
+		log_msg(LOG_INFO, "1-Wire device count change detected: %u --> %u",
 			onewire_bus->devices, count);
 		for (int i = 0; i < count; i++) {
 			log_msg(LOG_INFO, "1-Wire Device%d: %016llx",

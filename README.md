@@ -131,6 +131,7 @@ Currently following models are available:
 
 Models ending with "D" support a display to see 'real-time' status of fans and temperatures.
 
+
 OLED panel directly mounted on the PCB:
 
 ![FanPico OLED Display](images/oled-status-screen-2.jpg)
@@ -138,6 +139,16 @@ OLED panel directly mounted on the PCB:
 LCD Panel attached via a short cable:
 
 ![FanPico LCD Display](images/theme-default-480x320-small.jpg)
+
+
+#### Accessory Boards (PCB designs)
+Following accessories are available:
+
+|Model|Info|
+|-----|----|
+|[OLED-Adapter](boards/oled-dapter/)|Mounting adapter for OLED boards with different pinouts.|
+|[Power-Board](boards/power-board/)|Adapter for using high-power fans with FanPico.|
+
 
 ## Firmware
 Firmware is developed in C using the Pico SDK. Pre-compiled firmware is released when there is new major features or bug fixes.
@@ -184,6 +195,7 @@ Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 * [bb_spi_lcd-lib](https://github.com/tjko/bb_spi_lcd-lib)
 * [libb64](https://github.com/libb64/libb64)
 * [pico-telnetd](https://github.com/tjko/pico-telnetd)
+* [pico-1wire-lib](https://github.com/tjko/pico-1wire-lib)
 
 ##### Install Pico SDK
 Pico SDK must be installed working before you can compile fanpico.
