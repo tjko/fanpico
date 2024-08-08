@@ -164,6 +164,8 @@ Fanpico supports following commands:
 * [SYStem:MQTT:TOPIC:MBFANPWM?](#systemmqttopicmbfanpwm-1)
 * [SYStem:NAME](#systemname)
 * [SYStem:NAME?](#systemname-1)
+* [SYStem:ONEWIRE](#systemonewire)
+* [SYStem:ONEWIRE?](#systemonewire-1)
 * [SYStem:SENSORS?](#systemsensors)
 * [SYStem:SERIAL](#systemserial)
 * [SYStem:SERIAL?](#systemserial-1)
@@ -2413,6 +2415,32 @@ HomeServer
 ```
 
 
+#### SYStem:ONEWIRE
+Enable or disable 1-Wire Bus. This is disabled by default.
+Enabling 1-Wire bus allows use of 1-Wire temperature sensors.
+
+Note, unit must be rebooted for the change to take effect.
+
+Example (enable 1-Wire bus):
+```
+SYS:ONEWIRE ON
+```
+
+#### SYStem:ONEWIRE?
+Return status whether 1-Wire bus is currently enabled or disabled.
+
+Status|Description
+------|-----------
+ON|Enabled
+OFF|Disabled
+
+Example:
+```
+SYS:ONEWIRE?
+OFF
+```
+
+
 #### SYStem:SENSORS?
 Display number of (temperature) sensors available.
 Last temperature sensor is the internal temperature sensor on the
@@ -2430,7 +2458,7 @@ Reason to disable this could be to use the second I2C bus that is sharing pins w
 
 Example (disable serial console):
 ```
-SYS:SERIAL 0
+SYS:SERIAL OFF
 ```
 
 #### SYStem:SERIAL?
@@ -2438,13 +2466,13 @@ Return status of TTL Serial Console.
 
 Status|Description
 ------|-----------
-1|Enabled
-0|Disabled
+ON|Enabled
+OFF|Disabled
 
 Example:
 ```
 SYS:SERIAL?
-1
+ON
 ```
 
 #### SYStem:SPI

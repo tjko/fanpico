@@ -2469,6 +2469,12 @@ int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
+int cmd_onewire(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->onewire_active, "1-Wire Bus status");
+}
+
 int cmd_serial(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
@@ -2597,6 +2603,9 @@ const struct cmd_t system_commands[] = {
 	{ "MQTT",      4, mqtt_commands,     NULL },
 #endif
 	{ "NAME",      4, NULL,              cmd_name },
+#if ONEWIRE_SUPPORT
+	{ "ONEWIRE",   7, NULL,              cmd_onewire },
+#endif
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "SERIAL",    6, NULL,              cmd_serial },
 	{ "SPI",       3, NULL,              cmd_spi },
