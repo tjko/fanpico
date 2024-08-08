@@ -146,7 +146,7 @@ Following accessories are available:
 
 |Model|Info|
 |-----|----|
-|[OLED-Adapter](boards/oled-dapter/)|Mounting adapter for OLED boards with different pinouts.|
+|[OLED-Adapter](boards/oled-adapter/)|Mounting adapter for OLED boards with different pinouts.|
 |[Power-Board](boards/power-board/)|Adapter for using high-power fans with FanPico.|
 
 
