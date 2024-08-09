@@ -34,6 +34,7 @@
 #include "lwip/altcp_tls.h"
 #endif
 #endif
+#include "pico/util/datetime.h"
 
 #include "fanpico.h"
 
@@ -378,6 +379,7 @@ char* json_status_message()
 	cJSON *json, *l, *o;
 	int i;
 	float rpm;
+	datetime_t t;
 
 	if (!(json = cJSON_CreateObject()))
 		goto panic;
@@ -427,6 +429,14 @@ char* json_status_message()
 		cJSON_AddItemToArray(l, o);
 	}
 
+	if ( rtc_get_datetime(&t) ) {
+		/* Send Data Time stamp to broker for possible use */
+		char datetime_buf[256];
+        char *datetime_str = &datetime_buf[0];
+
+		datetime_to_str(datetime_str, sizeof(datetime_buf), &t);
+		cJSON_AddItemToObject(json, "date time", cJSON_CreateString( datetime_str ));
+	} else log_msg(LOG_WARNING,"rtc_get_datetime(): failed");
 
 	if (!(buf = cJSON_Print(json)))
 		goto panic;
