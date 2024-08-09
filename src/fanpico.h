@@ -213,6 +213,7 @@ struct fanpico_config {
 	char timezone[64];
 	bool spi_active;
 	bool serial_active;
+	float adc_vref;
 #ifdef WIFI_SUPPORT
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
 	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];
