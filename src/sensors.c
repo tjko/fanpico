@@ -60,7 +60,7 @@ double get_temperature(uint8_t input, const struct fanpico_config *config)
 		raw += adc_read();
 	}
 	raw /= ADC_AVG_WINDOW;
-	volt = raw * (config->adc_vref / ADC_MAX_VALUE);
+	volt = raw * ((double)config->adc_vref / ADC_MAX_VALUE);
 
 	if (sensor->type == TEMP_INTERNAL) {
 		t = 27.0 - ((volt - 0.706) / 0.001721);
