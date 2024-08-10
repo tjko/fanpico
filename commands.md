@@ -14,6 +14,8 @@ Fanpico supports following commands:
 * [CONFigure:DELete](#configuredelete)
 * [CONFigure:FANx:NAME](#configurefanxname)
 * [CONFigure:FANx:NAME?](#configurefanxname-1)
+* [CONFigure:FANx:HYSteresis](#CONFigure:FANx:HYSteresis)
+* [CONFigure:FANx:HYSteresis?](#CONFigure:FANx:HYSteresis-1)
 * [CONFigure:FANx:MINpwm](#configurefanxminpwm)
 * [CONFigure:FANx:MINpwm?](#configurefanxminpwm-1)
 * [CONFigure:FANx:MAXpwm](#configurefanxmaxpwm)
@@ -322,6 +324,23 @@ For example:
 ```
 CONF:FAN1:NAME?
 CPU Fan 1
+```
+
+#### CONFigure:FANx:HYSteresis
+Set the hysteresis threshold for a given fan (output) port.
+
+For example:
+```
+CONF:FAN1:HYSteresis 2.0
+```
+
+#### CONFigure:FANx:HYSteresis?
+Query the hysteresis threshold for a given fan (output) port.
+
+For example:
+```
+CONF:FAN8:HYSteresis?
+CONF:FAN8:HYS=1.000000
 ```
 
 #### CONFigure:FANx:MINpwm

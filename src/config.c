@@ -489,6 +489,7 @@ void clear_config(struct fanpico_config *cfg)
 		f->rpm_factor = 2;
 		f->filter = FILTER_NONE;
 		f->filter_ctx = NULL;
+		f->info_hyst = FAN_INFO_HYSTERESIS;
 	}
 
 	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
@@ -744,6 +745,7 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(o, "rpm_factor", cJSON_CreateNumber(f->rpm_factor));
 		cJSON_AddItemToObject(o, "lra_low", cJSON_CreateNumber(f->lra_low));
 		cJSON_AddItemToObject(o, "lra_high", cJSON_CreateNumber(f->lra_high));
+		cJSON_AddItemToObject(o, "hysteresis", cJSON_CreateNumber(f->info_hyst));
 		cJSON_AddItemToArray(fans, o);
 	}
 	cJSON_AddItemToObject(config, "fans", fans);
@@ -1092,6 +1094,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 				f->lra_high = cJSON_GetNumberValue(r);
 			if ((r = cJSON_GetObjectItem(item, "filter")))
 				json2filter(r, &f->filter, &f->filter_ctx);
+			if ((r = cJSON_GetObjectItem(item, "hysteresis")))
+				f->info_hyst = cJSON_GetNumberValue(r);
 		}
 	}
 

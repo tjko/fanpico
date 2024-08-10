@@ -837,6 +837,31 @@ int cmd_fan_source(const char *cmd, const char *args, int query, char *prev_cmd)
 	return ret;
 }
 
+int cmd_fan_info_hys(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int fan;
+	float val;
+
+	fan = atoi(&prev_cmd[3]) - 1;
+	if (fan >= 0 && fan < FAN_COUNT) {
+		if (query) {
+			printf("CONF:FAN%d:HYS=%f\n", fan+1, conf->fans[fan].info_hyst);
+		} else if (str_to_float(args, &val)) {
+			if (val >= 0.0) {
+				log_msg(LOG_NOTICE, "fan%d: change Hysteresis %f --> %f",
+					fan + 1, conf->fans[fan].info_hyst, val);
+				conf->fans[fan].info_hyst = val;
+			} else {
+				log_msg(LOG_WARNING, "fan%d: invalid new value for Hysteresis: %f",
+					fan + 1, val);
+				return 2;
+			}
+		}
+		return 0;
+	}
+	return 1;
+}
+
 int cmd_fan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int fan;
@@ -2692,6 +2717,7 @@ const struct cmd_t fan_c_commands[] = {
 	{ "RPMFactor", 4, NULL,              cmd_fan_rpm_factor },
 	{ "RPMMOde",   5, NULL,              cmd_fan_rpm_mode },
 	{ "SOUrce",    3, NULL,              cmd_fan_source },
+	{ "HYSteresis",3, NULL,              cmd_fan_info_hys },
 	{ 0, 0, 0, 0 }
 };
 

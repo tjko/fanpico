@@ -48,6 +48,7 @@
 #define SENSOR_SERIES_RESISTANCE 10000.0
 
 #define ADC_REF_VOLTAGE 3.0
+#define FAN_INFO_HYSTERESIS 1.0
 #define ADC_MAX_VALUE   (1 << 12)
 #define ADC_AVG_WINDOW  10
 
@@ -138,6 +139,7 @@ struct temp_map {
 
 struct fan_output {
 	char name[MAX_NAME_LEN];
+	float info_hyst;
 
 	/* output PWM signal settings */
 	uint8_t min_pwm;
