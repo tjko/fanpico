@@ -1472,31 +1472,23 @@ int cmd_sensor_ther_nominal(const char *cmd, const char *args, int query, char *
 
 int  cmd_sensor_adc_vref(const char *cmd, const char *args, int query, char *prev_cmd)
 {
-	int sensor;
 	float val;
 
-	sensor = atoi(&prev_cmd[6]) - 1; //all sensors on ADC share same adc_Vref so really a don't care
-	if ((sensor <= 0) || (sensor >= SENSOR_COUNT)) { 
-		log_msg(LOG_WARNING, "invalid sensor %d", sensor + 1);
-		return 2;
-	}
 	if (query) {
-		printf("%.2f\n", conf->adc_vref);
+		printf("%.4f\n", conf->adc_vref);
 		return 0;
 	} else if (str_to_float(args, &val)) {
 		if (val > 0.0) {
-			log_msg(LOG_NOTICE, "change adc voltage reference from %.2f volts --> %.2f volts",
-					conf->adc_vref,
-					val);
+			log_msg(LOG_NOTICE, "Change ADC voltage reference from %.4f volts --> %.4f volts",
+				conf->adc_vref,	val);
 			conf->adc_vref = val;
 			return 0;
 		} else {
-		    log_msg(LOG_WARNING, "sensor%d: invalid adc voltage reference: %f",
-					sensor + 1, val);
+		    log_msg(LOG_WARNING, "Invalid ADC voltage reference: %f", val);
 			return 2;
 		}
 	}
-    return 1;
+	return 1;
 }
 
 int cmd_sensor_beta_coef(const char *cmd, const char *args, int query, char *prev_cmd)
@@ -2673,6 +2665,7 @@ const struct cmd_t system_commands[] = {
 	{ "UPTIme",    4, NULL,              cmd_uptime },
 	{ "VERsion",   3, NULL,              cmd_version },
 	{ "VENSORS",   8, NULL,              cmd_vsensors },
+	{ "VREFadc",   4, NULL,              cmd_sensor_adc_vref },
 	{ "WIFI",      4, wifi_commands,     cmd_wifi },
 	{ 0, 0, 0, 0 }
 };
@@ -2712,7 +2705,6 @@ const struct cmd_t sensor_c_commands[] = {
 	{ "TEMPNominal", 5, NULL,            cmd_sensor_temp_nominal },
 	{ "TEMPOffset",  5, NULL,            cmd_sensor_temp_offset },
 	{ "THERmistor",  4, NULL,            cmd_sensor_ther_nominal },
-	{ "VREFadc",     4, NULL,            cmd_sensor_adc_vref },
 	{ 0, 0, 0, 0 }
 };
 
