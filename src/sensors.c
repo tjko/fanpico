@@ -46,7 +46,6 @@ double get_temperature(uint8_t input, const struct fanpico_config *config)
 	double t, r, volt;
 	int i;
 	const struct sensor_input *sensor;
-	const float adc_vref = config->adc_vref;
 
 	if (input >= SENSOR_COUNT)
 		return 0.0;
@@ -61,7 +60,7 @@ double get_temperature(uint8_t input, const struct fanpico_config *config)
 		raw += adc_read();
 	}
 	raw /= ADC_AVG_WINDOW;
-	volt = raw * (adc_vref / ADC_MAX_VALUE);
+	volt = raw * (config->adc_vref / ADC_MAX_VALUE);
 
 	if (sensor->type == TEMP_INTERNAL) {
 		t = 27.0 - ((volt - 0.706) / 0.001721);
@@ -140,6 +139,18 @@ double get_vsensor(uint8_t i, struct fanpico_config *config,
 				t = s->default_temp;
 			}
 		}
+	} else if (s->mode == VSMODE_ONEWIRE) {
+		uint64_t a = 0;
+		int idx = -1;
+		for (int j = 0; j < ONEWIRE_MAX_COUNT; j++) {
+			if (!(a = onewire_address(j)))
+				break;
+			if (a == s->onewire_addr) {
+				idx = j;
+				break;
+			}
+		}
+		t = (idx >= 0 ? state->onewire_temp[idx] : 0.0);
 	} else  {
 		int count = 0;
 		t = 0.0;

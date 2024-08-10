@@ -80,7 +80,7 @@ enum pwm_source_types {
 	PWM_FAN     = 3,     /* Another fan */
 	PWM_VSENSOR = 4,     /* Virtual sensor */
 };
-#define PWM_SOURCE_ENUM_MAX 3
+#define PWM_SOURCE_ENUM_MAX 4
 
 enum signal_filter_types {
 	FILTER_NONE = 0,      /* No filtering */
@@ -96,7 +96,7 @@ enum tacho_source_types {
 	TACHO_MAX    = 3,     /* Fastest tacho signal from a group of fans. */
 	TACHO_AVG    = 4,     /* Average tacho signal from a group of fans. */
 };
-#define TACHO_ENUM_MAX 1
+#define TACHO_ENUM_MAX 4
 
 enum temp_sensor_types {
 	TEMP_INTERNAL = 0,
@@ -110,8 +110,9 @@ enum vsensor_modes {
 	VSMODE_MIN = 2,
 	VSMODE_AVG = 3,
 	VSMODE_DELTA = 4,
+	VSMODE_ONEWIRE = 5,
 };
-#define VSMODE_ENUM_MAX 4
+#define VSMODE_ENUM_MAX 5
 
 enum rpm_modes {
 	RMODE_TACHO = 0,  /* Normal Tachometer signal */
@@ -195,6 +196,7 @@ struct vsensor_input {
 	float default_temp;
 	int32_t timeout;
 	uint8_t sensors[VSENSOR_SOURCE_MAX_COUNT];
+	uint64_t onewire_addr;
 	struct temp_map map;
 	enum signal_filter_types filter;
 	void *filter_ctx;
