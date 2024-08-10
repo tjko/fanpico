@@ -164,6 +164,9 @@ Fanpico supports following commands:
 * [SYStem:MQTT:TOPIC:MBFANPWM?](#systemmqttopicmbfanpwm-1)
 * [SYStem:NAME](#systemname)
 * [SYStem:NAME?](#systemname-1)
+* [SYStem:ONEWIRE](#systemonewire)
+* [SYStem:ONEWIRE?](#systemonewire-1)
+* [SYStem:ONEWIRE:SENSORS?](#systemonewiresensors)
 * [SYStem:SENSORS?](#systemsensors)
 * [SYStem:SERIAL](#systemserial)
 * [SYStem:SERIAL?](#systemserial-1)
@@ -1016,7 +1019,7 @@ These can be "sensors" that are updated by software, like "CPU Temperature" of h
 Or these can be be virtual sensors that report value of multiple physical sensors fed through a mathematical formula.
 
 
-Where x is a number from 1 to 3.
+Where x is a number from 1 to 8.
 
 Virtual Sensor Mode|Description
 ------|-----------
@@ -1025,6 +1028,7 @@ max|Maximum temperature of configured source sensors.
 min|Minimum temperature of configured source sensors.
 avg|Average temperature of configured source sensors.
 delta|Temperature delta between readings from two source sensors.
+onewire|Reading from digital 1-Wire sensor
 
 
 #### CONFigure:VSENSORx:NAME
@@ -1056,6 +1060,7 @@ MAX|Maximum temperatore between source sensors|2+|sensor_a, sensor_b, ...
 MIN|Minimum temperature between source sensors|2+|sensor_a, sensor_b, ...
 AVG|Average temperature between source sensors|2+|sensor_a, sensor_b, ...
 DELTA|Temperature delta between to source sensors|2|sensor_a, sensor_b
+ONEWIRE|Temperatur reading from digital 1-Wire sensor|1|onewire_address
 
 
 Note, in "manual" mode if timeout_ms is set to zero, then sensor's temperature reading
@@ -1091,6 +1096,14 @@ Example: Set VSENSOR3 to report average temperature between SENSOR1, SENSOR2, an
 ```
 CONF:VSENSOR3:SOURCE avg,1,2,101
 ```
+
+Example: Set VSENSOR4 to report temperature from 1-Wire sensor with address 2871d86a0000005a:
+```
+CONF:VENSOR4:SOURCE onewire,2871d86a0000005a
+```
+
+(to get list of currently active 1-Wire sensors use: SYS:ONEWIRE:SENSORS?)
+
 
 #### CONFigure:VSENSORx:SOUrce?
 Query a virtual temperature sensor configuration (temperature reading source).
@@ -2415,6 +2428,47 @@ HomeServer
 ```
 
 
+#### SYStem:ONEWIRE
+Enable or disable 1-Wire Bus. This is disabled by default.
+Enabling 1-Wire bus allows use of 1-Wire temperature sensors.
+
+Note, unit must be rebooted for the change to take effect.
+
+Example (enable 1-Wire bus):
+```
+SYS:ONEWIRE ON
+```
+
+#### SYStem:ONEWIRE?
+Return status whether 1-Wire bus is currently enabled or disabled.
+
+Status|Description
+------|-----------
+ON|Enabled
+OFF|Disabled
+
+Example:
+```
+SYS:ONEWIRE?
+OFF
+```
+
+
+#### SYStem:ONEWIRE:SENSORS?
+Return list of currently active (detected at boot time) 1-Wire bus devices, and last temperature
+measurement results.
+
+Output format: <sensor number>,<onewire address>,<temperature>
+
+Example:
+```
+SYS:ONEWIRE:SENSORS?
+1,28821e6a000000cf,23.4
+2,2871d86a0000005a,23.0
+3,22a275180000003c,23.9
+```
+
+
 #### SYStem:SENSORS?
 Display number of (temperature) sensors available.
 Last temperature sensor is the internal temperature sensor on the
@@ -2432,7 +2486,7 @@ Reason to disable this could be to use the second I2C bus that is sharing pins w
 
 Example (disable serial console):
 ```
-SYS:SERIAL 0
+SYS:SERIAL OFF
 ```
 
 #### SYStem:SERIAL?
@@ -2440,13 +2494,13 @@ Return status of TTL Serial Console.
 
 Status|Description
 ------|-----------
-1|Enabled
-0|Disabled
+ON|Enabled
+OFF|Disabled
 
 Example:
 ```
 SYS:SERIAL?
-1
+ON
 ```
 
 #### SYStem:SPI

@@ -87,4 +87,8 @@
 #define DC_PIN        -1
 #define LCD_RESET_PIN -1
 #define LCD_LIGHT_PIN -1
-#define ONEWIRE_PIN   -1
+
+#define ONEWIRE_SUPPORT 0
+#define ONEWIRE_SHARED  1 /* 0 = dedicated pins, 1 = shared with serial */
+#define ONEWIRE_PIN    -1
+

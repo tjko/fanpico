@@ -22,6 +22,7 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * Controls up to 8 fans.
 * Connect up to 4 motherboard fan outputs.
 * Connect up to 2 remote temperature probes (plus onboard "ambient" temperature sensor).
+* Support for 1-Wire Temperature sensors (up to 8 sensors)
 * [OLED](https://github.com/tjko/fanpico/wiki/OLED-(I2C)-Display-Support) and [LCD](https://github.com/tjko/fanpico/wiki/LCD-(SPI)-Panel-Connection) display support (boards where model name ends with "D").
 * Can be powered from motherboard fan outputs or using (AUX) 4-pin floppy connector.
 * Ability to define custom fan "curves" for each fan.
@@ -53,7 +54,7 @@ I would like to thank following sponsors, who have helped FanPico project:
 
 
 ## Where can I get one?
-Currently Fanpico is available as a DIY project. 
+Currently Fanpico is available as a DIY project.
 Check discussion forums for places to purchase Kits or PCBs: [Places to Purchase FanPico](https://github.com/tjko/fanpico/discussions/12)
 
 (Instructions for building the kit are in [FanPico Wiki](https://github.com/tjko/fanpico/wiki))
@@ -90,13 +91,14 @@ Fanpico is Open Source Hardware, reference design is provided for the "0804" mod
 
 Additional models with different combinations of fan inputs/outputs could be easily designed (takining into account limitations of Raspberry Pi Pico I/O limits). New and improved PCB models/designs are most welcome.
 
+Model "0840D" with (with right-angle connectors):
+
+[![Fanpico-0804D](images/fanpico-0804D-v1.2b.jpg)](images/fanpico-0804D-v1.2b-large.jpg?raw=true)
+
 Model "0804" without display (with straight connectors):
 
 ![Fanpico-0804](images/fanpico-0804.jpg)
 
-Model "0840D" with (with right-angle connectors):
-
-[![Fanpico-0804D](images/fanpico-0804D-v1.2b.jpg)](images/fanpico-0804D-v1.2b-large.jpg?raw=true)
 
 
 ### Hardware Design
@@ -131,6 +133,7 @@ Currently following models are available:
 
 Models ending with "D" support a display to see 'real-time' status of fans and temperatures.
 
+
 OLED panel directly mounted on the PCB:
 
 ![FanPico OLED Display](images/oled-status-screen-2.jpg)
@@ -138,6 +141,16 @@ OLED panel directly mounted on the PCB:
 LCD Panel attached via a short cable:
 
 ![FanPico LCD Display](images/theme-default-480x320-small.jpg)
+
+
+#### Accessory Boards (PCB designs)
+Following accessories are available:
+
+|Model|Info|
+|-----|----|
+|[OLED-Adapter](boards/oled-adapter/)|Mounting adapter for OLED boards with different pinouts.|
+|[Power-Board](boards/power-board/)|Adapter for using high-power fans with FanPico.|
+
 
 ## Firmware
 Firmware is developed in C using the Pico SDK. Pre-compiled firmware is released when there is new major features or bug fixes.
@@ -184,6 +197,7 @@ Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 * [bb_spi_lcd-lib](https://github.com/tjko/bb_spi_lcd-lib)
 * [libb64](https://github.com/libb64/libb64)
 * [pico-telnetd](https://github.com/tjko/pico-telnetd)
+* [pico-1wire-lib](https://github.com/tjko/pico-1wire-lib)
 
 ##### Install Pico SDK
 Pico SDK must be installed working before you can compile fanpico.

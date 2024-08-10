@@ -41,7 +41,9 @@
 #define VSENSOR_MAX_COUNT 8   /* Max number of virtual sensors */
 
 #define VSENSOR_SOURCE_MAX_COUNT 8
-#define VSENSOR_COUNT 8
+#define VSENSOR_COUNT            8
+
+#define ONEWIRE_MAX_COUNT        8
 
 #define SENSOR_SERIES_RESISTANCE 10000.0
 
@@ -78,7 +80,7 @@ enum pwm_source_types {
 	PWM_FAN     = 3,     /* Another fan */
 	PWM_VSENSOR = 4,     /* Virtual sensor */
 };
-#define PWM_SOURCE_ENUM_MAX 3
+#define PWM_SOURCE_ENUM_MAX 4
 
 enum signal_filter_types {
 	FILTER_NONE = 0,      /* No filtering */
@@ -94,7 +96,7 @@ enum tacho_source_types {
 	TACHO_MAX    = 3,     /* Fastest tacho signal from a group of fans. */
 	TACHO_AVG    = 4,     /* Average tacho signal from a group of fans. */
 };
-#define TACHO_ENUM_MAX 1
+#define TACHO_ENUM_MAX 4
 
 enum temp_sensor_types {
 	TEMP_INTERNAL = 0,
@@ -108,8 +110,9 @@ enum vsensor_modes {
 	VSMODE_MIN = 2,
 	VSMODE_AVG = 3,
 	VSMODE_DELTA = 4,
+	VSMODE_ONEWIRE = 5,
 };
-#define VSMODE_ENUM_MAX 4
+#define VSMODE_ENUM_MAX 5
 
 enum rpm_modes {
 	RMODE_TACHO = 0,  /* Normal Tachometer signal */
@@ -193,6 +196,7 @@ struct vsensor_input {
 	float default_temp;
 	int32_t timeout;
 	uint8_t sensors[VSENSOR_SOURCE_MAX_COUNT];
+	uint64_t onewire_addr;
 	struct temp_map map;
 	enum signal_filter_types filter;
 	void *filter_ctx;
@@ -213,6 +217,7 @@ struct fanpico_config {
 	char timezone[64];
 	bool spi_active;
 	bool serial_active;
+	bool onewire_active;
 	float adc_vref;
 #ifdef WIFI_SUPPORT
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
@@ -271,6 +276,9 @@ struct fanpico_state {
 	float vtemp[VSENSOR_MAX_COUNT];
 	absolute_time_t vtemp_updated[VSENSOR_MAX_COUNT];
 	float vtemp_prev[VSENSOR_MAX_COUNT];
+	float onewire_temp[ONEWIRE_MAX_COUNT];
+	absolute_time_t onewire_temp_updated[VSENSOR_MAX_COUNT];
+	float prev_onewire_temp[ONEWIRE_MAX_COUNT];
 	/* outputs */
 	float fan_duty[FAN_MAX_COUNT];
 	float fan_duty_prev[FAN_MAX_COUNT];
@@ -372,6 +380,11 @@ void fanpico_mqtt_publish_temp();
 void fanpico_mqtt_publish_rpm();
 void fanpico_mqtt_publish_duty();
 void fanpico_mqtt_scpi_command();
+
+/* onewire.c */
+void setup_onewire_bus();
+int onewire_read_temps(struct fanpico_config *config, struct fanpico_state *state);
+uint64_t onewire_address(uint sensor);
 
 /* telnetd.c */
 void telnetserver_init();

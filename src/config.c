@@ -113,6 +113,8 @@ int str2vsmode(const char *s)
 			ret = VSMODE_AVG;
 		else if (!strncasecmp(s, "delta", 5))
 			ret = VSMODE_DELTA;
+		else if (!strncasecmp(s, "onewire", 7))
+			ret = VSMODE_ONEWIRE;
 	}
 
 	return ret;
@@ -128,6 +130,8 @@ const char* vsmode2str(enum vsensor_modes mode)
 		return "avg";
 	else if (mode == VSMODE_DELTA)
 		return "delta";
+	else if (mode == VSMODE_ONEWIRE)
+		return "onewire";
 
 	return "manual";
 }
@@ -185,6 +189,21 @@ const char* tacho_source2str(enum tacho_source_types source)
 		return "avg";
 
 	return "fixed";
+}
+
+
+const char* onewireaddr2str(uint64_t addr)
+{
+	static char s[17];
+
+	snprintf(s, sizeof(s), "%016llx", addr);
+	return s;
+}
+
+
+uint64_t str2onewireaddr(const char *s)
+{
+	return strtoull(s, NULL, 16);
 }
 
 
@@ -441,6 +460,7 @@ void clear_config(struct fanpico_config *cfg)
 		vs->timeout = 30;
 		for (j = 0; j < SENSOR_MAX_COUNT; j++)
 			vs->sensors[j] = 0;
+		vs->onewire_addr = 0;
 		vs->map.points = 2;
 		vs->map.temp[0][0] = 20.0;
 		vs->map.temp[0][1] = 0.0;
@@ -494,7 +514,8 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->local_echo = false;
 	cfg->spi_active = false;
 	cfg->serial_active = false;
-	cfg->adc_vref = ADC_REF_VOLTAGE; //Zitt
+	cfg->onewire_active = false;
+	cfg->adc_vref = ADC_REF_VOLTAGE;
 	cfg->led_mode = 0;
 	strncopy(cfg->name, "fanpico1", sizeof(cfg->name));
 	strncopy(cfg->display_type, "default", sizeof(cfg->display_type));
@@ -565,6 +586,7 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	cJSON_AddItemToObject(config, "led_mode", cJSON_CreateNumber(cfg->led_mode));
 	cJSON_AddItemToObject(config, "spi_active", cJSON_CreateNumber(cfg->spi_active));
 	cJSON_AddItemToObject(config, "serial_active", cJSON_CreateNumber(cfg->serial_active));
+	cJSON_AddItemToObject(config, "onewire_active", cJSON_CreateNumber(cfg->onewire_active));
 	cJSON_AddItemToObject(config, "adc_vref", cJSON_CreateNumber(cfg->adc_vref)); //Zitt
 	if (strlen(cfg->display_type) > 0)
 		cJSON_AddItemToObject(config, "display_type", cJSON_CreateString(cfg->display_type));
@@ -802,6 +824,9 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		if (s->mode == VSMODE_MANUAL) {
 			cJSON_AddItemToObject(o, "default_temp", cJSON_CreateNumber(s->default_temp));
 			cJSON_AddItemToObject(o, "timeout", cJSON_CreateNumber(s->timeout));
+		} else if (s->mode == VSMODE_ONEWIRE) {
+			cJSON_AddItemToObject(o, "onewire_addr",
+					cJSON_CreateString(onewireaddr2str(s->onewire_addr)));
 		} else {
 			cJSON_AddItemToObject(o, "sensors", vsensors2json(s->sensors));
 		}
@@ -848,6 +873,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		cfg->spi_active = cJSON_GetNumberValue(ref);
 	if ((ref = cJSON_GetObjectItem(config, "serial_active")))
 		cfg->serial_active = cJSON_GetNumberValue(ref);
+	if ((ref = cJSON_GetObjectItem(config, "onewire_active")))
+		cfg->onewire_active = cJSON_GetNumberValue(ref);
 	if ((ref = cJSON_GetObjectItem(config, "adc_vref")))
 	    cfg->adc_vref = cJSON_GetNumberValue(ref);
 	if ((ref = cJSON_GetObjectItem(config, "display_type"))) {
@@ -1150,6 +1177,9 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 					s->default_temp = cJSON_GetNumberValue(r);
 				if ((r = cJSON_GetObjectItem(item, "timeout")))
 					s->timeout = cJSON_GetNumberValue(r);
+			} else if (s->mode == VSMODE_ONEWIRE) {
+				if ((r = cJSON_GetObjectItem(item, "onewire_addr")))
+					s->onewire_addr = str2onewireaddr(cJSON_GetStringValue(r));
 			} else {
 				if ((r = cJSON_GetObjectItem(item, "sensors")))
 					json2vsensors(r, s->sensors);
