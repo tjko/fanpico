@@ -28,21 +28,31 @@
 
 #include "fanpico.h"
 
-#define MAX_1WIRE_DEVICES   32
 
 
 typedef struct onewire_state_t {
 	pico_1wire_t *ctx;
 	uint devices;
-	uint64_t addr[MAX_1WIRE_DEVICES];
+	uint64_t addr[ONEWIRE_MAX_COUNT];
+	float temp[ONEWIRE_MAX_COUNT];
 } onewire_state_t;
 
-onewire_state_t onewire_state_struct;
-onewire_state_t *onewire_bus = &onewire_state_struct;
+static onewire_state_t onewire_state_struct;
+static onewire_state_t *onewire_bus = &onewire_state_struct;
+
+
+uint64_t onewire_address(uint sensor)
+{
+	if (sensor >= onewire_bus->devices)
+		return 0;
+
+	return onewire_bus->addr[sensor];
+}
+
 
 void onewire_scan_bus()
 {
-	int res;
+	int res, retries;
 	bool psu;
 	uint count;
 
@@ -52,7 +62,10 @@ void onewire_scan_bus()
 	log_msg(LOG_INFO, "Scanning 1-Wire bus...");
 
 	/* Check for any devices on the bus... */
-	res = pico_1wire_reset_bus(onewire_bus->ctx);
+	retries = 0;
+	do {
+		res = pico_1wire_reset_bus(onewire_bus->ctx);
+	} while (!res && retries++ < 3);
 	if (!res) {
 		log_msg(LOG_INFO, "No devices found in 1-Wire bus.");
 		return;
@@ -68,8 +81,11 @@ void onewire_scan_bus()
 
 	/* Search for devices... */
 	res = pico_1wire_search_rom(onewire_bus->ctx, onewire_bus->addr,
-				MAX_1WIRE_DEVICES, &count);
-	if (res) {
+				ONEWIRE_MAX_COUNT, &count);
+	if (res == 2) {
+		log_msg(LOG_NOTICE, "1-Wire bus has more than %d devices.",
+			ONEWIRE_MAX_COUNT);
+	} else 	if (res) {
 		log_msg(LOG_NOTICE, "1-Wire Search ROM Addresses failed: %d", res);
 		return;
 	}
@@ -85,20 +101,73 @@ void onewire_scan_bus()
 	}
 }
 
+int onewire_read_temps(struct fanpico_config *config, struct fanpico_state *state)
+{
+	static uint step = 0;
+	static uint sensor = 0;
+	int res;
+	float temp;
+
+	if (!onewire_bus->ctx)
+		return -1;
+
+	if (step > 1)
+		step = 0;
+	if (onewire_bus->devices < 1)
+		step = 2;
+
+	if (step == 0) {
+		/* Send "Convert Temperature" command to all devices. */
+		res = pico_1wire_convert_temperature(onewire_bus->ctx, 0, false);
+		if (res) {
+			log_msg(LOG_INFO, "pico_1wire_convert_temperature() failed: %d", res);
+			step = 2;
+		} else {
+			log_msg(LOG_DEBUG, "1-Wire Initiate temperature conversion");
+			sensor = 0;
+			step++;
+		}
+		return 1000; /* delay 1sec before reading measurement results (min 750ms) */
+	}
+	else if (step == 1) {
+		if (sensor < onewire_bus->devices) {
+			/* Read Temperature from one sensor */
+			res = pico_1wire_get_temperature(onewire_bus->ctx, onewire_bus->addr[sensor], &temp);
+			if (res) {
+				log_msg(LOG_INFO, "1-Wire Device%d: cannot get temperature: %d",
+					sensor + 1, res);
+			} else {
+				log_msg(LOG_DEBUG, "1-Wire Device%d: temperature %5.1fC",
+					sensor + 1, temp);
+				state->onewire_temp[sensor] = temp;
+				state->onewire_temp_updated[sensor] = get_absolute_time();
+			}
+			sensor++;
+			return 100; /* delay 100ms between reading sensors */
+		}
+		step = 2;
+	}
+
+	return 15000; /* delay 15sec between measurements */
+}
+
 
 void setup_onewire_bus()
 {
 	memset(onewire_bus, 0, sizeof(onewire_state_t));
 
-#if ONEWIRE_SUPPORT
-	log_msg(LOG_NOTICE, "Initializing 1-Wire Bus...");
-
-	onewire_bus->ctx = pico_1wire_init(ONEWIRE_PIN, -1, true);
-	if (!onewire_bus->ctx) {
-		log_msg(LOG_ERR, "1-Wire intialization failed!");
+	if (!cfg->onewire_active) {
+		log_msg(LOG_INFO, "1-Wire Bus disabled");
 		return;
 	}
+	else if ((!cfg->spi_active && !cfg->serial_active) || !ONEWIRE_SHARED) {
+		log_msg(LOG_NOTICE, "Initializing 1-Wire Bus...");
 
-	onewire_scan_bus();
-#endif
+		onewire_bus->ctx = pico_1wire_init(ONEWIRE_PIN, -1, true);
+		if (!onewire_bus->ctx) {
+			log_msg(LOG_ERR, "1-Wire intialization failed!");
+			return;
+		}
+		onewire_scan_bus();
+	}
 }

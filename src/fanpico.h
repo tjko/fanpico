@@ -41,7 +41,9 @@
 #define VSENSOR_MAX_COUNT 8   /* Max number of virtual sensors */
 
 #define VSENSOR_SOURCE_MAX_COUNT 8
-#define VSENSOR_COUNT 8
+#define VSENSOR_COUNT            8
+
+#define ONEWIRE_MAX_COUNT        8
 
 #define SENSOR_SERIES_RESISTANCE 10000.0
 
@@ -271,6 +273,9 @@ struct fanpico_state {
 	float vtemp[VSENSOR_MAX_COUNT];
 	absolute_time_t vtemp_updated[VSENSOR_MAX_COUNT];
 	float vtemp_prev[VSENSOR_MAX_COUNT];
+	float onewire_temp[ONEWIRE_MAX_COUNT];
+	absolute_time_t onewire_temp_updated[VSENSOR_MAX_COUNT];
+	float prev_onewire_temp[ONEWIRE_MAX_COUNT];
 	/* outputs */
 	float fan_duty[FAN_MAX_COUNT];
 	float fan_duty_prev[FAN_MAX_COUNT];
@@ -375,6 +380,8 @@ void fanpico_mqtt_scpi_command();
 
 /* onewire.c */
 void setup_onewire_bus();
+int onewire_read_temps(struct fanpico_config *config, struct fanpico_state *state);
+uint64_t onewire_address(uint sensor);
 
 /* telnetd.c */
 void telnetserver_init();

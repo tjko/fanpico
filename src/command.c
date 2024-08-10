@@ -2475,6 +2475,27 @@ int cmd_onewire(const char *cmd, const char *args, int query, char *prev_cmd)
 			&conf->onewire_active, "1-Wire Bus status");
 }
 
+int cmd_onewire_sensors(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int i;
+
+	if (!query)
+		return 1;
+
+	if (!conf->onewire_active)
+		return -1;
+
+	for (i = 0; i < ONEWIRE_MAX_COUNT; i++) {
+		uint64_t addr = onewire_address(i);
+		if (addr) {
+			printf("onewire%d,%016llx,%1.1f\n", i + 1,
+				addr, st->onewire_temp[i]);
+		}
+	}
+
+	return 0;
+}
+
 int cmd_serial(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
@@ -2587,6 +2608,11 @@ const struct cmd_t telnet_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t onewire_commands[] = {
+	{ "SENsors",   3, NULL,              cmd_onewire_sensors },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
 	{ "DISPlay",   4, display_commands,  cmd_display_type },
@@ -2604,7 +2630,7 @@ const struct cmd_t system_commands[] = {
 #endif
 	{ "NAME",      4, NULL,              cmd_name },
 #if ONEWIRE_SUPPORT
-	{ "ONEWIRE",   7, NULL,              cmd_onewire },
+	{ "ONEWIRE",   7, onewire_commands,  cmd_onewire },
 #endif
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "SERIAL",    6, NULL,              cmd_serial },

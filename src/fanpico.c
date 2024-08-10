@@ -312,10 +312,12 @@ void core1_main()
 	struct fanpico_config *config = &core1_config;
 	struct fanpico_state *state = &core1_state;
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_temp, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_onewire_temp, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_tacho, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_poll_pwm, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_set_outputs, 0);
 	absolute_time_t t_last, t_now, t_config, t_state;
+	int onewire_delay = 5000;
 	int64_t max_delta = 0;
 	int64_t delta;
 
@@ -387,6 +389,13 @@ void core1_main()
 						state->vtemp[i]);
 					state->vtemp_prev[i] = state->vtemp[i];
 				}
+			}
+		}
+
+		/* Read 1-Wire temperature sensors */
+		if (config->onewire_active && onewire_delay > 0) {
+			if (time_passed(&t_onewire_temp, onewire_delay)) {
+				onewire_delay = onewire_read_temps(config, state);
 			}
 		}
 
