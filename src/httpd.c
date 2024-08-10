@@ -244,7 +244,7 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	const struct fanpico_state *st = fanpico_state;
 	size_t printed = 0;
 
-	printf("ssi_handler(\"%s\",%lx,%d,%u,%u)\n", tag, (uint32_t)insert, insertlen, current_tag_part, *next_tag_part);
+	/* printf("ssi_handler(\"%s\",%lx,%d,%u,%u)\n", tag, (uint32_t)insert, insertlen, current_tag_part, *next_tag_part); */
 
 	if (!strncmp(tag, "datetime", 8)) {
 		datetime_t t;
