@@ -70,7 +70,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        path: main
         submodules: recursive
 
     # Initializes the CodeQL tools for scanning.
@@ -102,10 +101,10 @@ jobs:
     #     ./location_of_script_within_repo/buildscript.sh
 
     - name: Configure CMake
-      run: cmake -S main -B main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=pico_w -DFANPICO_BOARD=0804D
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=pico_w -DFANPICO_BOARD=0804D
 
     - name: Build
-      run: cmake --build main/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
