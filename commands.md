@@ -192,6 +192,8 @@ Fanpico supports following commands:
 * [SYStem:UPTIme?](#systemuptime)
 * [SYStem:UPGRADE](#systemupgrade)
 * [SYStem:VERsion?](#systemversion)
+* [SYStem:VREFadc](#systemvrefadc)
+* [SYStem:VREFadc?](#systemvrefadc-1)
 * [SYStem:VSENSORS?](#systemvsensors)
 * [SYStem:WIFI?](#systemwifi)
 * [SYStem:WIFI:COUntry](#systemwificountry)
@@ -2760,6 +2762,26 @@ Example:
 ```
 SYS:VSENSORS?
 8
+```
+
+
+#### SYStem:VREFadc
+Set actual (measured with a volt meter) reference voltage (Vref) for ADC.
+
+Example:
+```
+SYS:VREFADC
+3.002
+```
+
+
+#### SYStem:VREFadc?
+Display currently configured ADC voltage reference voltage.
+
+Example:
+```
+SYS:VREFADC?
+3.0000
 ```
 
 

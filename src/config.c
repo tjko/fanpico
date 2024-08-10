@@ -848,10 +848,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		cfg->spi_active = cJSON_GetNumberValue(ref);
 	if ((ref = cJSON_GetObjectItem(config, "serial_active")))
 		cfg->serial_active = cJSON_GetNumberValue(ref);
-	//Zitt: BEGIN
-	if ((ref = cJSON_GetObjectItem(config, "adc_vref")))	
+	if ((ref = cJSON_GetObjectItem(config, "adc_vref")))
 	    cfg->adc_vref = cJSON_GetNumberValue(ref);
-	//Zitt: END
 	if ((ref = cJSON_GetObjectItem(config, "display_type"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->display_type, val, sizeof(cfg->display_type));

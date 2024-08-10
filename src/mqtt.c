@@ -25,6 +25,7 @@
 #include <assert.h>
 #include "hardware/rtc.h"
 #include "pico/stdlib.h"
+#include "pico/util/datetime.h"
 #include "cJSON.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
@@ -34,7 +35,6 @@
 #include "lwip/altcp_tls.h"
 #endif
 #endif
-#include "pico/util/datetime.h"
 
 #include "fanpico.h"
 
@@ -431,12 +431,10 @@ char* json_status_message()
 
 	if ( rtc_get_datetime(&t) ) {
 		/* Send Data Time stamp to broker for possible use */
-		char datetime_buf[256];
-        char *datetime_str = &datetime_buf[0];
-
-		datetime_to_str(datetime_str, sizeof(datetime_buf), &t);
-		cJSON_AddItemToObject(json, "date time", cJSON_CreateString( datetime_str ));
-	} else log_msg(LOG_WARNING,"rtc_get_datetime(): failed");
+		char datetime_buf[64];
+		datetime_to_str(datetime_buf, sizeof(datetime_buf), &t);
+		cJSON_AddItemToObject(json, "datetime", cJSON_CreateString( datetime_buf ));
+	}
 
 	if (!(buf = cJSON_Print(json)))
 		goto panic;
