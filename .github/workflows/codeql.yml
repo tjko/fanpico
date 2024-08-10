@@ -47,6 +47,11 @@ jobs:
     - name: Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
 
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
     - name: Cache Pico-SDK
       id: cache-pico-sdk
       uses: actions/cache@v4
@@ -61,16 +66,12 @@ jobs:
         repository: raspberrypi/pico-sdk
         ref: ${{env.PICO_SDK_REF}}
         path: pico-sdk
-        submodules: true
+        submodules: recursive
 
     - name: Add PICO_SDK_PATH to Environment
       run: |
         echo "PICO_SDK_PATH=${{github.workspace}}/pico-sdk" >> $GITHUB_ENV
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
