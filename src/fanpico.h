@@ -216,6 +216,7 @@ struct fanpico_config {
 	bool spi_active;
 	bool serial_active;
 	bool onewire_active;
+	float adc_vref;
 #ifdef WIFI_SUPPORT
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
 	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];

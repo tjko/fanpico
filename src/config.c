@@ -495,6 +495,7 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->spi_active = false;
 	cfg->serial_active = false;
 	cfg->onewire_active = false;
+	cfg->adc_vref = ADC_REF_VOLTAGE;
 	cfg->led_mode = 0;
 	strncopy(cfg->name, "fanpico1", sizeof(cfg->name));
 	strncopy(cfg->display_type, "default", sizeof(cfg->display_type));
@@ -566,6 +567,7 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	cJSON_AddItemToObject(config, "spi_active", cJSON_CreateNumber(cfg->spi_active));
 	cJSON_AddItemToObject(config, "serial_active", cJSON_CreateNumber(cfg->serial_active));
 	cJSON_AddItemToObject(config, "onewire_active", cJSON_CreateNumber(cfg->onewire_active));
+	cJSON_AddItemToObject(config, "adc_vref", cJSON_CreateNumber(cfg->adc_vref)); //Zitt
 	if (strlen(cfg->display_type) > 0)
 		cJSON_AddItemToObject(config, "display_type", cJSON_CreateString(cfg->display_type));
 	if (strlen(cfg->display_theme) > 0)
@@ -850,6 +852,8 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		cfg->serial_active = cJSON_GetNumberValue(ref);
 	if ((ref = cJSON_GetObjectItem(config, "onewire_active")))
 		cfg->onewire_active = cJSON_GetNumberValue(ref);
+	if ((ref = cJSON_GetObjectItem(config, "adc_vref")))
+	    cfg->adc_vref = cJSON_GetNumberValue(ref);
 	if ((ref = cJSON_GetObjectItem(config, "display_type"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->display_type, val, sizeof(cfg->display_type));
