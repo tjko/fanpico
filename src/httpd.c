@@ -79,11 +79,6 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				pwm);
 			strncatenate(buf, row, BUF_LEN);
 		}
-		snprintf(row, sizeof(row), "sensor%d,\"%s\",%.3lf\n",
-				4,
-				"ADC VRef",
-				cfg->adc_vref);
-		strncatenate(buf, row, BUF_LEN);
 		for (i = 0; i < VSENSOR_COUNT; i++) {
 			pwm = sensor_get_duty(&cfg->vsensors[i].map, st->vtemp[i]);
 			snprintf(row, sizeof(row), "vsensor%d,\"%s\",%.1lf,%.1lf\n",
@@ -93,6 +88,10 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				pwm);
 			strncatenate(buf, row, BUF_LEN);
 		}
+
+		snprintf(row, sizeof(row), "vref1,\"ADC Vref\",%.4lf\n",
+			cfg->adc_vref);
+		strncatenate(buf, row, BUF_LEN);
 
 		p = buf;
 		buf_left = strlen(buf);
@@ -187,6 +186,7 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 			cJSON_AddItemToArray(array, o);
 		}
 		cJSON_AddItemToObject(json, "sensors", array);
+		cJSON_AddItemToObject(json, "adc_vref", cJSON_CreateNumber(round_decimal(cfg->adc_vref,4)));
 
 		/* Virtual Sensors */
 		if (!(array = cJSON_CreateArray()))
@@ -244,7 +244,7 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	const struct fanpico_state *st = fanpico_state;
 	size_t printed = 0;
 
-	/* printf("ssi_handler(\"%s\",%lx,%d,%u,%u)\n", tag, (uint32_t)insert, insertlen, current_tag_part, *next_tag_part); */
+	printf("ssi_handler(\"%s\",%lx,%d,%u,%u)\n", tag, (uint32_t)insert, insertlen, current_tag_part, *next_tag_part);
 
 	if (!strncmp(tag, "datetime", 8)) {
 		datetime_t t;
@@ -309,11 +309,8 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 					st->temp[i]);
 		}
 	}
-	else if (!strncmp(tag, "adcvrefrow", 10)) {
-		//uint8_t i = tag[7] - '1';
-		printed = snprintf(insert, insertlen, "<td>%s<td>%s<td align=\"right\">%0.3f V",
-					"",
-					"ADC VRef",
+	else if (!strncmp(tag, "adcvref", 7)) {
+		printed = snprintf(insert, insertlen, "<td>Vref<td>ADC<td align=\"right\">%0.4f V",
 					cfg->adc_vref);
 	}
 	else if (!strncmp(tag, "vsenrow", 7)) {
