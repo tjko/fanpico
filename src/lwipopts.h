@@ -124,7 +124,7 @@ void pico_set_system_time(long int sec);
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 #define SNTP_DEBUG                  LWIP_DBG_OFF
 #define HTTPD_DEBUG                 LWIP_DBG_OFF
-#define MQTT_DEBUG                  LWIP_DBG_OFF
+#define MQTT_DEBUG                  LWIP_DBG_ON
 #define ALTCP_MBEDTLS_DEBUG         LWIP_DBG_ON
 #define ALTCP_MBEDTLS_MEM_DEBUG     LWIP_DBG_ON
 #define ALTCP_MBEDTLS_LIB_DEBUG     LWIP_DBG_ON

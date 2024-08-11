@@ -272,6 +272,7 @@ void mqtt_connect(mqtt_client_t *client)
 	char client_id[32];
 	uint16_t port = MQTT_PORT;
 	err_t err;
+	static struct altcp_tls_config *tlsconfig = NULL;
 
 	if (!client)
 		return;
@@ -305,7 +306,9 @@ void mqtt_connect(mqtt_client_t *client)
 #if TLS_SUPPORT
 	if (cfg->mqtt_tls) {
 		cyw43_arch_lwip_begin();
-		ci.tls_config = altcp_tls_create_config_client(NULL, 0);
+		if (!tlsconfig)
+			tlsconfig = altcp_tls_create_config_client(NULL, 0);
+		ci.tls_config = tlsconfig;
 		cyw43_arch_lwip_end();
 		if (!ci.tls_config)
 			log_msg(LOG_WARNING, "altcp_tls_create_config_client(): failed");
