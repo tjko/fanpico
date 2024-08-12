@@ -32,6 +32,11 @@ Fanpico supports following commands:
 * [CONFigure:FANx:PWMMap?](#configurefanxpwmmap-1)
 * [CONFigure:FANx:FILTER](#configurefanxfilter)
 * [CONFigure:FANx:FILTER?](#configurefanxfilter-1)
+* [CONFigure:FANx:HYSTeresis?](#CONFigure:FANx:HYSTeresis)
+* [CONFigure:FANx:HYS_Tacho](#CONFigure:FANx:HYS_Tacho)
+* [CONFigure:FANx:HYS_Tacho?](#CONFigure:FANx:HYS_Tacho-1)
+* [CONFigure:FANx:HYS_Pwm](#CONFigure:FANx:HYS_Pwm)
+* [CONFigure:FANx:HYS_Pwm?](#CONFigure:FANx:HYS_Pwm-1)
 * [CONFigure:MBFANx:NAME](#configurembfanxname)
 * [CONFigure:MBFANx:NAME?](#configurembfanxname-1)
 * [CONFigure:MBFANx:MINrpm](#configurembfanxminrpm)
@@ -326,21 +331,47 @@ CONF:FAN1:NAME?
 CPU Fan 1
 ```
 
-#### CONFigure:FANx:HYSteresis
-Set the hysteresis threshold for a given fan (output) port.
+#### CONFigure:FANx:HYSTeresis?
+Returns the hysteresis thresholds for a given tacho fan (output) port.
 
 For example:
 ```
-CONF:FAN1:HYSteresis 2.0
+CONF:FAN8:HYST?
+CONF:FAN8:HYS_Pwm=1.000000      CONF:FAN8:HYS_Tacho=1.000000
 ```
 
-#### CONFigure:FANx:HYSteresis?
-Query the hysteresis threshold for a given fan (output) port.
+#### CONFigure:FANx:HYS_Tacho
+Set the hysteresis threshold for a given tacho fan (output) port.
 
 For example:
 ```
-CONF:FAN8:HYSteresis?
-CONF:FAN8:HYS=1.000000
+CONF:FAN1:HYSteresis:TACho 2.0
+```
+
+#### CONFigure:FANx:HYS_Tacho?
+Query the hysteresis threshold for a given tacho fan (output) port.
+
+For example:
+```
+CONF:FAN8:HYS_Tacho?
+CONF:FAN8:HYS_Tacho=1.000000
+```
+
+#### CONFigure:FANx:HYS_Pwm
+Set the hysteresis threshold for a given tacho PWM (output) port.
+
+For example:
+```
+CONF:FAN1:HYSteresis:PWM 2.0
+```
+
+#### CONFigure:FANx:HYS_Pwm?
+Query the hysteresis threshold for a given PWM fan (output) port.
+
+For example:
+```
+CONF:FAN8:HYS_Pwm?
+CONF:FAN8:HYS_Pwm=1.000000
 ```
 
 #### CONFigure:FANx:MINpwm

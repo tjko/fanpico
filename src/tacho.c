@@ -244,7 +244,7 @@ void read_tacho_inputs()
 void update_tacho_input_freq(struct fanpico_state *st)
 {
 	for (int i = 0; i < FAN_COUNT; i++) {
-		float hyst = cfg->fans[i].info_hyst;
+		float hyst = cfg->fans[i].tacho_hyst;
 		st->fan_freq[i] = roundf(fan_tacho_freq[i]*100)/100.0;
 		if (check_for_change(st->fan_freq_prev[i], st->fan_freq[i], hyst)) {
 			log_msg(LOG_INFO, "fan%d: Input Tacho change %.2fHz --> %.2fHz",
