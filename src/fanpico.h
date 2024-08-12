@@ -59,7 +59,7 @@
 #define WIFI_PASSWD_MAX_LEN   64
 #define WIFI_COUNTRY_MAX_LEN  3
 
-#define MQTT_MAX_TOPIC_LEN            33
+#define MQTT_MAX_TOPIC_LEN            49
 #define MQTT_MAX_USERNAME_LEN         81
 #define MQTT_MAX_PASSWORD_LEN         65
 #define DEFAULT_MQTT_STATUS_INTERVAL  600
