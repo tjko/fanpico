@@ -448,6 +448,7 @@ Configure source for the PWM signal of a fan.
 Source types:
 * MBFAN (set fan to follow duty cycle from motherboard fan port)
 * SENSOR (set fan to follow temperature based duty cycle)
+* VSENSOR (set fan to follow temperature based duty cycle)
 * FAN (set fan to follow another FAN output duty cycle)
 * FIXED (set fan to run on fixed duty cycle)
 
