@@ -275,8 +275,9 @@ void update_outputs(struct fanpico_state *state, const struct fanpico_config *co
 
 	/* Update fan PWM signals */
 	for (i = 0; i < FAN_COUNT; i++) {
+		float hyst = cfg->fans[i].pwm_hyst;
 		state->fan_duty[i] = calculate_pwm_duty(state, config, i);
-		if (check_for_change(state->fan_duty_prev[i], state->fan_duty[i], 1.0)) {
+		if (check_for_change(state->fan_duty_prev[i], state->fan_duty[i], hyst)) {
 			log_msg(LOG_INFO, "fan%d: Set output PWM %.1f%% --> %.1f%%",
 				i+1,
 				state->fan_duty_prev[i],

@@ -837,6 +837,72 @@ int cmd_fan_source(const char *cmd, const char *args, int query, char *prev_cmd)
 	return ret;
 }
 
+
+int cmd_fan_tacho_hys(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int fan;
+	float val;
+
+	fan = atoi(&prev_cmd[3]) - 1;
+	if (fan >= 0 && fan < FAN_COUNT) {
+		if (query) {
+			printf("CONF:FAN%d:HYS_Tacho=%f\n", fan+1, conf->fans[fan].tacho_hyst);
+		} else if (str_to_float(args, &val)) {
+			if (val >= 0.0) {
+				log_msg(LOG_NOTICE, "fan%d: change Hysteresis %f --> %f TAC",
+					fan + 1, conf->fans[fan].tacho_hyst, val);
+				conf->fans[fan].tacho_hyst = val;
+			} else {
+				log_msg(LOG_WARNING, "fan%d: invalid new value for Hysteresis: %f",
+					fan + 1, val);
+				return 2;
+			}
+		}
+		return 0;
+	}
+	return 1;
+}
+
+int cmd_fan_pwm_hys(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int fan;
+	float val;
+
+	//printf("in cmd_fan_pwm_hys(%s,%s,%d,%s)\n", cmd, args, query, prev_cmd);
+	fan = atoi(&prev_cmd[3]) - 1;
+	if (fan >= 0 && fan < FAN_COUNT) {
+		if (query) {
+			printf("CONF:FAN%d:HYS_Pwm=%f\n", fan+1, conf->fans[fan].pwm_hyst);
+		} else if (str_to_float(args, &val)) {
+			if (val >= 0.0) {
+				log_msg(LOG_NOTICE, "fan%d: change Hysteresis %f --> %f PWM",
+					fan + 1, conf->fans[fan].pwm_hyst, val);
+				conf->fans[fan].pwm_hyst = val;
+			} else {
+				log_msg(LOG_WARNING, "fan%d: invalid new value for Hysteresis: %f",
+					fan + 1, val);
+				return 2;
+			}
+		}
+		return 0;
+	}
+	return 1;
+}
+
+int cmd_hyst_supported(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	int fan;
+
+	//printf("in cmd_hyst_supported(%s,%s,%d,%s)\n", cmd, args, query, prev_cmd);
+	fan = atoi(&prev_cmd[3]) - 1;
+	if (query) {
+		printf("CONF:FAN%d:HYS_Pwm=%f\t", fan+1, conf->fans[fan].pwm_hyst);
+		printf("CONF:FAN%d:HYS_Tacho=%f\n", fan+1, conf->fans[fan].tacho_hyst);
+		return 0;
+	}
+	return 1;
+}
+
 int cmd_fan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
 {
 	int fan;
@@ -2682,6 +2748,12 @@ const struct cmd_t system_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t fan_hyst_commands[] = {
+	{ "TACho",     3, NULL,              cmd_fan_tacho_hys },
+	{ "PWM",       3, NULL,              cmd_fan_pwm_hys   },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t fan_c_commands[] = {
 	{ "FILTER",    6, NULL,              cmd_fan_filter },
 	{ "MAXpwm",    3, NULL,              cmd_fan_max_pwm },
@@ -2692,6 +2764,9 @@ const struct cmd_t fan_c_commands[] = {
 	{ "RPMFactor", 4, NULL,              cmd_fan_rpm_factor },
 	{ "RPMMOde",   5, NULL,              cmd_fan_rpm_mode },
 	{ "SOUrce",    3, NULL,              cmd_fan_source },
+	{ "HYSTeresis",4, NULL,              cmd_hyst_supported },
+	{ "HYS_Tacho", 5, NULL,              cmd_fan_tacho_hys  },
+	{ "HYS_Pwm",   5, NULL,              cmd_fan_pwm_hys    },
 	{ 0, 0, 0, 0 }
 };
 
