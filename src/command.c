@@ -42,12 +42,7 @@
 #endif
 
 
-struct cmd_t {
-	const char   *cmd;
-	uint8_t       min_match;
-	const struct cmd_t *subcmds;
-	int (*func)(const char *cmd, const char *args, int query, char *prev_cmd);
-};
+typedef int (*validate_str_func_t)(const char *args);
 
 struct error_t {
 	const char    *error;
@@ -72,11 +67,102 @@ struct fanpico_config *conf = NULL;
 extern const char fanpico_credits_text[];
 
 
+
+/**
+ * Exract (unsigned) number from end of command string.
+ *
+ * If string is "MBFAN3" return value is 3.
+ *
+ * @param cmd command string
+ *
+ * @return number extracted from string (negative values indicates error)
+ */
+static int get_cmd_index(const char *cmd)
+{
+	const char *s;
+	uint len;
+	int idx;
+
+	if (!cmd)
+		return -1;
+
+	s = cmd;
+	len = strnlen(cmd, 256);
+	if (len < 1 || len >= 256)
+		return -2;
+
+	/* Skip any spaces and letters at the beginning of the string... */
+	while (len > 1) {
+		if (isalpha((int)*s) || isblank((int)*s)) {
+			s++;
+			len--;
+		} else {
+			break;
+		}
+	}
+
+	if (!str_to_int(s, &idx, 10))
+		return -3;
+
+	return idx;
+}
+
+
+/**
+ * Return ealier (sub)command string
+ *
+ * If full command was "CONF:FAN2:HYST:PWM". Depth 0 returns "HYST"
+ * and depth 1 returns "FAN2".
+ *
+ * @param prev_cmd Structure storing previous sub commands
+ * @param depth Which command to return (0=last, 1=2nd to last, ...)
+ *
+ * @return (sub)command string
+ */
+static const char* get_prev_cmd(const struct prev_cmd_t *prev_cmd, uint depth)
+{
+	char *cmd;
+
+	if (!prev_cmd)
+		cmd = NULL;
+	else if (depth >= prev_cmd->depth)
+		cmd = NULL;
+	else
+		cmd = prev_cmd->cmds[prev_cmd->depth - depth - 1];
+
+	return (cmd ? cmd : "");
+}
+
+
+/**
+ * Return number from end of an earlier (sub)command
+ *
+ * If full command was "CONF:FAN3:NAME?", then depth 0 returns "FAN3"
+ * and depth 1 returns "CONF".
+ *
+ * @param prev_cmd Strucutre storing previous sub commands
+ * @param depth Which command to return (0=last, 1=2nd to last, ...)
+ *
+ * @return number extracted from specified subcommand (negative value indicates error)
+ */
+static int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
+{
+	int idx;
+
+	if (!prev_cmd)
+		return -1;
+	if (depth >= prev_cmd->depth)
+		return -2;
+
+	idx = get_cmd_index(prev_cmd->cmds[prev_cmd->depth - depth - 1]);
+
+	return idx;
+}
+
+
 /* Helper functions for commands */
 
-typedef int (*validate_str_func_t)(const char *args);
-
-int string_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+static int string_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
 {
 	if (query) {
@@ -96,7 +182,7 @@ int string_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 	return 0;
 }
 
-int bitmask16_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+static int bitmask16_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		uint16_t *mask, uint16_t len, uint8_t base, const char *name)
 {
 	uint32_t old = *mask;
@@ -117,7 +203,7 @@ int bitmask16_setting(const char *cmd, const char *args, int query, char *prev_c
 	return 1;
 }
 
-int uint32_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+static int uint32_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		uint32_t *var, uint32_t min_val, uint32_t max_val, const char *name)
 {
 	uint32_t val;
@@ -144,7 +230,7 @@ int uint32_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 	return 1;
 }
 
-int uint8_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+static int uint8_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		uint8_t *var, uint8_t min_val, uint8_t max_val, const char *name)
 {
 	uint8_t val;
@@ -171,7 +257,7 @@ int uint8_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 	return 1;
 }
 
-int bool_setting(const char *cmd, const char *args, int query, char *prev_cmd,
+static int bool_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		bool *var, const char *name)
 {
 	bool val;
@@ -201,7 +287,7 @@ int bool_setting(const char *cmd, const char *args, int query, char *prev_cmd,
 }
 
 #ifdef WIFI_SUPPORT
-int ip_change(const char *cmd, const char *args, int query, char *prev_cmd, const char *name, ip_addr_t *ip)
+static int ip_change(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd, const char *name, ip_addr_t *ip)
 {
 	ip_addr_t tmpip;
 
@@ -220,7 +306,7 @@ int ip_change(const char *cmd, const char *args, int query, char *prev_cmd, cons
 
 /* Command functions */
 
-int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_idn(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int i;
 	pico_unique_board_id_t board_id;
@@ -237,7 +323,7 @@ int cmd_idn(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_usb_boot(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_usb_boot(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	char buf[64];
 	const char *msg[] = {
@@ -261,7 +347,7 @@ int cmd_usb_boot(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0; /* should never get this far... */
 }
 
-int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	const char* credits = fanpico_credits_text;
 
@@ -282,7 +368,7 @@ int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_fans(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fans(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query)
 		return 1;
@@ -291,7 +377,7 @@ int cmd_fans(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_led(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_led(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int mode;
 
@@ -306,7 +392,7 @@ int cmd_led(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_mbfans(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfans(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query)
 		return 1;
@@ -315,7 +401,7 @@ int cmd_mbfans(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_sensors(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensors(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query)
 		return 1;
@@ -324,7 +410,7 @@ int cmd_sensors(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_vsensors(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_vsensors(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query)
 		return 1;
@@ -333,13 +419,13 @@ int cmd_vsensors(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_null(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_null(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	log_msg(LOG_INFO, "null command: %s %s (query=%d)", cmd, args, query);
 	return 0;
 }
 
-int cmd_debug(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_debug(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int level;
 
@@ -351,7 +437,7 @@ int cmd_debug(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_log_level(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_log_level(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int level = get_log_level();
 	int new_level;
@@ -377,7 +463,7 @@ int cmd_log_level(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_syslog_level(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_syslog_level(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int level = get_syslog_level();
 	int new_level;
@@ -402,38 +488,38 @@ int cmd_syslog_level(const char *cmd, const char *args, int query, char *prev_cm
 	return 0;
 }
 
-int cmd_echo(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_echo(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
 			&conf->local_echo, "Command Echo");
 }
 
-int cmd_display_type(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_display_type(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->display_type, sizeof(conf->display_type), "Display Type", NULL);
 }
 
-int cmd_display_theme(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_display_theme(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->display_theme, sizeof(conf->display_theme), "Display Theme", NULL);
 }
 
-int cmd_display_logo(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_display_logo(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->display_logo, sizeof(conf->display_logo), "Display Logo", NULL);
 }
 
-int cmd_display_layout_r(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_display_layout_r(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->display_layout_r, sizeof(conf->display_layout_r),
 			"Display Layout (Right)", NULL);
 }
 
-int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_reset(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	const char *msg[] = {
 		"    Rebooting...",
@@ -455,7 +541,7 @@ int cmd_reset(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_save_config(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_save_config(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query)
 		return 1;
@@ -463,7 +549,7 @@ int cmd_save_config(const char *cmd, const char *args, int query, char *prev_cmd
 	return 0;
 }
 
-int cmd_print_config(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_print_config(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query)
 		return 1;
@@ -471,7 +557,7 @@ int cmd_print_config(const char *cmd, const char *args, int query, char *prev_cm
 	return 0;
 }
 
-int cmd_delete_config(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_delete_config(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query)
 		return 1;
@@ -479,21 +565,21 @@ int cmd_delete_config(const char *cmd, const char *args, int query, char *prev_c
 	return 0;
 }
 
-int cmd_one(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_one(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query)
 		printf("1\n");
 	return 0;
 }
 
-int cmd_zero(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_zero(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query)
 		printf("0\n");
 	return 0;
 }
 
-int cmd_read(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_read(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int i;
 	double rpm, pwm;
@@ -538,11 +624,11 @@ int cmd_read(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_fan_name(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%s\n", conf->fans[fan].name);
@@ -556,11 +642,11 @@ int cmd_fan_name(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_fan_min_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_min_pwm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan, val;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->fans[fan].min_pwm);
@@ -580,11 +666,11 @@ int cmd_fan_min_pwm(const char *cmd, const char *args, int query, char *prev_cmd
 	return 1;
 }
 
-int cmd_fan_max_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_max_pwm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan, val;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->fans[fan].max_pwm);
@@ -604,12 +690,12 @@ int cmd_fan_max_pwm(const char *cmd, const char *args, int query, char *prev_cmd
 	return 1;
 }
 
-int cmd_fan_pwm_coef(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_pwm_coef(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	float val;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%f\n", conf->fans[fan].pwm_coefficient);
@@ -629,7 +715,7 @@ int cmd_fan_pwm_coef(const char *cmd, const char *args, int query, char *prev_cm
 	return 1;
 }
 
-int cmd_fan_pwm_map(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_pwm_map(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan, i, count;
 	int val;
@@ -638,7 +724,7 @@ int cmd_fan_pwm_map(const char *cmd, const char *args, int query, char *prev_cmd
 	struct pwm_map new_map;
 	int ret = 0;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan < 0 || fan >= FAN_COUNT)
 		return 1;
 	map = &conf->fans[fan].map;
@@ -674,7 +760,7 @@ int cmd_fan_pwm_map(const char *cmd, const char *args, int query, char *prev_cmd
 	return ret;
 }
 
-int cmd_fan_filter(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_filter(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	int ret = 0;
@@ -683,7 +769,7 @@ int cmd_fan_filter(const char *cmd, const char *args, int query, char *prev_cmd)
 	enum signal_filter_types new_filter;
 	void *new_ctx;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan < 0 || fan >= FAN_COUNT)
 		return 1;
 
@@ -718,12 +804,12 @@ int cmd_fan_filter(const char *cmd, const char *args, int query, char *prev_cmd)
 	return ret;
 }
 
-int cmd_fan_rpm_factor(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_rpm_factor(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	int val;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < FAN_COUNT) {
 		if (query) {
 			printf("%u\n", conf->fans[fan].rpm_factor);
@@ -743,14 +829,14 @@ int cmd_fan_rpm_factor(const char *cmd, const char *args, int query, char *prev_
 	return 1;
 }
 
-int cmd_fan_rpm_mode(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_rpm_mode(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int ret = 0;
 	int fan, val;
 	struct fan_output *f;
 	char *tok, *saveptr, *param;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan < 0 || fan >= FAN_COUNT)
 		return 1;
 	f = &conf->fans[fan];
@@ -789,14 +875,14 @@ int cmd_fan_rpm_mode(const char *cmd, const char *args, int query, char *prev_cm
 	return ret;
 }
 
-int cmd_fan_source(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_source(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	int type, val, d_o, d_n;
 	char *tok, *saveptr, *param;
 	int ret = 0;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan < 0 || fan >= FAN_COUNT)
 		return 1;
 
@@ -837,7 +923,58 @@ int cmd_fan_source(const char *cmd, const char *args, int query, char *prev_cmd)
 	return ret;
 }
 
-int cmd_fan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
+
+int cmd_fan_tacho_hys(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int fan;
+	float val;
+
+	fan = get_prev_cmd_index(prev_cmd, 1) - 1;
+	if (fan >= 0 && fan < FAN_COUNT) {
+		if (query) {
+			printf("%f\n", conf->fans[fan].tacho_hyst);
+		} else if (str_to_float(args, &val)) {
+			if (val >= 0.0) {
+				log_msg(LOG_NOTICE, "fan%d: change tachometer hysteresis %f --> %f",
+					fan + 1, conf->fans[fan].tacho_hyst, val);
+				conf->fans[fan].tacho_hyst = val;
+			} else {
+				log_msg(LOG_WARNING, "fan%d: invalid new value for hysteresis: %f",
+					fan + 1, val);
+				return 2;
+			}
+		}
+		return 0;
+	}
+	return 1;
+}
+
+int cmd_fan_pwm_hys(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int fan;
+	float val;
+
+	fan = get_prev_cmd_index(prev_cmd, 1) - 1;
+	if (fan >= 0 && fan < FAN_COUNT) {
+		if (query) {
+			printf("%f\n", conf->fans[fan].pwm_hyst);
+		} else if (str_to_float(args, &val)) {
+			if (val >= 0.0) {
+				log_msg(LOG_NOTICE, "fan%d: change PWM hysteresis %f --> %f",
+					fan + 1, conf->fans[fan].pwm_hyst, val);
+				conf->fans[fan].pwm_hyst = val;
+			} else {
+				log_msg(LOG_WARNING, "fan%d: invalid new value for hysteresis: %f",
+					fan + 1, val);
+				return 2;
+			}
+		}
+		return 0;
+	}
+	return 1;
+}
+
+int cmd_fan_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	double rpm;
@@ -845,7 +982,7 @@ int cmd_fan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 1;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < FAN_COUNT) {
 		rpm = st->fan_freq[fan] * 60.0 / conf->fans[fan].rpm_factor;
 		log_msg(LOG_DEBUG, "fan%d (tacho = %fHz) rpm = %.1lf", fan + 1,
@@ -857,7 +994,7 @@ int cmd_fan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_fan_tacho(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_tacho(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	float f;
@@ -865,7 +1002,7 @@ int cmd_fan_tacho(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 1;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < FAN_COUNT) {
 		f = st->fan_freq[fan];
 		log_msg(LOG_DEBUG, "fan%d tacho = %fHz", fan + 1, f);
@@ -876,7 +1013,7 @@ int cmd_fan_tacho(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_fan_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_pwm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	float d;
@@ -884,7 +1021,7 @@ int cmd_fan_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 1;
 
-	fan = atoi(&prev_cmd[3]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < FAN_COUNT) {
 		d = st->fan_duty[fan];
 		log_msg(LOG_DEBUG, "fan%d duty = %f%%", fan + 1, d);
@@ -895,7 +1032,7 @@ int cmd_fan_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_fan_read(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_fan_read(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	double rpm;
@@ -904,10 +1041,10 @@ int cmd_fan_read(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 1;
 
-	if (!strncasecmp(prev_cmd, "fan", 3)) {
-		fan = atoi(&prev_cmd[3]) - 1;
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "fan", 3)) {
+		fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
-		fan = atoi(&cmd[3]) - 1;
+		fan = get_cmd_index(cmd) - 1;
 	}
 
 	if (fan >= 0 && fan < FAN_COUNT) {
@@ -923,11 +1060,11 @@ int cmd_fan_read(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_mbfan_name(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int mbfan;
 
-	mbfan = atoi(&prev_cmd[5]) - 1;
+	mbfan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (mbfan >= 0 && mbfan < MBFAN_COUNT) {
 		if (query) {
 			printf("%s\n", conf->mbfans[mbfan].name);
@@ -941,21 +1078,21 @@ int cmd_mbfan_name(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_mbfan_min_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_min_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan, val;
+	int mbfan, val;
 
-	fan = atoi(&prev_cmd[5]) - 1;
-	if (fan >= 0 && fan < MBFAN_COUNT) {
+	mbfan = get_prev_cmd_index(prev_cmd, 0) - 1;
+	if (mbfan >= 0 && mbfan < MBFAN_COUNT) {
 		if (query) {
-			printf("%d\n", conf->mbfans[fan].min_rpm);
+			printf("%d\n", conf->mbfans[mbfan].min_rpm);
 		} else if (str_to_int(args, &val, 10)) {
 			if (val >= 0 && val <= 50000) {
-				log_msg(LOG_NOTICE, "mbfan%d: change min RPM %d --> %d", fan + 1,
-					conf->mbfans[fan].min_rpm, val);
-				conf->mbfans[fan].min_rpm = val;
+				log_msg(LOG_NOTICE, "mbfan%d: change min RPM %d --> %d", mbfan + 1,
+					conf->mbfans[mbfan].min_rpm, val);
+				conf->mbfans[mbfan].min_rpm = val;
 			} else {
-				log_msg(LOG_WARNING, "mbfan%d: invalid new value for min RPM: %d", fan + 1,
+				log_msg(LOG_WARNING, "mbfan%d: invalid new value for min RPM: %d", mbfan + 1,
 					val);
 				return 2;
 			}
@@ -965,11 +1102,11 @@ int cmd_mbfan_min_rpm(const char *cmd, const char *args, int query, char *prev_c
 	return 1;
 }
 
-int cmd_mbfan_max_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_max_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan, val;
 
-	fan = atoi(&prev_cmd[5]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%d\n", conf->mbfans[fan].max_rpm);
@@ -989,12 +1126,12 @@ int cmd_mbfan_max_rpm(const char *cmd, const char *args, int query, char *prev_c
 	return 1;
 }
 
-int cmd_mbfan_rpm_coef(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_rpm_coef(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	float val;
 
-	fan = atoi(&prev_cmd[5]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%f\n", conf->mbfans[fan].rpm_coefficient);
@@ -1014,12 +1151,12 @@ int cmd_mbfan_rpm_coef(const char *cmd, const char *args, int query, char *prev_
 	return 1;
 }
 
-int cmd_mbfan_rpm_factor(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_rpm_factor(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	int val;
 
-	fan = atoi(&prev_cmd[5]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan >= 0 && fan < MBFAN_COUNT) {
 		if (query) {
 			printf("%u\n", conf->mbfans[fan].rpm_factor);
@@ -1039,7 +1176,7 @@ int cmd_mbfan_rpm_factor(const char *cmd, const char *args, int query, char *pre
 	return 1;
 }
 
-int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan, i, count;
 	int val;
@@ -1048,7 +1185,7 @@ int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, char *prev_c
 	struct tacho_map new_map;
 	int ret = 0;
 
-	fan = atoi(&prev_cmd[5]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan < 0 || fan >= MBFAN_COUNT)
 		return 0;
 	map = &conf->mbfans[fan].map;
@@ -1084,14 +1221,14 @@ int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, char *prev_c
 	return ret;
 }
 
-int cmd_mbfan_rpm_mode(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_rpm_mode(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int ret = 0;
 	int fan, val;
 	char *tok, *saveptr, *param;
 	struct mb_input *m;
 
-	fan = atoi(&prev_cmd[5]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan < 0 || fan >= MBFAN_COUNT)
 		return 1;
 	m = &conf->mbfans[fan];
@@ -1133,7 +1270,7 @@ int cmd_mbfan_rpm_mode(const char *cmd, const char *args, int query, char *prev_
 	return ret;
 }
 
-int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_source(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	int type, val, d_o, d_n, ocount;
@@ -1144,7 +1281,7 @@ int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cm
 
 	memset(new_sources, 0, sizeof(new_sources));
 
-	fan = atoi(&prev_cmd[5]) - 1;
+	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (fan < 0 || fan >= MBFAN_COUNT)
 		return 1;
 
@@ -1231,13 +1368,13 @@ int cmd_mbfan_source(const char *cmd, const char *args, int query, char *prev_cm
 	return ret;
 }
 
-int cmd_mbfan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	double rpm;
 
 	if (query) {
-		fan = atoi(&prev_cmd[5]) - 1;
+		fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 		if (fan >= 0 && fan < MBFAN_COUNT) {
 			rpm = st->mbfan_freq[fan] * 60.0 / conf->mbfans[fan].rpm_factor;
 			log_msg(LOG_DEBUG, "mbfan%d (tacho = %fHz) rpm = %.1lf", fan+1,
@@ -1249,13 +1386,13 @@ int cmd_mbfan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_mbfan_tacho(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_tacho(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	float f;
 
 	if (query) {
-		fan = atoi(&prev_cmd[5]) - 1;
+		fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 		if (fan >= 0 && fan < MBFAN_COUNT) {
 			f = st->mbfan_freq[fan];
 			log_msg(LOG_DEBUG, "mbfan%d tacho = %fHz", fan + 1, f);
@@ -1266,13 +1403,13 @@ int cmd_mbfan_tacho(const char *cmd, const char *args, int query, char *prev_cmd
 	return 1;
 }
 
-int cmd_mbfan_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_pwm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	float d;
 
 	if (query) {
-		fan = atoi(&prev_cmd[5]) - 1;
+		fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 		if (fan >= 0 && fan < MBFAN_COUNT) {
 			d = st->mbfan_duty[fan];
 			log_msg(LOG_DEBUG, "mbfan%d duty = %f%%", fan + 1, d);
@@ -1283,7 +1420,7 @@ int cmd_mbfan_pwm(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_mbfan_read(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_read(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
 	double rpm;
@@ -1292,10 +1429,10 @@ int cmd_mbfan_read(const char *cmd, const char *args, int query, char *prev_cmd)
 	if (!query)
 		return 1;
 
-	if (!strncasecmp(prev_cmd, "mbfan", 5)) {
-		fan = atoi(&prev_cmd[5]) - 1;
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "mbfan", 5)) {
+		fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
-		fan = atoi(&cmd[5]) - 1;
+		fan = get_cmd_index(cmd) - 1;
 	}
 
 	if (fan >= 0 && fan < MBFAN_COUNT) {
@@ -1311,7 +1448,7 @@ int cmd_mbfan_read(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_mbfan_filter(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mbfan_filter(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int mbfan;
 	int ret = 0;
@@ -1320,7 +1457,7 @@ int cmd_mbfan_filter(const char *cmd, const char *args, int query, char *prev_cm
 	enum signal_filter_types new_filter;
 	void *new_ctx;
 
-	mbfan = atoi(&prev_cmd[5]) - 1;
+	mbfan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (mbfan < 0 || mbfan >= MBFAN_COUNT)
 		return 1;
 
@@ -1355,11 +1492,11 @@ int cmd_mbfan_filter(const char *cmd, const char *args, int query, char *prev_cm
 	return ret;
 }
 
-int cmd_sensor_name(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensor_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 
-	sensor = atoi(&prev_cmd[6]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%s\n", conf->sensors[sensor].name);
@@ -1374,12 +1511,12 @@ int cmd_sensor_name(const char *cmd, const char *args, int query, char *prev_cmd
 	return 1;
 }
 
-int cmd_sensor_temp_offset(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensor_temp_offset(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	float val;
 
-	sensor = atoi(&prev_cmd[6]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%f\n", conf->sensors[sensor].temp_offset);
@@ -1393,12 +1530,12 @@ int cmd_sensor_temp_offset(const char *cmd, const char *args, int query, char *p
 	return 1;
 }
 
-int cmd_sensor_temp_coef(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensor_temp_coef(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	float val;
 
-	sensor = atoi(&prev_cmd[6]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%f\n", conf->sensors[sensor].temp_coefficient);
@@ -1418,12 +1555,12 @@ int cmd_sensor_temp_coef(const char *cmd, const char *args, int query, char *pre
 	return 1;
 }
 
-int cmd_sensor_temp_nominal(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensor_temp_nominal(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	float val;
 
-	sensor = atoi(&prev_cmd[6]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%.1f\n", conf->sensors[sensor].temp_nominal);
@@ -1444,12 +1581,12 @@ int cmd_sensor_temp_nominal(const char *cmd, const char *args, int query, char *
 	return 1;
 }
 
-int cmd_sensor_ther_nominal(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensor_ther_nominal(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	float val;
 
-	sensor = atoi(&prev_cmd[6]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%.0f\n", conf->sensors[sensor].thermistor_nominal);
@@ -1470,7 +1607,7 @@ int cmd_sensor_ther_nominal(const char *cmd, const char *args, int query, char *
 	return 1;
 }
 
-int  cmd_sensor_adc_vref(const char *cmd, const char *args, int query, char *prev_cmd)
+int  cmd_sensor_adc_vref(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	float val;
 
@@ -1491,12 +1628,12 @@ int  cmd_sensor_adc_vref(const char *cmd, const char *args, int query, char *pre
 	return 1;
 }
 
-int cmd_sensor_beta_coef(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensor_beta_coef(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	float val;
 
-	sensor = atoi(&prev_cmd[6]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
 		if (query) {
 			printf("%.0f\n", conf->sensors[sensor].beta_coefficient);
@@ -1517,7 +1654,7 @@ int cmd_sensor_beta_coef(const char *cmd, const char *args, int query, char *pre
 	return 1;
 }
 
-int cmd_sensor_temp_map(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensor_temp_map(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor, i, count;
 	float val;
@@ -1526,7 +1663,7 @@ int cmd_sensor_temp_map(const char *cmd, const char *args, int query, char *prev
 	struct temp_map new_map;
 	int ret = 0;
 
-	sensor = atoi(&prev_cmd[6]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor < 0 || sensor >= SENSOR_COUNT)
 		return 1;
 	map = &conf->sensors[sensor].map;
@@ -1562,7 +1699,7 @@ int cmd_sensor_temp_map(const char *cmd, const char *args, int query, char *prev
 	return ret;
 }
 
-int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensor_temp(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	float d;
@@ -1570,10 +1707,10 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd
 	if (!query)
 		return 1;
 
-	if (!strncasecmp(prev_cmd, "sensor", 6)) {
-		sensor = atoi(&prev_cmd[6]) - 1;
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "sensor", 6)) {
+		sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
-		sensor = atoi(&cmd[6]) - 1;
+		sensor = get_cmd_index(cmd) - 1;
 	}
 
 	if (sensor >= 0 && sensor < SENSOR_COUNT) {
@@ -1586,7 +1723,7 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, char *prev_cmd
 	return 1;
 }
 
-int cmd_sensor_filter(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_sensor_filter(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	int ret = 0;
@@ -1595,7 +1732,7 @@ int cmd_sensor_filter(const char *cmd, const char *args, int query, char *prev_c
 	enum signal_filter_types new_filter;
 	void *new_ctx;
 
-	sensor = atoi(&prev_cmd[6]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor < 0 || sensor >= SENSOR_COUNT)
 		return 1;
 
@@ -1630,11 +1767,11 @@ int cmd_sensor_filter(const char *cmd, const char *args, int query, char *prev_c
 	return ret;
 }
 
-int cmd_vsensor_name(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_vsensor_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 
-	sensor = atoi(&prev_cmd[7]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
 		if (query) {
 			printf("%s\n", conf->vsensors[sensor].name);
@@ -1649,7 +1786,7 @@ int cmd_vsensor_name(const char *cmd, const char *args, int query, char *prev_cm
 	return 1;
 }
 
-int cmd_vsensor_source(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor, val, i;
 	uint8_t vsmode, selected[VSENSOR_SOURCE_MAX_COUNT];
@@ -1659,7 +1796,7 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, char *prev_
 	int ret = 0;
 	int count = 0;
 
-	sensor = atoi(&prev_cmd[7]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor < 0 || sensor >= VSENSOR_COUNT)
 		return 1;
 	vsmode = conf->vsensors[sensor].mode;
@@ -1749,7 +1886,7 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, char *prev_
 	return ret;
 }
 
-int cmd_vsensor_temp_map(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_vsensor_temp_map(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor, i, count;
 	float val;
@@ -1758,7 +1895,7 @@ int cmd_vsensor_temp_map(const char *cmd, const char *args, int query, char *pre
 	struct temp_map new_map;
 	int ret = 0;
 
-	sensor = atoi(&prev_cmd[7]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor < 0 || sensor >= VSENSOR_COUNT)
 		return 1;
 	map = &conf->vsensors[sensor].map;
@@ -1794,7 +1931,7 @@ int cmd_vsensor_temp_map(const char *cmd, const char *args, int query, char *pre
 	return ret;
 }
 
-int cmd_vsensor_temp(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_vsensor_temp(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	float d;
@@ -1802,10 +1939,10 @@ int cmd_vsensor_temp(const char *cmd, const char *args, int query, char *prev_cm
 	if (!query)
 		return 1;
 
-	if (!strncasecmp(prev_cmd, "vsensor", 7)) {
-		sensor = atoi(&prev_cmd[7]) - 1;
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "vsensor", 7)) {
+		sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
-		sensor = atoi(&cmd[7]) - 1;
+		sensor = get_cmd_index(cmd) - 1;
 	}
 
 	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
@@ -1818,7 +1955,7 @@ int cmd_vsensor_temp(const char *cmd, const char *args, int query, char *prev_cm
 	return 1;
 }
 
-int cmd_vsensor_filter(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_vsensor_filter(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	int ret = 0;
@@ -1827,7 +1964,7 @@ int cmd_vsensor_filter(const char *cmd, const char *args, int query, char *prev_
 	enum signal_filter_types new_filter;
 	void *new_ctx;
 
-	sensor = atoi(&prev_cmd[7]) - 1;
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor < 0 || sensor >= VSENSOR_COUNT)
 		return 1;
 
@@ -1862,7 +1999,7 @@ int cmd_vsensor_filter(const char *cmd, const char *args, int query, char *prev_
 	return ret;
 }
 
-int cmd_vsensor_write(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_vsensor_write(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
 	float val;
@@ -1870,10 +2007,10 @@ int cmd_vsensor_write(const char *cmd, const char *args, int query, char *prev_c
 	if (query)
 		return 1;
 
-	if (!strncasecmp(prev_cmd, "vsensor", 7)) {
-		sensor = atoi(&prev_cmd[7]) - 1;
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "vsensor", 7)) {
+		sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
-		sensor = atoi(&cmd[7]) - 1;
+		sensor = get_cmd_index(cmd) - 1;
 	}
 
 	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
@@ -1892,7 +2029,7 @@ int cmd_vsensor_write(const char *cmd, const char *args, int query, char *prev_c
 	return 1;
 }
 
-int cmd_wifi(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query) {
 #ifdef WIFI_SUPPORT
@@ -1906,32 +2043,32 @@ int cmd_wifi(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 
 #ifdef WIFI_SUPPORT
-int cmd_wifi_ip(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_ip(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return ip_change(cmd, args, query, prev_cmd, "IP", &conf->ip);
 }
 
-int cmd_wifi_netmask(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_netmask(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return ip_change(cmd, args, query, prev_cmd, "Netmask", &conf->netmask);
 }
 
-int cmd_wifi_gateway(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_gateway(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return ip_change(cmd, args, query, prev_cmd, "Default Gateway", &conf->gateway);
 }
 
-int cmd_wifi_syslog(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_syslog(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return ip_change(cmd, args, query, prev_cmd, "Syslog Server", &conf->syslog_server);
 }
 
-int cmd_wifi_ntp(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_ntp(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return ip_change(cmd, args, query, prev_cmd, "NTP Server", &conf->ntp_server);
 }
 
-int cmd_wifi_mac(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_mac(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query) {
 		network_mac();
@@ -1940,13 +2077,13 @@ int cmd_wifi_mac(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_wifi_ssid(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_ssid(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->wifi_ssid, sizeof(conf->wifi_ssid), "WiFi SSID", NULL);
 }
 
-int cmd_wifi_status(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_status(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query) {
 		network_status();
@@ -1955,7 +2092,7 @@ int cmd_wifi_status(const char *cmd, const char *args, int query, char *prev_cmd
 	return 1;
 }
 
-int cmd_wifi_stats(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_stats(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query) {
 		stats_display();
@@ -1964,171 +2101,171 @@ int cmd_wifi_stats(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 1;
 }
 
-int cmd_wifi_country(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_country(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->wifi_country, sizeof(conf->wifi_country),
 			"WiFi Country", valid_wifi_country);
 }
 
-int cmd_wifi_password(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_password(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->wifi_passwd, sizeof(conf->wifi_passwd), "WiFi Password", NULL);
 }
 
-int cmd_wifi_hostname(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_hostname(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->hostname, sizeof(conf->hostname),
 			"WiFi Hostname", valid_hostname);
 }
 
-int cmd_wifi_mode(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_mode(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint8_setting(cmd, args, query, prev_cmd,
 			&conf->wifi_mode, 0, 1, "WiFi Mode");
 }
 
-int cmd_mqtt_server(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_server(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_server, sizeof(conf->mqtt_server), "MQTT Server", NULL);
 }
 
-int cmd_mqtt_port(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint32_setting(cmd, args, query, prev_cmd,
 			&conf->mqtt_port, 0, 65535, "MQTT Port");
 }
 
-int cmd_mqtt_user(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_user(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_user, sizeof(conf->mqtt_user), "MQTT User", NULL);
 }
 
-int cmd_mqtt_pass(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_pass(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_pass, sizeof(conf->mqtt_pass), "MQTT Password", NULL);
 }
 
-int cmd_mqtt_status_interval(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_status_interval(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint32_setting(cmd, args, query, prev_cmd,
 			&conf->mqtt_status_interval, 0, (86400 * 30), "MQTT Publish Status Interval");
 }
 
-int cmd_mqtt_temp_interval(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_temp_interval(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint32_setting(cmd, args, query, prev_cmd,
 			&conf->mqtt_temp_interval, 0, (86400 * 30), "MQTT Publish Temp Interval");
 }
 
-int cmd_mqtt_rpm_interval(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_rpm_interval(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint32_setting(cmd, args, query, prev_cmd,
 			&conf->mqtt_rpm_interval, 0, (86400 * 30), "MQTT Publish RPM Interval");
 }
 
-int cmd_mqtt_duty_interval(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_duty_interval(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint32_setting(cmd, args, query, prev_cmd,
 			&conf->mqtt_duty_interval, 0, (86400 * 30), "MQTT Publish PWM Interval");
 }
 
-int cmd_mqtt_allow_scpi(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_allow_scpi(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
 			&conf->mqtt_allow_scpi, "MQTT Allow SCPI Commands");
 }
 
-int cmd_mqtt_status_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_status_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_status_topic, sizeof(conf->mqtt_status_topic),
 			"MQTT Status Topic", NULL);
 }
 
-int cmd_mqtt_cmd_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_cmd_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_cmd_topic, sizeof(conf->mqtt_cmd_topic),
 			"MQTT Command Topic", NULL);
 }
 
-int cmd_mqtt_resp_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_resp_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_resp_topic,
 			sizeof(conf->mqtt_resp_topic), "MQTT Response Topic", NULL);
 }
 
-int cmd_mqtt_temp_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_temp_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_temp_topic,
 			sizeof(conf->mqtt_temp_topic), "MQTT Temperature Topic", NULL);
 }
 
-int cmd_mqtt_fan_rpm_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_fan_rpm_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_fan_rpm_topic,
 			sizeof(conf->mqtt_fan_rpm_topic), "MQTT Fan RPM Topic", NULL);
 }
 
-int cmd_mqtt_fan_duty_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_fan_duty_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_fan_duty_topic,
 			sizeof(conf->mqtt_fan_duty_topic), "MQTT Fan PWM Topic", NULL);
 }
 
-int cmd_mqtt_mbfan_rpm_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_mbfan_rpm_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_mbfan_rpm_topic,
 			sizeof(conf->mqtt_mbfan_rpm_topic), "MQTT MBFan RPM Topic", NULL);
 }
 
-int cmd_mqtt_mbfan_duty_topic(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_mbfan_duty_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_mbfan_duty_topic,
 			sizeof(conf->mqtt_mbfan_duty_topic), "MQTT MBFan PWM Topic", NULL);
 }
 
-int cmd_mqtt_mask_temp(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_mask_temp(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bitmask16_setting(cmd, args, query, prev_cmd,
 				&conf->mqtt_temp_mask, SENSOR_MAX_COUNT,
 				1, "MQTT Temperature Mask");
 }
 
-int cmd_mqtt_mask_fan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_mask_fan_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bitmask16_setting(cmd, args, query, prev_cmd,
 				&conf->mqtt_fan_rpm_mask, FAN_MAX_COUNT,
 				1, "MQTT Fan RPM Mask");
 }
 
-int cmd_mqtt_mask_fan_duty(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_mask_fan_duty(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bitmask16_setting(cmd, args, query, prev_cmd,
 				&conf->mqtt_fan_duty_mask, FAN_MAX_COUNT,
 				1, "MQTT Fan PWM Mask");
 }
 
-int cmd_mqtt_mask_mbfan_rpm(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_mask_mbfan_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bitmask16_setting(cmd, args, query, prev_cmd,
 				&conf->mqtt_mbfan_rpm_mask, MBFAN_MAX_COUNT,
 				1, "MQTT MBFan RPM Mask");
 }
 
-int cmd_mqtt_mask_mbfan_duty(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_mask_mbfan_duty(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bitmask16_setting(cmd, args, query, prev_cmd,
 				&conf->mqtt_mbfan_duty_mask, MBFAN_MAX_COUNT,
@@ -2136,13 +2273,13 @@ int cmd_mqtt_mask_mbfan_duty(const char *cmd, const char *args, int query, char 
 }
 
 #if TLS_SUPPORT
-int cmd_mqtt_tls(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_mqtt_tls(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
 			&conf->mqtt_tls, "MQTT TLS Mode");
 }
 
-int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_tls_pkey(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	char *buf;
 	uint32_t buf_len = 4096;
@@ -2218,7 +2355,7 @@ int cmd_tls_pkey(const char *cmd, const char *args, int query, char *prev_cmd)
 	return res;
 }
 
-int cmd_tls_cert(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_tls_cert(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	char *buf;
 	uint32_t buf_len = 8192;
@@ -2286,38 +2423,38 @@ int cmd_tls_cert(const char *cmd, const char *args, int query, char *prev_cmd)
 }
 #endif /* TLS_SUPPORT */
 
-int cmd_telnet_auth(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_telnet_auth(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
 			&conf->telnet_auth, "Telnet Server Authentication");
 }
 
-int cmd_telnet_rawmode(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_telnet_rawmode(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
 			&conf->telnet_raw_mode, "Telnet Server Raw Mode");
 }
 
-int cmd_telnet_server(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_telnet_server(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
 			&conf->telnet_active, "Telnet Server");
 }
 
-int cmd_telnet_port(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_telnet_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint32_setting(cmd, args, query, prev_cmd,
 			&conf->telnet_port, 0, 65535, "Telnet Port");
 }
 
-int cmd_telnet_user(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_telnet_user(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->telnet_user, sizeof(conf->telnet_user),
 			"Telnet Username", NULL);
 }
 
-int cmd_telnet_pass(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_telnet_pass(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query) {
 		printf("%s\n", cfg->telnet_pwhash);
@@ -2335,7 +2472,7 @@ int cmd_telnet_pass(const char *cmd, const char *args, int query, char *prev_cmd
 }
 #endif /* WIFI_SUPPOERT */
 
-int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_time(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	datetime_t t;
 
@@ -2357,13 +2494,13 @@ int cmd_time(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 2;
 }
 
-int cmd_timezone(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_timezone(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->timezone, sizeof(conf->timezone), "Timezone", NULL);
 }
 
-int cmd_uptime(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_uptime(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
 	uint32_t mins =  secs / 60;
@@ -2379,7 +2516,7 @@ int cmd_uptime(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_err(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_err(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query)
 		return 1;
@@ -2395,14 +2532,14 @@ int cmd_err(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_name(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
 			conf->name, sizeof(conf->name), "System Name", NULL);
 }
 
 
-int cmd_lfs(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_lfs(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	size_t size, free, used, files, dirs;
 
@@ -2421,7 +2558,7 @@ int cmd_lfs(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_lfs_format(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_lfs_format(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query)
 		return 1;
@@ -2434,7 +2571,7 @@ int cmd_lfs_format(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_flash(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_flash(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query)
 		return 1;
@@ -2446,7 +2583,7 @@ int cmd_flash(const char *cmd, const char *args, int query, char *prev_cmd)
 
 #define TEST_MEM_SIZE (264*1024)
 
-int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int blocksize;
 
@@ -2503,13 +2640,13 @@ int cmd_memory(const char *cmd, const char *args, int query, char *prev_cmd)
 	return 0;
 }
 
-int cmd_onewire(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_onewire(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
 			&conf->onewire_active, "1-Wire Bus status");
 }
 
-int cmd_onewire_sensors(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_onewire_sensors(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int i;
 
@@ -2529,13 +2666,13 @@ int cmd_onewire_sensors(const char *cmd, const char *args, int query, char *prev
 	return 0;
 }
 
-int cmd_serial(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_serial(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
 			&conf->serial_active, "Serial Console status");
 }
 
-int cmd_spi(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_spi(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
 			&conf->spi_active, "SPI (LCD Display) status");
@@ -2682,6 +2819,12 @@ const struct cmd_t system_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t fan_hyst_commands[] = {
+	{ "TACho",     3, NULL,              cmd_fan_tacho_hys },
+	{ "PWM",       3, NULL,              cmd_fan_pwm_hys   },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t fan_c_commands[] = {
 	{ "FILTER",    6, NULL,              cmd_fan_filter },
 	{ "MAXpwm",    3, NULL,              cmd_fan_max_pwm },
@@ -2692,6 +2835,7 @@ const struct cmd_t fan_c_commands[] = {
 	{ "RPMFactor", 4, NULL,              cmd_fan_rpm_factor },
 	{ "RPMMOde",   5, NULL,              cmd_fan_rpm_mode },
 	{ "SOUrce",    3, NULL,              cmd_fan_source },
+	{ "HYSTeresis",4, fan_hyst_commands, NULL },
 	{ 0, 0, 0, 0 }
 };
 
@@ -2801,8 +2945,20 @@ const struct cmd_t commands[] = {
 };
 
 
-
-const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, char **prev_subcmd)
+/**
+ * Process (SCPI) command and execute associated command function.
+ *
+ * This process splits command into subcommands using ':' character.
+ * And tries to find the command in the command structure, finally
+ * calling the command function if command is found.
+ *
+ * @param cmd Command string.
+ * @param cmd_level pointer to command structure tree to start search.
+ * @param cmd_stack data structure to store subcommands found when parsing the command.
+ *
+ * @return command result (SCPI error code)
+ */
+static const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, struct prev_cmd_t *cmd_stack)
 {
 	int i, query, cmd_len, total_len;
 	char *saveptr1, *saveptr2, *t, *sub, *s, *arg;
@@ -2815,7 +2971,7 @@ const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, char **pre
 		if (*t == ':' || *t == '*') {
 			/* reset command level to 'root' */
 			cmd_level = commands;
-			*prev_subcmd = NULL;
+			cmd_stack->depth = 0;
 		}
 		/* Split command to subcommands and search from command tree ... */
 		sub = strtok_r(t, ":", &saveptr2);
@@ -2828,7 +2984,8 @@ const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, char **pre
 					sub = strtok_r(NULL, ":", &saveptr2);
 					if (cmd_level[i].subcmds && sub && strlen(sub) > 0) {
 						/* Match for subcommand...*/
-						*prev_subcmd = s;
+						if (cmd_stack->depth < MAX_CMD_DEPTH)
+							cmd_stack->cmds[cmd_stack->depth++] = s;
 						cmd_level = cmd_level[i].subcmds;
 					} else if (cmd_level[i].func) {
 						/* Match for command */
@@ -2839,7 +2996,7 @@ const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, char **pre
 						res = cmd_level[i].func(s,
 								(total_len > cmd_len+1 ? arg : ""),
 								query,
-								(*prev_subcmd ? *prev_subcmd : ""));
+								cmd_stack);
 						if (!query)
 							mutex_exit(config_mutex);
 					}
@@ -2869,11 +3026,20 @@ const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, char **pre
 	return cmd_level;
 }
 
-
+/**
+ * Process command string received from user.
+ *
+ * Splits command string into multiple commads by ';' character.
+ * And executes each command using run_cmd() function.
+ *
+ * @param state Current system state.
+ * @param config Current system configuration.
+ * @param command command string
+ */
 void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command)
 {
 	char *saveptr, *cmd;
-	char *prev_subcmd = NULL;
+	struct prev_cmd_t cmd_stack;
 	const struct cmd_t *cmd_level = commands;
 
 	if (!state || !config || !command)
@@ -2882,17 +3048,25 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 	st = state;
 	conf = config;
 
+
 	cmd = strtok_r(command, ";", &saveptr);
 	while (cmd) {
 		cmd = trim_str(cmd);
 		log_msg(LOG_DEBUG, "command: '%s'", cmd);
 		if (cmd && strlen(cmd) > 0) {
-			cmd_level = run_cmd(cmd, cmd_level, &prev_subcmd);
+			cmd_stack.depth = 0;
+			cmd_stack.cmds[0] = NULL;
+			cmd_level = run_cmd(cmd, cmd_level, &cmd_stack);
 		}
 		cmd = strtok_r(NULL, ";", &saveptr);
 	}
 }
 
+/**
+ * Return last command status code.
+ *
+ * @return status code
+ */
 int last_command_status()
 {
 	return last_error_num;

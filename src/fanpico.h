@@ -48,6 +48,8 @@
 #define SENSOR_SERIES_RESISTANCE 10000.0
 
 #define ADC_REF_VOLTAGE 3.0
+#define FAN_TACHO_HYSTERESIS 1.0
+#define FAN_PWM_HYSTERESIS 1.0
 #define ADC_MAX_VALUE   (1 << 12)
 #define ADC_AVG_WINDOW  10
 
@@ -138,6 +140,8 @@ struct temp_map {
 
 struct fan_output {
 	char name[MAX_NAME_LEN];
+	float tacho_hyst;
+	float pwm_hyst;
 
 	/* output PWM signal settings */
 	uint8_t min_pwm;
@@ -295,6 +299,22 @@ struct persistent_memory_block {
 };
 
 
+#define MAX_CMD_DEPTH 16
+
+struct prev_cmd_t {
+	uint depth;
+	char* cmds[MAX_CMD_DEPTH];
+};
+
+struct cmd_t {
+	const char   *cmd;
+	uint8_t       min_match;
+	const struct cmd_t *subcmds;
+	int (*func)(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
+};
+
+
+
 /* fanpico.c */
 extern struct persistent_memory_block *persistent_mem;
 extern const struct fanpico_state *fanpico_state;
@@ -308,7 +328,7 @@ void set_binary_info();
 
 /* command.c */
 void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command);
-int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd);
+int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
 int last_command_status();
 
 /* config.c */
