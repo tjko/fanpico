@@ -30,11 +30,10 @@ Fanpico supports following commands:
 * [CONFigure:FANx:PWMMap?](#configurefanxpwmmap-1)
 * [CONFigure:FANx:FILTER](#configurefanxfilter)
 * [CONFigure:FANx:FILTER?](#configurefanxfilter-1)
-* [CONFigure:FANx:HYSTeresis?](#configurefanxhysteresis)
-* [CONFigure:FANx:HYS_Tacho](#configurefanxhys_tacho)
-* [CONFigure:FANx:HYS_Tacho?](#configurefanxhys_tacho-1)
-* [CONFigure:FANx:HYS_Pwm](#configurefanxhys_pwm)
-* [CONFigure:FANx:HYS_Pwm?](#configurefanxhys_pwm-1)
+* [CONFigure:FANx:HYSTeresis:TACho](#configurefanxhysteresistacho)
+* [CONFigure:FANx:HYSTeresis:TACho?](#configurefanxhysteresistacho-1)
+* [CONFigure:FANx:HYSTeresis:PWM](#configurefanxhysteresispwm)
+* [CONFigure:FANx:HYSTeresis:PWM?](#configurefanxhysteresispwm-1)
 * [CONFigure:MBFANx:NAME](#configurembfanxname)
 * [CONFigure:MBFANx:NAME?](#configurembfanxname-1)
 * [CONFigure:MBFANx:MINrpm](#configurembfanxminrpm)
@@ -329,47 +328,39 @@ CONF:FAN1:NAME?
 CPU Fan 1
 ```
 
-#### CONFigure:FANx:HYSTeresis?
-Returns the hysteresis thresholds for a given tacho fan (output) port.
+
+#### CONFigure:FANx:HYSTeresis:TACho #### (new: release v1.6.4)
+Set the hysteresis threshold for a given tacho fan (output) port. 
 
 For example:
 ```
-CONF:FAN8:HYST?
-CONF:FAN8:HYS_Pwm=1.000000      CONF:FAN8:HYS_Tacho=1.000000
+CONF:FAN1:HYST:TACHO 1.5
 ```
 
-#### CONFigure:FANx:HYS_Tacho
-Set the hysteresis threshold for a given tacho fan (output) port.
-
-For example:
-```
-CONF:FAN1:HYSteresis:TACho 2.0
-```
-
-#### CONFigure:FANx:HYS_Tacho?
+#### CONFigure:FANx:HYSTeresis:TACho? #### (new: release v1.6.4)
 Query the hysteresis threshold for a given tacho fan (output) port.
 
 For example:
 ```
-CONF:FAN8:HYS_Tacho?
-CONF:FAN8:HYS_Tacho=1.000000
+CONF:FAN1:HYST:TACHO?
+1.500000
 ```
 
-#### CONFigure:FANx:HYS_Pwm
+#### CONFigure:FANx:HYSTeresis:PWM #### (new: release v1.6.4)
 Set the hysteresis threshold for a given tacho PWM (output) port.
 
 For example:
 ```
-CONF:FAN1:HYSteresis:PWM 2.0
+CONF:FAN1:HYST:PWM 2.0
 ```
 
-#### CONFigure:FANx:HYS_Pwm?
+#### CONFigure:FANx:HYSTereris:PWM? #### (new: release v1.6.4)
 Query the hysteresis threshold for a given PWM fan (output) port.
 
 For example:
 ```
-CONF:FAN8:HYS_Pwm?
-CONF:FAN8:HYS_Pwm=1.000000
+CONF:FAN1:HYST:PWM?
+2.000000
 ```
 
 #### CONFigure:FANx:MINpwm
@@ -496,6 +487,7 @@ Configure source for the PWM signal of a fan.
 Source types:
 * MBFAN (set fan to follow duty cycle from motherboard fan port)
 * SENSOR (set fan to follow temperature based duty cycle)
+* VSENSOR (set fan to follow temperature based duty cycle)
 * FAN (set fan to follow another FAN output duty cycle)
 * FIXED (set fan to run on fixed duty cycle)
 
@@ -2476,7 +2468,7 @@ HomeServer
 ```
 
 
-#### SYStem:ONEWIRE
+#### SYStem:ONEWIRE #### (new: release v1.6.4)
 Enable or disable 1-Wire Bus. This is disabled by default.
 Enabling 1-Wire bus allows use of 1-Wire temperature sensors.
 
@@ -2487,7 +2479,7 @@ Example (enable 1-Wire bus):
 SYS:ONEWIRE ON
 ```
 
-#### SYStem:ONEWIRE?
+#### SYStem:ONEWIRE? #### (new: release v1.6.4)
 Return status whether 1-Wire bus is currently enabled or disabled.
 
 Status|Description
@@ -2502,7 +2494,7 @@ OFF
 ```
 
 
-#### SYStem:ONEWIRE:SENSORS?
+#### SYStem:ONEWIRE:SENSORS? #### (new: release v1.6.4)
 Return list of currently active (detected at boot time) 1-Wire bus devices, and last temperature
 measurement results.
 
@@ -2867,7 +2859,7 @@ SYS:VSENSORS?
 ```
 
 
-#### SYStem:VREFadc
+#### SYStem:VREFadc #### (new: release v1.6.4)
 Set actual (measured with a volt meter) reference voltage (Vref) for ADC.
 
 Example:

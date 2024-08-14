@@ -61,7 +61,7 @@
 #define WIFI_PASSWD_MAX_LEN   64
 #define WIFI_COUNTRY_MAX_LEN  3
 
-#define MQTT_MAX_TOPIC_LEN            33
+#define MQTT_MAX_TOPIC_LEN            49
 #define MQTT_MAX_USERNAME_LEN         81
 #define MQTT_MAX_PASSWORD_LEN         65
 #define DEFAULT_MQTT_STATUS_INTERVAL  600
@@ -299,6 +299,22 @@ struct persistent_memory_block {
 };
 
 
+#define MAX_CMD_DEPTH 16
+
+struct prev_cmd_t {
+	uint depth;
+	char* cmds[MAX_CMD_DEPTH];
+};
+
+struct cmd_t {
+	const char   *cmd;
+	uint8_t       min_match;
+	const struct cmd_t *subcmds;
+	int (*func)(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
+};
+
+
+
 /* fanpico.c */
 extern struct persistent_memory_block *persistent_mem;
 extern const struct fanpico_state *fanpico_state;
@@ -312,7 +328,7 @@ void set_binary_info();
 
 /* command.c */
 void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command);
-int cmd_version(const char *cmd, const char *args, int query, char *prev_cmd);
+int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
 int last_command_status();
 
 /* config.c */
