@@ -67,22 +67,16 @@ struct fanpico_config *conf = NULL;
 extern const char fanpico_credits_text[];
 
 
-/* Helper functions for commands */
 
-static const char* get_prev_cmd(const struct prev_cmd_t *prev_cmd)
-{
-	char *cmd;
-
-	if (!prev_cmd)
-		cmd = NULL;
-	else if (prev_cmd->depth < 1)
-		cmd = NULL;
-	else
-		cmd = prev_cmd->cmds[prev_cmd->depth - 1];
-
-	return (cmd ? cmd : "");
-}
-
+/**
+ * Exract (unsigned) number from end of command string.
+ *
+ * If string is "MBFAN3" return value is 3.
+ *
+ * @param cmd command string
+ *
+ * @return number extracted from string (negative values indicates error)
+ */
 static int get_cmd_index(const char *cmd)
 {
 	const char *s;
@@ -97,7 +91,7 @@ static int get_cmd_index(const char *cmd)
 	if (len < 1 || len >= 256)
 		return -2;
 
-	/* Skip any space and letter in the beginning of the string... */
+	/* Skip any spaces and letters at the beginning of the string... */
 	while (len > 1) {
 		if (isalpha((int)*s) || isblank((int)*s)) {
 			s++;
@@ -113,6 +107,44 @@ static int get_cmd_index(const char *cmd)
 	return idx;
 }
 
+
+/**
+ * Return ealier (sub)command string
+ *
+ * If full command was "CONF:FAN2:HYST:PWM". Depth 0 returns "HYST"
+ * and depth 1 returns "FAN2".
+ *
+ * @param prev_cmd Structure storing previous sub commands
+ * @param depth Which command to return (0=last, 1=2nd to last, ...)
+ *
+ * @return (sub)command string
+ */
+static const char* get_prev_cmd(const struct prev_cmd_t *prev_cmd, uint depth)
+{
+	char *cmd;
+
+	if (!prev_cmd)
+		cmd = NULL;
+	else if (depth >= prev_cmd->depth)
+		cmd = NULL;
+	else
+		cmd = prev_cmd->cmds[prev_cmd->depth - depth - 1];
+
+	return (cmd ? cmd : "");
+}
+
+
+/**
+ * Return number from end of an earlier (sub)command
+ *
+ * If full command was "CONF:FAN3:NAME?", then depth 0 returns "FAN3"
+ * and depth 1 returns "CONF".
+ *
+ * @param prev_cmd Strucutre storing previous sub commands
+ * @param depth Which command to return (0=last, 1=2nd to last, ...)
+ *
+ * @return number extracted from specified subcommand (negative value indicates error)
+ */
 static int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
 {
 	int idx;
@@ -126,6 +158,9 @@ static int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
 
 	return idx;
 }
+
+
+/* Helper functions for commands */
 
 static int string_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
@@ -1006,7 +1041,7 @@ int cmd_fan_read(const char *cmd, const char *args, int query, struct prev_cmd_t
 	if (!query)
 		return 1;
 
-	if (!strncasecmp(get_prev_cmd(prev_cmd), "fan", 3)) {
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "fan", 3)) {
 		fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
 		fan = get_cmd_index(cmd) - 1;
@@ -1394,7 +1429,7 @@ int cmd_mbfan_read(const char *cmd, const char *args, int query, struct prev_cmd
 	if (!query)
 		return 1;
 
-	if (!strncasecmp(get_prev_cmd(prev_cmd), "mbfan", 5)) {
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "mbfan", 5)) {
 		fan = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
 		fan = get_cmd_index(cmd) - 1;
@@ -1672,7 +1707,7 @@ int cmd_sensor_temp(const char *cmd, const char *args, int query, struct prev_cm
 	if (!query)
 		return 1;
 
-	if (!strncasecmp(get_prev_cmd(prev_cmd), "sensor", 6)) {
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "sensor", 6)) {
 		sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
 		sensor = get_cmd_index(cmd) - 1;
@@ -1904,7 +1939,7 @@ int cmd_vsensor_temp(const char *cmd, const char *args, int query, struct prev_c
 	if (!query)
 		return 1;
 
-	if (!strncasecmp(get_prev_cmd(prev_cmd), "vsensor", 7)) {
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "vsensor", 7)) {
 		sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
 		sensor = get_cmd_index(cmd) - 1;
@@ -1972,7 +2007,7 @@ int cmd_vsensor_write(const char *cmd, const char *args, int query, struct prev_
 	if (query)
 		return 1;
 
-	if (!strncasecmp(get_prev_cmd(prev_cmd), "vsensor", 7)) {
+	if (!strncasecmp(get_prev_cmd(prev_cmd, 0), "vsensor", 7)) {
 		sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	} else {
 		sensor = get_cmd_index(cmd) - 1;
@@ -2910,7 +2945,19 @@ const struct cmd_t commands[] = {
 };
 
 
-
+/**
+ * Process (SCPI) command and execute associated command function.
+ *
+ * This process splits command into subcommands using ':' character.
+ * And tries to find the command in the command structure, finally
+ * calling the command function if command is found.
+ *
+ * @param cmd Command string.
+ * @param cmd_level pointer to command structure tree to start search.
+ * @param cmd_stack data structure to store subcommands found when parsing the command.
+ *
+ * @return command result (SCPI error code)
+ */
 static const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, struct prev_cmd_t *cmd_stack)
 {
 	int i, query, cmd_len, total_len;
@@ -2979,7 +3026,16 @@ static const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, str
 	return cmd_level;
 }
 
-
+/**
+ * Process command string received from user.
+ *
+ * Splits command string into multiple commads by ';' character.
+ * And executes each command using run_cmd() function.
+ *
+ * @param state Current system state.
+ * @param config Current system configuration.
+ * @param command command string
+ */
 void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command)
 {
 	char *saveptr, *cmd;
@@ -3006,6 +3062,11 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 	}
 }
 
+/**
+ * Return last command status code.
+ *
+ * @return status code
+ */
 int last_command_status()
 {
 	return last_error_num;
