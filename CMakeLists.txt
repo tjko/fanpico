@@ -96,6 +96,7 @@ add_executable(fanpico
   src/pwm.c
   src/tacho.c
   src/sensors.c
+  src/i2c.c
   src/onewire.c
   src/filters.c
   src/filter_lossypeak.c

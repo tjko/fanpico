@@ -264,7 +264,7 @@ void lcd_display_init()
 	int dtype = LCD_INVALID;
 	int flags = FLAGS_NONE;
 	int orientation = LCD_ORIENTATION_90;
-	int32_t spi_freq = 30000000; // Default SPI bus frequency 30MHz
+	int32_t spi_freq = SPI_DEFAULT_SPEED;
 	const char *lcd_name = "";
 	int val;
 	char *args, *tok, *saveptr;
