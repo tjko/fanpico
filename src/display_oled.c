@@ -354,12 +354,11 @@ void oled_display_status(const struct fanpico_state *state,
 	}
 	else if (FAN_COUNT <= 4) {
 		/* Uptime / Clock */
-		snprintf(buf, sizeof(buf), "%02lu+%02lu:%02lu:%02lu",
-			days % 100,
+		snprintf(buf, sizeof(buf), "%03lu+%02lu:%02lu",
+			days % 1000,
 			hours % 24,
-			mins % 60,
-			secs % 60);
-		oledWriteString(&oled, 0, 0, 7, buf, FONT_6x8, 0, 1);
+			mins % 60);
+		oledWriteString(&oled, 0, 6, 7, buf, FONT_6x8, 0, 1);
 		if (rtc_get_datetime(&t)) {
 			snprintf(buf, sizeof(buf), "%02d:%02d", t.hour, t.min);
 			oledWriteString(&oled, 0, 3, 5, buf, FONT_12x16, 0, 1);
