@@ -113,6 +113,10 @@ Fanpico supports following commands:
 * [SYStem:ECHO?](#systemecho)
 * [SYStem:FANS?](#systemfans)
 * [SYStem:FLASH?](#systemflash)
+* [SYStem:I2C?](#systemi2c)
+* [SYStem:I2C:SCAN?](#systemi2cscan)
+* [SYStem:I2C:SPEED](#systemi2cspeed)
+* [SYStem:I2C:SPEED?](#systemi2cspeed?)
 * [SYStem:LED](#systemled)
 * [SYStem:LED?](#systemled-1)
 * [SYStem:LFS?](#systemlfs)
@@ -1777,6 +1781,60 @@ Flash memory size:                     2097152
 Binary size:                           683520
 LittleFS size:                         262144
 Unused flash memory:                   1151488
+```
+
+
+### SYStem:I2C?
+Returns status if I2C bus is active (available) currently.
+Depening on board model I2C may not be available at all
+or may only be available if SPI is not active.
+
+Returns:
+
+status|description
+------|-----------
+0|I2C Bus not available
+1|I2C Bus available
+
+Example:
+```
+SYS:I2C?
+1
+```
+
+
+### SYStem:I2C:SCAN?
+Scan I2C Bus for active devices.
+This returns addresses of any devices found on I2C bus.
+
+Example:
+```
+SYS:I2C:SCAN??
+Scanning I2C Bus... 0x3c
+Device(s) found: 1
+```
+
+
+### SYStem:I2C:SPEED
+Set speed that I2C bus operates.
+Note, change won't take effect until unit is rebooted.
+
+Default: 1000000  (1000 kHz or 1000 kbit/s)
+
+Example:
+```
+SYS:I2C:SPEED 1000000
+CONF:SAVE
+```
+
+
+### SYStem:I2C:SPEED?
+Return currently configured I2C bus speed (Hz or bit/s).
+
+Example:
+```
+SYS:I2C:SPEED?
+1000000
 ```
 
 
