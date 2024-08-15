@@ -175,6 +175,7 @@ void setup()
 		log_msg(LOG_NOTICE, "RTC clock time: %s", datetime_str(buf, sizeof(buf), &t));
 	}
 
+	setup_i2c_bus();
 	display_init();
 	network_init(&system_state);
 

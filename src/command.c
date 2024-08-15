@@ -2666,6 +2666,30 @@ int cmd_onewire_sensors(const char *cmd, const char *args, int query, struct pre
 	return 0;
 }
 
+int cmd_i2c(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	display_i2c_status();
+	return 0;
+}
+
+int cmd_i2c_scan(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	scan_i2c_bus();
+	return 0;
+}
+
+int cmd_i2c_speed(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->i2c_speed, 10000, 5000000, "I2C Bus Speed (Hz)");
+}
+
 int cmd_serial(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
@@ -2778,6 +2802,12 @@ const struct cmd_t telnet_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t i2c_commands[] = {
+	{ "SCAN",      4, NULL,              cmd_i2c_scan },
+	{ "SPEED",     5, NULL,              cmd_i2c_speed },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t onewire_commands[] = {
 	{ "SENsors",   3, NULL,              cmd_onewire_sensors },
 	{ 0, 0, 0, 0 }
@@ -2790,6 +2820,7 @@ const struct cmd_t system_commands[] = {
 	{ "ERRor",     3, NULL,              cmd_err },
 	{ "FANS",      4, NULL,              cmd_fans },
 	{ "FLASH",     5, NULL,              cmd_flash },
+	{ "I2C",       3, i2c_commands,      cmd_i2c },
 	{ "LED",       3, NULL,              cmd_led },
 	{ "LFS",       3, lfs_commands,      cmd_lfs },
 	{ "LOG",       3, NULL,              cmd_log_level },

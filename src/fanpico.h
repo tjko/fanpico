@@ -74,6 +74,13 @@
 #define WATCHDOG_REBOOT_DELAY 15000
 #endif
 
+#ifndef I2C_DEFAULT_SPEED
+#define I2C_DEFAULT_SPEED   1000000L /* Default I2C bus frequency 1MHz */
+#endif
+#ifndef SPI_DEFAULT_SPEED
+#define SPI_DEFAULT_SPEED  30000000L /* Default SPI bus frequency 30MHz */
+#endif
+
 
 enum pwm_source_types {
 	PWM_FIXED   = 0,     /* Fixed speed set by s_id */
@@ -222,6 +229,7 @@ struct fanpico_config {
 	bool spi_active;
 	bool serial_active;
 	bool onewire_active;
+	uint32_t i2c_speed;
 	float adc_vref;
 #ifdef WIFI_SUPPORT
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
@@ -391,6 +399,12 @@ const char *network_hostname();
 /* httpd.c */
 u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 			u16_t current_tag_part, u16_t *next_tag_part);
+
+/* i2c.c */
+void scan_i2c_bus();
+void display_i2c_status();
+void setup_i2c_bus();
+
 /* mqtt.c */
 void fanpico_setup_mqtt_client();
 int fanpico_mqtt_client_active();
