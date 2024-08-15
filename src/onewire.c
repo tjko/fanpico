@@ -122,6 +122,7 @@ int onewire_read_temps(struct fanpico_config *config, struct fanpico_state *stat
 		if (res) {
 			log_msg(LOG_INFO, "pico_1wire_convert_temperature() failed: %d", res);
 			step = 2;
+			return 15000;
 		} else {
 			log_msg(LOG_DEBUG, "1-Wire Initiate temperature conversion");
 			sensor = 0;
