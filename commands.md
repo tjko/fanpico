@@ -1819,6 +1819,9 @@ Device(s) found: 1
 Set speed that I2C bus operates.
 Note, change won't take effect until unit is rebooted.
 
+Speed range: 10000 - 3400000
+(speeds over 1000000 may not work reliably)
+
 Default: 1000000  (1000 kHz or 1000 kbit/s)
 
 Example:

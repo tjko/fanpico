@@ -2687,7 +2687,7 @@ int cmd_i2c_scan(const char *cmd, const char *args, int query, struct prev_cmd_t
 int cmd_i2c_speed(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint32_setting(cmd, args, query, prev_cmd,
-			&conf->i2c_speed, 10000, 5000000, "I2C Bus Speed (Hz)");
+			&conf->i2c_speed, 10000, 3400000, "I2C Bus Speed (Hz)");
 }
 
 int cmd_serial(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
