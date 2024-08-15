@@ -330,7 +330,8 @@ CPU Fan 1
 
 
 #### CONFigure:FANx:HYSTeresis:TACho
-Set the hysteresis threshold for a given tacho fan (output) port.
+<mark>new: release v1.6.4</mark>  \
+Set the hysteresis threshold for a given tacho fan (output) port. 
 
 For example:
 ```
@@ -338,6 +339,7 @@ CONF:FAN1:HYST:TACHO 1.5
 ```
 
 #### CONFigure:FANx:HYSTeresis:TACho?
+<mark>new: release v1.6.4</mark>  \
 Query the hysteresis threshold for a given tacho fan (output) port.
 
 For example:
@@ -347,6 +349,7 @@ CONF:FAN1:HYST:TACHO?
 ```
 
 #### CONFigure:FANx:HYSTeresis:PWM
+<mark>new: release v1.6.4</mark>  \
 Set the hysteresis threshold for a given tacho PWM (output) port.
 
 For example:
@@ -355,6 +358,7 @@ CONF:FAN1:HYST:PWM 2.0
 ```
 
 #### CONFigure:FANx:HYSTereris:PWM?
+<mark>new: release v1.6.4</mark>  \
 Query the hysteresis threshold for a given PWM fan (output) port.
 
 For example:
@@ -2468,7 +2472,8 @@ HomeServer
 ```
 
 
-#### SYStem:ONEWIRE
+#### SYStem:ONEWIRE 
+<mark>new: release v1.6.4</mark>  \
 Enable or disable 1-Wire Bus. This is disabled by default.
 Enabling 1-Wire bus allows use of 1-Wire temperature sensors.
 
@@ -2480,6 +2485,7 @@ SYS:ONEWIRE ON
 ```
 
 #### SYStem:ONEWIRE?
+<mark>new: release v1.6.4</mark>  \
 Return status whether 1-Wire bus is currently enabled or disabled.
 
 Status|Description
@@ -2495,6 +2501,7 @@ OFF
 
 
 #### SYStem:ONEWIRE:SENSORS?
+<mark>new: release v1.6.4</mark>  \
 Return list of currently active (detected at boot time) 1-Wire bus devices, and last temperature
 measurement results.
 
@@ -2860,6 +2867,7 @@ SYS:VSENSORS?
 
 
 #### SYStem:VREFadc
+<mark>new: release v1.6.4</mark>  \
 Set actual (measured with a volt meter) reference voltage (Vref) for ADC.
 
 Example:
@@ -2870,6 +2878,7 @@ SYS:VREFADC
 
 
 #### SYStem:VREFadc?
+<mark>new: release v1.6.4</mark>  \
 Display currently configured ADC voltage reference voltage.
 
 Example:
