@@ -5,8 +5,8 @@
 	(uuid "bbdfdd6a-c898-4a7d-9724-7451df1ad22f")
 	(paper "A4")
 	(title_block
-		(title "FanPico-0401D v1.0")
-		(date "2024-07-22")
+		(title "FanPico-0401D v1.1")
+		(date "2024-08-15")
 		(company "Timo Kokkonen <tjko@iki.fi>")
 		(comment 3 "Fanpico firmware reference PCB.")
 	)
@@ -1270,6 +1270,12 @@
 		(uuid "459498db-0aef-4cf3-924b-e9347747e08f")
 	)
 	(junction
+		(at 223.52 43.18)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "6258b30e-8264-45e7-ba5a-ea07af77586b")
+	)
+	(junction
 		(at 190.5 71.12)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1280,6 +1286,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "724cd939-a587-4be1-b752-dd9854610826")
+	)
+	(junction
+		(at 81.28 71.12)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7dc7f7a4-8c8d-4023-a69b-6a8aa325e313")
 	)
 	(junction
 		(at 201.93 134.62)
@@ -1304,6 +1316,16 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "df362961-367a-462b-a6bf-378f561fc33b")
+	)
+	(wire
+		(pts
+			(xy 81.28 71.12) (xy 81.28 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "08bbb17f-6c94-4d05-a90b-13e584a2969d")
 	)
 	(wire
 		(pts
@@ -1347,6 +1369,16 @@
 	)
 	(wire
 		(pts
+			(xy 81.28 83.82) (xy 81.28 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2009100c-f061-456e-aa87-57b9dbc8d03c")
+	)
+	(wire
+		(pts
 			(xy 214.63 71.12) (xy 223.52 71.12)
 		)
 		(stroke
@@ -1357,7 +1389,7 @@
 	)
 	(wire
 		(pts
-			(xy 205.74 43.18) (xy 256.54 43.18)
+			(xy 205.74 43.18) (xy 223.52 43.18)
 		)
 		(stroke
 			(width 0)
@@ -1377,16 +1409,6 @@
 	)
 	(wire
 		(pts
-			(xy 97.79 43.18) (xy 132.08 43.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2de93c9c-ec26-4cea-9f4e-d95197e5a3c1")
-	)
-	(wire
-		(pts
 			(xy 176.53 118.11) (xy 190.5 118.11)
 		)
 		(stroke
@@ -1394,6 +1416,16 @@
 			(type default)
 		)
 		(uuid "2eba858d-1165-48fb-98d0-486a1dc6ae86")
+	)
+	(wire
+		(pts
+			(xy 223.52 43.18) (xy 223.52 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3479e5f1-9640-425d-9240-c5342a0868c8")
 	)
 	(wire
 		(pts
@@ -1434,6 +1466,16 @@
 			(type default)
 		)
 		(uuid "583d6084-3a53-4056-af7e-142f327c101e")
+	)
+	(wire
+		(pts
+			(xy 223.52 55.88) (xy 223.52 59.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "58e76441-f1c2-4d5e-8938-26125198b754")
 	)
 	(wire
 		(pts
@@ -1567,7 +1609,17 @@
 	)
 	(wire
 		(pts
-			(xy 68.58 71.12) (xy 106.68 71.12)
+			(xy 81.28 71.12) (xy 106.68 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "92402786-f18d-4f81-adff-5f33704b20c7")
+	)
+	(wire
+		(pts
+			(xy 68.58 71.12) (xy 81.28 71.12)
 		)
 		(stroke
 			(width 0)
@@ -1707,6 +1759,16 @@
 	)
 	(wire
 		(pts
+			(xy 223.52 43.18) (xy 256.54 43.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d45119ae-f145-4c5d-b63f-62cf69f36d58")
+	)
+	(wire
+		(pts
 			(xy 200.66 71.12) (xy 190.5 71.12)
 		)
 		(stroke
@@ -1777,7 +1839,7 @@
 	)
 	(wire
 		(pts
-			(xy 81.28 43.18) (xy 90.17 43.18)
+			(xy 81.28 43.18) (xy 132.08 43.18)
 		)
 		(stroke
 			(width 0)
@@ -2236,7 +2298,7 @@
 				)
 			)
 		)
-		(property "Value" "BAT54C"
+		(property "Value" "BAT54(C)"
 			(at 210.82 67.31 0)
 			(effects
 				(font
@@ -2332,33 +2394,17 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
-		(at 93.98 43.18 270)
+		(lib_id "power:GND")
+		(at 81.28 88.9 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "3fb97f3e-520c-4a3d-90e0-f35e2392af78")
-		(property "Reference" "R8"
-			(at 93.98 36.83 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "1k"
-			(at 93.98 39.37 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
-			(at 93.98 41.402 90)
+		(uuid "2f6f826f-61c0-439f-989d-2ac282ca920f")
+		(property "Reference" "#PWR06"
+			(at 81.28 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2366,8 +2412,16 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
-			(at 93.98 43.18 0)
+		(property "Value" "GND"
+			(at 81.28 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 81.28 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2375,8 +2429,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Resistor"
-			(at 93.98 43.18 0)
+		(property "Datasheet" ""
+			(at 81.28 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2384,26 +2438,8 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part Number" "C22548"
-			(at 93.98 43.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "JCLC Part Number" ""
-			(at 93.98 43.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Mouser Part Number" ""
-			(at 93.98 43.18 0)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 81.28 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2412,15 +2448,109 @@
 			)
 		)
 		(pin "1"
-			(uuid "c4ffe736-e6eb-47f1-9617-5dc3d45d2dcd")
-		)
-		(pin "2"
-			(uuid "1063eed3-5129-40b3-aa3a-4e036ecc2d24")
+			(uuid "ffd3d187-46b0-4fbe-99b6-48ae069f60e3")
 		)
 		(instances
 			(project "fanpico"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/cccf50bc-434f-4bd7-95d5-172f10b931f4"
-					(reference "R8")
+					(reference "#PWR06")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:D_TVS")
+		(at 223.52 52.07 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "3aa61efe-1bec-444c-86b6-a0f82e6204cd")
+		(property "Reference" "D33"
+			(at 226.06 50.7999 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "5V TVS"
+			(at 226.06 53.3399 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Diode_SMD:D_SOD-323_HandSoldering"
+			(at 223.52 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 223.52 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Bidirectional transient-voltage-suppression diode"
+			(at 223.52 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part Number" "C5180216"
+			(at 223.52 52.07 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "JCLC Part Number" ""
+			(at 223.52 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" ""
+			(at 223.52 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "b6827b73-0ed2-41a4-b72b-9d37dd467d7b")
+		)
+		(pin "2"
+			(uuid "bfc699b5-f7cc-40a3-a9ae-9656bba4b646")
+		)
+		(instances
+			(project "fanpico"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/cccf50bc-434f-4bd7-95d5-172f10b931f4"
+					(reference "D33")
 					(unit 1)
 				)
 			)
@@ -2531,7 +2661,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.diodes.com/assets/Datasheets/ds30896.pdf"
+		(property "Datasheet" "https://www.diodes.com/assets/Datasheets/2N7002K.pdf"
 			(at 104.14 88.9 0)
 			(effects
 				(font
@@ -2614,7 +2744,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "12V"
+		(property "Value" "12V TVS"
 			(at 226.06 81.2799 90)
 			(effects
 				(font
@@ -2784,6 +2914,72 @@
 			(project "fanpico"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/cccf50bc-434f-4bd7-95d5-172f10b931f4"
 					(reference "C10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 223.52 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "808ff747-07ce-4588-b60c-6a291e615f2a")
+		(property "Reference" "#PWR036"
+			(at 223.52 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 223.52 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 223.52 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 223.52 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 223.52 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "42dd6829-da30-4e9d-b6c9-1bd3d9dca16f")
+		)
+		(instances
+			(project "fanpico"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/cccf50bc-434f-4bd7-95d5-172f10b931f4"
+					(reference "#PWR036")
 					(unit 1)
 				)
 			)
@@ -3488,6 +3684,103 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:D_TVS")
+		(at 81.28 80.01 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "bdc419e0-9c06-4d99-8061-21132e7c47c6")
+		(property "Reference" "D2"
+			(at 83.82 78.7399 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "12V TVS"
+			(at 83.82 81.2799 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Diode_SMD:D_SOD-323_HandSoldering"
+			(at 81.28 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 81.28 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Bidirectional transient-voltage-suppression diode"
+			(at 81.28 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part Number" "C502541 or C5199168"
+			(at 81.28 80.01 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "JCLC Part Number" ""
+			(at 81.28 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" ""
+			(at 81.28 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c395bcad-3d7f-4812-9d0b-a3fbeefe786c")
+		)
+		(pin "2"
+			(uuid "58e80f68-f7eb-459f-a4a2-96f4cd87c3d7")
+		)
+		(instances
+			(project "fanpico"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/cccf50bc-434f-4bd7-95d5-172f10b931f4"
+					(reference "D2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 223.52 87.63 0)
 		(unit 1)
@@ -3667,7 +3960,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "5V"
+		(property "Value" "5V TVS"
 			(at 83.82 54.6099 90)
 			(effects
 				(font

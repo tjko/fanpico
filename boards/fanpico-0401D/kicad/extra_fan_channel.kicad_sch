@@ -5,8 +5,8 @@
 	(uuid "a3e4201d-65f6-465e-922c-6bde94345467")
 	(paper "A4")
 	(title_block
-		(title "FanPico-0401D v1.0")
-		(date "2024-07-22")
+		(title "FanPico-0401D v1.1")
+		(date "2024-08-15")
 		(company "Timo Kokkonen <tjko@iki.fi>")
 		(comment 3 "Fanpico firmware reference PCB.")
 	)
@@ -455,175 +455,6 @@
 				)
 			)
 		)
-		(symbol "Device:LED"
-			(pin_numbers hide)
-			(pin_names
-				(offset 1.016) hide)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "D"
-				(at 0 2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED"
-				(at 0 -2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Light emitting diode"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "LED diode"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "LED* LED_SMD:* LED_THT:*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "LED_0_1"
-				(polyline
-					(pts
-						(xy -1.27 -1.27) (xy -1.27 1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 0) (xy 1.27 0)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.27 -1.27) (xy 1.27 1.27) (xy -1.27 0) (xy 1.27 -1.27)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -3.048 -0.762) (xy -4.572 -2.286) (xy -3.81 -2.286) (xy -4.572 -2.286) (xy -4.572 -1.524)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.778 -0.762) (xy -3.302 -2.286) (xy -2.54 -2.286) (xy -3.302 -2.286) (xy -3.302 -1.524)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "LED_1_1"
-				(pin passive line
-					(at -3.81 0 0)
-					(length 2.54)
-					(name "K"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 3.81 0 180)
-					(length 2.54)
-					(name "A"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-		)
 		(symbol "Device:R"
 			(pin_numbers hide)
 			(pin_names
@@ -963,12 +794,6 @@
 		)
 	)
 	(junction
-		(at 147.32 121.92)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "4725c110-3918-44c6-9202-0379854f5511")
-	)
-	(junction
 		(at 146.05 74.93)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1004,6 +829,12 @@
 		(color 0 0 0 0)
 		(uuid "bc3c0dfa-b464-40ed-b333-1addf7963fde")
 	)
+	(junction
+		(at 195.58 46.99)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c65cf519-771a-455b-9fae-86c31004fccc")
+	)
 	(wire
 		(pts
 			(xy 195.58 74.93) (xy 195.58 80.01)
@@ -1014,6 +845,16 @@
 		)
 		(uuid "05338c02-d69b-4bed-8580-e522a090bd45")
 	)
+	(wire
+		(pts
+			(xy 195.58 60.96) (xy 195.58 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "07926de5-6438-4a83-8c20-6b36a09f0ddb")
+	)
 	(polyline
 		(pts
 			(xy 250.19 144.78) (xy 207.01 144.78)
@@ -1023,16 +864,6 @@
 			(type default)
 		)
 		(uuid "0b251daa-acb2-4563-8a00-282536baae82")
-	)
-	(wire
-		(pts
-			(xy 147.32 143.51) (xy 147.32 148.59)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "17ea7d3f-838e-47ed-8b34-32e6dd7c52f1")
 	)
 	(wire
 		(pts
@@ -1076,7 +907,7 @@
 	)
 	(wire
 		(pts
-			(xy 171.45 46.99) (xy 212.09 46.99)
+			(xy 171.45 46.99) (xy 195.58 46.99)
 		)
 		(stroke
 			(width 0)
@@ -1124,6 +955,16 @@
 		)
 		(uuid "5d7c9e49-c51b-4cd3-9c74-e64da3dc723c")
 	)
+	(wire
+		(pts
+			(xy 195.58 46.99) (xy 212.09 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "64d1f619-52db-4a09-8a28-848f170f0a20")
+	)
 	(polyline
 		(pts
 			(xy 90.17 34.29) (xy 137.16 34.29)
@@ -1153,26 +994,6 @@
 			(type default)
 		)
 		(uuid "71f1d60b-385f-4b2a-8c0f-92a6f8634db3")
-	)
-	(wire
-		(pts
-			(xy 147.32 121.92) (xy 147.32 125.73)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7c442b30-229b-43e2-9845-71ef86cf968a")
-	)
-	(wire
-		(pts
-			(xy 147.32 133.35) (xy 147.32 135.89)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "80ba5a1b-364d-46ab-b340-b5f8416f381e")
 	)
 	(wire
 		(pts
@@ -1266,7 +1087,17 @@
 	)
 	(wire
 		(pts
-			(xy 147.32 121.92) (xy 167.64 121.92)
+			(xy 195.58 46.99) (xy 195.58 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d3fb9dda-2c53-4126-a673-2a22ced20443")
+	)
+	(wire
+		(pts
+			(xy 101.6 121.92) (xy 167.64 121.92)
 		)
 		(stroke
 			(width 0)
@@ -1283,16 +1114,6 @@
 			(type default)
 		)
 		(uuid "d781a121-7dce-4e92-b9ad-3e37759ee30c")
-	)
-	(wire
-		(pts
-			(xy 101.6 121.92) (xy 147.32 121.92)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d9535a5b-c26d-42fe-bda7-1555a7c3816f")
 	)
 	(wire
 		(pts
@@ -1458,80 +1279,6 @@
 			(justify right)
 		)
 		(uuid "e2014b0f-a50a-4333-81ed-31444f0ecafa")
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 147.32 148.59 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "0acd508c-e29a-44a1-9369-7c7575a9efb9")
-		(property "Reference" "#PWR071"
-			(at 147.32 154.94 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 147.32 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 147.32 148.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 147.32 148.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 147.32 148.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "eccb6478-c3ea-4aa1-9f07-4ad91d1bea66")
-		)
-		(instances
-			(project "fanpico"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/5ae37739-065e-4580-bde3-1038e45a286b"
-					(reference "#PWR071")
-					(unit 1)
-				)
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/61057e9f-bb51-4960-97cb-0865458dfe32"
-					(reference "#PWR075")
-					(unit 1)
-				)
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/d911133f-dd4d-432b-a685-8d9b5b84e35e"
-					(reference "#PWR067")
-					(unit 1)
-				)
-			)
-		)
 	)
 	(symbol
 		(lib_id "power:GND")
@@ -1967,35 +1714,35 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
-		(at 147.32 129.54 0)
+		(lib_id "Device:D_TVS")
+		(at 195.58 57.15 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "4e28b459-dd74-4c82-9144-e285ed7f5928")
-		(property "Reference" "R39"
-			(at 149.86 128.2699 0)
+		(uuid "6535bc33-56ae-4cc2-99e7-1448e1c62b75")
+		(property "Reference" "D35"
+			(at 198.12 55.8799 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
+				(justify right)
 			)
 		)
-		(property "Value" "49.9k"
-			(at 149.86 130.8099 0)
+		(property "Value" "5V TVS"
+			(at 198.12 58.4199 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
+				(justify right)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
-			(at 145.542 129.54 90)
+		(property "Footprint" "Diode_SMD:D_SOD-323_HandSoldering"
+			(at 195.58 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2004,7 +1751,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 147.32 129.54 0)
+			(at 195.58 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2012,8 +1759,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Resistor"
-			(at 147.32 129.54 0)
+		(property "Description" "Bidirectional transient-voltage-suppression diode"
+			(at 195.58 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2021,8 +1768,8 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part Number" "C114624"
-			(at 147.32 129.54 0)
+		(property "LCSC Part Number" "C5180216"
+			(at 195.58 57.15 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2031,7 +1778,7 @@
 			)
 		)
 		(property "JCLC Part Number" ""
-			(at 147.32 129.54 0)
+			(at 195.58 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2040,7 +1787,7 @@
 			)
 		)
 		(property "Mouser Part Number" ""
-			(at 147.32 129.54 0)
+			(at 195.58 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2049,23 +1796,23 @@
 			)
 		)
 		(pin "1"
-			(uuid "9cca6172-81fb-4620-b084-c64be1867819")
+			(uuid "e8702433-44c2-4946-aeb2-d43a492304ca")
 		)
 		(pin "2"
-			(uuid "98dcd480-8b0e-4075-9565-706143c76d27")
+			(uuid "d04829e4-c99e-474f-a569-53c22467dde9")
 		)
 		(instances
 			(project "fanpico"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/5ae37739-065e-4580-bde3-1038e45a286b"
-					(reference "R39")
+					(reference "D35")
 					(unit 1)
 				)
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/61057e9f-bb51-4960-97cb-0865458dfe32"
-					(reference "R42")
+					(reference "D36")
 					(unit 1)
 				)
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/d911133f-dd4d-432b-a685-8d9b5b84e35e"
-					(reference "R36")
+					(reference "D34")
 					(unit 1)
 				)
 			)
@@ -2090,7 +1837,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "12V"
+		(property "Value" "12V TVS"
 			(at 198.12 85.0899 90)
 			(effects
 				(font
@@ -2404,6 +2151,80 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 195.58 63.5 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b26a0ffc-7745-484b-9539-c92880c70c86")
+		(property "Reference" "#PWR042"
+			(at 195.58 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 195.58 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 195.58 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 195.58 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 195.58 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "774df901-1392-426e-bc85-6012ac6af56b")
+		)
+		(instances
+			(project "fanpico"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/5ae37739-065e-4580-bde3-1038e45a286b"
+					(reference "#PWR042")
+					(unit 1)
+				)
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/61057e9f-bb51-4960-97cb-0865458dfe32"
+					(reference "#PWR043")
+					(unit 1)
+				)
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/d911133f-dd4d-432b-a685-8d9b5b84e35e"
+					(reference "#PWR037")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:D")
 		(at 177.8 74.93 180)
 		(unit 1)
@@ -2421,7 +2242,7 @@
 				)
 			)
 		)
-		(property "Value" "BAT54C"
+		(property "Value" "BAT54(C)"
 			(at 177.8 71.12 0)
 			(effects
 				(font
@@ -2696,111 +2517,6 @@
 				)
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/d911133f-dd4d-432b-a685-8d9b5b84e35e"
 					(reference "R38")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:LED")
-		(at 147.32 139.7 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "e71c48c0-bfa1-45a6-b74d-c5c4cc91c89c")
-		(property "Reference" "D26"
-			(at 151.13 140.0174 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "LED 0805 (green)"
-			(at 151.13 142.5574 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder"
-			(at 147.32 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 147.32 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Light emitting diode"
-			(at 147.32 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part Number" "C434432"
-			(at 147.32 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "JCLC Part Number" ""
-			(at 147.32 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Mouser Part Number" "710-150080GS75000"
-			(at 147.32 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "2de7d4bb-b01a-48ca-9b1b-ecd43e3fc6be")
-		)
-		(pin "2"
-			(uuid "45e66619-4d72-42c4-bc94-c0a456633ec2")
-		)
-		(instances
-			(project "fanpico"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/5ae37739-065e-4580-bde3-1038e45a286b"
-					(reference "D26")
-					(unit 1)
-				)
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/61057e9f-bb51-4960-97cb-0865458dfe32"
-					(reference "D29")
-					(unit 1)
-				)
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55/4d4dd17e-947f-4b3c-bd12-d4039fccae25/d911133f-dd4d-432b-a685-8d9b5b84e35e"
-					(reference "D23")
 					(unit 1)
 				)
 			)

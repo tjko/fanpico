@@ -5,8 +5,8 @@
 	(uuid "21c2a7bb-e53e-404f-aa6f-d468a4437c78")
 	(paper "A4")
 	(title_block
-		(title "FanPico-0401D v1.0")
-		(date "2024-07-22")
+		(title "FanPico-0401D v1.1")
+		(date "2024-08-15")
 		(company "Timo Kokkonen <tjko@iki.fi>")
 		(comment 3 "Fanpico firmware reference PCB.")
 	)
