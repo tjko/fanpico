@@ -109,9 +109,6 @@ uint get_i2c_sensor_type(const char *name)
 
 const char *i2c_sensor_type_str(uint type)
 {
-	if (type < 1)
-		return "NONE";
-
 	for (int i = 0; i2c_sensor_types[i].name; i++) {
 		if (i == type) {
 			return i2c_sensor_types[i].name;
@@ -144,25 +141,8 @@ void scan_i2c_bus()
 		printf("0x%02x", addr);
 		found++;
 	}
+
 	printf("\nDevice(s) found: %d\n", found);
-
-#if 0
-	float temp = 0.0;
-	static void *ctx = NULL;
-	static int sensor = -1;
-
-	if (!ctx) {
-		sensor = i2c_init_sensor("TMP117", 0x48, &ctx);
-		printf("sensor=%d, ctx=%p\n", sensor, ctx);
-	}
-
-	res = i2c_start_measurement(sensor, ctx);
-	printf("start_measurement: %d\n", res);
-	if (res > 0)
-		sleep_ms(res);
-	res = i2c_get_measurement(sensor, ctx, &temp);
-	printf("get_measurement: %d %0.4f\n", res, temp);
-#endif
 }
 
 
@@ -296,7 +276,6 @@ int i2c_read_temps(struct fanpico_config *config)
 			wait_time = 100;
 		}
 	}
-
 
 	return wait_time;
 }
