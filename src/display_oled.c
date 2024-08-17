@@ -310,7 +310,7 @@ void oled_display_status(const struct fanpico_state *state,
 			}
 			oledWriteString(&oled, 0 , h_pos + 2, i, buf, FONT_6x8, 0, 1);
 		}
-		else if (i == 0 && oled_height <= 64) {
+		else if (FAN_COUNT > 4 && i == 0 && oled_height <= 64) {
 			/* Handle case where first row has static content... */
 			buf[0] = (counter++ % 2 == 0 ? '*' : ' ');
 			buf[1] = 0;
@@ -360,7 +360,8 @@ void oled_display_status(const struct fanpico_state *state,
 			mins % 60);
 		oledWriteString(&oled, 0, 6, 7, buf, FONT_6x8, 0, 1);
 		if (rtc_get_datetime(&t)) {
-			snprintf(buf, sizeof(buf), "%02d:%02d", t.hour, t.min);
+			snprintf(buf, sizeof(buf), "%02d%c%02d",
+				t.hour, (secs % 2 ? ':' : ' '), t.min);
 			oledWriteString(&oled, 0, 3, 5, buf, FONT_12x16, 0, 1);
 		}
 	}
