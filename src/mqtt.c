@@ -437,7 +437,7 @@ char* json_status_message()
 
 	if ( rtc_get_datetime(&t) ) {
 		/* Send Data Time stamp to broker for possible use */
-		char datetime_buf[64];
+		char datetime_buf[32];
 		datetime_to_str(datetime_buf, sizeof(datetime_buf), &t);
 		cJSON_AddItemToObject(json, "datetime", cJSON_CreateString( datetime_buf ));
 	}
@@ -460,6 +460,7 @@ void fanpico_mqtt_publish()
 	if (!mqtt_client || strlen(cfg->mqtt_status_topic) < 1)
 		return;
 
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish(): start");
 	/* Generate status message */
 	if (!(buf = json_status_message())) {
 		log_msg(LOG_WARNING,"json_status_message(): failed");
@@ -468,6 +469,7 @@ void fanpico_mqtt_publish()
 	mqtt_publish_message(cfg->mqtt_status_topic, buf, strlen(buf), mqtt_qos, 0,
 			cfg->mqtt_status_topic);
 	free(buf);
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish(): end");
 }
 
 void fanpico_mqtt_publish_temp()
@@ -479,6 +481,7 @@ void fanpico_mqtt_publish_temp()
 	if (!mqtt_client || strlen(cfg->mqtt_temp_topic) < 1)
 		return;
 
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish_temp(): start");
 	for (int i = 0; i < SENSOR_COUNT; i++) {
 		if (cfg->mqtt_temp_mask & (1 << i)) {
 			snprintf(topic, sizeof(topic), cfg->mqtt_temp_topic, i + 1);
@@ -487,6 +490,7 @@ void fanpico_mqtt_publish_temp()
 					cfg->mqtt_temp_topic);
 		}
 	}
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish_temp(): end");
 }
 
 void fanpico_mqtt_publish_rpm()
@@ -498,6 +502,7 @@ void fanpico_mqtt_publish_rpm()
 	if (!mqtt_client)
 		return;
 
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish_rpm(): start");
 	if (strlen(cfg->mqtt_fan_rpm_topic) > 0) {
 		for (int i = 0; i < FAN_COUNT; i++) {
 			if (cfg->mqtt_fan_rpm_mask & (1 << i)) {
@@ -520,6 +525,7 @@ void fanpico_mqtt_publish_rpm()
 			}
 		}
 	}
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish_rpm(): end");
 }
 
 void fanpico_mqtt_publish_duty()
@@ -531,6 +537,7 @@ void fanpico_mqtt_publish_duty()
 	if (!mqtt_client)
 		return;
 
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish_duty(): start");
 	if (strlen(cfg->mqtt_fan_duty_topic) > 0) {
 		for (int i = 0; i < FAN_COUNT; i++) {
 			if (cfg->mqtt_fan_duty_mask & (1 << i)) {
@@ -551,6 +558,7 @@ void fanpico_mqtt_publish_duty()
 			}
 		}
 	}
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish_duty(): end");
 }
 
 void fanpico_mqtt_scpi_command()
@@ -562,6 +570,7 @@ void fanpico_mqtt_scpi_command()
 	if (!mqtt_client || !mqtt_scpi_cmd_queued)
 		return;
 
+	log_msg(LOG_DEBUG, "MQTT process SCPI command: '%s'", mqtt_scpi_cmd);
 	strncopy(cmd, mqtt_scpi_cmd, sizeof(cmd));
 	process_command(st, (struct fanpico_config *)cfg, cmd);
 	if ((res = last_command_status()) == 0) {
