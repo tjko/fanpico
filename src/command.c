@@ -1809,6 +1809,9 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev
 				conf->vsensors[sensor].timeout);
 		} else if (vsmode == VSMODE_ONEWIRE) {
 			printf(",%016llx", conf->vsensors[sensor].onewire_addr);
+		} else if (vsmode == VSMODE_I2C) {
+			printf(",%s,%u", i2c_sensor_type_str(conf->vsensors[sensor].i2c_type),
+				conf->vsensors[sensor].i2c_addr);
 		} else {
 			for(i = 0; i < VSENSOR_SOURCE_MAX_COUNT; i++) {
 				if (conf->vsensors[sensor].sensors[i]) {
@@ -1852,6 +1855,26 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev
 						addr);
 					conf->vsensors[sensor].mode = vsmode;
 					conf->vsensors[sensor].onewire_addr = addr;
+					ret = 0;
+				}
+			} else if (vsmode == VSMODE_I2C) {
+				tok = strtok_r(NULL, ",", &saveptr);
+				uint type = get_i2c_sensor_type(tok);
+				if (type > 0) {
+					tok = strtok_r(NULL, ",", &saveptr);
+					if (str_to_int(tok, &val, 16)) {
+						if (val > 0 && val < 128 && !i2c_reserved_address(val)) {
+							log_msg(LOG_NOTICE, "vsensor%d: set source to %s,%s,%02x",
+								sensor + 1,
+								vsmode2str(vsmode),
+								i2c_sensor_type_str(type),
+								val);
+							conf->vsensors[sensor].mode = vsmode;
+							conf->vsensors[sensor].i2c_type = type;
+							conf->vsensors[sensor].i2c_addr = val;
+							ret = 0;
+						}
+					}
 				}
 			} else {
 				temp_str[0] = 0;

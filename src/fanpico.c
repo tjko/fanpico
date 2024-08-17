@@ -179,7 +179,7 @@ void setup()
 		log_msg(LOG_NOTICE, "RTC clock time: %s", datetime_str(buf, sizeof(buf), &t));
 	}
 
-	setup_i2c_bus();
+	setup_i2c_bus((struct fanpico_config *)cfg);
 	display_init();
 	network_init(&system_state);
 
@@ -441,13 +441,14 @@ int main()
 {
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_led, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_network, 0);
-	absolute_time_t t_now, t_last, t_display, t_ram;
+	absolute_time_t t_now, t_last, t_display, t_ram, t_i2c_temp;
 	uint8_t led_state = 0;
 	int64_t max_delta = 0;
 	int64_t delta;
 	int c;
 	char input_buf[1024 + 1];
 	int i_ptr = 0;
+	int i2c_temp_delay =  10000;
 
 
 	set_binary_info();
@@ -472,7 +473,7 @@ int main()
 #endif
 
 	t_last = get_absolute_time();
-	t_ram = t_display = t_last;
+	t_i2c_temp = t_ram = t_display = t_last;
 
 	while (1) {
 		t_now = get_absolute_time();
@@ -515,6 +516,11 @@ int main()
 		if (time_passed(&t_display, 1000)) {
 			update_system_state();
 			display_status(fanpico_state, cfg);
+		}
+
+		/* Poll I2C Temperature Sensors */
+		if (i2c_temp_delay > 0 && time_passed(&t_i2c_temp, i2c_temp_delay)) {
+			i2c_temp_delay = i2c_read_temps((struct fanpico_config*)cfg);
 		}
 
 		/* Process any (user) input */

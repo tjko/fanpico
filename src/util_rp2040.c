@@ -69,6 +69,8 @@ void print_rp2040_meminfo()
 		&__StackOneTop - &__StackOneBottom);
 	printf("Heap size:                             %d\n",
 		&__StackLimit - &__end__);
+	printf("Core%d stack free:                      %lu\n",
+		get_core_num(), get_stack_free());
 }
 
 

@@ -115,6 +115,8 @@ int str2vsmode(const char *s)
 			ret = VSMODE_DELTA;
 		else if (!strncasecmp(s, "onewire", 7))
 			ret = VSMODE_ONEWIRE;
+		else if (!strncasecmp(s, "i2c", 3))
+			ret = VSMODE_I2C;
 	}
 
 	return ret;
@@ -132,6 +134,8 @@ const char* vsmode2str(enum vsensor_modes mode)
 		return "delta";
 	else if (mode == VSMODE_ONEWIRE)
 		return "onewire";
+	else if (mode == VSMODE_I2C)
+		return "i2c";
 
 	return "manual";
 }
@@ -461,6 +465,8 @@ void clear_config(struct fanpico_config *cfg)
 		for (j = 0; j < SENSOR_MAX_COUNT; j++)
 			vs->sensors[j] = 0;
 		vs->onewire_addr = 0;
+		vs->i2c_type = 0;
+		vs->i2c_addr = 0;
 		vs->map.points = 2;
 		vs->map.temp[0][0] = 20.0;
 		vs->map.temp[0][1] = 0.0;
@@ -471,6 +477,7 @@ void clear_config(struct fanpico_config *cfg)
 
 		cfg->vtemp[i] = 0.0;
 		cfg->vtemp_updated[i] = from_us_since_boot(0);
+		cfg->i2c_context[i] = NULL;
 	}
 
 	for (i = 0; i < FAN_MAX_COUNT; i++) {
@@ -833,6 +840,11 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		} else if (s->mode == VSMODE_ONEWIRE) {
 			cJSON_AddItemToObject(o, "onewire_addr",
 					cJSON_CreateString(onewireaddr2str(s->onewire_addr)));
+		} else if (s->mode == VSMODE_I2C) {
+			cJSON_AddItemToObject(o, "i2c_type",
+					cJSON_CreateString(i2c_sensor_type_str(s->i2c_type)));
+			cJSON_AddItemToObject(o, "i2c_addr",
+					cJSON_CreateNumber(s->i2c_addr));
 		} else {
 			cJSON_AddItemToObject(o, "sensors", vsensors2json(s->sensors));
 		}
@@ -1192,6 +1204,11 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 			} else if (s->mode == VSMODE_ONEWIRE) {
 				if ((r = cJSON_GetObjectItem(item, "onewire_addr")))
 					s->onewire_addr = str2onewireaddr(cJSON_GetStringValue(r));
+			} else if (s->mode == VSMODE_I2C) {
+				if ((r = cJSON_GetObjectItem(item, "i2c_type")))
+					s->i2c_type = get_i2c_sensor_type(cJSON_GetStringValue(r));
+				if ((r = cJSON_GetObjectItem(item, "i2c_addr")))
+					s->i2c_addr = cJSON_GetNumberValue(r);
 			} else {
 				if ((r = cJSON_GetObjectItem(item, "sensors")))
 					json2vsensors(r, s->sensors);
