@@ -103,13 +103,17 @@ void update_persistent_memory()
 	struct persistent_memory_block *m = persistent_mem;
 	datetime_t t;
 
-	mutex_enter_blocking(pmem_mutex);
-	if (rtc_get_datetime(&t)) {
-		m->saved_time = t;
+	//mutex_enter_blocking(pmem_mutex);
+	if (mutex_enter_timeout_us(pmem_mutex, 100)) {
+		if (rtc_get_datetime(&t)) {
+			m->saved_time = t;
+		}
+		m->uptime = to_us_since_boot(get_absolute_time());
+		update_persistent_memory_crc();
+		mutex_exit(pmem_mutex);
+	} else {
+		log_msg(LOG_DEBUG, "update_persistent_memory(): Failed to get pmem_mutex");
 	}
-	m->uptime = to_us_since_boot(get_absolute_time());
-	update_persistent_memory_crc();
-	mutex_exit(pmem_mutex);
 }
 
 void boot_reason()
@@ -264,9 +268,13 @@ void clear_state(struct fanpico_state *s)
 
 void update_system_state()
 {
-	mutex_enter_blocking(state_mutex);
-	memcpy(&system_state, &transfer_state, sizeof(system_state));
-	mutex_exit(state_mutex);
+	//mutex_enter_blocking(state_mutex);
+	if (mutex_enter_timeout_us(state_mutex, 1000)) {
+		memcpy(&system_state, &transfer_state, sizeof(system_state));
+		mutex_exit(state_mutex);
+	} else {
+		log_msg(LOG_INFO, "update_system_state(): failed to get system_mutex");
+	}
 }
 
 
