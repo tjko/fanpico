@@ -404,15 +404,6 @@ const char *network_hostname();
 u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 			u16_t current_tag_part, u16_t *next_tag_part);
 
-/* i2c.c */
-void scan_i2c_bus();
-void display_i2c_status();
-void setup_i2c_bus(struct fanpico_config *config);
-uint get_i2c_sensor_type(const char *name);
-const char *i2c_sensor_type_str(uint type);
-bool i2c_reserved_address(uint8_t addr);
-int i2c_read_temps(struct fanpico_config *config);
-
 
 /* mqtt.c */
 void fanpico_setup_mqtt_client();
@@ -424,16 +415,25 @@ void fanpico_mqtt_publish_rpm();
 void fanpico_mqtt_publish_duty();
 void fanpico_mqtt_scpi_command();
 
+/* telnetd.c */
+void telnetserver_init();
+
+#endif
+
 /* onewire.c */
 void setup_onewire_bus();
 int onewire_read_temps(struct fanpico_config *config, struct fanpico_state *state);
 uint64_t onewire_address(uint sensor);
 
-/* telnetd.c */
-void telnetserver_init();
+/* i2c.c */
+void scan_i2c_bus();
+void display_i2c_status();
+void setup_i2c_bus(struct fanpico_config *config);
+uint get_i2c_sensor_type(const char *name);
+const char *i2c_sensor_type_str(uint type);
+bool i2c_reserved_address(uint8_t addr);
+int i2c_read_temps(struct fanpico_config *config);
 
-
-#endif
 
 /* tls.c */
 int read_pem_file(char *buf, uint32_t size, uint32_t timeout, bool append);
