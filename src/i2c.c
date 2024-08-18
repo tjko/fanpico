@@ -34,6 +34,7 @@
 
 static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
+	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
 	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement },
 	{ NULL, NULL, NULL, NULL }
 };
@@ -83,6 +84,77 @@ static int i2c_get_measurement(int sensor_type, void *ctx, float *temp)
 bool i2c_reserved_address(uint8_t addr)
 {
 	return (addr & 0x78) == 0 || (addr & 0x78) == 0x78;
+}
+
+
+int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t *val)
+{
+	uint8_t buf[2];
+	int res;
+
+	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
+	if (res < 1)
+		return -1;
+
+	res = i2c_read_blocking(i2c, addr, buf, 2, false);
+	if (res < 2)
+		return -2;
+
+	*val = (buf[0] << 8) | buf[1];
+
+	return 0;
+}
+
+
+int i2c_read_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *val)
+{
+	uint8_t buf;
+	int res;
+
+	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
+	if (res < 1)
+		return -1;
+
+	res = i2c_read_blocking(i2c, addr, &buf, 1, false);
+	if (res < 1)
+		return -2;
+
+	*val = buf;
+
+	return 0;
+}
+
+
+int i2c_write_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t val)
+{
+	uint8_t buf[3];
+	int res;
+
+	buf[0] = reg;
+	buf[1] = val >> 8;
+	buf[2] = val & 0xff;
+
+	res = i2c_write_blocking(i2c, addr, buf, 3, false);
+	if (res < 1)
+		return -1;
+
+	return 0;
+}
+
+
+int i2c_write_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t val)
+{
+	uint8_t buf[2];
+	int res;
+
+	buf[0] = reg;
+	buf[1] = val;
+
+	res = i2c_write_blocking(i2c, addr, buf, 2, false);
+	if (res < 1)
+		return -1;
+
+	return 0;
 }
 
 
@@ -197,6 +269,7 @@ void setup_i2c_bus(struct fanpico_config *config)
 		if (res) {
 			log_msg(LOG_NOTICE, "Failed to initialize I2C sensor: %s,%02x",
 				i2c_sensor_type_str(v->i2c_type), v->i2c_addr);
+			continue;
 		}
 		config->i2c_context[i] = ctx;
 		log_msg(LOG_NOTICE,"I2C Device%d: %s (at 0x%02x)", ++count,

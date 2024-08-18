@@ -1,4 +1,4 @@
-/* i2c_tmp117.c
+/* i2c_adt7410.c
    Copyright (C) 2024 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
@@ -28,24 +28,31 @@
 
 #include "i2c.h"
 
-/* TMP117 Registers */
-#define TMP117_REG_TEMP_RESULT  0x00
-#define TMP117_REG_CONFIG       0x01
-#define TMP117_REG_DEVICE_ID    0x0f
+/* ADT7410 Registers */
+#define REG_TEMP_MSB       0x00
+#define REG_TEMP_LSB       0x01
+#define REG_STATUS         0x02
+#define REG_CONFIG         0x03
+#define REG_ID             0x0b
+#define REG_RESET          0x2f
 
-#define TMP117_DEVICE_ID 0x117
+#define ADT7410_DEVICE_ID 0xc8  // bits 7-3 (bits 2-0 contain silicon revision)
 
-typedef struct tmp117_context_t {
+
+typedef struct adt7410_context_t {
 	i2c_inst_t *i2c;
 	uint8_t addr;
-} tmp117_context_t;
+} adt7410_context_t;
 
 
-void* tmp117_init(i2c_inst_t *i2c, uint8_t addr)
+
+void* adt7410_init(i2c_inst_t *i2c, uint8_t addr)
 {
 	int res;
-	uint16_t val = 0;
-	tmp117_context_t *ctx = calloc(1, sizeof(tmp117_context_t));
+	uint8_t val = 0;
+	uint8_t buf[3];
+	adt7410_context_t *ctx = calloc(1, sizeof(adt7410_context_t));
+
 
 	if (!ctx)
 		return NULL;
@@ -53,25 +60,31 @@ void* tmp117_init(i2c_inst_t *i2c, uint8_t addr)
 	ctx->addr = addr;
 
 	/* Read and verify device ID */
-	res  = i2c_read_register_u16(i2c, addr, TMP117_REG_DEVICE_ID, &val);
-	if (res || val != TMP117_DEVICE_ID)
+	res  = i2c_read_register_u8(i2c, addr, REG_ID, &val);
+	if (res || (val & 0xf8) != ADT7410_DEVICE_ID)
 		goto panic;
 
 	/* Reset Sensor */
-	res = i2c_write_register_u16(i2c, addr, TMP117_REG_CONFIG, 0x0222);
+	buf[0] = REG_RESET;
+	res = i2c_write_blocking(i2c, addr, buf, 1, false);
+	if (res < 1)
+		goto panic;
+
+	/* Wait for sensor to soft reset (reset should take 200us per datasheet)  */
+	sleep_us(250);
+
+	/* Write configuration register */
+	res = i2c_write_register_u8(i2c, addr, REG_CONFIG, 0x80);
 	if (res)
 		goto panic;
 
-	/* Wait for sensor to soft reset (reset should take 2ms per datasheet)  */
-	sleep_us(2500);
-
 	/* Read configuration register */
-	res = i2c_read_register_u16(i2c, addr, TMP117_REG_CONFIG, &val);
+	res = i2c_read_register_u8(i2c, addr, REG_CONFIG, &val);
 	if (res)
 		goto panic;
 
 	/* Check that confuration is now as expected... */
-	if ((val & 0x0FFC) != 0x0220)
+	if (val != 0x80)
 		goto panic;
 
 	return ctx;
@@ -82,7 +95,7 @@ panic:
 }
 
 
-int tmp117_start_measurement(void *ctx)
+int adt7410_start_measurement(void *ctx)
 {
 	/* Nothing to do, sensor is in continuous measurement mode... */
 
@@ -90,30 +103,30 @@ int tmp117_start_measurement(void *ctx)
 }
 
 
-int tmp117_get_measurement(void *ctx, float *temp)
+int adt7410_get_measurement(void *ctx, float *temp)
 {
-	tmp117_context_t *c = (tmp117_context_t*)ctx;
+	adt7410_context_t *c = (adt7410_context_t*)ctx;
 	int res;
-	uint16_t val;
+	uint8_t val;
+	uint16_t meas;
 
+	printf("adt7410_get_measurement(%p,%p)\n", ctx, temp);
 
-	/* Read configuration register */
-	res = i2c_read_register_u16(c->i2c, c->addr, TMP117_REG_CONFIG, &val);
+	/* Read status register */
+	res = i2c_read_register_u8(c->i2c, c->addr, REG_STATUS, &val);
 	if (res)
 		return -1;
 
-	/* Check Data_Ready bit */
-	if ((val & 0x2000) == 0)
+	/* Check !RDY bit */
+	if ((val & 0x80) != 0)
 		return 1;
 
 	/* Get Measurement */
-	res = i2c_read_register_u16(c->i2c, c->addr, TMP117_REG_TEMP_RESULT, &val);
+	res = i2c_read_register_u16(c->i2c, c->addr, REG_TEMP_MSB, &meas);
 	if (res)
 		return -2;
 
-	*temp = ((int16_t)val) / 128.0;
+	*temp = ((int16_t)meas) / 128.0;
 
 	return 0;
 }
-
-

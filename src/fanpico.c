@@ -103,7 +103,6 @@ void update_persistent_memory()
 	struct persistent_memory_block *m = persistent_mem;
 	datetime_t t;
 
-	//mutex_enter_blocking(pmem_mutex);
 	if (mutex_enter_timeout_us(pmem_mutex, 100)) {
 		if (rtc_get_datetime(&t)) {
 			m->saved_time = t;
@@ -268,7 +267,6 @@ void clear_state(struct fanpico_state *s)
 
 void update_system_state()
 {
-	//mutex_enter_blocking(state_mutex);
 	if (mutex_enter_timeout_us(state_mutex, 1000)) {
 		memcpy(&system_state, &transfer_state, sizeof(system_state));
 		mutex_exit(state_mutex);
@@ -441,6 +439,7 @@ int main()
 {
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_led, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_network, 0);
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_watchdog, 0);
 	absolute_time_t t_now, t_last, t_display, t_ram, t_i2c_temp;
 	uint8_t led_state = 0;
 	int64_t max_delta = 0;
@@ -489,7 +488,9 @@ int main()
 			network_poll();
 		}
 		if (time_passed(&t_ram, 1000)) {
+			log_msg(LOG_DEBUG, "update persistent mem start");
 			update_persistent_memory();
+			log_msg(LOG_DEBUG, "update persistent mem end");
 		}
 
 		/* Toggle LED every 1000ms */
@@ -514,8 +515,10 @@ int main()
 
 		/* Update display every 1000ms */
 		if (time_passed(&t_display, 1000)) {
+			log_msg(LOG_DEBUG, "udpate display start");
 			update_system_state();
 			display_status(fanpico_state, cfg);
+			log_msg(LOG_DEBUG, "udpate display end");
 		}
 
 		/* Poll I2C Temperature Sensors */
@@ -536,8 +539,10 @@ int main()
 				if (cfg->local_echo) printf("\r\n");
 				input_buf[i_ptr] = 0;
 				if (i_ptr > 0) {
+					log_msg(LOG_DEBUG,"command start");
 					update_system_state();
 					process_command(fanpico_state, (struct fanpico_config *)cfg, input_buf);
+					log_msg(LOG_DEBUG,"command end");
 					i_ptr = 0;
 				}
 				continue;
@@ -546,7 +551,11 @@ int main()
 			if (cfg->local_echo) printf("%c", c);
 		}
 #if WATCHDOG_ENABLED
-		watchdog_update();
+		if (time_passed(&t_watchdog, 1000)) {
+			log_msg(LOG_DEBUG,"watchdog_update start");
+			watchdog_update();
+			log_msg(LOG_DEBUG,"watchdog_update end");
+		}
 #endif
 	}
 }

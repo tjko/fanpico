@@ -35,6 +35,19 @@ typedef struct i2c_sensor_entry {
 	i2c_get_measurement_func_t *get_measurement;
 } i2c_sensor_entry_t;
 
+
+int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t i2c_addr, uint8_t reg, uint16_t *val);
+int i2c_read_register_u8(i2c_inst_t *i2c, uint8_t i2c_addr, uint8_t reg, uint8_t *val);
+int i2c_write_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t val);
+int i2c_write_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t val);
+
+
+
+/* i2c_adt7410.c */
+void* adt7410_init(i2c_inst_t *i2c, uint8_t addr);
+int adt7410_start_measurement(void *ctx);
+int adt7410_get_measurement(void *ctx, float *temp);
+
 /* i2c_tmp117.c */
 void* tmp117_init(i2c_inst_t *i2c, uint8_t addr);
 int tmp117_start_measurement(void *ctx);
