@@ -1104,11 +1104,12 @@ Source types:
 MODE|Description|No of Parameters|Parameters
 ----|-----------|----------------|----------
 MANUAL|Temperature updated by external program/driver|2|default_temperature_C,timeout
-MAX|Maximum temperatore between source sensors|2+|sensor_a, sensor_b, ...
-MIN|Minimum temperature between source sensors|2+|sensor_a, sensor_b, ...
-AVG|Average temperature between source sensors|2+|sensor_a, sensor_b, ...
-DELTA|Temperature delta between to source sensors|2|sensor_a, sensor_b
-ONEWIRE|Temperatur reading from digital 1-Wire sensor|1|onewire_address
+MAX|Maximum temperatore between source sensors|2+|sensor_a,sensor_b, ...
+MIN|Minimum temperature between source sensors|2+|sensor_a,sensor_b, ...
+AVG|Average temperature between source sensors|2+|sensor_a,sensor_b, ...
+DELTA|Temperature delta between to source sensors|2|sensor_a,sensor_b
+ONEWIRE|Temperature reading from digital 1-Wire sensor|1|onewire_address
+I2C|Temperature reading from digital I2C sensor|2|sensor_model,i2c_address
 
 
 Note, in "manual" mode if timeout_ms is set to zero, then sensor's temperature reading
@@ -1147,10 +1148,19 @@ CONF:VSENSOR3:SOURCE avg,1,2,101
 
 Example: Set VSENSOR4 to report temperature from 1-Wire sensor with address 2871d86a0000005a:
 ```
-CONF:VENSOR4:SOURCE onewire,2871d86a0000005a
+CONF:VSENSOR4:SOURCE onewire,2871d86a0000005a
 ```
 
 (to get list of currently active 1-Wire sensors use: SYS:ONEWIRE:SENSORS?)
+
+
+Example: Set VSENSOR5 to report temperature from TMP117 (I2C) sensor with address 0x48:
+```
+CONF:VSENSOR5:SOURCE i2c,tmp117,0x48
+```
+
+(to get list of currently active I2C sensor addresses, use: SYS:I2C:SCAN?)
+
 
 
 #### CONFigure:VSENSORx:SOUrce?
