@@ -110,7 +110,6 @@ int adt7410_get_measurement(void *ctx, float *temp)
 	uint8_t val;
 	uint16_t meas;
 
-	printf("adt7410_get_measurement(%p,%p)\n", ctx, temp);
 
 	/* Read status register */
 	res = i2c_read_register_u8(c->i2c, c->addr, REG_STATUS, &val);
