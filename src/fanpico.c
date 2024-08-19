@@ -60,6 +60,8 @@ auto_init_mutex(state_mutex_inst);
 mutex_t *state_mutex = &state_mutex_inst;
 bool rebooted_by_watchdog = false;
 
+static char input_buf[1024];
+
 
 void update_persistent_memory_crc()
 {
@@ -445,7 +447,6 @@ int main()
 	int64_t max_delta = 0;
 	int64_t delta;
 	int c;
-	char input_buf[1024 + 1];
 	int i_ptr = 0;
 	int i2c_temp_delay =  10000;
 
@@ -539,10 +540,10 @@ int main()
 				if (cfg->local_echo) printf("\r\n");
 				input_buf[i_ptr] = 0;
 				if (i_ptr > 0) {
-					log_msg(LOG_DEBUG,"command start");
+					log_msg(LOG_DEBUG,"user command start");
 					update_system_state();
 					process_command(fanpico_state, (struct fanpico_config *)cfg, input_buf);
-					log_msg(LOG_DEBUG,"command end");
+					log_msg(LOG_DEBUG,"user command end");
 					i_ptr = 0;
 				}
 				continue;
