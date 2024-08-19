@@ -36,10 +36,14 @@ typedef struct i2c_sensor_entry {
 } i2c_sensor_entry_t;
 
 
+/* Helper functions for reading/writing sensor registers */
+int i2c_read_register_block(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, size_t len);
+int i2c_read_register_u24(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint32_t *val);
 int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t i2c_addr, uint8_t reg, uint16_t *val);
 int i2c_read_register_u8(i2c_inst_t *i2c, uint8_t i2c_addr, uint8_t reg, uint8_t *val);
 int i2c_write_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t val);
 int i2c_write_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t val);
+int32_t twos_complement(uint32_t value, uint8_t bits);
 
 
 
@@ -47,6 +51,12 @@ int i2c_write_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t va
 void* adt7410_init(i2c_inst_t *i2c, uint8_t addr);
 int adt7410_start_measurement(void *ctx);
 int adt7410_get_measurement(void *ctx, float *temp);
+
+
+/* i2c_dps310.c */
+void* dps310_init(i2c_inst_t *i2c, uint8_t addr);
+int dps310_start_measurement(void *ctx);
+int dps310_get_measurement(void *ctx, float *temp);
 
 /* i2c_tmp117.c */
 void* tmp117_init(i2c_inst_t *i2c, uint8_t addr);

@@ -31,10 +31,25 @@
 #include "i2c.h"
 
 
+#define I2C_DEBUG 0
+
+#if I2C_DEBUG > 0
+#define DEBUG_PRINT(fmt, ...)				      \
+	do {						      \
+		printf("%s:%d: %s(): " fmt,		      \
+			__FILE__, __LINE__, __func__,	      \
+			##__VA_ARGS__);			      \
+	} while (0)
+#else
+#define DEBUG_PRINT(...)
+#endif
+
+
 
 static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
 	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
+	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
 	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement },
 	{ NULL, NULL, NULL, NULL }
 };
@@ -81,9 +96,75 @@ static int i2c_get_measurement(int sensor_type, void *ctx, float *temp)
 
 
 
+int32_t twos_complement(uint32_t value, uint8_t bits)
+{
+	int32_t v = value;
+
+	if (value & ((uint32_t)1 << (bits - 1))) {
+		v = value - ((uint32_t)1 << bits);
+	}
+
+	return v;
+}
+
+
 bool i2c_reserved_address(uint8_t addr)
 {
 	return (addr & 0x78) == 0 || (addr & 0x78) == 0x78;
+}
+
+
+int i2c_read_register_block(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, size_t len)
+{
+	int res;
+
+	DEBUG_PRINT("args=%p,%02x,%02x,%p,%u\n", i2c, addr, reg, buf, len);
+	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
+	if (res < 1) {
+		DEBUG_PRINT("write failed (%d)\n", res);
+		return -1;
+	}
+
+	res = i2c_read_blocking(i2c, addr, buf, len, false);
+	if (res < len) {
+		DEBUG_PRINT("read failed (%d)\n", res);
+		return -2;
+	} else {
+#if I2C_DEBUG > 0
+		DEBUG_PRINT("read ok: ");
+		for(int i = 0; i < len; i++) {
+			printf(" %02x", buf[i]);
+		}
+		printf("\n");
+#endif
+	}
+
+	return 0;
+}
+
+
+int i2c_read_register_u24(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint32_t *val)
+{
+	uint8_t buf[3];
+	int res;
+
+	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
+	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
+	if (res < 1) {
+		DEBUG_PRINT("write failed (%d)\n", res);
+		return -1;
+	}
+
+	res = i2c_read_blocking(i2c, addr, buf, 3, false);
+	if (res < 3) {
+		DEBUG_PRINT("read failed (%d)\n", res);
+		return -2;
+	}
+
+	*val = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+	DEBUG_PRINT("read ok: [%02x %02x %02x] %06lx (%lu)\n", buf[0], buf[1], buf[2], *val, *val);
+
+	return 0;
 }
 
 
@@ -92,15 +173,21 @@ int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t *
 	uint8_t buf[2];
 	int res;
 
+	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
 	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
-	if (res < 1)
+	if (res < 1) {
+		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
+	}
 
 	res = i2c_read_blocking(i2c, addr, buf, 2, false);
-	if (res < 2)
+	if (res < 2) {
+		DEBUG_PRINT("read failed (%d)\n", res);
 		return -2;
+	}
 
 	*val = (buf[0] << 8) | buf[1];
+	DEBUG_PRINT("read ok: [%02x %02x] %04x (%u)\n", buf[0], buf[1], *val, *val);
 
 	return 0;
 }
@@ -111,15 +198,21 @@ int i2c_read_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *va
 	uint8_t buf;
 	int res;
 
+	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
 	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
-	if (res < 1)
+	if (res < 1) {
+		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
+	}
 
 	res = i2c_read_blocking(i2c, addr, &buf, 1, false);
-	if (res < 1)
+	if (res < 1) {
+		DEBUG_PRINT("read failed (%d)\n", res);
 		return -2;
+	}
 
 	*val = buf;
+	DEBUG_PRINT("read ok: %02x (%u)\n", *val, *val);
 
 	return 0;
 }
@@ -134,9 +227,13 @@ int i2c_write_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t 
 	buf[1] = val >> 8;
 	buf[2] = val & 0xff;
 
+	DEBUG_PRINT("args=%p,%02x,%02x,%04x (%u)\n", i2c, addr, reg, val, val);
+
 	res = i2c_write_blocking(i2c, addr, buf, 3, false);
-	if (res < 1)
+	if (res < 3) {
+		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
+	}
 
 	return 0;
 }
@@ -150,9 +247,13 @@ int i2c_write_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t va
 	buf[0] = reg;
 	buf[1] = val;
 
+	DEBUG_PRINT("args=%p,%02x,%02x,%02x (%u)\n", i2c, addr, reg, val, val);
+
 	res = i2c_write_blocking(i2c, addr, buf, 2, false);
-	if (res < 1)
+	if (res < 2) {
+		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
+	}
 
 	return 0;
 }
