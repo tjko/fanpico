@@ -331,6 +331,10 @@ void mqtt_connect(mqtt_client_t *client)
 	cyw43_arch_lwip_end();
 	if (err != ERR_OK) {
 		log_msg(LOG_WARNING,"mqtt_client_connect(): failed %d", err);
+		if (err == ERR_RTE) {
+			t_mqtt_disconnect = get_absolute_time();
+			mqtt_reconnect = 30;
+		}
 	}
 }
 
