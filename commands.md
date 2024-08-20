@@ -1120,6 +1120,16 @@ Sensor numbering:
  - VSENSORS: 101, 102, ...
 
 
+Supporte I2C sensors:
+
+Sensor Model|Notes
+------------|-----
+ADT7410|16bit, 0.5C accuracy
+DPS310|24bit, 0.5C accuracy
+MCP9808|13bit, 0.25C accuracy
+TMP117|16bit, 0.1C accuracy
+
+
 Defaults:
 
 Default for all virtual sensors is to be in "MANUAL" mode and revert automatically to 0C

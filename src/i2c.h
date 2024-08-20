@@ -24,9 +24,41 @@
 
 #include "hardware/i2c.h"
 
+
+
+#define I2C_DEBUG 0
+
+
+#if I2C_DEBUG > 0
+#define DEBUG_PRINT(fmt, ...)						\
+	do {								\
+		uint64_t t = to_us_since_boot(get_absolute_time());	\
+		printf("[%6llu.%06llu] %s:%d: %s(): " fmt,		\
+			(t / 1000000), (t % 1000000),			\
+			__FILE__, __LINE__, __func__,			\
+			##__VA_ARGS__);					\
+	} while (0)
+#else
+#define DEBUG_PRINT(...)
+#endif
+
+
+extern uint i2c_current_baudrate;  // kHz
+
+#define I2C_TIMEOUT_SCALE_FACTOR (10000 / i2c_current_baudrate)
+
+
+// timeouts in us (at 1000kHz)
+#define I2C_READ_BASE_TIMEOUT 10000
+#define I2C_WRITE_BASE_TIMEOUT 10000
+
+#define I2C_READ_TIMEOUT(x) ((I2C_READ_BASE_TIMEOUT + (x * 250)) * 10 / I2C_TIMEOUT_SCALE_FACTOR)
+#define I2C_WRITE_TIMEOUT(x) ((I2C_WRITE_BASE_TIMEOUT + (x * 250)) * 10 / I2C_TIMEOUT_SCALE_FACTOR)
+
+
 typedef void* (i2c_init_func_t)(i2c_inst_t *i2c, uint8_t addr);
 typedef int (i2c_start_measurement_func_t)(void *ctx);
-typedef int (i2c_get_measurement_func_t)(void *ctx, float *temp);
+typedef int (i2c_get_measurement_func_t)(void *ctx, float *temp, float *pressure);
 
 typedef struct i2c_sensor_entry {
 	const char* name;
@@ -50,18 +82,22 @@ int32_t twos_complement(uint32_t value, uint8_t bits);
 /* i2c_adt7410.c */
 void* adt7410_init(i2c_inst_t *i2c, uint8_t addr);
 int adt7410_start_measurement(void *ctx);
-int adt7410_get_measurement(void *ctx, float *temp);
-
+int adt7410_get_measurement(void *ctx, float *temp, float *pressure);
 
 /* i2c_dps310.c */
 void* dps310_init(i2c_inst_t *i2c, uint8_t addr);
 int dps310_start_measurement(void *ctx);
-int dps310_get_measurement(void *ctx, float *temp);
+int dps310_get_measurement(void *ctx, float *temp, float *pressure);
+
+/* i2c_mcp9808.c */
+void* mcp9808_init(i2c_inst_t *i2c, uint8_t addr);
+int mcp9808_start_measurement(void *ctx);
+int mcp9808_get_measurement(void *ctx, float *temp, float *pressure);
 
 /* i2c_tmp117.c */
 void* tmp117_init(i2c_inst_t *i2c, uint8_t addr);
 int tmp117_start_measurement(void *ctx);
-int tmp117_get_measurement(void *ctx, float *temp);
+int tmp117_get_measurement(void *ctx, float *temp, float *pressure);
 
 
 #endif /* FANPICO_I2C_H */

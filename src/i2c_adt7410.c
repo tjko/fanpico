@@ -66,7 +66,8 @@ void* adt7410_init(i2c_inst_t *i2c, uint8_t addr)
 
 	/* Reset Sensor */
 	buf[0] = REG_RESET;
-	res = i2c_write_blocking(i2c, addr, buf, 1, false);
+	res = i2c_write_timeout_us(i2c, addr, buf, 1, false,
+				I2C_WRITE_TIMEOUT(1));
 	if (res < 1)
 		goto panic;
 
@@ -103,7 +104,7 @@ int adt7410_start_measurement(void *ctx)
 }
 
 
-int adt7410_get_measurement(void *ctx, float *temp)
+int adt7410_get_measurement(void *ctx, float *temp, float *pressure)
 {
 	adt7410_context_t *c = (adt7410_context_t*)ctx;
 	int res;
@@ -126,6 +127,7 @@ int adt7410_get_measurement(void *ctx, float *temp)
 		return -2;
 
 	*temp = ((int16_t)meas) / 128.0;
+	*pressure = -1.0;
 
 	return 0;
 }

@@ -31,25 +31,13 @@
 #include "i2c.h"
 
 
-#define I2C_DEBUG 0
-
-#if I2C_DEBUG > 0
-#define DEBUG_PRINT(fmt, ...)				      \
-	do {						      \
-		printf("%s:%d: %s(): " fmt,		      \
-			__FILE__, __LINE__, __func__,	      \
-			##__VA_ARGS__);			      \
-	} while (0)
-#else
-#define DEBUG_PRINT(...)
-#endif
-
 
 
 static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
 	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
+	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement },
 	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement },
 	{ NULL, NULL, NULL, NULL }
 };
@@ -58,6 +46,7 @@ static bool i2c_bus_active = false;
 static i2c_inst_t *i2c_bus = NULL;
 static int i2c_temp_sensors = 0;
 
+uint i2c_current_baudrate = I2C_DEFAULT_SPEED / 1000;  // kHz
 
 
 static int i2c_init_sensor(uint8_t type, uint8_t addr, void **ctx)
@@ -68,7 +57,8 @@ static int i2c_init_sensor(uint8_t type, uint8_t addr, void **ctx)
 		return -1;
 
 	/* Check for a device on given address... */
-	if (i2c_read_blocking(i2c_bus, addr, buf, 1, false) < 0)
+	if (i2c_read_timeout_us(i2c_bus, addr, buf, 1, false,
+					I2C_READ_TIMEOUT(1)) < 0)
 			return -2;
 
 	/* Initialize sensor */
@@ -86,29 +76,33 @@ static int i2c_start_measurement(int sensor_type, void *ctx)
 	return i2c_sensor_types[sensor_type].start_measurement(ctx);
 }
 
-static int i2c_get_measurement(int sensor_type, void *ctx, float *temp)
+static int i2c_get_measurement(int sensor_type, void *ctx, float *temp, float *pressure)
 {
 	if (sensor_type < 1 || !ctx)
 		return -1;
 
-	return i2c_sensor_types[sensor_type].get_measurement(ctx, temp);
+	return i2c_sensor_types[sensor_type].get_measurement(ctx, temp, pressure);
 }
 
 
 
-int32_t twos_complement(uint32_t value, uint8_t bits)
+inline int32_t twos_complement(uint32_t value, uint8_t bits)
 {
-	int32_t v = value;
+	uint32_t mask = ((uint32_t)0xffffffff >> (32 - bits));
 
 	if (value & ((uint32_t)1 << (bits - 1))) {
-		v = value - ((uint32_t)1 << bits);
+		/* negative value, set high bits */
+		value |= ~mask;
+	} else {
+		/* positive value, clear high bits */
+		value &= mask;
 	}
 
-	return v;
+	return (int32_t)value;
 }
 
 
-bool i2c_reserved_address(uint8_t addr)
+inline bool i2c_reserved_address(uint8_t addr)
 {
 	return (addr & 0x78) == 0 || (addr & 0x78) == 0x78;
 }
@@ -119,13 +113,15 @@ int i2c_read_register_block(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t 
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p,%u\n", i2c, addr, reg, buf, len);
-	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
+	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
+				I2C_WRITE_TIMEOUT(1));
 	if (res < 1) {
 		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
 	}
 
-	res = i2c_read_blocking(i2c, addr, buf, len, false);
+	res = i2c_read_timeout_us(i2c, addr, buf, len, false,
+				I2C_READ_TIMEOUT(len));
 	if (res < len) {
 		DEBUG_PRINT("read failed (%d)\n", res);
 		return -2;
@@ -149,20 +145,22 @@ int i2c_read_register_u24(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint32_t *
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
+	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
+				I2C_WRITE_TIMEOUT(1));
 	if (res < 1) {
 		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
 	}
 
-	res = i2c_read_blocking(i2c, addr, buf, 3, false);
+	res = i2c_read_timeout_us(i2c, addr, buf, 3, false,
+				I2C_READ_TIMEOUT(3));
 	if (res < 3) {
 		DEBUG_PRINT("read failed (%d)\n", res);
 		return -2;
 	}
 
 	*val = (buf[0] << 16) | (buf[1] << 8) | buf[2];
-	DEBUG_PRINT("read ok: [%02x %02x %02x] %06lx (%lu)\n", buf[0], buf[1], buf[2], *val, *val);
+	DEBUG_PRINT("read ok: [%02x %02x %02x] %08lx (%lu)\n", buf[0], buf[1], buf[2], *val, *val);
 
 	return 0;
 }
@@ -174,13 +172,15 @@ int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t *
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
+	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
+				I2C_WRITE_TIMEOUT(1));
 	if (res < 1) {
 		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
 	}
 
-	res = i2c_read_blocking(i2c, addr, buf, 2, false);
+	res = i2c_read_timeout_us(i2c, addr, buf, 2, false,
+				I2C_READ_TIMEOUT(2));
 	if (res < 2) {
 		DEBUG_PRINT("read failed (%d)\n", res);
 		return -2;
@@ -199,13 +199,15 @@ int i2c_read_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *va
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_write_blocking(i2c, addr, &reg, 1, true);
+	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
+				I2C_WRITE_TIMEOUT(1));
 	if (res < 1) {
 		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
 	}
 
-	res = i2c_read_blocking(i2c, addr, &buf, 1, false);
+	res = i2c_read_timeout_us(i2c, addr, &buf, 1, false,
+				I2C_READ_TIMEOUT(1));
 	if (res < 1) {
 		DEBUG_PRINT("read failed (%d)\n", res);
 		return -2;
@@ -229,7 +231,8 @@ int i2c_write_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t 
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%04x (%u)\n", i2c, addr, reg, val, val);
 
-	res = i2c_write_blocking(i2c, addr, buf, 3, false);
+	res = i2c_write_timeout_us(i2c, addr, buf, 3, false,
+				I2C_WRITE_TIMEOUT(3));
 	if (res < 3) {
 		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
@@ -249,7 +252,8 @@ int i2c_write_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t va
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%02x (%u)\n", i2c, addr, reg, val, val);
 
-	res = i2c_write_blocking(i2c, addr, buf, 2, false);
+	res = i2c_write_timeout_us(i2c, addr, buf, 2, false,
+				I2C_WRITE_TIMEOUT(2));
 	if (res < 2) {
 		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
@@ -306,7 +310,8 @@ void scan_i2c_bus()
 	for (uint addr = 0; addr < 0x80; addr++) {
 		if (i2c_reserved_address(addr))
 			continue;
-		res = i2c_read_blocking(i2c_bus, addr, buf, 1, false);
+		res = i2c_read_timeout_us(i2c_bus, addr, buf, 1, false,
+					I2C_READ_TIMEOUT(1));
 		if (res < 0)
 			continue;
 		if (found > 0)
@@ -329,7 +334,6 @@ void display_i2c_status()
 void setup_i2c_bus(struct fanpico_config *config)
 {
 	int count = 0;
-	uint speed;
 	int res;
 
 	i2c_bus_active = false;
@@ -343,12 +347,12 @@ void setup_i2c_bus(struct fanpico_config *config)
 		return;
 	}
 
-	log_msg(LOG_INFO, "Initializing I2C Bus...",
-		config->i2c_speed / 1000);
+	log_msg(LOG_INFO, "Initializing I2C Bus..");
 
 	i2c_bus = (I2C_HW > 1 ? i2c1 : i2c0);
-	speed = i2c_init(i2c_bus, config->i2c_speed);
-	log_msg(LOG_INFO, "I2C Bus initalized at %u kHz", speed / 1000);
+	i2c_current_baudrate = i2c_init(i2c_bus, config->i2c_speed);
+	i2c_current_baudrate /= 1000;
+	log_msg(LOG_INFO, "I2C Bus initalized at %u kHz", i2c_current_baudrate);
 	gpio_set_function(SDA_PIN, GPIO_FUNC_I2C);
 	gpio_set_function(SCL_PIN, GPIO_FUNC_I2C);
 	gpio_pull_up(SDA_PIN);
@@ -386,6 +390,7 @@ int i2c_read_temps(struct fanpico_config *config)
 	static uint sensor = 0;
 	int wait_time = 0;
 	float temp = 0.0;
+	float pressure = 0.0;
 	int res;
 
 	if (!i2c_bus_active ||  i2c_temp_sensors < 1)
@@ -429,9 +434,14 @@ int i2c_read_temps(struct fanpico_config *config)
 			if (v->i2c_type < 1 || !config->i2c_context[i])
 				continue;
 
-			res = i2c_get_measurement(v->i2c_type, config->i2c_context[i], &temp);
+			res = i2c_get_measurement(v->i2c_type, config->i2c_context[i], &temp, &pressure);
 			if (res == 0) {
-				log_msg(LOG_INFO, "vsensor%d: temperature %0.4f C", i + 1, temp);
+				if (pressure > 0.0) {
+					log_msg(LOG_INFO, "vsensor%d: temperature %0.4f C, pressure %0.2f hPa",
+						i + 1, temp, pressure / 100.0);
+				} else {
+					log_msg(LOG_INFO, "vsensor%d: temperature %0.4f C", i + 1, temp);
+				}
 				mutex_enter_blocking(config_mutex);
 				config->vtemp[i] = temp;
 				config->vtemp_updated[i] = get_absolute_time();

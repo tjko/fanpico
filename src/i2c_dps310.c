@@ -49,10 +49,13 @@
 
 #define DPS310_DEVICE_ID  0x10  // revision id [7:4], product id [3:0]
 
+#define SCALE_FACTOR 1040384  // 64 times oversampling (high precision)
 
 typedef struct dps310_context_t {
 	i2c_inst_t *i2c;
 	uint8_t addr;
+	float temp;
+	float pressure;
 	// Calibration Coefficients
 	int16_t c0;
 	int16_t c1;
@@ -80,6 +83,8 @@ void* dps310_init(i2c_inst_t *i2c, uint8_t addr)
 		return NULL;
 	ctx->i2c = i2c;
 	ctx->addr = addr;
+	ctx->temp = 0.0;
+	ctx->pressure = -1.0;
 
 	/* Read and verify device ID */
 	res  = i2c_read_register_u8(i2c, addr, REG_ID, &val);
@@ -136,14 +141,31 @@ void* dps310_init(i2c_inst_t *i2c, uint8_t addr)
 		goto panic;
 
 	ctx->c0 = twos_complement((buf[0] << 4) | (buf[1] >> 4), 12);
+	DEBUG_PRINT("c0 = %08lx %ld\n", ctx->c0, ctx->c0);
+
 	ctx->c1 = twos_complement(((buf[1] & 0x0f) << 8) | (buf[2]), 12);
+	DEBUG_PRINT("c1 = %08lx %ld\n", ctx->c1, ctx->c1);
+
 	ctx->c00 = twos_complement((buf[3] << 12) | (buf[4] << 4) | (buf[5] >> 4), 20);
+	DEBUG_PRINT("c00 = %08lx %ld\n", ctx->c00, ctx->c00);
+
 	ctx->c10 = twos_complement(((buf[5] & 0x0f) << 16) | (buf[6] << 8) | buf[7], 20);
+	DEBUG_PRINT("c10 = %08lx %ld\n", ctx->c10, ctx->c10);
+
 	ctx->c01 = twos_complement((buf[8] << 8) | buf[9], 16);
+	DEBUG_PRINT("c01 = %08lx %ld\n", ctx->c01, ctx->c01);
+
 	ctx->c11 = twos_complement((buf[10] << 8) | buf[11], 16);
+	DEBUG_PRINT("c11 = %08lx %ld\n", ctx->c11, ctx->c11);
+
 	ctx->c20 = twos_complement((buf[12] << 8) | buf[13], 16);
+	DEBUG_PRINT("c20 = %08lx %ld\n", ctx->c20, ctx->c20);
+
 	ctx->c21 = twos_complement((buf[14] << 8) | buf[15], 16);
+	DEBUG_PRINT("c21 = %08lx %ld\n", ctx->c21, ctx->c21);
+
 	ctx->c30 = twos_complement((buf[16] << 8) | buf[17], 16);
+	DEBUG_PRINT("c30 = %08lx %ld\n", ctx->c30, ctx->c30);
 
 	return ctx;
 
@@ -161,12 +183,13 @@ int dps310_start_measurement(void *ctx)
 }
 
 
-int dps310_get_measurement(void *ctx, float *temp)
+int dps310_get_measurement(void *ctx, float *temp, float *pressure)
 {
 	dps310_context_t *c = (dps310_context_t*)ctx;
 	int res;
 	uint8_t status;
 	uint32_t meas;
+	double t_raw_sc, p_raw_sc;
 
 
 	/* Get sensor status */
@@ -174,17 +197,36 @@ int dps310_get_measurement(void *ctx, float *temp)
 	if (res)
 		return -1;
 
-	/* Get Temperature Measurement if TMP_RDY bit set */
+	/* Get Temperature Measurement if TMP_RDY bit is set */
 	if ((status & 0x20)) {
 		res = i2c_read_register_u24(c->i2c, c->addr, REG_TMP_B2, &meas);
 		if (res)
 			return -2;
 
-		*temp =  (double)meas / 1040384 * c->c1 + c->c0 * 0.5;
+		t_raw_sc = (double)twos_complement(meas, 24) / SCALE_FACTOR;
+		DEBUG_PRINT("T_raw_sc = %0.6lf\n", t_raw_sc);
+		*temp =  c->c0 * 0.5 + c->c1 * t_raw_sc;
+		c->temp = *temp;
 	} else {
-		return -3;
+		*temp = c->temp;
+		*pressure = c->pressure;
+		return 0;
 	}
 
+	/* Get Pressure Measurement if PRS_RDY bit is set */
+	if ((status & 0x10)) {
+		res = i2c_read_register_u24(c->i2c, c->addr, REG_PSR_B2, &meas);
+		if (res)
+			return -4;
+
+		p_raw_sc = (double)twos_complement(meas, 24) / SCALE_FACTOR;
+		DEBUG_PRINT("P_raw_sc = %0.6lf\n", p_raw_sc);
+		*pressure = c->c00 + p_raw_sc * (c->c10 + p_raw_sc * (c->c20 + p_raw_sc * c->c30))
+			+ t_raw_sc * c->c01 + t_raw_sc * p_raw_sc * (c->c11 + p_raw_sc * c->c21);
+		c->pressure = *pressure;
+	} else {
+		*pressure = c->pressure;
+	}
 
 	return 0;
 }
