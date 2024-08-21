@@ -32,12 +32,37 @@
 
 
 
+/* i2c_adt7410.c */
+void* adt7410_init(i2c_inst_t *i2c, uint8_t addr);
+int adt7410_start_measurement(void *ctx);
+int adt7410_get_measurement(void *ctx, float *temp, float *pressure);
+
+/* i2c_dps310.c */
+void* dps310_init(i2c_inst_t *i2c, uint8_t addr);
+int dps310_start_measurement(void *ctx);
+int dps310_get_measurement(void *ctx, float *temp, float *pressure);
+
+/* i2c_mcp9808.c */
+void* mcp9808_init(i2c_inst_t *i2c, uint8_t addr);
+int mcp9808_start_measurement(void *ctx);
+int mcp9808_get_measurement(void *ctx, float *temp, float *pressure);
+
+/* i2c_pct2075.c */
+void* pct2075_init(i2c_inst_t *i2c, uint8_t addr);
+int pct2075_start_measurement(void *ctx);
+int pct2075_get_measurement(void *ctx, float *temp, float *pressure);
+
+/* i2c_tmp117.c */
+void* tmp117_init(i2c_inst_t *i2c, uint8_t addr);
+int tmp117_start_measurement(void *ctx);
+int tmp117_get_measurement(void *ctx, float *temp, float *pressure);
 
 static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
 	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
 	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement },
+	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement },
 	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement },
 	{ NULL, NULL, NULL, NULL }
 };
