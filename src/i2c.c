@@ -37,6 +37,11 @@ void* adt7410_init(i2c_inst_t *i2c, uint8_t addr);
 int adt7410_start_measurement(void *ctx);
 int adt7410_get_measurement(void *ctx, float *temp, float *pressure);
 
+/* i2c_bmp280.c */
+void* bmp280_init(i2c_inst_t *i2c, uint8_t addr);
+int bmp280_start_measurement(void *ctx);
+int bmp280_get_measurement(void *ctx, float *temp, float *pressure);
+
 /* i2c_dps310.c */
 void* dps310_init(i2c_inst_t *i2c, uint8_t addr);
 int dps310_start_measurement(void *ctx);
@@ -60,6 +65,7 @@ int tmp117_get_measurement(void *ctx, float *temp, float *pressure);
 static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
 	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
+	{ "BMP280", bmp280_init, bmp280_start_measurement, bmp280_get_measurement },
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
 	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement },
 	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement },

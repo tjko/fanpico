@@ -141,10 +141,10 @@ void* dps310_init(i2c_inst_t *i2c, uint8_t addr)
 		goto panic;
 
 	ctx->c0 = twos_complement((buf[0] << 4) | (buf[1] >> 4), 12);
-	DEBUG_PRINT("c0 = %08lx %ld\n", ctx->c0, ctx->c0);
+	DEBUG_PRINT("c0 = %08x %d\n", ctx->c0, ctx->c0);
 
 	ctx->c1 = twos_complement(((buf[1] & 0x0f) << 8) | (buf[2]), 12);
-	DEBUG_PRINT("c1 = %08lx %ld\n", ctx->c1, ctx->c1);
+	DEBUG_PRINT("c1 = %08x %d\n", ctx->c1, ctx->c1);
 
 	ctx->c00 = twos_complement((buf[3] << 12) | (buf[4] << 4) | (buf[5] >> 4), 20);
 	DEBUG_PRINT("c00 = %08lx %ld\n", ctx->c00, ctx->c00);
@@ -153,19 +153,19 @@ void* dps310_init(i2c_inst_t *i2c, uint8_t addr)
 	DEBUG_PRINT("c10 = %08lx %ld\n", ctx->c10, ctx->c10);
 
 	ctx->c01 = twos_complement((buf[8] << 8) | buf[9], 16);
-	DEBUG_PRINT("c01 = %08lx %ld\n", ctx->c01, ctx->c01);
+	DEBUG_PRINT("c01 = %08x %d\n", ctx->c01, ctx->c01);
 
 	ctx->c11 = twos_complement((buf[10] << 8) | buf[11], 16);
-	DEBUG_PRINT("c11 = %08lx %ld\n", ctx->c11, ctx->c11);
+	DEBUG_PRINT("c11 = %08x %d\n", ctx->c11, ctx->c11);
 
 	ctx->c20 = twos_complement((buf[12] << 8) | buf[13], 16);
-	DEBUG_PRINT("c20 = %08lx %ld\n", ctx->c20, ctx->c20);
+	DEBUG_PRINT("c20 = %08x %d\n", ctx->c20, ctx->c20);
 
 	ctx->c21 = twos_complement((buf[14] << 8) | buf[15], 16);
-	DEBUG_PRINT("c21 = %08lx %ld\n", ctx->c21, ctx->c21);
+	DEBUG_PRINT("c21 = %08x %d\n", ctx->c21, ctx->c21);
 
 	ctx->c30 = twos_complement((buf[16] << 8) | buf[17], 16);
-	DEBUG_PRINT("c30 = %08lx %ld\n", ctx->c30, ctx->c30);
+	DEBUG_PRINT("c30 = %08x %d\n", ctx->c30, ctx->c30);
 
 	return ctx;
 
