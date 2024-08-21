@@ -1810,7 +1810,7 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev
 		} else if (vsmode == VSMODE_ONEWIRE) {
 			printf(",%016llx", conf->vsensors[sensor].onewire_addr);
 		} else if (vsmode == VSMODE_I2C) {
-			printf(",%s,%u", i2c_sensor_type_str(conf->vsensors[sensor].i2c_type),
+			printf(",%s,%02x", i2c_sensor_type_str(conf->vsensors[sensor].i2c_type),
 				conf->vsensors[sensor].i2c_addr);
 		} else {
 			for(i = 0; i < VSENSOR_SOURCE_MAX_COUNT; i++) {
