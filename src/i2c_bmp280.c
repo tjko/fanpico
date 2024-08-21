@@ -49,8 +49,6 @@
 typedef struct bmp280_context_t {
 	i2c_inst_t *i2c;
 	uint8_t addr;
-	float temp;
-	float pressure;
 	// Calibration Data
 	uint16_t t1;
 	int16_t t2;
@@ -79,8 +77,7 @@ void* bmp280_init(i2c_inst_t *i2c, uint8_t addr)
 		return NULL;
 	ctx->i2c = i2c;
 	ctx->addr = addr;
-	ctx->temp = 0.0;
-	ctx->pressure = -1.0;
+
 
 	/* Read and verify device ID */
 	res  = i2c_read_register_u8(i2c, addr, REG_ID, &val);
@@ -195,14 +192,8 @@ int bmp280_get_measurement(void *ctx, float *temp, float *pressure)
 {
 	bmp280_context_t *c = (bmp280_context_t*)ctx;
 	int res;
-	uint8_t status;
 	uint8_t buf[6];
 	int32_t p_raw, t_raw, t_fine;
-
-	/* Get sensor status */
-	res  = i2c_read_register_u8(c->i2c, c->addr, REG_STATUS, &status);
-	if (res)
-		return -1;
 
 
 	/* Read Pressure & Temperature registers */

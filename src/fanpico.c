@@ -496,6 +496,7 @@ int main()
 
 		/* Toggle LED every 1000ms */
 		if (time_passed(&t_led, 1000)) {
+			log_msg(LOG_DEBUG, "toggle LED start");
 			if (cfg->led_mode == 0) {
 				/* Slow blinking */
 				led_state = (led_state > 0 ? 0 : 1);
@@ -510,8 +511,11 @@ int main()
 			gpio_put(LED_PIN, led_state);
 #endif
 #ifdef LIB_PICO_CYW43_ARCH
+			cyw43_arch_lwip_begin();
 			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
+			cyw43_arch_lwip_end();
 #endif
+			log_msg(LOG_DEBUG, "toggle LED end");
 		}
 
 		/* Update display every 1000ms */
@@ -524,11 +528,14 @@ int main()
 
 		/* Poll I2C Temperature Sensors */
 		if (i2c_temp_delay > 0 && time_passed(&t_i2c_temp, i2c_temp_delay)) {
+			log_msg(LOG_DEBUG, "I2C sensor poll start");
 			i2c_temp_delay = i2c_read_temps((struct fanpico_config*)cfg);
+			log_msg(LOG_DEBUG, "I2C sensor poll end");
 		}
 
 		/* Process any (user) input */
 		while ((c = getchar_timeout_us(0)) != PICO_ERROR_TIMEOUT) {
+			log_msg(LOG_DEBUG, "character received: %02x", c);
 			if (c == 0xff || c == 0x00)
 				continue;
 			if (c == 0x7f || c == 0x08) {

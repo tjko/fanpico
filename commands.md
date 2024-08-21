@@ -1122,12 +1122,15 @@ Sensor numbering:
 
 Supporte I2C sensors:
 
-Sensor Model|Notes
-------------|-----
-ADT7410|16bit, 0.5C accuracy
-DPS310|24bit, 0.5C accuracy
-MCP9808|13bit, 0.25C accuracy
-TMP117|16bit, 0.1C accuracy
+Sensor Model|Possible Addresses|Notes
+------------|------------------|-----
+ADT7410|0x48, 0x49, 0x4a, 0x4b|16bit, 0.5C accuracy
+BMP180||16bit, 0.5C accuracy
+BMP280|0x76, 0x77|20bit, 0.5C accuracy
+DPS310|0x77, 0x76|24bit, 0.5C accuracy
+MCP9808||13bit, 0.25C accuracy
+PCT2075||11bit, 1C accuracy
+TMP117|0x48, 0x49, 0x4a, 0x4b|16bit, 0.1C accuracy
 
 
 Defaults:
