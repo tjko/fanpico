@@ -55,7 +55,7 @@ struct log_facility {
 	const char *name;
 };
 
-struct log_priority log_priorities[] = {
+const struct log_priority log_priorities[] = {
 	{ LOG_EMERG,   "EMERG" },
 	{ LOG_ALERT,   "ALERT" },
 	{ LOG_CRIT,    "CRIT" },
@@ -67,7 +67,7 @@ struct log_priority log_priorities[] = {
 	{ 0, NULL }
 };
 
-struct log_facility log_facilities[] = {
+const struct log_facility log_facilities[] = {
 	{ LOG_KERN,     "KERN" },
 	{ LOG_USER,     "USER" },
 	{ LOG_MAIL,     "MAIL" },

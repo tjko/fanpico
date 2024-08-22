@@ -30,7 +30,7 @@
 #include "filters.h"
 
 
-filter_entry_t filters[] = {
+static const filter_entry_t filters[] = {
 	{ "none", NULL, NULL, NULL }, /* FILTER_NONE */
 	{ "lossypeak", lossy_peak_parse_args, lossy_peak_print_args, lossy_peak_filter }, /* FILTER_LOSSYPEAK */
 	{ "sma", sma_parse_args, sma_print_args, sma_filter }, /* FILTER_SMA */

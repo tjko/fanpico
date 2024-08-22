@@ -97,6 +97,14 @@ add_executable(fanpico
   src/tacho.c
   src/sensors.c
   src/i2c.c
+  src/i2c_adt7410.c
+  src/i2c_aht.c
+  src/i2c_bmp180.c
+  src/i2c_bmp280.c
+  src/i2c_dps310.c
+  src/i2c_mcp9808.c
+  src/i2c_pct2075.c
+  src/i2c_tmp117.c
   src/onewire.c
   src/filters.c
   src/filter_lossypeak.c

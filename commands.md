@@ -206,6 +206,7 @@ Fanpico supports following commands:
 * [SYStem:VREFadc](#systemvrefadc)
 * [SYStem:VREFadc?](#systemvrefadc-1)
 * [SYStem:VSENSORS?](#systemvsensors)
+* [SYStem:VSENSORS:SOUrces?](#systemvsensorssources)
 * [SYStem:WIFI?](#systemwifi)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
@@ -1062,7 +1063,7 @@ sma,10
 
 
 ### CONFigure:VSENSORx Commands
-VSENSORx commands are used to configure virtual temperature sensors.
+VSENSORx (where x is the sensor number) commands are used to configure virtual temperature sensors.
 These can be "sensors" that are updated by software, like "CPU Temperature" of host system.
 Or these can be be virtual sensors that report value of multiple physical sensors fed through a mathematical formula.
 
@@ -1104,11 +1105,12 @@ Source types:
 MODE|Description|No of Parameters|Parameters
 ----|-----------|----------------|----------
 MANUAL|Temperature updated by external program/driver|2|default_temperature_C,timeout
-MAX|Maximum temperatore between source sensors|2+|sensor_a, sensor_b, ...
-MIN|Minimum temperature between source sensors|2+|sensor_a, sensor_b, ...
-AVG|Average temperature between source sensors|2+|sensor_a, sensor_b, ...
-DELTA|Temperature delta between to source sensors|2|sensor_a, sensor_b
-ONEWIRE|Temperatur reading from digital 1-Wire sensor|1|onewire_address
+MAX|Maximum temperatore between source sensors|2+|sensor_a,sensor_b, ...
+MIN|Minimum temperature between source sensors|2+|sensor_a,sensor_b, ...
+AVG|Average temperature between source sensors|2+|sensor_a,sensor_b, ...
+DELTA|Temperature delta between to source sensors|2|sensor_a,sensor_b
+ONEWIRE|Temperature reading from digital 1-Wire sensor|1|onewire_address
+I2C|Temperature reading from digital I2C sensor|2|i2c_address,sensor_model
 
 
 Note, in "manual" mode if timeout_ms is set to zero, then sensor's temperature reading
@@ -1117,6 +1119,19 @@ will never revert back to default value (if no updates are being received).
 Sensor numbering:
  - SENSORS: 1, 2, ...
  - VSENSORS: 101, 102, ...
+
+
+Supporte I2C sensors:
+
+Sensor Model|Possible Addresses|Notes
+------------|------------------|-----
+ADT7410|0x48, 0x49, 0x4a, 0x4b|16bit, 0.5C accuracy
+BMP180||16bit, 0.5C accuracy
+BMP280|0x76, 0x77|20bit, 0.5C accuracy
+DPS310|0x77, 0x76|24bit, 0.5C accuracy
+MCP9808||13bit, 0.25C accuracy
+PCT2075||11bit, 1C accuracy
+TMP117|0x48, 0x49, 0x4a, 0x4b|16bit, 0.1C accuracy
 
 
 Defaults:
@@ -1147,10 +1162,19 @@ CONF:VSENSOR3:SOURCE avg,1,2,101
 
 Example: Set VSENSOR4 to report temperature from 1-Wire sensor with address 2871d86a0000005a:
 ```
-CONF:VENSOR4:SOURCE onewire,2871d86a0000005a
+CONF:VSENSOR4:SOURCE onewire,2871d86a0000005a
 ```
 
 (to get list of currently active 1-Wire sensors use: SYS:ONEWIRE:SENSORS?)
+
+
+Example: Set VSENSOR5 to report temperature from TMP117 (I2C) sensor with address 0x48:
+```
+CONF:VSENSOR5:SOURCE i2c,0x48,tmp117
+```
+
+(to get list of currently active I2C sensor addresses, use: SYS:I2C:SCAN?)
+
 
 
 #### CONFigure:VSENSORx:SOUrce?
@@ -2924,6 +2948,25 @@ Example:
 ```
 SYS:VSENSORS?
 8
+```
+
+#### SYStem:VSENSORS:SOUrces?
+Return virtual sensor (source) configuration information for all
+virtual sensors in CSV format.
+
+Format: <vsensor>,<type>,<parameter1>,<parameter2>,...
+
+Example:
+```
+SYS:VSENSORS:SOURCES?
+vsensor1,onewire,22cd991800000020
+vsensor2,i2c,0x48,TMP117
+vsensor3,i2c,0x37,PCT2075
+vsensor4,i2c,0x77,DPS310
+vsensor5,i2c,0x76,BMP280
+vsensor6,i2c,0x49,ADT7410
+vsensor7,i2c,0x38,AHT2x
+vsensor8,manual,0.00,30
 ```
 
 

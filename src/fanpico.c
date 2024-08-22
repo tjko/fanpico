@@ -60,6 +60,8 @@ auto_init_mutex(state_mutex_inst);
 mutex_t *state_mutex = &state_mutex_inst;
 bool rebooted_by_watchdog = false;
 
+static char input_buf[1024];
+
 
 void update_persistent_memory_crc()
 {
@@ -103,13 +105,16 @@ void update_persistent_memory()
 	struct persistent_memory_block *m = persistent_mem;
 	datetime_t t;
 
-	mutex_enter_blocking(pmem_mutex);
-	if (rtc_get_datetime(&t)) {
-		m->saved_time = t;
+	if (mutex_enter_timeout_us(pmem_mutex, 100)) {
+		if (rtc_get_datetime(&t)) {
+			m->saved_time = t;
+		}
+		m->uptime = to_us_since_boot(get_absolute_time());
+		update_persistent_memory_crc();
+		mutex_exit(pmem_mutex);
+	} else {
+		log_msg(LOG_DEBUG, "update_persistent_memory(): Failed to get pmem_mutex");
 	}
-	m->uptime = to_us_since_boot(get_absolute_time());
-	update_persistent_memory_crc();
-	mutex_exit(pmem_mutex);
 }
 
 void boot_reason()
@@ -175,7 +180,7 @@ void setup()
 		log_msg(LOG_NOTICE, "RTC clock time: %s", datetime_str(buf, sizeof(buf), &t));
 	}
 
-	setup_i2c_bus();
+	setup_i2c_bus((struct fanpico_config *)cfg);
 	display_init();
 	network_init(&system_state);
 
@@ -199,7 +204,9 @@ void setup()
 	}
 #ifdef LIB_PICO_CYW43_ARCH
 	/* On pico_w, LED is connected to the radio GPIO... */
+	cyw43_arch_lwip_begin();
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+	cyw43_arch_lwip_end();
 #endif
 
 	/* Configure PWM pins... */
@@ -264,9 +271,12 @@ void clear_state(struct fanpico_state *s)
 
 void update_system_state()
 {
-	mutex_enter_blocking(state_mutex);
-	memcpy(&system_state, &transfer_state, sizeof(system_state));
-	mutex_exit(state_mutex);
+	if (mutex_enter_timeout_us(state_mutex, 1000)) {
+		memcpy(&system_state, &transfer_state, sizeof(system_state));
+		mutex_exit(state_mutex);
+	} else {
+		log_msg(LOG_INFO, "update_system_state(): failed to get system_mutex");
+	}
 }
 
 
@@ -354,7 +364,7 @@ void core1_main()
 		/* PWM input signals (duty cycles) from "motherboard". */
 		get_pwm_duty_cycles(config);
 		if (time_passed(&t_poll_pwm, 200)) {
-			log_msg(LOG_DEBUG, "Read PWM inputs");
+			//log_msg(LOG_DEBUG, "Read PWM inputs");
 			for (int i = 0; i < MBFAN_COUNT; i++) {
 				state->mbfan_duty[i] = roundf(mbfan_pwm_duty[i]);
 				if (check_for_change(state->mbfan_duty_prev[i], state->mbfan_duty[i], 1.5)) {
@@ -433,13 +443,14 @@ int main()
 {
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_led, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_network, 0);
-	absolute_time_t t_now, t_last, t_display, t_ram;
+	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_watchdog, 0);
+	absolute_time_t t_now, t_last, t_display, t_ram, t_i2c_temp;
 	uint8_t led_state = 0;
 	int64_t max_delta = 0;
 	int64_t delta;
 	int c;
-	char input_buf[1024 + 1];
 	int i_ptr = 0;
+	int i2c_temp_delay =  10000;
 
 
 	set_binary_info();
@@ -464,7 +475,7 @@ int main()
 #endif
 
 	t_last = get_absolute_time();
-	t_ram = t_display = t_last;
+	t_i2c_temp = t_ram = t_display = t_last;
 
 	while (1) {
 		t_now = get_absolute_time();
@@ -480,11 +491,14 @@ int main()
 			network_poll();
 		}
 		if (time_passed(&t_ram, 1000)) {
+			log_msg(LOG_DEBUG, "update persistent mem start");
 			update_persistent_memory();
+			//log_msg(LOG_DEBUG, "update persistent mem end");
 		}
 
 		/* Toggle LED every 1000ms */
 		if (time_passed(&t_led, 1000)) {
+			uint8_t old_led_state = led_state;
 			if (cfg->led_mode == 0) {
 				/* Slow blinking */
 				led_state = (led_state > 0 ? 0 : 1);
@@ -495,22 +509,38 @@ int main()
 				/* Always off */
 				led_state = 0;
 			}
+			if (led_state != old_led_state) {
+				log_msg(LOG_DEBUG, "toggle LED start: %u", led_state);
 #if LED_PIN > 0
-			gpio_put(LED_PIN, led_state);
+				gpio_put(LED_PIN, led_state);
 #endif
 #ifdef LIB_PICO_CYW43_ARCH
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
+				cyw43_arch_lwip_begin();
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
+				cyw43_arch_lwip_end();
 #endif
+				log_msg(LOG_DEBUG, "toggle LED end");
+			}
 		}
 
 		/* Update display every 1000ms */
 		if (time_passed(&t_display, 1000)) {
+			log_msg(LOG_DEBUG, "udpate display");
 			update_system_state();
 			display_status(fanpico_state, cfg);
+			log_msg(LOG_DEBUG, "udpate display end");
+		}
+
+		/* Poll I2C Temperature Sensors */
+		if (i2c_temp_delay > 0 && time_passed(&t_i2c_temp, i2c_temp_delay)) {
+			//log_msg(LOG_DEBUG, "I2C sensor poll start");
+			i2c_temp_delay = i2c_read_temps((struct fanpico_config*)cfg);
+			//log_msg(LOG_DEBUG, "I2C sensor poll end");
 		}
 
 		/* Process any (user) input */
 		while ((c = getchar_timeout_us(0)) != PICO_ERROR_TIMEOUT) {
+			//log_msg(LOG_DEBUG, "character received: %02x", c);
 			if (c == 0xff || c == 0x00)
 				continue;
 			if (c == 0x7f || c == 0x08) {
@@ -522,8 +552,10 @@ int main()
 				if (cfg->local_echo) printf("\r\n");
 				input_buf[i_ptr] = 0;
 				if (i_ptr > 0) {
+					log_msg(LOG_DEBUG,"user command start");
 					update_system_state();
 					process_command(fanpico_state, (struct fanpico_config *)cfg, input_buf);
+					log_msg(LOG_DEBUG,"user command end");
 					i_ptr = 0;
 				}
 				continue;
@@ -532,7 +564,10 @@ int main()
 			if (cfg->local_echo) printf("%c", c);
 		}
 #if WATCHDOG_ENABLED
-		watchdog_update();
+		if (time_passed(&t_watchdog, 1000)) {
+			log_msg(LOG_DEBUG,"watchdog update");
+			watchdog_update();
+		}
 #endif
 	}
 }

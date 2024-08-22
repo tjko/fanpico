@@ -187,28 +187,38 @@ void oled_display_init()
 		return;
 	}
 
+	char *disp_model = "";
+	uint8_t disp_addr = 0;
+
 	switch (res) {
 	case OLED_SSD1306_3C:
-		log_msg(LOG_NOTICE, "OLED Display: SSD1306 (at 0x3c)");
+		disp_model = "SSD1306";
+		disp_addr = 0x3c;
 		break;
 	case OLED_SSD1306_3D:
-		log_msg(LOG_NOTICE, "OLED Display: SSD1306 (at 0x3d)");
+		disp_model = "SSD1306";
+		disp_addr = 0x3d;
 		break;
 	case OLED_SH1106_3C:
-		log_msg(LOG_NOTICE, "OLED Display: SH1106 (at 0x3c)");
+		disp_model = "SH1106";
+		disp_addr = 0x3c;
 		break;
 	case OLED_SH1106_3D:
-		log_msg(LOG_NOTICE, "OLED Display: SH1106 (at 0x3d)");
+		disp_model = "SH1106";
+		disp_addr = 0x3d;
 		break;
 	case OLED_SH1107_3C:
-		log_msg(LOG_NOTICE, "OLED Display: SH1107 (at 0x3c)");
+		disp_model = "SH1107";
+		disp_addr = 0x3c;
 		break;
 	case OLED_SH1107_3D:
-		log_msg(LOG_NOTICE, "OLED Display: SH1107 (at 0x3d)");
+		disp_model = "SH1107";
+		disp_addr = 0x3d;
 		break;
 	default:
-		log_msg(LOG_ERR, "Unknown OLED Display.");
+		disp_model = "Unknown";
 	}
+	log_msg(LOG_NOTICE, "I2C OLED Display: %s (at %02x)", disp_model, disp_addr);
 
 	/* Initialize screen. */
 	oledSetBackBuffer(&oled, ucBuffer);
@@ -310,7 +320,7 @@ void oled_display_status(const struct fanpico_state *state,
 			}
 			oledWriteString(&oled, 0 , h_pos + 2, i, buf, FONT_6x8, 0, 1);
 		}
-		else if (i == 0 && oled_height <= 64) {
+		else if (FAN_COUNT > 4 && i == 0 && oled_height <= 64) {
 			/* Handle case where first row has static content... */
 			buf[0] = (counter++ % 2 == 0 ? '*' : ' ');
 			buf[1] = 0;
@@ -360,7 +370,8 @@ void oled_display_status(const struct fanpico_state *state,
 			mins % 60);
 		oledWriteString(&oled, 0, 6, 7, buf, FONT_6x8, 0, 1);
 		if (rtc_get_datetime(&t)) {
-			snprintf(buf, sizeof(buf), "%02d:%02d", t.hour, t.min);
+			snprintf(buf, sizeof(buf), "%02d%c%02d",
+				t.hour, (secs % 2 ? ':' : ' '), t.min);
 			oledWriteString(&oled, 0, 3, 5, buf, FONT_12x16, 0, 1);
 		}
 	}

@@ -71,7 +71,7 @@
 
 #ifdef NDEBUG
 #define WATCHDOG_ENABLED      1
-#define WATCHDOG_REBOOT_DELAY 15000
+#define WATCHDOG_REBOOT_DELAY 8000
 #endif
 
 #ifndef I2C_DEFAULT_SPEED
@@ -120,8 +120,9 @@ enum vsensor_modes {
 	VSMODE_AVG = 3,
 	VSMODE_DELTA = 4,
 	VSMODE_ONEWIRE = 5,
+	VSMODE_I2C = 6,
 };
-#define VSMODE_ENUM_MAX 5
+#define VSMODE_ENUM_MAX 6
 
 enum rpm_modes {
 	RMODE_TACHO = 0,  /* Normal Tachometer signal */
@@ -208,6 +209,8 @@ struct vsensor_input {
 	int32_t timeout;
 	uint8_t sensors[VSENSOR_SOURCE_MAX_COUNT];
 	uint64_t onewire_addr;
+	uint8_t i2c_type;
+	uint8_t i2c_addr;
 	struct temp_map map;
 	enum signal_filter_types filter;
 	void *filter_ctx;
@@ -275,6 +278,7 @@ struct fanpico_config {
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
 	absolute_time_t vtemp_updated[VSENSOR_MAX_COUNT];
+	void *i2c_context[VSENSOR_MAX_COUNT];
 };
 
 struct fanpico_state {
@@ -400,10 +404,6 @@ const char *network_hostname();
 u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 			u16_t current_tag_part, u16_t *next_tag_part);
 
-/* i2c.c */
-void scan_i2c_bus();
-void display_i2c_status();
-void setup_i2c_bus();
 
 /* mqtt.c */
 void fanpico_setup_mqtt_client();
@@ -415,16 +415,25 @@ void fanpico_mqtt_publish_rpm();
 void fanpico_mqtt_publish_duty();
 void fanpico_mqtt_scpi_command();
 
+/* telnetd.c */
+void telnetserver_init();
+
+#endif
+
 /* onewire.c */
 void setup_onewire_bus();
 int onewire_read_temps(struct fanpico_config *config, struct fanpico_state *state);
 uint64_t onewire_address(uint sensor);
 
-/* telnetd.c */
-void telnetserver_init();
+/* i2c.c */
+void scan_i2c_bus();
+void display_i2c_status();
+void setup_i2c_bus(struct fanpico_config *config);
+uint get_i2c_sensor_type(const char *name);
+const char *i2c_sensor_type_str(uint type);
+bool i2c_reserved_address(uint8_t addr);
+int i2c_read_temps(struct fanpico_config *config);
 
-
-#endif
 
 /* tls.c */
 int read_pem_file(char *buf, uint32_t size, uint32_t timeout, bool append);
