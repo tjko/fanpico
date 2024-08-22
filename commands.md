@@ -206,6 +206,7 @@ Fanpico supports following commands:
 * [SYStem:VREFadc](#systemvrefadc)
 * [SYStem:VREFadc?](#systemvrefadc-1)
 * [SYStem:VSENSORS?](#systemvsensors)
+* [SYStem:VSENSORS:SOUrces?](#systemvsensorssources)
 * [SYStem:WIFI?](#systemwifi)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
@@ -1062,7 +1063,7 @@ sma,10
 
 
 ### CONFigure:VSENSORx Commands
-VSENSORx commands are used to configure virtual temperature sensors.
+VSENSORx (where x is the sensor number) commands are used to configure virtual temperature sensors.
 These can be "sensors" that are updated by software, like "CPU Temperature" of host system.
 Or these can be be virtual sensors that report value of multiple physical sensors fed through a mathematical formula.
 
@@ -1109,7 +1110,7 @@ MIN|Minimum temperature between source sensors|2+|sensor_a,sensor_b, ...
 AVG|Average temperature between source sensors|2+|sensor_a,sensor_b, ...
 DELTA|Temperature delta between to source sensors|2|sensor_a,sensor_b
 ONEWIRE|Temperature reading from digital 1-Wire sensor|1|onewire_address
-I2C|Temperature reading from digital I2C sensor|2|sensor_model,i2c_address
+I2C|Temperature reading from digital I2C sensor|2|i2c_address,sensor_model
 
 
 Note, in "manual" mode if timeout_ms is set to zero, then sensor's temperature reading
@@ -1169,7 +1170,7 @@ CONF:VSENSOR4:SOURCE onewire,2871d86a0000005a
 
 Example: Set VSENSOR5 to report temperature from TMP117 (I2C) sensor with address 0x48:
 ```
-CONF:VSENSOR5:SOURCE i2c,tmp117,0x48
+CONF:VSENSOR5:SOURCE i2c,0x48,tmp117
 ```
 
 (to get list of currently active I2C sensor addresses, use: SYS:I2C:SCAN?)
@@ -2947,6 +2948,25 @@ Example:
 ```
 SYS:VSENSORS?
 8
+```
+
+#### SYStem:VSENSORS:SOUrces?
+Return virtual sensor (source) configuration information for all
+virtual sensors in CSV format.
+
+Format: <vsensor>,<type>,<parameter1>,<parameter2>,...
+
+Example:
+```
+SYS:VSENSORS:SOURCES?
+vsensor1,onewire,22cd991800000020
+vsensor2,i2c,0x48,TMP117
+vsensor3,i2c,0x37,PCT2075
+vsensor4,i2c,0x77,DPS310
+vsensor5,i2c,0x76,BMP280
+vsensor6,i2c,0x49,ADT7410
+vsensor7,i2c,0x38,AHT2x
+vsensor8,manual,0.00,30
 ```
 
 

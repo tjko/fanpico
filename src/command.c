@@ -419,6 +419,37 @@ int cmd_vsensors(const char *cmd, const char *args, int query, struct prev_cmd_t
 	return 0;
 }
 
+int cmd_vsensors_sources(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	for (int i = 0; i < VSENSOR_COUNT; i++) {
+		const struct vsensor_input *v = &conf->vsensors[i];
+		printf("vsensor%d,%s", i + 1, vsmode2str(v->mode));
+		switch (v->mode) {
+		case VSMODE_MANUAL:
+			printf(",%0.2f,%ld", v->default_temp, v->timeout);
+			break;
+		case VSMODE_ONEWIRE:
+			printf(",%016llx", v->onewire_addr);
+			break;
+		case VSMODE_I2C:
+			printf(",0x%02x,%s", v->i2c_addr, i2c_sensor_type_str(v->i2c_type));
+			break;
+		default:
+			for (int j = 0; j < VSENSOR_SOURCE_MAX_COUNT; i++) {
+				if (v->sensors[j])
+					printf(",%d", v->sensors[i]);
+			}
+			break;
+		}
+		printf("\n");
+	}
+
+	return 0;
+}
+
 int cmd_null(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	log_msg(LOG_INFO, "null command: %s %s (query=%d)", cmd, args, query);
@@ -1788,6 +1819,7 @@ int cmd_vsensor_name(const char *cmd, const char *args, int query, struct prev_c
 
 int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
+	struct vsensor_input *v;
 	int sensor, val, i;
 	uint8_t vsmode, selected[VSENSOR_SOURCE_MAX_COUNT];
 	float default_temp;
@@ -1799,24 +1831,20 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev
 	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
 	if (sensor < 0 || sensor >= VSENSOR_COUNT)
 		return 1;
-	vsmode = conf->vsensors[sensor].mode;
+	v = &conf->vsensors[sensor];
 
 	if (query) {
-		printf("%s", vsmode2str(vsmode));
-		if (vsmode == VSMODE_MANUAL) {
-			printf(",%0.2f,%ld",
-				conf->vsensors[sensor].default_temp,
-				conf->vsensors[sensor].timeout);
-		} else if (vsmode == VSMODE_ONEWIRE) {
-			printf(",%016llx", conf->vsensors[sensor].onewire_addr);
-		} else if (vsmode == VSMODE_I2C) {
-			printf(",%s,%02x", i2c_sensor_type_str(conf->vsensors[sensor].i2c_type),
-				conf->vsensors[sensor].i2c_addr);
+		printf("%s", vsmode2str(v->mode));
+		if (v->mode == VSMODE_MANUAL) {
+			printf(",%0.2f,%ld", v->default_temp, v->timeout);
+		} else if (v->mode == VSMODE_ONEWIRE) {
+			printf(",%016llx", v->onewire_addr);
+		} else if (v->mode == VSMODE_I2C) {
+			printf(",0x%02x,%s", v->i2c_addr, i2c_sensor_type_str(v->i2c_type));
 		} else {
 			for(i = 0; i < VSENSOR_SOURCE_MAX_COUNT; i++) {
-				if (conf->vsensors[sensor].sensors[i]) {
-					printf(",%d", conf->vsensors[sensor].sensors[i]);
-				}
+				if (v->sensors[i])
+					printf(",%d", v->sensors[i]);
 			}
 		}
 		printf("\n");
@@ -1839,9 +1867,9 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev
 							vsmode2str(vsmode),
 							default_temp,
 							timeout);
-						conf->vsensors[sensor].mode = vsmode;
-						conf->vsensors[sensor].default_temp = default_temp;
-						conf->vsensors[sensor].timeout = timeout;
+						v->mode = vsmode;
+						v->default_temp = default_temp;
+						v->timeout = timeout;
 						ret = 0;
 					}
 				}
@@ -1853,25 +1881,25 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev
 						sensor + 1,
 						vsmode2str(vsmode),
 						addr);
-					conf->vsensors[sensor].mode = vsmode;
-					conf->vsensors[sensor].onewire_addr = addr;
+					v->mode = vsmode;
+					v->onewire_addr = addr;
 					ret = 0;
 				}
 			} else if (vsmode == VSMODE_I2C) {
 				tok = strtok_r(NULL, ",", &saveptr);
-				uint type = get_i2c_sensor_type(tok);
-				if (type > 0) {
-					tok = strtok_r(NULL, ",", &saveptr);
-					if (str_to_int(tok, &val, 16)) {
-						if (val > 0 && val < 128 && !i2c_reserved_address(val)) {
-							log_msg(LOG_NOTICE, "vsensor%d: set source to %s,%s,%02x",
+				if (str_to_int(tok, &val, 16)) {
+					if (val > 0 && val < 128 && !i2c_reserved_address(val)) {
+						tok = strtok_r(NULL, ",", &saveptr);
+						uint type = get_i2c_sensor_type(tok);
+						if (type > 0) {
+							log_msg(LOG_NOTICE, "vsensor%d: set source to %s,0x%02x,%s",
 								sensor + 1,
 								vsmode2str(vsmode),
-								i2c_sensor_type_str(type),
-								val);
-							conf->vsensors[sensor].mode = vsmode;
-							conf->vsensors[sensor].i2c_type = type;
-							conf->vsensors[sensor].i2c_addr = val;
+								val,
+								i2c_sensor_type_str(type));
+							v->mode = vsmode;
+							v->i2c_type = type;
+							v->i2c_addr = val;
 							ret = 0;
 						}
 					}
@@ -1895,9 +1923,9 @@ int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev
 						sensor + 1,
 						vsmode2str(vsmode),
 						temp_str);
-					conf->vsensors[sensor].mode = vsmode;
+					v->mode = vsmode;
 					for(i = 0; i < SENSOR_COUNT; i++) {
-						conf->vsensors[sensor].sensors[i] = selected[i];
+						v->sensors[i] = selected[i];
 					}
 					ret = 0;
 				}
@@ -2836,6 +2864,11 @@ const struct cmd_t onewire_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t vsensor_s_commands[] = {
+	{ "SOUrce",   3, NULL,               cmd_vsensors_sources },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
 	{ "DISPlay",   4, display_commands,  cmd_display_type },
@@ -2867,7 +2900,7 @@ const struct cmd_t system_commands[] = {
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "UPTIme",    4, NULL,              cmd_uptime },
 	{ "VERsion",   3, NULL,              cmd_version },
-	{ "VENSORS",   8, NULL,              cmd_vsensors },
+	{ "VSENSORS",  8, vsensor_s_commands, cmd_vsensors },
 	{ "VREFadc",   4, NULL,              cmd_sensor_adc_vref },
 	{ "WIFI",      4, wifi_commands,     cmd_wifi },
 	{ 0, 0, 0, 0 }
