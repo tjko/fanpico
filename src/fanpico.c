@@ -204,7 +204,9 @@ void setup()
 	}
 #ifdef LIB_PICO_CYW43_ARCH
 	/* On pico_w, LED is connected to the radio GPIO... */
+	cyw43_arch_lwip_begin();
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+	cyw43_arch_lwip_end();
 #endif
 
 	/* Configure PWM pins... */
@@ -496,7 +498,7 @@ int main()
 
 		/* Toggle LED every 1000ms */
 		if (time_passed(&t_led, 1000)) {
-			log_msg(LOG_DEBUG, "toggle LED start");
+			uint8_t old_led_state = led_state;
 			if (cfg->led_mode == 0) {
 				/* Slow blinking */
 				led_state = (led_state > 0 ? 0 : 1);
@@ -507,15 +509,18 @@ int main()
 				/* Always off */
 				led_state = 0;
 			}
+			if (led_state != old_led_state) {
+				log_msg(LOG_DEBUG, "toggle LED start: %u", led_state);
 #if LED_PIN > 0
-			gpio_put(LED_PIN, led_state);
+				gpio_put(LED_PIN, led_state);
 #endif
 #ifdef LIB_PICO_CYW43_ARCH
-			cyw43_arch_lwip_begin();
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
-			cyw43_arch_lwip_end();
+				cyw43_arch_lwip_begin();
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
+				cyw43_arch_lwip_end();
 #endif
-			log_msg(LOG_DEBUG, "toggle LED end");
+				log_msg(LOG_DEBUG, "toggle LED end");
+			}
 		}
 
 		/* Update display every 1000ms */
