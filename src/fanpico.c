@@ -362,7 +362,7 @@ void core1_main()
 		/* PWM input signals (duty cycles) from "motherboard". */
 		get_pwm_duty_cycles(config);
 		if (time_passed(&t_poll_pwm, 200)) {
-			log_msg(LOG_DEBUG, "Read PWM inputs");
+			//log_msg(LOG_DEBUG, "Read PWM inputs");
 			for (int i = 0; i < MBFAN_COUNT; i++) {
 				state->mbfan_duty[i] = roundf(mbfan_pwm_duty[i]);
 				if (check_for_change(state->mbfan_duty_prev[i], state->mbfan_duty[i], 1.5)) {
@@ -491,7 +491,7 @@ int main()
 		if (time_passed(&t_ram, 1000)) {
 			log_msg(LOG_DEBUG, "update persistent mem start");
 			update_persistent_memory();
-			log_msg(LOG_DEBUG, "update persistent mem end");
+			//log_msg(LOG_DEBUG, "update persistent mem end");
 		}
 
 		/* Toggle LED every 1000ms */
@@ -520,7 +520,7 @@ int main()
 
 		/* Update display every 1000ms */
 		if (time_passed(&t_display, 1000)) {
-			log_msg(LOG_DEBUG, "udpate display start");
+			log_msg(LOG_DEBUG, "udpate display");
 			update_system_state();
 			display_status(fanpico_state, cfg);
 			log_msg(LOG_DEBUG, "udpate display end");
@@ -528,14 +528,14 @@ int main()
 
 		/* Poll I2C Temperature Sensors */
 		if (i2c_temp_delay > 0 && time_passed(&t_i2c_temp, i2c_temp_delay)) {
-			log_msg(LOG_DEBUG, "I2C sensor poll start");
+			//log_msg(LOG_DEBUG, "I2C sensor poll start");
 			i2c_temp_delay = i2c_read_temps((struct fanpico_config*)cfg);
-			log_msg(LOG_DEBUG, "I2C sensor poll end");
+			//log_msg(LOG_DEBUG, "I2C sensor poll end");
 		}
 
 		/* Process any (user) input */
 		while ((c = getchar_timeout_us(0)) != PICO_ERROR_TIMEOUT) {
-			log_msg(LOG_DEBUG, "character received: %02x", c);
+			//log_msg(LOG_DEBUG, "character received: %02x", c);
 			if (c == 0xff || c == 0x00)
 				continue;
 			if (c == 0x7f || c == 0x08) {
@@ -560,9 +560,8 @@ int main()
 		}
 #if WATCHDOG_ENABLED
 		if (time_passed(&t_watchdog, 1000)) {
-			log_msg(LOG_DEBUG,"watchdog_update start");
+			log_msg(LOG_DEBUG,"watchdog update");
 			watchdog_update();
-			log_msg(LOG_DEBUG,"watchdog_update end");
 		}
 #endif
 	}

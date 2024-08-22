@@ -420,7 +420,7 @@ void setup_i2c_bus(struct fanpico_config *config)
 			continue;
 		}
 		config->i2c_context[i] = ctx;
-		log_msg(LOG_NOTICE,"I2C Device %s (at 0x%02x): mapped to vsensor%d", 
+		log_msg(LOG_INFO, "I2C Device %s (at 0x%02x): mapped to vsensor%d",
 			i2c_sensor_type_str(v->i2c_type), v->i2c_addr, i + 1);
 		i2c_temp_sensors++;
 	}
@@ -445,7 +445,7 @@ int i2c_read_temps(struct fanpico_config *config)
 
 	if (step == 0) {
 		/* Send "Convert Temperature" commands to all sensors */
-		log_msg(LOG_DEBUG, "Initiate I2C sensors temperature conversion.");
+		log_msg(LOG_DEBUG, "Initiate I2C sensors temperature conversions.");
 		for (int i = 0; i < VSENSOR_COUNT; i++) {
 			struct vsensor_input *v = &config->vsensors[i];
 
@@ -469,6 +469,8 @@ int i2c_read_temps(struct fanpico_config *config)
 	}
 	else if (step == 1) {
 		/* Read temperature measurements one sensor at a time... */
+		if (sensor == 0)
+			log_msg(LOG_DEBUG, "Initiate I2C sensor measurement readings.");
 		int i;
 		for (i = sensor; i < VSENSOR_COUNT; i++) {
 			struct vsensor_input *v = &config->vsensors[i];
@@ -480,18 +482,20 @@ int i2c_read_temps(struct fanpico_config *config)
 
 			res = i2c_get_measurement(v->i2c_type, config->i2c_context[i], &temp, &pressure, &humidity);
 			if (res == 0) {
-				if (pressure > 0.0) {
-					log_msg(LOG_INFO, "vsensor%d: temperature %0.4f C, pressure %0.2f hPa",
-						i + 1, temp, pressure / 100.0);
+				if (pressure > 0.0 || humidity > 0.0 ) {
+					if (pressure > 0.0)
+						pressure /= 100.0;
+					log_msg(LOG_DEBUG, "vsensor%d: temp=%0.4fC, pressure=%0.2fhPa, humidity=%0.2f%%",
+						i + 1, temp, pressure, humidity);
 				} else {
-					log_msg(LOG_INFO, "vsensor%d: temperature %0.4f C", i + 1, temp);
+					log_msg(LOG_DEBUG, "vsensor%d: temperature %0.4f C", i + 1, temp);
 				}
 				mutex_enter_blocking(config_mutex);
 				config->vtemp[i] = temp;
 				config->vtemp_updated[i] = get_absolute_time();
 				mutex_exit(config_mutex);
 			} else {
-				log_msg(LOG_DEBUG, "vsensor%d: I2C get temperature failed: %d",
+				log_msg(LOG_INFO, "vsensor%d: I2C get temperature failed: %d",
 					i + 1, res);
 			}
 			break;
@@ -500,8 +504,9 @@ int i2c_read_temps(struct fanpico_config *config)
 		if (sensor >= VSENSOR_COUNT) {
 			wait_time = 15000;
 			step++;
+			log_msg(LOG_DEBUG, "I2C Temperature measurements complete.");
 		} else {
-			wait_time = 100;
+			wait_time = 50;
 		}
 	}
 

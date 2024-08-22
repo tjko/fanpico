@@ -84,7 +84,7 @@ static void* aht_init(i2c_inst_t *i2c, uint8_t addr, uint8_t type)
 		goto panic;
 
 	/* Wait for sensor to soft reset (should be done in 20ms?)  */
-	sleep_us(20000);
+	sleep_us(25000);
 
 	/* Write initialization register: set normal mode */
 	res = i2c_write_register_u16(i2c, addr,

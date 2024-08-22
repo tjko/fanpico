@@ -462,7 +462,7 @@ void clear_config(struct fanpico_config *cfg)
 		vs->name[0] = 0;
 		vs->mode = VSMODE_MANUAL;
 		vs->default_temp = 0.0;
-		vs->timeout = 30;
+		vs->timeout = 60;
 		for (j = 0; j < SENSOR_MAX_COUNT; j++)
 			vs->sensors[j] = 0;
 		vs->onewire_addr = 0;
