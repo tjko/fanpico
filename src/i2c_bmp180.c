@@ -198,7 +198,7 @@ static int32_t bmp180_compensated_p(int32_t up, bmp180_context_t *c)
 }
 
 
-int bmp180_get_measurement(void *ctx, float *temp, float *pressure)
+int bmp180_get_measurement(void *ctx, float *temp, float *pressure, float *humidity)
 {
 	bmp180_context_t *c = (bmp180_context_t*)ctx;
 	int res;
@@ -226,6 +226,7 @@ int bmp180_get_measurement(void *ctx, float *temp, float *pressure)
 
 	*temp = c->temp / 10.0;
 	*pressure = (float)c->pressure;
+	*humidity = -1.0;
 
 	return 0;
 }

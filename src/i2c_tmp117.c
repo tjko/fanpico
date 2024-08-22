@@ -90,7 +90,7 @@ int tmp117_start_measurement(void *ctx)
 }
 
 
-int tmp117_get_measurement(void *ctx, float *temp, float *pressure)
+int tmp117_get_measurement(void *ctx, float *temp, float *pressure, float *humidity)
 {
 	tmp117_context_t *c = (tmp117_context_t*)ctx;
 	int res;
@@ -113,6 +113,7 @@ int tmp117_get_measurement(void *ctx, float *temp, float *pressure)
 
 	*temp = ((int16_t)val) / 128.0;
 	*pressure = -1.0;
+	*humidity = -1.0;
 
 	return 0;
 }

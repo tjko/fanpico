@@ -188,7 +188,7 @@ static uint32_t bmp280_compensate_p(int32_t adc_p, int32_t t_fine, bmp280_contex
 }
 
 
-int bmp280_get_measurement(void *ctx, float *temp, float *pressure)
+int bmp280_get_measurement(void *ctx, float *temp, float *pressure, float *humidity)
 {
 	bmp280_context_t *c = (bmp280_context_t*)ctx;
 	int res;
@@ -207,6 +207,7 @@ int bmp280_get_measurement(void *ctx, float *temp, float *pressure)
 
 	*temp = bmp280_compensate_t(t_raw, &t_fine, c) / 100.0;
 	*pressure = bmp280_compensate_p(p_raw, t_fine, c) / 256.0;
+	*humidity = -1.0;
 
 	return 0;
 }

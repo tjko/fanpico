@@ -183,7 +183,7 @@ int dps310_start_measurement(void *ctx)
 }
 
 
-int dps310_get_measurement(void *ctx, float *temp, float *pressure)
+int dps310_get_measurement(void *ctx, float *temp, float *pressure, float *humidity)
 {
 	dps310_context_t *c = (dps310_context_t*)ctx;
 	int res;
@@ -227,6 +227,8 @@ int dps310_get_measurement(void *ctx, float *temp, float *pressure)
 	} else {
 		*pressure = c->pressure;
 	}
+
+	*humidity = -1.0;
 
 	return 0;
 }

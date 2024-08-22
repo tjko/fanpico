@@ -99,7 +99,7 @@ int mcp9808_start_measurement(void *ctx)
 }
 
 
-int mcp9808_get_measurement(void *ctx, float *temp, float *pressure)
+int mcp9808_get_measurement(void *ctx, float *temp, float *pressure, float *humidity)
 {
 	mcp9808_context_t *c = (mcp9808_context_t*)ctx;
 	uint16_t meas = 0;
@@ -113,6 +113,7 @@ int mcp9808_get_measurement(void *ctx, float *temp, float *pressure)
 
 	*temp = (double)twos_complement(meas, 13) / 16.0;
 	*pressure = -1.0;
+	*humidity = -1.0;
 
 	return 0;
 }

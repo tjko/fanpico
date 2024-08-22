@@ -58,7 +58,7 @@ extern uint i2c_current_baudrate;  // kHz
 
 typedef void* (i2c_init_func_t)(i2c_inst_t *i2c, uint8_t addr);
 typedef int (i2c_start_measurement_func_t)(void *ctx);
-typedef int (i2c_get_measurement_func_t)(void *ctx, float *temp, float *pressure);
+typedef int (i2c_get_measurement_func_t)(void *ctx, float *temp, float *pressure, float *humidity);
 
 typedef struct i2c_sensor_entry {
 	const char* name;

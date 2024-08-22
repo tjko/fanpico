@@ -104,7 +104,7 @@ int adt7410_start_measurement(void *ctx)
 }
 
 
-int adt7410_get_measurement(void *ctx, float *temp, float *pressure)
+int adt7410_get_measurement(void *ctx, float *temp, float *pressure, float *humidity)
 {
 	adt7410_context_t *c = (adt7410_context_t*)ctx;
 	int res;
@@ -128,6 +128,7 @@ int adt7410_get_measurement(void *ctx, float *temp, float *pressure)
 
 	*temp = ((int16_t)meas) / 128.0;
 	*pressure = -1.0;
+	*humidity = -1.0;
 
 	return 0;
 }

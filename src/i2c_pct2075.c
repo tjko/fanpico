@@ -101,7 +101,7 @@ int pct2075_start_measurement(void *ctx)
 }
 
 
-int pct2075_get_measurement(void *ctx, float *temp, float *pressure)
+int pct2075_get_measurement(void *ctx, float *temp, float *pressure, float *humidity)
 {
 	pct2075_context_t *c = (pct2075_context_t*)ctx;
 	uint16_t meas = 0;
@@ -116,6 +116,7 @@ int pct2075_get_measurement(void *ctx, float *temp, float *pressure)
 	meas >>= 5;
 	*temp = (double)twos_complement(meas, 11) / 8.0;
 	*pressure = -1.0;
+	*humidity = -1.0;
 
 	return 0;
 }

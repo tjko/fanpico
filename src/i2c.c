@@ -35,41 +35,48 @@
 /* i2c_adt7410.c */
 void* adt7410_init(i2c_inst_t *i2c, uint8_t addr);
 int adt7410_start_measurement(void *ctx);
-int adt7410_get_measurement(void *ctx, float *temp, float *pressure);
+int adt7410_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
+/* i2c_aht.c */
+void* aht1x_init(i2c_inst_t *i2c, uint8_t addr);
+void* aht2x_init(i2c_inst_t *i2c, uint8_t addr);
+int aht_start_measurement(void *ctx);
+int aht_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 /* i2c_bmp180.c */
 void* bmp180_init(i2c_inst_t *i2c, uint8_t addr);
 int bmp180_start_measurement(void *ctx);
-int bmp180_get_measurement(void *ctx, float *temp, float *pressure);
+int bmp180_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 /* i2c_bmp280.c */
 void* bmp280_init(i2c_inst_t *i2c, uint8_t addr);
 int bmp280_start_measurement(void *ctx);
-int bmp280_get_measurement(void *ctx, float *temp, float *pressure);
+int bmp280_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 /* i2c_dps310.c */
 void* dps310_init(i2c_inst_t *i2c, uint8_t addr);
 int dps310_start_measurement(void *ctx);
-int dps310_get_measurement(void *ctx, float *temp, float *pressure);
+int dps310_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 /* i2c_mcp9808.c */
 void* mcp9808_init(i2c_inst_t *i2c, uint8_t addr);
 int mcp9808_start_measurement(void *ctx);
-int mcp9808_get_measurement(void *ctx, float *temp, float *pressure);
+int mcp9808_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 /* i2c_pct2075.c */
 void* pct2075_init(i2c_inst_t *i2c, uint8_t addr);
 int pct2075_start_measurement(void *ctx);
-int pct2075_get_measurement(void *ctx, float *temp, float *pressure);
+int pct2075_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 /* i2c_tmp117.c */
 void* tmp117_init(i2c_inst_t *i2c, uint8_t addr);
 int tmp117_start_measurement(void *ctx);
-int tmp117_get_measurement(void *ctx, float *temp, float *pressure);
+int tmp117_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
 	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
+	{ "AHT2x", aht2x_init, aht_start_measurement, aht_get_measurement },
 	{ "BMP180", bmp180_init, bmp180_start_measurement, bmp180_get_measurement },
 	{ "BMP280", bmp280_init, bmp280_start_measurement, bmp280_get_measurement },
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
@@ -113,12 +120,12 @@ static int i2c_start_measurement(int sensor_type, void *ctx)
 	return i2c_sensor_types[sensor_type].start_measurement(ctx);
 }
 
-static int i2c_get_measurement(int sensor_type, void *ctx, float *temp, float *pressure)
+static int i2c_get_measurement(int sensor_type, void *ctx, float *temp, float *pressure, float *humidity)
 {
 	if (sensor_type < 1 || !ctx)
 		return -1;
 
-	return i2c_sensor_types[sensor_type].get_measurement(ctx, temp, pressure);
+	return i2c_sensor_types[sensor_type].get_measurement(ctx, temp, pressure, humidity);
 }
 
 
@@ -370,7 +377,6 @@ void display_i2c_status()
 
 void setup_i2c_bus(struct fanpico_config *config)
 {
-	int count = 0;
 	int res;
 
 	i2c_bus_active = false;
@@ -409,13 +415,13 @@ void setup_i2c_bus(struct fanpico_config *config)
 
 		res = i2c_init_sensor(v->i2c_type, v->i2c_addr, &ctx);
 		if (res) {
-			log_msg(LOG_NOTICE, "Failed to initialize I2C sensor: %s,%02x",
+			log_msg(LOG_NOTICE, "I2C Device %s (at 0x%02x): failed to initialize",
 				i2c_sensor_type_str(v->i2c_type), v->i2c_addr);
 			continue;
 		}
 		config->i2c_context[i] = ctx;
-		log_msg(LOG_NOTICE,"I2C Device%d: %s (at 0x%02x)", ++count,
-			i2c_sensor_type_str(v->i2c_type), v->i2c_addr);
+		log_msg(LOG_NOTICE,"I2C Device %s (at 0x%02x): mapped to vsensor%d", 
+			i2c_sensor_type_str(v->i2c_type), v->i2c_addr, i + 1);
 		i2c_temp_sensors++;
 	}
 }
@@ -428,6 +434,7 @@ int i2c_read_temps(struct fanpico_config *config)
 	int wait_time = 0;
 	float temp = 0.0;
 	float pressure = 0.0;
+	float humidity = 0.0;
 	int res;
 
 	if (!i2c_bus_active ||  i2c_temp_sensors < 1)
@@ -471,7 +478,7 @@ int i2c_read_temps(struct fanpico_config *config)
 			if (v->i2c_type < 1 || !config->i2c_context[i])
 				continue;
 
-			res = i2c_get_measurement(v->i2c_type, config->i2c_context[i], &temp, &pressure);
+			res = i2c_get_measurement(v->i2c_type, config->i2c_context[i], &temp, &pressure, &humidity);
 			if (res == 0) {
 				if (pressure > 0.0) {
 					log_msg(LOG_INFO, "vsensor%d: temperature %0.4f C, pressure %0.2f hPa",
