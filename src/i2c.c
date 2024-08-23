@@ -68,6 +68,11 @@ void* pct2075_init(i2c_inst_t *i2c, uint8_t addr);
 int pct2075_start_measurement(void *ctx);
 int pct2075_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_stts22h.c */
+void* stts22h_init(i2c_inst_t *i2c, uint8_t addr);
+int stts22h_start_measurement(void *ctx);
+int stts22h_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_tmp102.c */
 void* tmp102_init(i2c_inst_t *i2c, uint8_t addr);
 int tmp102_start_measurement(void *ctx);
@@ -87,6 +92,7 @@ static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
 	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement },
 	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement },
+	{ "STTS22H", stts22h_init, stts22h_start_measurement, stts22h_get_measurement },
 	{ "TMP102", tmp102_init, tmp102_start_measurement, tmp102_get_measurement },
 	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement },
 	{ NULL, NULL, NULL, NULL }
