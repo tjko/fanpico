@@ -54,7 +54,7 @@ void* tmp102_init(i2c_inst_t *i2c, uint8_t addr)
 	ctx->i2c = i2c;
 	ctx->addr = addr;
 
-	/* Try to detect device by T_HIGH and T_LOW register default valuues (80C and 75C) */
+	/* Try to detect device by T_HIGH and T_LOW register default values (80C and 75C) */
 
 	res  = i2c_read_register_u16(i2c, addr, REG_T_HIGH, &val);
 	if (res)
@@ -78,7 +78,6 @@ void* tmp102_init(i2c_inst_t *i2c, uint8_t addr)
 	if (res)
 		goto panic;
 
-	/* Wait for sensor to soft reset (reset should take 2ms per datasheet)  */
 	sleep_us(100);
 
 	/* Read configuration register */
@@ -102,7 +101,7 @@ int tmp102_start_measurement(void *ctx)
 {
 	/* Nothing to do, sensor is in continuous measurement mode... */
 
-	return 1000;  /* measurement should be available after 1s */
+	return 250;  /* measurement should be available after 250ms */
 }
 
 
@@ -119,7 +118,6 @@ int tmp102_get_measurement(void *ctx, float *temp, float *pressure, float *humid
 		return -2;
 
 	val = twos_complement((val >> 3), 13);
-
 	*temp = ((int16_t)val) / 16.0;
 	DEBUG_PRINT("t_raw = %d, temp=%0.2f\n", val, *temp);
 
