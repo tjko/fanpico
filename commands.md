@@ -1126,11 +1126,14 @@ Supporte I2C sensors:
 Sensor Model|Possible Addresses|Notes
 ------------|------------------|-----
 ADT7410|0x48, 0x49, 0x4a, 0x4b|16bit, 0.5C accuracy
+AHT2X||AHT2x (AHT20, AHT21 ,...)
 BMP180||16bit, 0.5C accuracy
 BMP280|0x76, 0x77|20bit, 0.5C accuracy
 DPS310|0x77, 0x76|24bit, 0.5C accuracy
 MCP9808||13bit, 0.25C accuracy
 PCT2075||11bit, 1C accuracy
+STTS22H|0x38, 0x3c, 0x3e, 0x3f|16bit, 0.5C accuracy
+TMP102|0x48, 0x49, 0x4a, 0x4b|12bit, 2C accuracy
 TMP117|0x48, 0x49, 0x4a, 0x4b|16bit, 0.1C accuracy
 
 
