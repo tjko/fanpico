@@ -563,12 +563,12 @@ int main()
 			input_buf[i_ptr++] = c;
 			if (cfg->local_echo) printf("%c", c);
 		}
-#if WATCHDOG_ENABLED
 		if (time_passed(&t_watchdog, 1000)) {
+#if WATCHDOG_ENABLED
 			log_msg(LOG_DEBUG,"watchdog update");
 			watchdog_update();
-		}
 #endif
+		}
 	}
 }
 
