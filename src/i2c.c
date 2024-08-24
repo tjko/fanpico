@@ -43,6 +43,11 @@ void* aht2x_init(i2c_inst_t *i2c, uint8_t addr);
 int aht_start_measurement(void *ctx);
 int aht_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_as621x.c */
+void* as621x_init(i2c_inst_t *i2c, uint8_t addr);
+int as621x_start_measurement(void *ctx);
+int as621x_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_bmp180.c */
 void* bmp180_init(i2c_inst_t *i2c, uint8_t addr);
 int bmp180_start_measurement(void *ctx);
@@ -87,6 +92,7 @@ static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
 	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
 	{ "AHT2x", aht2x_init, aht_start_measurement, aht_get_measurement },
+	{ "AS621x", as621x_init, as621x_start_measurement, as621x_get_measurement },
 	{ "BMP180", bmp180_init, bmp180_start_measurement, bmp180_get_measurement },
 	{ "BMP280", bmp280_init, bmp280_start_measurement, bmp280_get_measurement },
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
