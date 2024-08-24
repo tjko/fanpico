@@ -77,6 +77,7 @@ void onewire_scan_bus()
 		log_msg(LOG_INFO, "All devices in 1-Wire bus have power.");
 	} else {
 		log_msg(LOG_INFO, "1-Wire bus has devices requiring 'phantom' power.");
+		return;
 	}
 
 	/* Search for devices... */
