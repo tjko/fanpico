@@ -91,6 +91,7 @@ int tmp117_get_measurement(void *ctx, float *temp, float *pressure, float *humid
 static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
 	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
+	{ "AHT1x", aht1x_init, aht_start_measurement, aht_get_measurement },
 	{ "AHT2x", aht2x_init, aht_start_measurement, aht_get_measurement },
 	{ "AS621x", as621x_init, as621x_start_measurement, as621x_get_measurement },
 	{ "BMP180", bmp180_init, bmp180_start_measurement, bmp180_get_measurement },
