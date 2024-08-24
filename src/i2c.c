@@ -521,7 +521,7 @@ int i2c_read_temps(struct fanpico_config *config)
 		}
 		sensor = i + 1;
 		if (sensor >= VSENSOR_COUNT) {
-			wait_time = 15000;
+			wait_time = 10000;
 			step++;
 			log_msg(LOG_DEBUG, "I2C Temperature measurements complete.");
 		} else {
