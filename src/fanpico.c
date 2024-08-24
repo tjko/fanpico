@@ -450,7 +450,7 @@ int main()
 	int64_t delta;
 	int c;
 	int i_ptr = 0;
-	int i2c_temp_delay =  10000;
+	int i2c_temp_delay =  1000;
 
 
 	set_binary_info();
@@ -525,10 +525,10 @@ int main()
 
 		/* Update display every 1000ms */
 		if (time_passed(&t_display, 1000)) {
-			log_msg(LOG_DEBUG, "udpate display");
+			log_msg(LOG_DEBUG, "update display start");
 			update_system_state();
 			display_status(fanpico_state, cfg);
-			log_msg(LOG_DEBUG, "udpate display end");
+			log_msg(LOG_DEBUG, "update display end");
 		}
 
 		/* Poll I2C Temperature Sensors */
@@ -563,12 +563,12 @@ int main()
 			input_buf[i_ptr++] = c;
 			if (cfg->local_echo) printf("%c", c);
 		}
-#if WATCHDOG_ENABLED
 		if (time_passed(&t_watchdog, 1000)) {
+#if WATCHDOG_ENABLED
 			log_msg(LOG_DEBUG,"watchdog update");
 			watchdog_update();
-		}
 #endif
+		}
 	}
 }
 

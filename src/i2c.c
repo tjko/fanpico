@@ -43,6 +43,11 @@ void* aht2x_init(i2c_inst_t *i2c, uint8_t addr);
 int aht_start_measurement(void *ctx);
 int aht_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_as621x.c */
+void* as621x_init(i2c_inst_t *i2c, uint8_t addr);
+int as621x_start_measurement(void *ctx);
+int as621x_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_bmp180.c */
 void* bmp180_init(i2c_inst_t *i2c, uint8_t addr);
 int bmp180_start_measurement(void *ctx);
@@ -68,6 +73,16 @@ void* pct2075_init(i2c_inst_t *i2c, uint8_t addr);
 int pct2075_start_measurement(void *ctx);
 int pct2075_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_stts22h.c */
+void* stts22h_init(i2c_inst_t *i2c, uint8_t addr);
+int stts22h_start_measurement(void *ctx);
+int stts22h_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
+/* i2c_tmp102.c */
+void* tmp102_init(i2c_inst_t *i2c, uint8_t addr);
+int tmp102_start_measurement(void *ctx);
+int tmp102_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_tmp117.c */
 void* tmp117_init(i2c_inst_t *i2c, uint8_t addr);
 int tmp117_start_measurement(void *ctx);
@@ -76,12 +91,16 @@ int tmp117_get_measurement(void *ctx, float *temp, float *pressure, float *humid
 static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
 	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
+	{ "AHT1x", aht1x_init, aht_start_measurement, aht_get_measurement },
 	{ "AHT2x", aht2x_init, aht_start_measurement, aht_get_measurement },
+	{ "AS621x", as621x_init, as621x_start_measurement, as621x_get_measurement },
 	{ "BMP180", bmp180_init, bmp180_start_measurement, bmp180_get_measurement },
 	{ "BMP280", bmp280_init, bmp280_start_measurement, bmp280_get_measurement },
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
 	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement },
 	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement },
+	{ "STTS22H", stts22h_init, stts22h_start_measurement, stts22h_get_measurement },
+	{ "TMP102", tmp102_init, tmp102_start_measurement, tmp102_get_measurement },
 	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement },
 	{ NULL, NULL, NULL, NULL }
 };
@@ -502,7 +521,7 @@ int i2c_read_temps(struct fanpico_config *config)
 		}
 		sensor = i + 1;
 		if (sensor >= VSENSOR_COUNT) {
-			wait_time = 15000;
+			wait_time = 10000;
 			step++;
 			log_msg(LOG_DEBUG, "I2C Temperature measurements complete.");
 		} else {
