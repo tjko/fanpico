@@ -35,7 +35,6 @@
 #define REG_T_HIGH       0x03
 
 
-#define TMP102_DEVICE_ID 0x117
 
 typedef struct tmp102_context_t {
 	i2c_inst_t *i2c;
