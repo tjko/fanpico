@@ -53,6 +53,12 @@ void* tmp102_init(i2c_inst_t *i2c, uint8_t addr)
 	ctx->i2c = i2c;
 	ctx->addr = addr;
 
+
+	/* Verify configuration register read-only bits */
+	res  = i2c_read_register_u16(i2c, addr, REG_CONFIG, &val);
+	if (res || ((val & 0x600f) != 0x6000))
+		goto panic;
+
 	/* Try to detect device by T_HIGH and T_LOW register default values (80C and 75C) */
 
 	res  = i2c_read_register_u16(i2c, addr, REG_T_HIGH, &val);
