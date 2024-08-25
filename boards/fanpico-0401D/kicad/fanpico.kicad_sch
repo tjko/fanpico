@@ -5,8 +5,8 @@
 	(uuid "e63e39d7-6ac0-4ffd-8aa3-1841a4541b55")
 	(paper "A4")
 	(title_block
-		(title "FanPico-0401D v1.0")
-		(date "2024-07-22")
+		(title "FanPico-0401D v1.1")
+		(date "2024-08-15")
 		(company "Timo Kokkonen <tjko@iki.fi>")
 		(comment 3 "Fanpico firmware reference PCB.")
 	)
@@ -971,7 +971,7 @@
 				)
 			)
 		)
-		(symbol "Transistor_FET:BSS138"
+		(symbol "Transistor_FET:2N7002K"
 			(pin_names hide)
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -985,7 +985,7 @@
 					(justify left)
 				)
 			)
-			(property "Value" "BSS138"
+			(property "Value" "2N7002K"
 				(at 5.08 0 0)
 				(effects
 					(font
@@ -1005,7 +1005,7 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "https://www.onsemi.com/pub/Collateral/BSS138-D.PDF"
+			(property "Datasheet" "https://www.diodes.com/assets/Datasheets/ds30896.pdf"
 				(at 5.08 -3.81 0)
 				(effects
 					(font
@@ -1015,7 +1015,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "50V Vds, 0.22A Id, N-Channel MOSFET, SOT-23"
+			(property "Description" "0.38A Id, 60V Vds, N-Channel MOSFET, SOT-23"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1042,7 +1042,7 @@
 					(hide yes)
 				)
 			)
-			(symbol "BSS138_0_1"
+			(symbol "2N7002K_0_1"
 				(polyline
 					(pts
 						(xy 0.254 0) (xy -2.54 0)
@@ -1209,7 +1209,7 @@
 					)
 				)
 			)
-			(symbol "BSS138_1_1"
+			(symbol "2N7002K_1_1"
 				(pin input line
 					(at -5.08 0 0)
 					(length 2.54)
@@ -3409,7 +3409,7 @@
 	)
 	(wire
 		(pts
-			(xy 59.69 152.4) (xy 59.69 158.75)
+			(xy 59.69 152.4) (xy 59.69 157.48)
 		)
 		(stroke
 			(width 0)
@@ -3539,6 +3539,16 @@
 	)
 	(wire
 		(pts
+			(xy 95.25 154.94) (xy 86.36 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a2739d16-4022-4c8e-8d10-29d4e62ab466")
+	)
+	(wire
+		(pts
 			(xy 256.54 144.78) (xy 256.54 142.24)
 		)
 		(stroke
@@ -3596,16 +3606,6 @@
 			(type default)
 		)
 		(uuid "aeb321a9-5237-4c78-bac4-781a3c603cc1")
-	)
-	(wire
-		(pts
-			(xy 86.36 154.94) (xy 86.36 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b1eb6913-6e45-4739-b87a-eb6a48530c65")
 	)
 	(wire
 		(pts
@@ -5210,107 +5210,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:BSS138")
-		(at 73.66 143.51 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "27507b3f-59c1-4b4c-b970-329efd208ce6")
-		(property "Reference" "Q2"
-			(at 73.66 134.62 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "BSS138"
-			(at 73.66 137.16 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
-			(at 75.565 138.43 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/BSS138-D.PDF"
-			(at 77.47 138.43 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "Description" "50V Vds, 0.22A Id, N-Channel MOSFET, SOT-23"
-			(at 73.66 143.51 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part Number" "C82045 or C427380"
-			(at 73.66 143.51 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "JCLC Part Number" ""
-			(at 73.66 143.51 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Mouser Part Number" ""
-			(at 73.66 143.51 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "3"
-			(uuid "aaf815ce-f6da-497a-b875-a7e35b532a60")
-		)
-		(pin "2"
-			(uuid "72b29e9b-eb67-4008-a86f-b13987f3c3fb")
-		)
-		(pin "1"
-			(uuid "d3a5da77-882d-4c37-b0b2-01ac41075789")
-		)
-		(instances
-			(project ""
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "Q2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Reference_Voltage:LM4040DBZ-3")
 		(at 256.54 138.43 90)
 		(unit 1)
@@ -6204,6 +6103,72 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 59.69 157.48 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7103d435-6ca0-4652-99fb-71c41566cd18")
+		(property "Reference" "#PWR012"
+			(at 59.69 163.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 59.69 162.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 59.69 157.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 59.69 157.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 59.69 157.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4aaa9373-b4ea-41a6-8342-1527e8856e1a")
+		)
+		(instances
+			(project "fanpico"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(reference "#PWR012")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R")
 		(at 36.83 34.29 180)
 		(unit 1)
@@ -6319,7 +6284,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "10k"
+		(property "Value" "49.9k"
 			(at 88.9 149.8599 0)
 			(effects
 				(font
@@ -6355,7 +6320,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part Number" "C98220"
+		(property "LCSC Part Number" "C114624"
 			(at 86.36 148.59 0)
 			(effects
 				(font
@@ -6845,72 +6810,6 @@
 			(project "fanpico"
 				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
 					(reference "H4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+5V")
-		(at 59.69 158.75 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "93a07f42-5f13-4402-adcb-efe760d91a22")
-		(property "Reference" "#PWR06"
-			(at 59.69 154.94 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "+5V"
-			(at 59.69 162.56 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 59.69 158.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 59.69 158.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+5V\""
-			(at 59.69 158.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "1d8dd958-1ab5-4f37-b997-8cf46406f9a9")
-		)
-		(instances
-			(project "fanpico"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "#PWR06")
 					(unit 1)
 				)
 			)
@@ -7440,6 +7339,107 @@
 		)
 	)
 	(symbol
+		(lib_id "Transistor_FET:2N7002K")
+		(at 73.66 143.51 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "c8a53563-593a-4628-bfe4-3d6f26507f00")
+		(property "Reference" "Q2"
+			(at 73.66 134.62 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "2N7002K"
+			(at 73.66 137.16 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+			(at 75.565 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.diodes.com/assets/Datasheets/2N7002K.pdf"
+			(at 73.66 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Description" "0.38A Id, 60V Vds, N-Channel MOSFET, SOT-23"
+			(at 73.66 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part Number" "C85047"
+			(at 73.66 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "JCLC Part Number" ""
+			(at 73.66 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "512-2N7002K"
+			(at 73.66 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "fb142682-33ca-499e-96c8-ac910f8daf3b")
+		)
+		(pin "2"
+			(uuid "524fa9a9-2aad-4386-955e-d7b256ddfb37")
+		)
+		(pin "3"
+			(uuid "ae040668-2f95-4a6d-ab2c-9b180298fe4e")
+		)
+		(instances
+			(project "fanpico"
+				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+					(reference "Q2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Mechanical:MountingHole_Pad")
 		(at 25.4 186.69 0)
 		(unit 1)
@@ -7601,7 +7601,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 86.36 157.48 180)
+		(at 95.25 154.94 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -7609,7 +7609,7 @@
 		(dnp no)
 		(uuid "d656f0c2-917e-42c9-837c-131326c1a4dc")
 		(property "Reference" "#PWR04"
-			(at 86.36 153.67 0)
+			(at 91.44 154.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7618,7 +7618,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 86.36 167.64 90)
+			(at 105.41 154.94 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7627,7 +7627,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 86.36 157.48 0)
+			(at 95.25 154.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7636,7 +7636,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 86.36 157.48 0)
+			(at 95.25 154.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7645,7 +7645,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 86.36 157.48 0)
+			(at 95.25 154.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
