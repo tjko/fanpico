@@ -199,7 +199,7 @@ struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm)
 }
 
 
-time_t datetime_to_time(const datetime_t *datetime)
+time_t get_time_from_datetime(const datetime_t *datetime)
 {
 	struct tm tm;
 

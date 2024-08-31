@@ -498,7 +498,7 @@ int str_to_datetime(const char *str, datetime_t *t);
 char* datetime_str(char *buf, size_t size, const datetime_t *t);
 datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t);
 struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
-time_t datetime_to_time(const datetime_t *datetime);
+time_t get_time_from_datetime(const datetime_t *datetime);
 const char *mac_address_str(const uint8_t *mac);
 int valid_wifi_country(const char *country);
 int valid_hostname(const char *name);
@@ -519,7 +519,9 @@ uint32_t get_stack_pointer();
 uint32_t get_stack_free();
 void print_rp2040_meminfo();
 void print_irqinfo();
+#if PICO_SDK_VERSION_MAJOR < 2
 void watchdog_disable();
+#endif
 const char *rp2040_model_str();
 const char *pico_serial_str();
 int time_passed(absolute_time_t *t, uint32_t us);

@@ -27,16 +27,18 @@ string(RANDOM LENGTH ${EXTRA_ENTROPY_LEN} EXTRA_ENTROPY)
 
 #set(CMAKE_BUILD_TYPE Debug)
 
+pico_sdk_init()
+
 message("---------------------------------")
 message("       FANPICO_BOARD: ${FANPICO_BOARD}")
 message("          PICO_BOARD: ${PICO_BOARD}")
+message("       PICO_PLATFORM: ${PICO_PLATFORM}")
 message("FANPICO_CUSTOM_THEME: ${FANPICO_CUSTOM_THEME}")
 message(" FANPICO_CUSTOM_LOGO: ${FANPICO_CUSTOM_LOGO}")
 message("         TLS_SUPPORT: ${TLS_SUPPORT}")
 message("    CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message("---------------------------------")
 
-pico_sdk_init()
 
 
 # External libaries
@@ -222,6 +224,14 @@ target_compile_definitions(fanpico PRIVATE
   )
 
 
-pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom.ld)
+if (${PICO_SDK_VERSION_MAJOR} LESS 2)
+  pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom.ld)
+else()
+  if (${PICO_PLATFORM} MATCHES rp2350)
+    pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom_rp2350.ld)
+  else()
+    pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom_rp2040.ld)
+  endif()
+endif()
 
 # eof :-)
