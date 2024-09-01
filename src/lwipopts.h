@@ -21,11 +21,11 @@
 #define MEM_LIBC_MALLOC             0
 #endif
 #define MEM_ALIGNMENT               4
-#define MEM_SIZE                    32768
+#define MEM_SIZE                    49152
 #define MEM_SANITY_CHECK            1
 #define MEM_OVERFLOW_CHECK          1
-#define MEMP_NUM_TCP_SEG            48
-#define MEMP_NUM_TCP_PCB            16
+#define MEMP_NUM_TCP_SEG            64
+#define MEMP_NUM_TCP_PCB            32
 #define MEMP_NUM_UDP_PCB            8
 #define MEMP_NUM_ARP_QUEUE          10
 #define MEMP_NUM_SYS_TIMEOUT        (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 4)

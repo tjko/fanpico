@@ -25,7 +25,6 @@
 #include <assert.h>
 #include "hardware/rtc.h"
 #include "pico/stdlib.h"
-#include "pico/util/datetime.h"
 #include "pico/cyw43_arch.h"
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
@@ -125,13 +124,12 @@ int syslog_msg(int severity, const char *format, ...)
 {
 	va_list args;
 	char buf[SYSLOG_MAX_MSG_LEN];
-	datetime_t t;
 	struct tm tm;
 	uint16_t len;
 
 	if (!format || !syslog)
 		return 1;
-	if (!rtc_get_datetime(&t))
+	if (!rtc_get_tm(&tm))
 		return 2;
 
 	/* Build syslog 'packet' ... */
@@ -140,7 +138,6 @@ int syslog_msg(int severity, const char *format, ...)
 	snprintf(buf, 6, "<%u>",  (syslog->facility << 3) | (severity & 0x07));
 	len = strlen(buf);
 	/* timestamp */
-	datetime_to_tm(&t, &tm);
 	strftime(&buf[len], 18, "%b %e %T ", &tm);
 	len = strlen(buf);
 	/* hostname */

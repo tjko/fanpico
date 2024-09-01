@@ -25,8 +25,6 @@
 #include <math.h>
 #include <assert.h>
 #include "pico/stdlib.h"
-#include "hardware/i2c.h"
-#include "hardware/rtc.h"
 
 #include "bb_spi_lcd.h"
 #include "fanpico.h"
@@ -416,7 +414,7 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 	int i = 0;
 	char buf[64];
 	double val;
-	datetime_t t;
+	struct tm t;
 	const display_field_t *list;
 
 	list = (mode ? theme->fg : theme->bg);
@@ -512,21 +510,21 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 				snprintf(buf, 16, "%15s", network_ip());
 				break;
 			case DATE_TIME:
-				if (rtc_get_datetime(&t)) {
+				if (rtc_get_tm(&t)) {
 					snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
-						t.year, t.month, t.day, t.hour, t.min, t.sec);
+						t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
 				}
 				break;
 			case DATE:
-				if (rtc_get_datetime(&t)) {
+				if (rtc_get_tm(&t)) {
 					snprintf(buf, sizeof(buf), "%04d-%02d-%02d",
-						t.year, t.month, t.day);
+						t.tm_year + 1900, t.tm_mon + 1, t.tm_mday);
 				}
 				break;
 			case TIME:
-				if (rtc_get_datetime(&t)) {
+				if (rtc_get_tm(&t)) {
 					snprintf(buf, sizeof(buf), "%02d:%02d:%02d",
-						t.hour, t.min, t.sec);
+						t.tm_hour, t.tm_min, t.tm_sec);
 				}
 				break;
 			case UPTIME:

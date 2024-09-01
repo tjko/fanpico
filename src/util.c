@@ -19,6 +19,9 @@
    along with FanPico. If not, see <https://www.gnu.org/licenses/>.
 */
 
+
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -31,6 +34,7 @@
 #include <time.h>
 #include "b64/cencode.h"
 #include "b64/cdecode.h"
+#include "pico/aon_timer.h"
 
 #include "fanpico.h"
 
@@ -95,116 +99,69 @@ int str_to_float(const char *str, float *val)
 }
 
 
-#define GET_DIGITS(buf, n, s, dest) {		\
-		count = 0;			\
-		while (count < n) {			\
-			if (*s >= '0' && *s <= '9') {	\
-				buf[count++] = *s++;	\
-			} else {			\
-				return 0;		\
-			}				\
-		}					\
-		buf[count] = 0;				\
-		int val;				\
-		if (!str_to_int(buf, &val, 10))		\
-			return 0;			\
-		dest = val;				\
-	}
-
-int str_to_datetime(const char *str, datetime_t *t)
+time_t timespec_to_time_t(const struct timespec *ts)
 {
-	const char *s = str;
-	char buf[8];
-	int count;
-
-	if (!str || !t)
+	if (!ts)
 		return 0;
-
-	/* Expecting string in format: "YYYY-MM-DD HH:MM:SS" */
-
-	/* Year */
-	GET_DIGITS(buf, 4, s, t->year);
-	if (*s++ != '-')
-		return 0;
-	/* Month */
-	GET_DIGITS(buf, 2, s, t->month);
-	if (*s++ != '-')
-		return 0;
-	/* Day */
-	GET_DIGITS(buf, 2, s, t->day);
-	if (*s++ != ' ')
-		return 0;
-	/* Hour */
-	GET_DIGITS(buf, 2, s, t->hour);
-	if (*s++ != ':')
-		return 0;
-	/* Minutes */
-	GET_DIGITS(buf, 2, s, t->min);
-	if (*s++ != ':')
-		return 0;
-	/* Seconds */
-	GET_DIGITS(buf, 2, s, t->sec);
-
-	/* No support for day of the week. */
-	t->dotw = 0;
-
-	return 1;
+	return ts->tv_sec;
 }
 
 
-char* datetime_str(char *buf, size_t size, const datetime_t *t)
+struct timespec* time_t_to_timespec(time_t t, struct timespec *ts)
 {
-	if (!t || !buf)
+	if (!ts)
 		return NULL;
 
+	ts->tv_sec = t;
+	ts->tv_nsec = 0;
+
+	return ts;
+}
+
+
+char* time_t_to_str(char *buf, size_t size, const time_t t)
+{
+	struct tm tm;
+
+	if (!buf)
+		return NULL;
+
+	localtime_r(&t, &tm);
 	snprintf(buf, size, "%04d-%02d-%02d %02d:%02d:%02d",
-		t->year, t->month, t->day, t->hour, t->min, t->sec);
+		tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
 	return buf;
 }
 
 
-datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t)
-{
-	if (!tm || !t)
-		return NULL;
-
-	t->year = tm->tm_year + 1900;
-	t->month = tm->tm_mon + 1;
-	t->day = tm->tm_mday;
-	t->dotw = tm->tm_wday;
-	t->hour = tm->tm_hour;
-	t->min = tm->tm_min;
-	t->sec = tm->tm_sec;
-
-	return t;
-}
-
-
-struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm)
-{
-	if (!t || !tm)
-		return NULL;
-
-	tm->tm_year = t->year - 1900;
-	tm->tm_mon = t->month -1;
-	tm->tm_mday = t->day;
-	tm->tm_wday = t->dotw;
-	tm->tm_hour = t->hour;
-	tm->tm_min = t->min;
-	tm->tm_sec = t->sec;
-	tm->tm_isdst = -1;
-
-	return tm;
-}
-
-
-time_t get_time_from_datetime(const datetime_t *datetime)
+bool str_to_time_t(const char *str, time_t *t)
 {
 	struct tm tm;
 
-	datetime_to_tm(datetime, &tm);
-	return mktime(&tm);
+	if (!str || !t)
+		return false;
+
+	if (!strptime(str, "%Y-%m-%d %H:%M:%S", &tm))
+		return false;
+
+	*t = mktime(&tm);
+	return true;
+}
+
+
+bool rtc_get_tm(struct tm *tm)
+{
+	struct timespec ts;
+	time_t t;
+
+	if (!tm || !aon_timer_is_running())
+		return false;
+
+	aon_timer_get_time(&ts);
+	t = timespec_to_time_t(&ts);
+	localtime_r(&t, tm);
+
+	return true;
 }
 
 

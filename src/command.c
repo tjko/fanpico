@@ -30,9 +30,9 @@
 #include "pico/unique_id.h"
 #include "pico/bootrom.h"
 #include "pico/util/datetime.h"
+#include "pico/aon_timer.h"
 #include "pico/rand.h"
 #include "hardware/watchdog.h"
-#include "hardware/rtc.h"
 #include "cJSON.h"
 #include "fanpico.h"
 #ifdef WIFI_SUPPORT
@@ -2525,23 +2525,31 @@ int cmd_telnet_pass(const char *cmd, const char *args, int query, struct prev_cm
 
 int cmd_time(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	datetime_t t;
+	struct timespec ts;
+	time_t t;
+	char buf[32];
 
 	if (query) {
-		if (rtc_get_datetime(&t)) {
-			printf("%04d-%02d-%02d %02d:%02d:%02d\n",
-				t.year, t.month, t.day,	t.hour, t.min, t.sec);
+		if (aon_timer_is_running()) {
+			aon_timer_get_time(&ts);
+			time_t_to_str(buf, sizeof(buf), timespec_to_time_t(&ts));
+			printf("%s\n", buf);
 		}
 		return 0;
 	}
 
-	if (str_to_datetime(args, &t)) {
-		if (rtc_set_datetime(&t)) {
-			log_msg(LOG_NOTICE, "Set system clock: %04d-%02d-%02d %02d:%02d:%02d",
-				t.year, t.month, t.day, t.hour, t.min, t.sec);
-			return 0;
+	if (str_to_time_t(args, &t)) {
+		time_t_to_timespec(t, &ts);
+		if (aon_timer_is_running()) {
+			aon_timer_set_time(&ts);
+		} else {
+			aon_timer_start(&ts);
 		}
+		time_t_to_str(buf, sizeof(buf), t);
+		log_msg(LOG_NOTICE, "Set system clock: %s", buf);
+		return 0;
 	}
+
 	return 2;
 }
 

@@ -22,10 +22,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <assert.h>
-#include "hardware/rtc.h"
 #include "hardware/watchdog.h"
 #include "pico/stdlib.h"
 #include "pico/util/datetime.h"
+#include "pico/aon_timer.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
 #include "lwip/pbuf.h"
@@ -412,7 +412,7 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 
 void pico_set_system_time(long int sec)
 {
-	datetime_t t;
+	struct timespec ts;
 	struct tm *ntp;
 	time_t ntp_time = sec;
 
@@ -420,7 +420,12 @@ void pico_set_system_time(long int sec)
 	if (!(ntp = localtime(&ntp_time)))
 		return;
 
-	rtc_set_datetime(tm_to_datetime(ntp, &t));
+	time_t_to_timespec(ntp_time, &ts);
+	if (aon_timer_is_running()) {
+		aon_timer_set_time(&ts);
+	} else {
+		aon_timer_start(&ts);
+	}
 
 	log_msg(LOG_NOTICE, "SNTP Set System time: %s", asctime(ntp));
 }

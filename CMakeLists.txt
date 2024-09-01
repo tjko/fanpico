@@ -160,11 +160,11 @@ target_link_libraries(fanpico PRIVATE
   pico_stdio_uart
   pico_multicore
   pico_rand
+  pico_aon_timer
   hardware_pwm
   hardware_pio
   hardware_adc
   hardware_i2c
-  hardware_rtc
   pico-lfs
   cJSON
   ss_oled-lib

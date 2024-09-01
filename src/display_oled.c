@@ -26,7 +26,6 @@
 #include <assert.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
-#include "hardware/rtc.h"
 
 #include "ss_oled.h"
 #include "fanpico.h"
@@ -248,7 +247,7 @@ void oled_display_status(const struct fanpico_state *state,
 	char buf[64];
 	int i;
 	double rpm, pwm, temp;
-	datetime_t t;
+	struct tm t;
 	static uint32_t counter = 0;
 	static int bg_drawn = 0;
 
@@ -354,9 +353,9 @@ void oled_display_status(const struct fanpico_state *state,
 			hours % 24,
 			mins % 60,
 			secs % 60);
-		if (rtc_get_datetime(&t)) {
+		if (rtc_get_tm(&t)) {
 			oledWriteString(&oled, 0, 28, 14, buf, FONT_6x8, 0, 1);
-			snprintf(buf, sizeof(buf), "%02d:%02d:%02d", t.hour, t.min, t.sec);
+			snprintf(buf, sizeof(buf), "%02d:%02d:%02d", t.tm_hour, t.tm_min, t.tm_sec);
 			oledWriteString(&oled, 0, 16, 11, buf, FONT_12x16, 0, 1);
 		} else {
 			oledWriteString(&oled, 0, 28, 12, buf, FONT_6x8, 0, 1);
@@ -369,9 +368,9 @@ void oled_display_status(const struct fanpico_state *state,
 			hours % 24,
 			mins % 60);
 		oledWriteString(&oled, 0, 6, 7, buf, FONT_6x8, 0, 1);
-		if (rtc_get_datetime(&t)) {
+		if (rtc_get_tm(&t)) {
 			snprintf(buf, sizeof(buf), "%02d%c%02d",
-				t.hour, (secs % 2 ? ':' : ' '), t.min);
+				t.tm_hour, (t.tm_sec % 2 ? ':' : ' '), t.tm_min);
 			oledWriteString(&oled, 0, 3, 5, buf, FONT_12x16, 0, 1);
 		}
 	}
