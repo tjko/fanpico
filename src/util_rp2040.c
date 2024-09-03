@@ -73,12 +73,12 @@ void print_rp2040_meminfo()
 		get_core_num(), get_stack_free());
 }
 
-
+#if PICO_SDK_VERSION_MAJOR < 2
 void watchdog_disable()
 {
 	hw_clear_bits(&watchdog_hw->ctrl, WATCHDOG_CTRL_ENABLE_BITS);
 }
-
+#endif
 
 void print_irqinfo()
 {

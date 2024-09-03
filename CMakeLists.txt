@@ -8,13 +8,15 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.7.0
+  VERSION 1.7.1
+  DESCRIPTION "FanPico - Programmable PWM (PC) Fan Controller"
+  HOMEPAGE_URL https://kokkonen.net/fanpico/
   LANGUAGES C CXX ASM
   )
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-
+set(FANPICO_BUILD beta CACHE STRING "Fanpico Build Tag")
 set(FANPICO_BOARD 0804D CACHE STRING "Fanpico Board Model")
 #set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0804D 0401D)
 set(FANPICO_CUSTOM_THEME 0 CACHE STRING "Fanpico LCD Custom Theme")
@@ -27,16 +29,18 @@ string(RANDOM LENGTH ${EXTRA_ENTROPY_LEN} EXTRA_ENTROPY)
 
 #set(CMAKE_BUILD_TYPE Debug)
 
+pico_sdk_init()
+
 message("---------------------------------")
 message("       FANPICO_BOARD: ${FANPICO_BOARD}")
 message("          PICO_BOARD: ${PICO_BOARD}")
+message("       PICO_PLATFORM: ${PICO_PLATFORM}")
 message("FANPICO_CUSTOM_THEME: ${FANPICO_CUSTOM_THEME}")
 message(" FANPICO_CUSTOM_LOGO: ${FANPICO_CUSTOM_LOGO}")
 message("         TLS_SUPPORT: ${TLS_SUPPORT}")
 message("    CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message("---------------------------------")
 
-pico_sdk_init()
 
 
 # External libaries
@@ -158,11 +162,11 @@ target_link_libraries(fanpico PRIVATE
   pico_stdio_uart
   pico_multicore
   pico_rand
+  pico_aon_timer
   hardware_pwm
   hardware_pio
   hardware_adc
   hardware_i2c
-  hardware_rtc
   pico-lfs
   cJSON
   ss_oled-lib
@@ -222,6 +226,14 @@ target_compile_definitions(fanpico PRIVATE
   )
 
 
-pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom.ld)
+if (${PICO_SDK_VERSION_MAJOR} LESS 2)
+  pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom.ld)
+else()
+  if (${PICO_PLATFORM} MATCHES rp2350)
+    pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom_rp2350.ld)
+  else()
+    pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom_rp2040.ld)
+  endif()
+endif()
 
 # eof :-)

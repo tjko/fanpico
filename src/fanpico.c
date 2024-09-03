@@ -28,13 +28,13 @@
 #include "pico/mutex.h"
 #include "pico/multicore.h"
 #include "pico/util/datetime.h"
+#include "pico/aon_timer.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
 #endif
 #include "hardware/adc.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
-#include "hardware/rtc.h"
 #include "hardware/clocks.h"
 #include "hardware/watchdog.h"
 #include "hardware/vreg.h"
@@ -63,27 +63,24 @@ bool rebooted_by_watchdog = false;
 static char input_buf[1024];
 
 
-void update_persistent_memory_crc()
+static void update_persistent_memory_crc()
 {
 	struct persistent_memory_block *m = persistent_mem;
 
 	m->crc32 = xcrc32((unsigned char*)m, PERSISTENT_MEMORY_CRC_LEN, 0);
 }
 
-void init_persistent_memory()
+static void init_persistent_memory()
 {
 	struct persistent_memory_block *m = persistent_mem;
 	uint32_t crc;
-	char s[32];
 
 	if (m->id == PERSISTENT_MEMORY_ID) {
 		crc = xcrc32((unsigned char*)m, PERSISTENT_MEMORY_CRC_LEN, 0);
 		if (crc == m->crc32) {
 			printf("Found persistent memory block\n");
-			datetime_str(s, sizeof(s), &m->saved_time);
-			if (!rtc_set_datetime(&m->saved_time)) {
-				printf("Failed to restore RTC clock: %s\n", s);
-			}
+			if (m->saved_time.tv_sec > 0)
+				aon_timer_start(&m->saved_time);
 			if (m->uptime) {
 				m->prev_uptime = m->uptime;
 				update_persistent_memory_crc();
@@ -103,10 +100,11 @@ void init_persistent_memory()
 void update_persistent_memory()
 {
 	struct persistent_memory_block *m = persistent_mem;
-	datetime_t t;
+	struct timespec t;
 
 	if (mutex_enter_timeout_us(pmem_mutex, 100)) {
-		if (rtc_get_datetime(&t)) {
+		if (aon_timer_is_running()) {
+			aon_timer_get_time(&t);
 			m->saved_time = t;
 		}
 		m->uptime = to_us_since_boot(get_absolute_time());
@@ -117,19 +115,21 @@ void update_persistent_memory()
 	}
 }
 
+
 void boot_reason()
 {
+#if PICO_RP2040
 	printf("     CHIP_RESET: %08lx\n", vreg_and_chip_reset_hw->chip_reset);
+#endif
 	printf("WATCHDOG_REASON: %08lx\n", watchdog_hw->reason);
 }
 
-void setup()
+
+static void setup()
 {
-	datetime_t t;
 	char buf[32];
 	int i = 0;
 
-	rtc_init();
 
 	stdio_usb_init();
 	/* Wait a while for USB Serial to connect... */
@@ -176,8 +176,11 @@ void setup()
 		log_msg(LOG_NOTICE, "Uptime before soft reset: %llus\n",
 			persistent_mem->prev_uptime / 1000000);
 	}
-	if (rtc_get_datetime(&t)) {
-		log_msg(LOG_NOTICE, "RTC clock time: %s", datetime_str(buf, sizeof(buf), &t));
+	if (aon_timer_is_running()) {
+		struct timespec ts;
+		aon_timer_get_time(&ts);
+		log_msg(LOG_NOTICE, "RTC clock time: %s",
+			time_t_to_str(buf, sizeof(buf), timespec_to_time_t(&ts)));
 	}
 
 	setup_i2c_bus((struct fanpico_config *)cfg);
@@ -235,7 +238,7 @@ void setup()
 }
 
 
-void clear_state(struct fanpico_state *s)
+static void clear_state(struct fanpico_state *s)
 {
 	int i;
 
@@ -269,7 +272,7 @@ void clear_state(struct fanpico_state *s)
  *  This function updates system state from that buffer.
  */
 
-void update_system_state()
+static void update_system_state()
 {
 	if (mutex_enter_timeout_us(state_mutex, 1000)) {
 		memcpy(&system_state, &transfer_state, sizeof(system_state));
@@ -280,7 +283,7 @@ void update_system_state()
 }
 
 
-void update_outputs(struct fanpico_state *state, const struct fanpico_config *config)
+static void update_outputs(struct fanpico_state *state, const struct fanpico_config *config)
 {
 	int i;
 
@@ -319,7 +322,7 @@ void update_outputs(struct fanpico_state *state, const struct fanpico_config *co
 }
 
 
-void core1_main()
+static void core1_main()
 {
 	struct fanpico_config *config = &core1_config;
 	struct fanpico_state *state = &core1_state;
@@ -444,9 +447,10 @@ int main()
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_led, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_network, 0);
 	absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_watchdog, 0);
-	absolute_time_t t_now, t_last, t_display, t_ram, t_i2c_temp;
+	absolute_time_t t_now, t_last, t_display, t_ram, t_i2c_temp, t_led_start;
 	uint8_t led_state = 0;
 	int64_t max_delta = 0;
+	int64_t led_max_delta = 0;
 	int64_t delta;
 	int c;
 	int i_ptr = 0;
@@ -511,6 +515,7 @@ int main()
 			}
 			if (led_state != old_led_state) {
 				log_msg(LOG_DEBUG, "toggle LED start: %u", led_state);
+				t_led_start = get_absolute_time();
 #if LED_PIN > 0
 				gpio_put(LED_PIN, led_state);
 #endif
@@ -519,7 +524,13 @@ int main()
 				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
 				cyw43_arch_lwip_end();
 #endif
+				t_now = get_absolute_time();
 				log_msg(LOG_DEBUG, "toggle LED end");
+				delta = absolute_time_diff_us(t_led_start, t_now);
+				if (delta > led_max_delta) {
+					led_max_delta = delta;
+					log_msg(LOG_INFO, "core0: max_led_gpio_time=%lld", led_max_delta);
+				}
 			}
 		}
 

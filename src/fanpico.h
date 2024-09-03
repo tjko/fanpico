@@ -304,7 +304,7 @@ struct fanpico_state {
 
 struct persistent_memory_block {
 	uint32_t id;
-	datetime_t saved_time;
+	struct timespec saved_time;
 	uint64_t uptime;
 	uint64_t prev_uptime;
 	uint32_t crc32;
@@ -494,11 +494,11 @@ void print_mallinfo();
 char *trim_str(char *s);
 int str_to_int(const char *str, int *val, int base);
 int str_to_float(const char *str, float *val);
-int str_to_datetime(const char *str, datetime_t *t);
-char* datetime_str(char *buf, size_t size, const datetime_t *t);
-datetime_t *tm_to_datetime(const struct tm *tm, datetime_t *t);
-struct tm *datetime_to_tm(const datetime_t *t, struct tm *tm);
-time_t datetime_to_time(const datetime_t *datetime);
+time_t timespec_to_time_t(const struct timespec *ts);
+struct timespec* time_t_to_timespec(time_t t, struct timespec *ts);
+char* time_t_to_str(char *buf, size_t size, const time_t t);
+bool str_to_time_t(const char *str, time_t *t);
+bool rtc_get_tm(struct tm *tm);
 const char *mac_address_str(const uint8_t *mac);
 int valid_wifi_country(const char *country);
 int valid_hostname(const char *name);
@@ -519,7 +519,9 @@ uint32_t get_stack_pointer();
 uint32_t get_stack_free();
 void print_rp2040_meminfo();
 void print_irqinfo();
+#if PICO_SDK_VERSION_MAJOR < 2
 void watchdog_disable();
+#endif
 const char *rp2040_model_str();
 const char *pico_serial_str();
 int time_passed(absolute_time_t *t, uint32_t us);
