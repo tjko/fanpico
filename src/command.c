@@ -318,7 +318,7 @@ int cmd_idn(const char *cmd, const char *args, int query, struct prev_cmd_t *pre
 	pico_get_unique_board_id(&board_id);
 	for (i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; i++)
 		printf("%02x", board_id.id[i]);
-	printf(",%s\n", FANPICO_VERSION);
+	printf(",%s%s\n", FANPICO_VERSION, FANPICO_BUILD_TAG);
 
 	return 0;
 }
@@ -354,9 +354,10 @@ int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t 
 	if (cmd && !query)
 		return 1;
 
-	printf("FanPico-%s v%s (%s; %s; SDK v%s; %s)\n\n",
+	printf("FanPico-%s v%s%s (%s; %s; SDK v%s; %s)\n\n",
 		FANPICO_MODEL,
 		FANPICO_VERSION,
+		FANPICO_BUILD_TAG,
 		__DATE__,
 		PICO_CMAKE_BUILD_TYPE,
 		PICO_SDK_VERSION_STRING,

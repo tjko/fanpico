@@ -228,6 +228,7 @@ void oled_display_init()
 	int y_o = (oled_height > 64 ? 4 : 0);
 	oledWriteString(&oled, 0, 15, y_o + 1, "FanPico-" FANPICO_MODEL, FONT_8x8, 0, 1);
 	oledWriteString(&oled, 0, 40, y_o + 3, "v" FANPICO_VERSION, FONT_8x8, 0, 1);
+	oledWriteString(&oled, 0, 40, y_o + 4, " " FANPICO_BUILD_TAG, FONT_8x8, 0, 1);
 	oledWriteString(&oled, 0, 20, y_o + 6, "Initializing...", FONT_6x8, 0, 1);
 
 	oled_found = 1;

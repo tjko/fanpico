@@ -512,7 +512,8 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 			case DATE_TIME:
 				if (rtc_get_tm(&t)) {
 					snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
-						t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+						t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
+						t.tm_hour, t.tm_min, t.tm_sec);
 				}
 				break;
 			case DATE:

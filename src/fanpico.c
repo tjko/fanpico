@@ -118,7 +118,9 @@ void update_persistent_memory()
 
 void boot_reason()
 {
-//	printf("     CHIP_RESET: %08lx\n", vreg_and_chip_reset_hw->chip_reset);
+#if PICO_RP2040
+	printf("     CHIP_RESET: %08lx\n", vreg_and_chip_reset_hw->chip_reset);
+#endif
 	printf("WATCHDOG_REASON: %08lx\n", watchdog_hw->reason);
 }
 
@@ -128,8 +130,6 @@ static void setup()
 	char buf[32];
 	int i = 0;
 
-	//rtc_init();
-	//aon_timer_start_with_timeofday();
 
 	stdio_usb_init();
 	/* Wait a while for USB Serial to connect... */

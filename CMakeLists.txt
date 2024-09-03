@@ -8,13 +8,15 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.7.0
+  VERSION 1.7.1
+  DESCRIPTION "FanPico - Programmable PWM (PC) Fan Controller"
+  HOMEPAGE_URL https://kokkonen.net/fanpico/
   LANGUAGES C CXX ASM
   )
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-
+set(FANPICO_BUILD beta CACHE STRING "Fanpico Build Tag")
 set(FANPICO_BOARD 0804D CACHE STRING "Fanpico Board Model")
 #set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0804D 0401D)
 set(FANPICO_CUSTOM_THEME 0 CACHE STRING "Fanpico LCD Custom Theme")
