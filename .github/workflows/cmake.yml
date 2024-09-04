@@ -33,8 +33,8 @@ jobs:
       id: compiler-version
       run: |
         arm-none-eabi-gcc --version
-	ver=$(arm-none-eabi-gcc --version | head -1)
-	echo "CC_VERSION=$ver" >> $GITHUB_OUTPUT
+        ver=$(arm-none-eabi-gcc --version | head -1)
+        echo "CC_VERSION=$ver" >> $GITHUB_OUTPUT
 
     - name: Cache Pico-SDK
       id: cache-pico-sdk
@@ -122,8 +122,8 @@ jobs:
       run: |
         sha256sum * > sha256sums.txt
         ls -la
-	echo "## Compiler Used" >> $GITHUB_STEP_SUMMARY
-	echo "${{env.COMPILER_VERSION}}
+        echo "## Compiler Used" >> $GITHUB_STEP_SUMMARY
+        echo "${{env.COMPILER_VERSION}}
         echo "### Generated firmware files" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         cat sha256sums.txt >> $GITHUB_STEP_SUMMARY
