@@ -123,7 +123,7 @@ jobs:
         sha256sum * > sha256sums.txt
         ls -la
         echo "## Compiler Used" >> $GITHUB_STEP_SUMMARY
-        echo "${{env.COMPILER_VERSION}}
+        echo "${{env.COMPILER_VERSION}}" >> $GITHUB_STEP_SUMMARY
         echo "### Generated firmware files" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         cat sha256sums.txt >> $GITHUB_STEP_SUMMARY
