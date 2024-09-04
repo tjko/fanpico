@@ -34,7 +34,7 @@ jobs:
       run: |
         arm-none-eabi-gcc --version
         ver=$(arm-none-eabi-gcc --version | head -1)
-	echo "version: $ver"
+        echo "version: $ver"
         echo "CC_VERSION=$ver" >> $GITHUB_OUTPUT
 
     - name: Cache Pico-SDK
