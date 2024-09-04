@@ -17,7 +17,7 @@ jobs:
     outputs:
       fanpico_version: ${{steps.version-check.outputs.FANPICO_VERSION}}
       build_date: ${{steps.version-check.outputs.BUILD_DATE}}
-      compiler_version: ${{steps.compiler-version.CC_VERSION}}
+      compiler_version: ${{steps.compiler-version.outputs.CC_VERSION}}
 
     strategy:
       matrix:
@@ -34,7 +34,6 @@ jobs:
       run: |
         arm-none-eabi-gcc --version
         ver=$(arm-none-eabi-gcc --version | head -1)
-        echo "version: $ver"
         echo "CC_VERSION=$ver" >> $GITHUB_OUTPUT
 
     - name: Cache Pico-SDK
