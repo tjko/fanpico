@@ -17,7 +17,7 @@ jobs:
     outputs:
       fanpico_version: ${{steps.version-check.outputs.FANPICO_VERSION}}
       build_date: ${{steps.version-check.outputs.BUILD_DATE}}
-      compiler_version: $${{steps.compiler-version.CC_VERSION}}
+      compiler_version: ${{steps.compiler-version.CC_VERSION}}
 
     strategy:
       matrix:
@@ -34,6 +34,7 @@ jobs:
       run: |
         arm-none-eabi-gcc --version
         ver=$(arm-none-eabi-gcc --version | head -1)
+	echo "version: $ver"
         echo "CC_VERSION=$ver" >> $GITHUB_OUTPUT
 
     - name: Cache Pico-SDK
@@ -106,7 +107,7 @@ jobs:
     env:
       FANPICO_VERSION: ${{needs.build.outputs.fanpico_version}}
       BUILD_DATE: ${{needs.build.outputs.build_date}}
-      COMPILER_VERSION: $${{needs.build.outputs.compiler_version}}
+      COMPILER_VERSION: ${{needs.build.outputs.compiler_version}}
 
     steps:
 
@@ -122,7 +123,7 @@ jobs:
       run: |
         sha256sum * > sha256sums.txt
         ls -la
-        echo "## Compiler Used" >> $GITHUB_STEP_SUMMARY
+        echo "### Compiler Used" >> $GITHUB_STEP_SUMMARY
         echo "${{env.COMPILER_VERSION}}" >> $GITHUB_STEP_SUMMARY
         echo "### Generated firmware files" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
