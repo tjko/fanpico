@@ -366,6 +366,10 @@ int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t 
 	if (query)
 		printf("%s\n", credits);
 
+#ifdef __GNUC__
+	printf("Compiled with: gcc v%s\n\n", __VERSION__);
+#endif
+
 	return 0;
 }
 

@@ -386,8 +386,9 @@ char *bitmask_to_str(uint32_t mask, uint16_t len, uint8_t base, bool range)
 	static char buf[96 + 16];
 	int state = 0;
 	int prev = -2;
+	int last = 0;
 	char *s = buf;
-	int i, w, last;
+	int i, w;
 
 	buf[0] = 0;
 
