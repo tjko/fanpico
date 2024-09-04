@@ -71,13 +71,13 @@ jobs:
         repository: raspberrypi/picotool
         ref: ${{env.PICOTOOL_REF}}
         path: picotool-src
-	submodules: recursive
+        submodules: recursive
 
     - if: ${{steps.cache-picotool.outputs.cache-hit != 'true' }}
       name: Build picotool
       run: |
         cmake -S picotool-src -B picotool-src/build -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/picotool -DPICOTOOL_FLAT_INSTALL=1
-	cd picotool-src/build
+        cd picotool-src/build
         make install
 
     - name: Checkout
