@@ -23,8 +23,7 @@ jobs:
     strategy:
       matrix:
         fanpico_board: ["0804", "0804D", "0401D" ]
-#        pico_board: ["pico", "pico_w", "pico2"]
-        pico_board: ["pico_w"]
+        pico_board: ["pico", "pico_w", "pico2"]
 
     steps:
     - name: Arm GNU Toolchain (arm-none-eabi-gcc)
