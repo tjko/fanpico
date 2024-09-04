@@ -21,11 +21,15 @@ jobs:
     strategy:
       matrix:
         fanpico_board: ["0804", "0804D", "0401D" ]
-        pico_board: ["pico", "pico_w", "pico2"]
+#        pico_board: ["pico", "pico_w", "pico2"]
+        pico_board: ["pico_w"]
 
     steps:
     - name: Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
+
+    - name: Check GCC Version
+      run: arm-none-eabi-gcc --version
 
     - name: Cache Pico-SDK
       id: cache-pico-sdk
