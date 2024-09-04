@@ -76,7 +76,7 @@ jobs:
       name: Build picotool
       run: |
         cmake -S picotool-src -B picotool-src/build -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/picotool -DPICOTOOL_FLAT_INSTALL=1
-	make install
+        make install
 
     - name: Checkout
       uses: actions/checkout@v4
