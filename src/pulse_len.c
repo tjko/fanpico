@@ -1,5 +1,5 @@
 /* pulse_len.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2024 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -44,7 +44,8 @@
 uint64_t pulse_measure(int pin, bool type, bool mode, uint32_t timeout_ms)
 {
 	absolute_time_t start = get_absolute_time();
-	absolute_time_t now, pulse_start;
+	absolute_time_t pulse_start = start;
+	absolute_time_t now;
 	uint64_t timeout = timeout_ms * 1000;
 	int state = 0;
 	bool in;
