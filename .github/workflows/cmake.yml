@@ -87,7 +87,7 @@ jobs:
         submodules: recursive
 
     - name: Configure CMake
-      run: cmake -S main -B ${{github.workspace}}/main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=${{matrix.pico_board}} -DFANPICO_BOARD=${{matrix.fanpico_board}}
+      run: cmake -S main -B ${{github.workspace}}/main/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=${{matrix.pico_board}} -DFANPICO_BOARD=${{matrix.fanpico_board}} -Dpicotool_DIR=${{github.workspace}}/picotool/picotool
 
     - name: Check Source Version
       id: version-check
