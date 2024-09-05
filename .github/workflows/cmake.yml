@@ -7,6 +7,7 @@ on:
     branches: [ "main" ]
 
 env:
+  BUILD_THREADS: 4
   BUILD_TYPE: Release
   # Pico-SDK version
   PICO_SDK_REF: 2.0.0
@@ -77,7 +78,7 @@ jobs:
       run: |
         cmake -S picotool-src -B picotool-src/build -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/picotool -DPICOTOOL_FLAT_INSTALL=1
         cd picotool-src/build
-        make install
+        make -j ${{env.BUILD_THREADS}} install
 
     - name: Checkout
       uses: actions/checkout@v4
@@ -99,7 +100,7 @@ jobs:
         echo "BUILD_DATE=$date" >> $GITHUB_OUTPUT
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/main/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/main/build --config ${{env.BUILD_TYPE}} -j ${{env.BUILD_THREADS}}
 
     - name: Test
       working-directory: ${{github.workspace}}/main/build
