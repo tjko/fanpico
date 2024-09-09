@@ -568,6 +568,7 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->mqtt_temp_interval = DEFAULT_MQTT_TEMP_INTERVAL;
 	cfg->mqtt_rpm_interval = DEFAULT_MQTT_RPM_INTERVAL;
 	cfg->mqtt_duty_interval = DEFAULT_MQTT_DUTY_INTERVAL;
+	cfg->mqtt_ha_discovery_prefix[0] = 0;
 	cfg->telnet_active = false;
 	cfg->telnet_auth = true;
 	cfg->telnet_raw_mode = false;
@@ -719,6 +720,9 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	if (strlen(cfg->mqtt_mbfan_duty_topic) > 0)
 		cJSON_AddItemToObject(config, "mqtt_mbfan_duty_topic",
 				cJSON_CreateString(cfg->mqtt_mbfan_duty_topic));
+	if (strlen(cfg->mqtt_ha_discovery_prefix) > 0)
+		cJSON_AddItemToObject(config, "mqtt_ha_discovery_prefix",
+				cJSON_CreateString(cfg->mqtt_ha_discovery_prefix));
 	if (cfg->telnet_active)
 		cJSON_AddItemToObject(config, "telnet_active", cJSON_CreateNumber(cfg->telnet_active));
 	if (cfg->telnet_auth != true)
@@ -1059,6 +1063,10 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "mqtt_mbfan_duty_topic"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->mqtt_mbfan_duty_topic, val, sizeof(cfg->mqtt_mbfan_duty_topic));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_ha_discovery_prefix"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->mqtt_ha_discovery_prefix, val, sizeof(cfg->mqtt_ha_discovery_prefix));
 	}
 	if ((ref = cJSON_GetObjectItem(config, "telnet_active"))) {
 		cfg->telnet_active = cJSON_GetNumberValue(ref);

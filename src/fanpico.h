@@ -61,9 +61,9 @@
 #define WIFI_PASSWD_MAX_LEN   64
 #define WIFI_COUNTRY_MAX_LEN  3
 
-#define MQTT_MAX_TOPIC_LEN            49
-#define MQTT_MAX_USERNAME_LEN         81
-#define MQTT_MAX_PASSWORD_LEN         65
+#define MQTT_MAX_TOPIC_LEN            48
+#define MQTT_MAX_USERNAME_LEN         80
+#define MQTT_MAX_PASSWORD_LEN         64
 #define DEFAULT_MQTT_STATUS_INTERVAL  600
 #define DEFAULT_MQTT_TEMP_INTERVAL    60
 #define DEFAULT_MQTT_RPM_INTERVAL     60
@@ -249,25 +249,26 @@ struct fanpico_config {
 	uint32_t mqtt_port;
 	bool mqtt_tls;
 	bool mqtt_allow_scpi;
-	char mqtt_user[MQTT_MAX_USERNAME_LEN];
-	char mqtt_pass[MQTT_MAX_PASSWORD_LEN];
-	char mqtt_status_topic[MQTT_MAX_TOPIC_LEN];
+	char mqtt_user[MQTT_MAX_USERNAME_LEN + 1];
+	char mqtt_pass[MQTT_MAX_PASSWORD_LEN + 1];
+	char mqtt_status_topic[MQTT_MAX_TOPIC_LEN + 1];
 	uint32_t mqtt_status_interval;
-	char mqtt_cmd_topic[MQTT_MAX_TOPIC_LEN];
-	char mqtt_resp_topic[MQTT_MAX_TOPIC_LEN];
+	char mqtt_cmd_topic[MQTT_MAX_TOPIC_LEN + 1];
+	char mqtt_resp_topic[MQTT_MAX_TOPIC_LEN + 1];
 	uint16_t mqtt_temp_mask;
 	uint16_t mqtt_fan_rpm_mask;
 	uint16_t mqtt_fan_duty_mask;
 	uint16_t mqtt_mbfan_rpm_mask;
 	uint16_t mqtt_mbfan_duty_mask;
-	char mqtt_temp_topic[MQTT_MAX_TOPIC_LEN];
-	char mqtt_fan_rpm_topic[MQTT_MAX_TOPIC_LEN];
-	char mqtt_fan_duty_topic[MQTT_MAX_TOPIC_LEN];
-	char mqtt_mbfan_rpm_topic[MQTT_MAX_TOPIC_LEN];
-	char mqtt_mbfan_duty_topic[MQTT_MAX_TOPIC_LEN];
+	char mqtt_temp_topic[MQTT_MAX_TOPIC_LEN + 1];
+	char mqtt_fan_rpm_topic[MQTT_MAX_TOPIC_LEN + 1];
+	char mqtt_fan_duty_topic[MQTT_MAX_TOPIC_LEN + 1];
+	char mqtt_mbfan_rpm_topic[MQTT_MAX_TOPIC_LEN + 1];
+	char mqtt_mbfan_duty_topic[MQTT_MAX_TOPIC_LEN + 1];
 	uint32_t mqtt_temp_interval;
 	uint32_t mqtt_rpm_interval;
 	uint32_t mqtt_duty_interval;
+	char mqtt_ha_discovery_prefix[32 + 1];
 	bool telnet_active;
 	bool telnet_auth;
 	bool telnet_raw_mode;

@@ -2293,6 +2293,13 @@ int cmd_mqtt_mbfan_duty_topic(const char *cmd, const char *args, int query, stru
 			sizeof(conf->mqtt_mbfan_duty_topic), "MQTT MBFan PWM Topic", NULL);
 }
 
+int cmd_mqtt_ha_discovery(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_ha_discovery_prefix,
+			sizeof(conf->mqtt_ha_discovery_prefix), "MQTT Home Assistant Discovery Prefix", NULL);
+}
+
 int cmd_mqtt_mask_temp(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bitmask16_setting(cmd, args, query, prev_cmd,
@@ -2828,6 +2835,11 @@ const struct cmd_t mqtt_topic_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t mqtt_ha_commands[] = {
+	{ "DISCovery", 4, NULL,              cmd_mqtt_ha_discovery },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t mqtt_commands[] = {
 	{ "SERVer",    4, NULL,              cmd_mqtt_server },
 	{ "PORT",      4, NULL,              cmd_mqtt_port },
@@ -2837,6 +2849,7 @@ const struct cmd_t mqtt_commands[] = {
 #if TLS_SUPPORT
 	{ "TLS",       3, NULL,              cmd_mqtt_tls },
 #endif
+	{ "HA",        2, mqtt_ha_commands, NULL },
 	{ "INTerval",  3, mqtt_interval_commands, NULL },
 	{ "MASK",      4, mqtt_mask_commands, NULL },
 	{ "TOPIC",     5, mqtt_topic_commands, NULL },
