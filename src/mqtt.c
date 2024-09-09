@@ -445,7 +445,7 @@ void fanpico_mqtt_reconnect()
 }
 
 
-static char* json_ha_discovery_message(const char *type, int idx, bool device_info)
+static char* json_ha_discovery_message(const char *type, int idx, int count)
 {
 	char *buf;
 	cJSON *json, *d, *id;
@@ -455,16 +455,37 @@ static char* json_ha_discovery_message(const char *type, int idx, bool device_in
 		return NULL;
 
 	if (!strncmp(type, "sensor", 6)) {
-		cJSON_AddItemToObject(json, "name", cJSON_CreateString(cfg->sensors[idx - 1].name));
+		snprintf(tmp, sizeof(tmp), "Sensor: %s", cfg->sensors[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
 		cJSON_AddItemToObject(json, "device_class", cJSON_CreateString("temperature"));
 		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("°C"));
-		snprintf(tmp, sizeof(tmp), "{{ value_json.%s%d }}", type, idx);
-		cJSON_AddItemToObject(json, "value_template", cJSON_CreateString(tmp));
+	}
+	else if (!strncmp(type, "fanrpm", 6)) {
+		snprintf(tmp, sizeof(tmp), "Fan: %s", cfg->fans[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("RPM"));
+	}
+	else if (!strncmp(type, "fanpwm", 6)) {
+		snprintf(tmp, sizeof(tmp), "Fan: %s", cfg->fans[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("%"));
+	}
+	else if (!strncmp(type, "mbfanrpm", 8)) {
+		snprintf(tmp, sizeof(tmp), "MB Fan: %s", cfg->mbfans[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("RPM"));
+	}
+	else if (!strncmp(type, "mbfanpwm", 8)) {
+		snprintf(tmp, sizeof(tmp), "MB Fan: %s", cfg->mbfans[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("%"));
 	}
 	else {
 		goto panic;
 	}
 
+	snprintf(tmp, sizeof(tmp), "{{ value_json.%s%d }}", type, idx);
+	cJSON_AddItemToObject(json, "value_template", cJSON_CreateString(tmp));
 	snprintf(tmp, sizeof(tmp), "%s/state", mqtt_ha_base_topic);
 	cJSON_AddItemToObject(json, "state_topic", cJSON_CreateString(tmp));
 	snprintf(tmp, sizeof(tmp), "fanpico_%s_%s%d", pico_serial_str(), type, idx);
@@ -478,7 +499,7 @@ static char* json_ha_discovery_message(const char *type, int idx, bool device_in
 	snprintf(tmp, sizeof(tmp), "fanpico_%s", pico_serial_str());
 	cJSON_AddItemToArray(id, cJSON_CreateString(tmp));
 	cJSON_AddItemToObject(d, "identifiers", id);
-	if (device_info) {
+	if (count == 0) {
 		cJSON_AddItemToObject(d, "name", cJSON_CreateString(cfg->name));
 		cJSON_AddItemToObject(d, "manufacturer", cJSON_CreateString("TJKO Industries"));
 		cJSON_AddItemToObject(d, "model", cJSON_CreateString("FanPico"));
@@ -502,6 +523,7 @@ static void fanpico_mqtt_ha_discovery()
 {
 	char *buf;
 	char topic[100];
+	int count = 0;
 
 	if (mqtt_ha_discovery == 0)
 		return;
@@ -512,14 +534,62 @@ static void fanpico_mqtt_ha_discovery()
 	mqtt_ha_discovery = 0;
 
 	for (int i = 0; i < SENSOR_COUNT; i++) {
-		snprintf(topic, sizeof(topic), "%s_t%d/config", mqtt_ha_base_topic, i + 1);
-		if (!(buf = json_ha_discovery_message("sensor", i + 1, (i == 0 ? true : false)))) {
-			log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
-			return;
+		if (cfg->mqtt_temp_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_t%d/config", mqtt_ha_base_topic, i + 1);
+			if (!(buf = json_ha_discovery_message("sensor", i + 1, count++))) {
+				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+				return;
+			}
+			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
+			free(buf);
 		}
-		log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
-		mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
-		free(buf);
+	}
+
+	for (int i = 0; i < FAN_COUNT; i++) {
+		if (cfg->mqtt_fan_rpm_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_fr%d/config", mqtt_ha_base_topic, i + 1);
+			if (!(buf = json_ha_discovery_message("fanrpm", i + 1, count++))) {
+				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+				return;
+			}
+			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
+			free(buf);
+		}
+		if (cfg->mqtt_fan_duty_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_fp%d/config", mqtt_ha_base_topic, i + 1);
+			if (!(buf = json_ha_discovery_message("fanpwm", i + 1, count++))) {
+				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+				return;
+			}
+			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
+			free(buf);
+		}
+	}
+
+	for (int i = 0; i < MBFAN_COUNT; i++) {
+		if (cfg->mqtt_mbfan_rpm_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_mfr%d/config", mqtt_ha_base_topic, i + 1);
+			if (!(buf = json_ha_discovery_message("mbfanrpm", i + 1, count++))) {
+				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+				return;
+			}
+			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
+			free(buf);
+		}
+		if (cfg->mqtt_mbfan_duty_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_mfp%d/config", mqtt_ha_base_topic, i + 1);
+			if (!(buf = json_ha_discovery_message("mbfanpwm", i + 1, count++))) {
+				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+				return;
+			}
+			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
+			free(buf);
+		}
 	}
 }
 
@@ -533,8 +603,34 @@ static char* json_ha_state_message()
 		return NULL;
 
 	for (int i = 0; i < SENSOR_COUNT; i++) {
-		snprintf(name, sizeof(name), "sensor%d", i + 1);
-		cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->temp[i], 1)));
+		if (cfg->mqtt_temp_mask & (1 << i)) {
+			snprintf(name, sizeof(name), "sensor%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->temp[i], 1)));
+		}
+	}
+
+	for (int i = 0; i < FAN_COUNT; i++) {
+		if (cfg->mqtt_fan_rpm_mask & (1 << i)) {
+			float rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
+			snprintf(name, sizeof(name), "fanrpm%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(rpm, 0)));
+		}
+		if (cfg->mqtt_fan_duty_mask & (1 << i)) {
+			snprintf(name, sizeof(name), "fanpwm%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->fan_duty[i], 1)));
+		}
+	}
+
+	for (int i = 0; i < MBFAN_COUNT; i++) {
+		if (cfg->mqtt_mbfan_rpm_mask & (1 << i)) {
+			float rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
+			snprintf(name, sizeof(name), "mbfanrpm%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(rpm, 0)));
+		}
+		if (cfg->mqtt_mbfan_duty_mask & (1 << i)) {
+			snprintf(name, sizeof(name), "mbfanpwm%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->mbfan_duty[i], 1)));
+		}
 	}
 
 	if (!(buf = cJSON_Print(json)))
