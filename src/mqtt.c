@@ -463,21 +463,25 @@ static char* json_ha_discovery_message(const char *type, int idx, int count)
 	else if (!strncmp(type, "fanrpm", 6)) {
 		snprintf(tmp, sizeof(tmp), "Fan: %s", cfg->fans[idx - 1].name);
 		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "icon", cJSON_CreateString("mdi:fan"));
 		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("RPM"));
 	}
 	else if (!strncmp(type, "fanpwm", 6)) {
 		snprintf(tmp, sizeof(tmp), "Fan: %s", cfg->fans[idx - 1].name);
 		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "icon", cJSON_CreateString("mdi:speedometer"));
 		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("%"));
 	}
 	else if (!strncmp(type, "mbfanrpm", 8)) {
 		snprintf(tmp, sizeof(tmp), "MB Fan: %s", cfg->mbfans[idx - 1].name);
 		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "icon", cJSON_CreateString("mdi:fan"));
 		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("RPM"));
 	}
 	else if (!strncmp(type, "mbfanpwm", 8)) {
 		snprintf(tmp, sizeof(tmp), "MB Fan: %s", cfg->mbfans[idx - 1].name);
 		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "icon", cJSON_CreateString("mdi:speedometer"));
 		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("%"));
 	}
 	else {
@@ -519,10 +523,24 @@ panic:
 	return NULL;
 }
 
-static void fanpico_mqtt_ha_discovery()
+static int send_ha_discovery_msg(const char *topic, const char *type, int idx, int count)
 {
 	char *buf;
-	char topic[100];
+
+	if (!(buf = json_ha_discovery_message(type, idx, count))) {
+		log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+		return 1;
+	}
+	log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
+	mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
+	free(buf);
+
+	return 0;
+}
+
+static void fanpico_mqtt_ha_discovery()
+{
+	char topic[128];
 	int count = 0;
 
 	if (mqtt_ha_discovery == 0)
@@ -536,59 +554,34 @@ static void fanpico_mqtt_ha_discovery()
 	for (int i = 0; i < SENSOR_COUNT; i++) {
 		if (cfg->mqtt_temp_mask & (1 << i)) {
 			snprintf(topic, sizeof(topic), "%s_t%d/config", mqtt_ha_base_topic, i + 1);
-			if (!(buf = json_ha_discovery_message("sensor", i + 1, count++))) {
-				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+			if (send_ha_discovery_msg(topic, "sensor", i + 1, count++))
 				return;
-			}
-			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
-			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
-			free(buf);
 		}
 	}
 
 	for (int i = 0; i < FAN_COUNT; i++) {
 		if (cfg->mqtt_fan_rpm_mask & (1 << i)) {
 			snprintf(topic, sizeof(topic), "%s_fr%d/config", mqtt_ha_base_topic, i + 1);
-			if (!(buf = json_ha_discovery_message("fanrpm", i + 1, count++))) {
-				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+			if (send_ha_discovery_msg(topic, "fanrpm", i + 1, count++))
 				return;
-			}
-			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
-			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
-			free(buf);
 		}
 		if (cfg->mqtt_fan_duty_mask & (1 << i)) {
 			snprintf(topic, sizeof(topic), "%s_fp%d/config", mqtt_ha_base_topic, i + 1);
-			if (!(buf = json_ha_discovery_message("fanpwm", i + 1, count++))) {
-				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+			if (send_ha_discovery_msg(topic, "fanpwm", i + 1, count++))
 				return;
-			}
-			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
-			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
-			free(buf);
 		}
 	}
 
 	for (int i = 0; i < MBFAN_COUNT; i++) {
 		if (cfg->mqtt_mbfan_rpm_mask & (1 << i)) {
 			snprintf(topic, sizeof(topic), "%s_mfr%d/config", mqtt_ha_base_topic, i + 1);
-			if (!(buf = json_ha_discovery_message("mbfanrpm", i + 1, count++))) {
-				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+			if (send_ha_discovery_msg(topic, "mbfanrpm", i + 1, count++))
 				return;
-			}
-			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
-			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
-			free(buf);
 		}
 		if (cfg->mqtt_mbfan_duty_mask & (1 << i)) {
 			snprintf(topic, sizeof(topic), "%s_mfp%d/config", mqtt_ha_base_topic, i + 1);
-			if (!(buf = json_ha_discovery_message("mbfanpwm", i + 1, count++))) {
-				log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+			if (send_ha_discovery_msg(topic, "mbfanpwm", i + 1, count++))
 				return;
-			}
-			log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
-			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
-			free(buf);
 		}
 	}
 }
