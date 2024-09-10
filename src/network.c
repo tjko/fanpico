@@ -280,7 +280,7 @@ void wifi_poll()
 	}
 	if (fanpico_mqtt_client_active()) {
 		/* Check for pending SCPI command received via MQTT */
-		if (time_passed(&command_t, 250)) {
+		if (time_passed(&command_t, 500)) {
 			fanpico_mqtt_scpi_command();
 		}
 

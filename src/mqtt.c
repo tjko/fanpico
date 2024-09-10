@@ -47,13 +47,18 @@ ip_addr_t mqtt_server_ip = IPADDR4_INIT_BYTES(0, 0, 0, 0);
 u16_t mqtt_server_port = 0;
 int incoming_topic = 0;
 int mqtt_qos = 1;
+char mqtt_ha_birth_topic[64 + 1];
+char mqtt_ha_base_topic[64 + 1];
 char mqtt_scpi_cmd[MQTT_CMD_MAX_LEN];
 bool mqtt_scpi_cmd_queued = false;
 absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_mqtt_disconnect, 0);
+absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_mqtt_ha_discovery, 0);
 u16_t mqtt_reconnect = 0;
+u16_t mqtt_ha_discovery = 0;
 
 
-void mqtt_connect(mqtt_client_t *client);
+
+static void mqtt_connect(mqtt_client_t *client);
 
 
 
@@ -75,7 +80,7 @@ static void mqtt_pub_request_cb(void *arg, err_t result)
 	}
 }
 
-int mqtt_publish_message(const char *topic, const char *buf, u16_t buf_len,
+static int mqtt_publish_message(const char *topic, const char *buf, u16_t buf_len,
 			u8_t qos, u8_t retain, const char *arg)
 {
 	if (!topic || !buf || buf_len == 0)
@@ -104,7 +109,7 @@ int mqtt_publish_message(const char *topic, const char *buf, u16_t buf_len,
 	return err;
 }
 
-char* json_response_message(const char *cmd, int result, const char *msg)
+static char* json_response_message(const char *cmd, int result, const char *msg)
 {
 	char *buf;
 	cJSON *json;
@@ -127,7 +132,7 @@ panic:
 	return NULL;
 }
 
-void send_mqtt_command_response(const char *cmd, int result, const char *msg)
+static void send_mqtt_command_response(const char *cmd, int result, const char *msg)
 {
 	char *buf = NULL;
 
@@ -150,23 +155,22 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
 		topic, (unsigned int)tot_len);
 	if (!strncmp(topic, cfg->mqtt_cmd_topic, strlen(cfg->mqtt_cmd_topic) + 1)) {
 		incoming_topic = 1;
+	} else if (strlen(mqtt_ha_birth_topic) > 0) {
+		if (!strncmp(topic, mqtt_ha_birth_topic, strlen(mqtt_ha_birth_topic) + 1)) {
+			incoming_topic = 2;
+		}
 	} else {
+		log_msg(LOG_DEBUG, "Ignoring publish on unknown topic: %s", topic);
 		incoming_topic = 0;
 	}
 }
 
-static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags)
+static void incoming_fanpico_cmd(const u8_t *data, u16_t len)
 {
 	char cmd[MQTT_CMD_MAX_LEN];
 	const u8_t *end, *start;
 	int l;
 
-
-	log_msg(LOG_DEBUG, "MQTT incoming publish payload with length %d, flags %u\n",
-		len, (unsigned int)flags);
-
-	if (incoming_topic != 1 || len < 1)
-		return;
 
 	/* Check for command prefix, if found skip past prefix */
 	if ((start = memmem(data, len, "CMD:", 4))) {
@@ -208,10 +212,47 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
 
 }
 
+
+static void incoming_ha_status(const u8_t *data, u16_t len)
+{
+	/* Handle incoming Home Assistant status messages (online/offline) */
+
+	log_msg(LOG_INFO, "Home Assistant status message received: %d", len);
+
+	if (memmem(data, len, "online", 6)) {
+		log_msg(LOG_INFO, "Schedule resending HA MQTT Discovery messages");
+		mqtt_ha_discovery = 1;
+		t_mqtt_ha_discovery = get_absolute_time();
+	}
+}
+
+
+static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags)
+{
+	log_msg(LOG_DEBUG, "MQTT incoming publish payload with length %d, flags %u\n",
+		len, (unsigned int)flags);
+	if (len < 1 || !data)
+		return;
+
+	if (incoming_topic == 1) {
+		incoming_fanpico_cmd(data, len);
+	}
+	else if (incoming_topic == 2) {
+		incoming_ha_status(data, len);
+	}
+}
+
 static void mqtt_sub_request_cb(void *arg, err_t result)
 {
 	if (result != ERR_OK) {
 		log_msg(LOG_WARNING, "MQTT failed to subscribe command topic: %d", result);
+	}
+}
+
+static void mqtt_ha_sub_request_cb(void *arg, err_t result)
+{
+	if (result != ERR_OK) {
+		log_msg(LOG_WARNING, "MQTT failed to subscribe HA Birth topic: %d", result);
 	}
 }
 
@@ -224,12 +265,28 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
 			mqtt_server_port);
 		mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb, mqtt_incoming_data_cb, arg);
 		if (strlen(cfg->mqtt_cmd_topic) > 0) {
+			/* Subscribe to command topic */
 			log_msg(LOG_INFO, "MQTT subscribe to command topic: %s", cfg->mqtt_cmd_topic);
 			err_t err = mqtt_subscribe(client, cfg->mqtt_cmd_topic, 1,
 						mqtt_sub_request_cb, arg);
 			if (err != ERR_OK) {
 				log_msg(LOG_WARNING, "MQTT subscribe failed: %d", err);
 			}
+		}
+		if (strlen(cfg->mqtt_ha_discovery_prefix) > 0) {
+			/* Subscribe to Home Assistant Birth topic */
+			snprintf(mqtt_ha_birth_topic, sizeof(mqtt_ha_birth_topic), "%s/status",
+				cfg->mqtt_ha_discovery_prefix);
+			log_msg(LOG_INFO, "MQTT subscribe to HA Birth topic: %s", mqtt_ha_birth_topic);
+			err_t err = mqtt_subscribe(client, mqtt_ha_birth_topic, 1, mqtt_ha_sub_request_cb, arg);
+			if (err != ERR_OK) {
+				log_msg(LOG_WARNING, "MQTT subscribe failed: %d", err);
+			}
+
+			snprintf(mqtt_ha_base_topic, sizeof(mqtt_ha_base_topic), "%s/sensor/fanpico_%s",
+				cfg->mqtt_ha_discovery_prefix, pico_serial_str());
+			mqtt_ha_discovery = 5;
+			t_mqtt_ha_discovery = get_absolute_time();
 		}
 	}
 	else if (status == MQTT_CONNECT_DISCONNECTED) {
@@ -266,7 +323,7 @@ static void mqtt_dns_resolve_cb(const char *name, const ip_addr_t *ipaddr, void 
 	}
 }
 
-void mqtt_connect(mqtt_client_t *client)
+static void mqtt_connect(mqtt_client_t *client)
 {
 #if TLS_SUPPORT
 	static struct altcp_tls_config *tlsconfig = NULL;
@@ -280,6 +337,7 @@ void mqtt_connect(mqtt_client_t *client)
 		return;
 
 	mqtt_reconnect = 0;
+	mqtt_ha_discovery = 0;
 
 	/* Resolve domain name */
 	cyw43_arch_lwip_begin();
@@ -345,6 +403,10 @@ void fanpico_setup_mqtt_client()
 
 	ip_addr_set_zero(&mqtt_server_ip);
 	mqtt_reconnect = 0;
+	mqtt_ha_discovery = 0;
+	mqtt_ha_birth_topic[0] = 0;
+	mqtt_ha_base_topic[0] = 0;
+	mqtt_scpi_cmd[0] = 0;
 
 	cyw43_arch_lwip_begin();
 	mqtt_client = mqtt_client_new();
@@ -382,7 +444,200 @@ void fanpico_mqtt_reconnect()
 	}
 }
 
-char* json_status_message()
+
+static char* json_ha_discovery_message(const char *type, int idx, int count)
+{
+	char *buf;
+	cJSON *json, *d, *id;
+	char tmp[100];
+
+	if (!(json = cJSON_CreateObject()))
+		return NULL;
+
+	if (!strncmp(type, "sensor", 6)) {
+		snprintf(tmp, sizeof(tmp), "Sensor: %s", cfg->sensors[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "device_class", cJSON_CreateString("temperature"));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("°C"));
+	}
+	else if (!strncmp(type, "fanrpm", 6)) {
+		snprintf(tmp, sizeof(tmp), "Fan: %s", cfg->fans[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "icon", cJSON_CreateString("mdi:fan"));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("RPM"));
+	}
+	else if (!strncmp(type, "fanpwm", 6)) {
+		snprintf(tmp, sizeof(tmp), "Fan: %s", cfg->fans[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "icon", cJSON_CreateString("mdi:speedometer"));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("%"));
+	}
+	else if (!strncmp(type, "mbfanrpm", 8)) {
+		snprintf(tmp, sizeof(tmp), "MB Fan: %s", cfg->mbfans[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "icon", cJSON_CreateString("mdi:fan"));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("RPM"));
+	}
+	else if (!strncmp(type, "mbfanpwm", 8)) {
+		snprintf(tmp, sizeof(tmp), "MB Fan: %s", cfg->mbfans[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "icon", cJSON_CreateString("mdi:speedometer"));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("%"));
+	}
+	else {
+		goto panic;
+	}
+
+	snprintf(tmp, sizeof(tmp), "{{ value_json.%s%d }}", type, idx);
+	cJSON_AddItemToObject(json, "value_template", cJSON_CreateString(tmp));
+	snprintf(tmp, sizeof(tmp), "%s/state", mqtt_ha_base_topic);
+	cJSON_AddItemToObject(json, "state_topic", cJSON_CreateString(tmp));
+	snprintf(tmp, sizeof(tmp), "fanpico_%s_%s%d", pico_serial_str(), type, idx);
+	cJSON_AddItemToObject(json, "unique_id", cJSON_CreateString(tmp));
+
+	if (!(d = cJSON_CreateObject()))
+		goto panic;
+	if (!(id = cJSON_CreateArray()))
+		goto panic;
+
+	snprintf(tmp, sizeof(tmp), "fanpico_%s", pico_serial_str());
+	cJSON_AddItemToArray(id, cJSON_CreateString(tmp));
+	cJSON_AddItemToObject(d, "identifiers", id);
+	if (count == 0) {
+		cJSON_AddItemToObject(d, "name", cJSON_CreateString(cfg->name));
+		cJSON_AddItemToObject(d, "manufacturer", cJSON_CreateString("TJKO Industries"));
+		cJSON_AddItemToObject(d, "model", cJSON_CreateString("FanPico"));
+		cJSON_AddItemToObject(d, "model_id", cJSON_CreateString(FANPICO_MODEL));
+		cJSON_AddItemToObject(d, "serial_number", cJSON_CreateString(pico_serial_str()));
+		cJSON_AddItemToObject(d, "sw_version", cJSON_CreateString(FANPICO_VERSION));
+	}
+	cJSON_AddItemToObject(json, "device", d);
+
+	if (!(buf = cJSON_Print(json)))
+		goto panic;
+	cJSON_Delete(json);
+	return buf;
+
+panic:
+	cJSON_Delete(json);
+	return NULL;
+}
+
+static int send_ha_discovery_msg(const char *topic, const char *type, int idx, int count)
+{
+	char *buf;
+
+	if (!(buf = json_ha_discovery_message(type, idx, count))) {
+		log_msg(LOG_WARNING, "json_ha_discovery_message(): failed");
+		return 1;
+	}
+	log_msg(LOG_INFO, "Publish HA Discovery Message: %s (%d)", topic, strlen(buf));
+	mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
+	free(buf);
+
+	return 0;
+}
+
+static void fanpico_mqtt_ha_discovery()
+{
+	char topic[128];
+	int count = 0;
+
+	if (mqtt_ha_discovery == 0)
+		return;
+
+	if (!time_passed(&t_mqtt_ha_discovery, mqtt_ha_discovery * 1000))
+		return;
+
+	mqtt_ha_discovery = 0;
+
+	for (int i = 0; i < SENSOR_COUNT; i++) {
+		if (cfg->mqtt_temp_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_t%d/config", mqtt_ha_base_topic, i + 1);
+			if (send_ha_discovery_msg(topic, "sensor", i + 1, count++))
+				return;
+		}
+	}
+
+	for (int i = 0; i < FAN_COUNT; i++) {
+		if (cfg->mqtt_fan_rpm_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_fr%d/config", mqtt_ha_base_topic, i + 1);
+			if (send_ha_discovery_msg(topic, "fanrpm", i + 1, count++))
+				return;
+		}
+		if (cfg->mqtt_fan_duty_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_fp%d/config", mqtt_ha_base_topic, i + 1);
+			if (send_ha_discovery_msg(topic, "fanpwm", i + 1, count++))
+				return;
+		}
+	}
+
+	for (int i = 0; i < MBFAN_COUNT; i++) {
+		if (cfg->mqtt_mbfan_rpm_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_mfr%d/config", mqtt_ha_base_topic, i + 1);
+			if (send_ha_discovery_msg(topic, "mbfanrpm", i + 1, count++))
+				return;
+		}
+		if (cfg->mqtt_mbfan_duty_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_mfp%d/config", mqtt_ha_base_topic, i + 1);
+			if (send_ha_discovery_msg(topic, "mbfanpwm", i + 1, count++))
+				return;
+		}
+	}
+}
+
+static char* json_ha_state_message()
+{
+	const struct fanpico_state *st = fanpico_state;
+	cJSON *json;
+	char *buf, name[32];
+
+	if (!(json = cJSON_CreateObject()))
+		return NULL;
+
+	for (int i = 0; i < SENSOR_COUNT; i++) {
+		if (cfg->mqtt_temp_mask & (1 << i)) {
+			snprintf(name, sizeof(name), "sensor%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->temp[i], 1)));
+		}
+	}
+
+	for (int i = 0; i < FAN_COUNT; i++) {
+		if (cfg->mqtt_fan_rpm_mask & (1 << i)) {
+			float rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
+			snprintf(name, sizeof(name), "fanrpm%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(rpm, 0)));
+		}
+		if (cfg->mqtt_fan_duty_mask & (1 << i)) {
+			snprintf(name, sizeof(name), "fanpwm%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->fan_duty[i], 1)));
+		}
+	}
+
+	for (int i = 0; i < MBFAN_COUNT; i++) {
+		if (cfg->mqtt_mbfan_rpm_mask & (1 << i)) {
+			float rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
+			snprintf(name, sizeof(name), "mbfanrpm%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(rpm, 0)));
+		}
+		if (cfg->mqtt_mbfan_duty_mask & (1 << i)) {
+			snprintf(name, sizeof(name), "mbfanpwm%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->mbfan_duty[i], 1)));
+		}
+	}
+
+	if (!(buf = cJSON_Print(json)))
+		goto panic;
+	cJSON_Delete(json);
+	return buf;
+
+panic:
+	cJSON_Delete(json);
+	return NULL;
+}
+
+
+static char* json_status_message()
 {
 	const struct fanpico_state *st = fanpico_state;
 	char *buf;
@@ -461,18 +716,36 @@ void fanpico_mqtt_publish()
 {
 	char *buf = NULL;
 
-	if (!mqtt_client || strlen(cfg->mqtt_status_topic) < 1)
+	if (!mqtt_client)
 		return;
 
 	log_msg(LOG_DEBUG, "fanpico_mqtt_publish(): start");
-	/* Generate status message */
-	if (!(buf = json_status_message())) {
-		log_msg(LOG_WARNING,"json_status_message(): failed");
-		return;
+
+	if (strlen(cfg->mqtt_status_topic) > 0) {
+		/* Generate status message */
+		if (!(buf = json_status_message())) {
+			log_msg(LOG_WARNING,"json_status_message(): failed");
+			return;
+		}
+		mqtt_publish_message(cfg->mqtt_status_topic, buf, strlen(buf), mqtt_qos, 0,
+				cfg->mqtt_status_topic);
+		free(buf);
 	}
-	mqtt_publish_message(cfg->mqtt_status_topic, buf, strlen(buf), mqtt_qos, 0,
-			cfg->mqtt_status_topic);
-	free(buf);
+	if (strlen(cfg->mqtt_ha_discovery_prefix) > 0) {
+		char topic[64 + 10 + 1];
+
+		if (mqtt_ha_discovery > 0)
+			fanpico_mqtt_ha_discovery();
+		/* Generate Home Assistant State message */
+		if (!(buf = json_ha_state_message())) {
+			log_msg(LOG_WARNING,"json_ha_state_message(): failed");
+			return;
+		}
+		snprintf(topic, sizeof(topic), "%s/state", mqtt_ha_base_topic);
+		mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0, topic);
+		free(buf);
+	}
+
 	log_msg(LOG_DEBUG, "fanpico_mqtt_publish(): end");
 }
 
