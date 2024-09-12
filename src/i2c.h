@@ -26,7 +26,7 @@
 
 
 
-#define I2C_DEBUG 0
+#define I2C_DEBUG 1
 
 
 #if I2C_DEBUG > 0
