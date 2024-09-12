@@ -73,6 +73,11 @@ void* pct2075_init(i2c_inst_t *i2c, uint8_t addr);
 int pct2075_start_measurement(void *ctx);
 int pct2075_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_shtc3.c */
+void* shtc3_init(i2c_inst_t *i2c, uint8_t addr);
+int shtc3_start_measurement(void *ctx);
+int shtc3_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_stts22h.c */
 void* stts22h_init(i2c_inst_t *i2c, uint8_t addr);
 int stts22h_start_measurement(void *ctx);
@@ -99,6 +104,7 @@ static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
 	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement },
 	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement },
+	{ "SHTC3", shtc3_init, shtc3_start_measurement, shtc3_get_measurement },
 	{ "STTS22H", stts22h_init, stts22h_start_measurement, stts22h_get_measurement },
 	{ "TMP102", tmp102_init, tmp102_start_measurement, tmp102_get_measurement },
 	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement },
@@ -326,6 +332,46 @@ int i2c_write_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t va
 }
 
 
+int i2c_read_raw(i2c_inst_t *i2c, uint8_t addr, uint8_t *buf, size_t len, bool nostop)
+{
+	int res;
+
+	DEBUG_PRINT("args=%p,%02x,%p,%u\n", i2c, addr, buf, len);
+
+	res = i2c_read_timeout_us(i2c, addr, buf, len, nostop,
+				I2C_READ_TIMEOUT(len));
+	if (res < len) {
+		DEBUG_PRINT("read failed (%d)\n", res);
+		return -2;
+	}
+
+	DEBUG_PRINT("read ok: %u\n", len);
+
+	return 0;
+}
+
+
+int i2c_write_raw_u16(i2c_inst_t *i2c, uint8_t addr, uint16_t cmd, bool nostop)
+{
+	uint8_t buf[2];
+	int res;
+
+	buf[0] = cmd >> 8;
+	buf[1] = cmd & 0xff;
+
+	DEBUG_PRINT("args=%p,%02x,%04x\n", i2c, addr, cmd);
+
+	res = i2c_write_timeout_us(i2c, addr, buf, 2, nostop,
+				I2C_WRITE_TIMEOUT(2));
+	if (res < 2) {
+		DEBUG_PRINT("write failed (%d)\n", res);
+		return -1;
+	}
+
+	return 0;
+}
+
+
 uint get_i2c_sensor_type(const char *name)
 {
 	int type = -1;
@@ -434,8 +480,8 @@ void setup_i2c_bus(struct fanpico_config *config)
 
 		res = i2c_init_sensor(v->i2c_type, v->i2c_addr, &ctx);
 		if (res) {
-			log_msg(LOG_NOTICE, "I2C Device %s (at 0x%02x): failed to initialize",
-				i2c_sensor_type_str(v->i2c_type), v->i2c_addr);
+			log_msg(LOG_NOTICE, "I2C Device %s (at 0x%02x): failed to initialize: %d",
+				i2c_sensor_type_str(v->i2c_type), v->i2c_addr, res);
 			continue;
 		}
 		config->i2c_context[i] = ctx;
