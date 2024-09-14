@@ -63,6 +63,11 @@ void* dps310_init(i2c_inst_t *i2c, uint8_t addr);
 int dps310_start_measurement(void *ctx);
 int dps310_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_lps22.c */
+void* lps22_init(i2c_inst_t *i2c, uint8_t addr);
+int lps22_start_measurement(void *ctx);
+int lps22_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_lps25.c */
 void* lps25_init(i2c_inst_t *i2c, uint8_t addr);
 int lps25_start_measurement(void *ctx);
@@ -107,6 +112,7 @@ static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "BMP180", bmp180_init, bmp180_start_measurement, bmp180_get_measurement },
 	{ "BMP280", bmp280_init, bmp280_start_measurement, bmp280_get_measurement },
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
+	{ "LPS22", lps22_init, lps22_start_measurement, lps22_get_measurement },
 	{ "LPS25", lps25_init, lps25_start_measurement, lps25_get_measurement },
 	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement },
 	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement },
