@@ -226,18 +226,10 @@ int i2c_read_register_u24(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint32_t *
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
-				I2C_WRITE_TIMEOUT(1));
-	if (res < 1) {
-		DEBUG_PRINT("write failed (%d)\n", res);
+	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf));
+	if (res) {
+		DEBUG_PRINT("failed to read register\n");
 		return -1;
-	}
-
-	res = i2c_read_timeout_us(i2c, addr, buf, 3, false,
-				I2C_READ_TIMEOUT(3));
-	if (res < 3) {
-		DEBUG_PRINT("read failed (%d)\n", res);
-		return -2;
 	}
 
 	*val = (buf[0] << 16) | (buf[1] << 8) | buf[2];
@@ -253,18 +245,10 @@ int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t *
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
-				I2C_WRITE_TIMEOUT(1));
-	if (res < 1) {
-		DEBUG_PRINT("write failed (%d)\n", res);
+	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf));
+	if (res) {
+		DEBUG_PRINT("failed to read register\n");
 		return -1;
-	}
-
-	res = i2c_read_timeout_us(i2c, addr, buf, 2, false,
-				I2C_READ_TIMEOUT(2));
-	if (res < 2) {
-		DEBUG_PRINT("read failed (%d)\n", res);
-		return -2;
 	}
 
 	*val = (buf[0] << 8) | buf[1];
@@ -276,26 +260,49 @@ int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t *
 
 int i2c_read_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *val)
 {
-	uint8_t buf;
+	uint8_t buf[1];
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
-				I2C_WRITE_TIMEOUT(1));
-	if (res < 1) {
-		DEBUG_PRINT("write failed (%d)\n", res);
+	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf));
+	if (res) {
+		DEBUG_PRINT("failed to read register\n");
 		return -1;
 	}
 
-	res = i2c_read_timeout_us(i2c, addr, &buf, 1, false,
-				I2C_READ_TIMEOUT(1));
-	if (res < 1) {
-		DEBUG_PRINT("read failed (%d)\n", res);
-		return -2;
-	}
-
-	*val = buf;
+	*val = buf[0];
 	DEBUG_PRINT("read ok: %02x (%u)\n", *val, *val);
+
+	return 0;
+}
+
+
+int i2c_write_register_block(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, const uint8_t *buf, size_t len)
+{
+	uint8_t tmp[128];
+	int res;
+
+	DEBUG_PRINT("args=%p,%02x,%02x,%p,%u\n", i2c, addr, reg, buf, len);
+	tmp[0] = reg;
+	if (len >= sizeof(tmp)) {
+		DEBUG_PRINT("too large buffer: %d\n", len);
+		return -1;
+	}
+	memcpy(&tmp[1], buf, len);
+	res = i2c_write_timeout_us(i2c, addr, buf, len + 1, false,
+				I2C_WRITE_TIMEOUT(len + 1));
+	if (res < len + 1) {
+		DEBUG_PRINT("write register values failed (%d)\n", res);
+		return -2;
+	} else {
+#if I2C_DEBUG > 0
+		DEBUG_PRINT("write ok: %d [", res);
+		for(int i = 0; i <= len; i++) {
+			printf(" %02x", tmp[i]);
+		}
+		printf(" ]\n");
+#endif
+	}
 
 	return 0;
 }
