@@ -90,7 +90,10 @@ Fanpico supports following commands:
 * [MEASure:SENSORx?](#measuresensorx)
 * [MEASure:SENSORx:Read?](#measuresensorxread)
 * [MEASure:SENSORx:TEMP?](#measuresensorxtemp)
+* [MEASure:VSENSORS?](#measurevsensors)
 * [MEASure:VSENSORx?](#measurevsensorx)
+* [MEASure:VSENSORx:HUMidity?](#measurevsensorxhumidity)
+* [MEASure:VSENSORx:PREssure?](#measurevsensorxpressure)
 * [MEASure:VSENSORx:Read?](#measurevsensorxread)
 * [MEASure:VSENSORx:TEMP?](#measurevsensorxtemp)
 * [Read?](#read)
@@ -1463,6 +1466,26 @@ MEAS:SENSOR1:TEMP?
 25
 ```
 
+
+#### MEASure:VSENSORS?
+Return all measurements for all virtual sensors.
+
+Format: sensor,temperature_C,humidity_%,pressure_hPa
+
+Example:
+```
+MEAS:VSENSORS?
+vsensor1,"vsensor1",24.4,0,0
+vsensor2,"vsensor2",24.9,0,0
+vsensor3,"vsensor3",24.8,43,0
+vsensor4,"vsensor4",26.5,0,997
+vsensor5,"vsensor5",25.1,0,991
+vsensor6,"vsensor6",0.0,0,0
+vsensor7,"vsensor7",0.0,0,0
+vsensor8,"vsensor8",0.0,0,0
+```
+
+
 #### MEASure:VENSORx?
 Return current temperature (C) measured by the sensor.
 
@@ -1470,6 +1493,24 @@ Example:
 ```
 MEAS:VSENSOR1?
 25
+```
+
+#### MEASure:VSENSORx:HUMidity?
+Return current humidity (%) measured by the sensor.
+
+Example:
+```
+MEAS:VSENSOR1:HUM?
+45
+```
+
+#### MEASure:VSENSORx:PREssure?
+Return current pressure (hPa) measured by the sensor.
+
+Example:
+```
+MEAS:VSENSOR1:PRE?
+1013
 ```
 
 #### MEASure:VSENSORx:Read?

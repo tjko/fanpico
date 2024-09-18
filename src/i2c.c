@@ -566,9 +566,7 @@ int i2c_read_temps(struct fanpico_config *config)
 
 			res = i2c_get_measurement(v->i2c_type, config->i2c_context[i], &temp, &pressure, &humidity);
 			if (res == 0) {
-				if (pressure > 0.0 || humidity > 0.0 ) {
-					if (pressure > 0.0)
-						pressure /= 100.0;
+				if (pressure >= 0.0 || humidity >= 0.0 ) {
 					log_msg(LOG_DEBUG, "vsensor%d: temp=%0.4fC, pressure=%0.2fhPa, humidity=%0.2f%%",
 						i + 1, temp, pressure, humidity);
 				} else {
@@ -576,6 +574,10 @@ int i2c_read_temps(struct fanpico_config *config)
 				}
 				mutex_enter_blocking(config_mutex);
 				config->vtemp[i] = temp;
+				if (pressure >= 0.0)
+					config->vpressure[i] = pressure;
+				if (humidity >= 0.0)
+					config->vhumidity[i] = humidity;
 				config->vtemp_updated[i] = get_absolute_time();
 				mutex_exit(config_mutex);
 			} else {

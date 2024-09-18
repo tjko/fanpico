@@ -660,6 +660,24 @@ int cmd_read(const char *cmd, const char *args, int query, struct prev_cmd_t *pr
 	return 0;
 }
 
+int cmd_vsensors_read(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int i;
+
+	if (!query)
+		return 1;
+
+	for (i = 0; i < VSENSOR_COUNT; i++) {
+		printf("vsensor%d,\"%s\",%.1lf,%.0f,%0.0f\n", i+1,
+			conf->vsensors[i].name,
+			st->vtemp[i],
+			st->vhumidity[i],
+			st->vpressure[i]);
+	}
+
+	return 0;
+}
+
 int cmd_fan_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
@@ -2011,6 +2029,44 @@ int cmd_vsensor_temp(const char *cmd, const char *args, int query, struct prev_c
 	return 1;
 }
 
+int cmd_vsensor_humidity(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int sensor;
+	float d;
+
+	if (!query)
+		return 1;
+
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
+	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
+		d = st->vhumidity[sensor];
+		log_msg(LOG_DEBUG, "vsensor%d humidity = %f%%", sensor + 1, d);
+		printf("%.0f\n", d);
+		return 0;
+	}
+
+	return 1;
+}
+
+int cmd_vsensor_pressure(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int sensor;
+	float d;
+
+	if (!query)
+		return 1;
+
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
+	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
+		d = st->vpressure[sensor];
+		log_msg(LOG_DEBUG, "vsensor%d pressure = %fhPa", sensor + 1, d);
+		printf("%.0f\n", d);
+		return 0;
+	}
+
+	return 1;
+}
+
 int cmd_vsensor_filter(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
@@ -3019,6 +3075,8 @@ const struct cmd_t sensor_commands[] = {
 };
 
 const struct cmd_t vsensor_commands[] = {
+	{ "HUMidity",  3, NULL,              cmd_vsensor_humidity },
+	{ "PREssure",  3, NULL,              cmd_vsensor_pressure },
 	{ "Read",      1, NULL,              cmd_vsensor_temp },
 	{ "TEMP",      4, NULL,              cmd_vsensor_temp },
 	{ 0, 0, 0, 0 }
@@ -3029,6 +3087,7 @@ const struct cmd_t measure_commands[] = {
 	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read },
 	{ "Read",      1, NULL,              cmd_read },
 	{ "SENSOR",    6, sensor_commands,   cmd_sensor_temp },
+	{ "VSENSORS",  8, NULL,              cmd_vsensors_read },
 	{ "VSENSOR",   7, vsensor_commands,  cmd_vsensor_temp },
 	{ 0, 0, 0, 0 }
 };

@@ -278,6 +278,8 @@ struct fanpico_config {
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
+	float vhumidity[VSENSOR_MAX_COUNT];
+	float vpressure[VSENSOR_MAX_COUNT];
 	absolute_time_t vtemp_updated[VSENSOR_MAX_COUNT];
 	void *i2c_context[VSENSOR_MAX_COUNT];
 };
@@ -291,6 +293,8 @@ struct fanpico_state {
 	float temp[SENSOR_MAX_COUNT];
 	float temp_prev[SENSOR_MAX_COUNT];
 	float vtemp[VSENSOR_MAX_COUNT];
+	float vhumidity[VSENSOR_MAX_COUNT];
+	float vpressure[VSENSOR_MAX_COUNT];
 	absolute_time_t vtemp_updated[VSENSOR_MAX_COUNT];
 	float vtemp_prev[VSENSOR_MAX_COUNT];
 	float onewire_temp[ONEWIRE_MAX_COUNT];

@@ -130,6 +130,8 @@ double get_vsensor(uint8_t i, struct fanpico_config *config,
 		if (absolute_time_diff_us(config->vtemp_updated[i], state->vtemp_updated[i]) != 0) {
 			t = config->vtemp[i];
 			state->vtemp_updated[i] = config->vtemp_updated[i];
+			state->vpressure[i] = config->vpressure[i];
+			state->vhumidity[i] = config->vhumidity[i];
 		}
 		/* Check if should reset temperature back to default due to lack of updates... */
 		if (s->timeout > 0 && t != s->default_temp) {
