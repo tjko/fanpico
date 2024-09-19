@@ -145,12 +145,20 @@ Fanpico supports following commands:
 * [SYStem:MQTT:INTerval:STATUS?](#systemmqttintervalstatus-1)
 * [SYStem:MQTT:INTerval:TEMP](#systemmqttintervaltemp)
 * [SYStem:MQTT:INTerval:TEMP?](#systemmqttintervaltemp-1)
+* [SYStem:MQTT:INTerval:VSENsor](#systemmqttintervalvsensor)
+* [SYStem:MQTT:INTerval:VSENsor?](#systemmqttintervalvsensor-1)
 * [SYStem:MQTT:INTerval:RPM](#systemmqttintervalrpm)
 * [SYStem:MQTT:INTerval:RPM?](#systemmqttintervalrpm-1)
 * [SYStem:MQTT:INTerval:PWM](#systemmqttintervalpwm)
 * [SYStem:MQTT:INTerval:PWM?](#systemmqttintervalpwm-1)
 * [SYStem:MQTT:MASK:TEMP](#systemmqttmasktemp)
 * [SYStem:MQTT:MASK:TEMP?](#systemmqttmasktemp-1)
+* [SYStem:MQTT:MASK:VTEMP](#systemmqttmaskvtemp)
+* [SYStem:MQTT:MASK:VTEMP?](#systemmqttmaskvtemp-1)
+* [SYStem:MQTT:MASK:VHUMidity](#systemmqttmaskvhumidity)
+* [SYStem:MQTT:MASK:VHUMidity?](#systemmqttmaskvhumidity-1)
+* [SYStem:MQTT:MASK:VPREssure](#systemmqttmaskvpressure)
+* [SYStem:MQTT:MASK:VPREssure?](#systemmqttmaskvpressure-1)
 * [SYStem:MQTT:MASK:FANRPM](#systemmqttmaskfanrpm)
 * [SYStem:MQTT:MASK:FANRPM?](#systemmqttmaskfanrpm-1)
 * [SYStem:MQTT:MASK:FANPWM](#systemmqttmaskfanpwm)
@@ -167,6 +175,12 @@ Fanpico supports following commands:
 * [SYStem:MQTT:TOPIC:RESPonse?](#systemmqttopicresponse-1)
 * [SYStem:MQTT:TOPIC:TEMP](#systemmqtttopictemp)
 * [SYStem:MQTT:TOPIC:TEMP?](#systemmqttopictemp-1)
+* [SYStem:MQTT:TOPIC:VTEMP](#systemmqtttopicvtemp)
+* [SYStem:MQTT:TOPIC:VTEMP?](#systemmqttopicvtemp-1)
+* [SYStem:MQTT:TOPIC:VHUMidity](#systemmqtttopicvhumidity)
+* [SYStem:MQTT:TOPIC:VHUMidity?](#systemmqttopicvhumidity-1)
+* [SYStem:MQTT:TOPIC:VPREssure](#systemmqtttopicvpressure)
+* [SYStem:MQTT:TOPIC:VPREssure?](#systemmqttopicvpressure-1)
 * [SYStem:MQTT:TOPIC:FANRPM](#systemmqtttopicfanrpm)
 * [SYStem:MQTT:TOPIC:FANRPM?](#systemmqttopicfanrpm-1)
 * [SYStem:MQTT:TOPIC:FANPWM](#systemmqtttopicfanpwm)
@@ -2254,6 +2268,29 @@ SYS:MQTT:INT:TEMP?
 ```
 
 
+#### SYStem:MQTT:INTerval:VSENsor
+Configure how often unit will publish (send) virtual sensor status messages.
+Set this to 0 (seconds) to disable publishing status updates.
+Recommended values are 60 (seconds) or higher.
+
+Default: 0  (disabled)
+
+Example:
+```
+SYS:MQTT:INT:VSEN 60
+```
+
+
+#### SYStem:MQTT:INTerval:VSENsor?
+Query how often unit is setup to publish virtual sensor status messages.
+
+Example:
+```
+SYS:MQTT:INT:VSENP?
+60
+```
+
+
 #### SYStem:MQTT:INTerval:RPM
 Configure how often unit will publish (send) RPM status updates for
 fans (and mbfans).
@@ -2325,6 +2362,78 @@ Example:
 ```
 SYS:MQTT:MASK:TEMP?
 1,3
+```
+
+
+#### SYStem:MQTT:MASK:VTEMP
+Configure which virtual sensors should publish (send) temperature data to MQTT server.
+
+Sensors can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any sensor)
+
+Example:
+```
+SYS:MQTT:MASK:VTEMP 1,2,3,4
+```
+
+
+#### SYStem:MQTT:MASK:VTEMP?
+Query which virtual sensors are configured to publish (send) temperature data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:VTEMP?
+1-4
+```
+
+
+#### SYStem:MQTT:MASK:VHUMidity
+Configure which virtual sensors should publish (send) humidity data to MQTT server.
+
+Sensors can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any sensor)
+
+Example:
+```
+SYS:MQTT:MASK:VHUM 1,2
+```
+
+
+#### SYStem:MQTT:MASK:VHUMidity?
+Query which virtual sensors are configured to publish (send) humidity data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:VHUM?
+1-2
+```
+
+
+#### SYStem:MQTT:MASK:VPREssure
+Configure which virtual sensors should publish (send) pressure data to MQTT server.
+
+Sensors can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any sensor)
+
+Example:
+```
+SYS:MQTT:MASK:VPRE 1,2
+```
+
+
+#### SYStem:MQTT:MASK:VPREssure?
+Query which virtual sensors are configured to publish (send) pressure data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:VPRE?
+1-2
 ```
 
 
@@ -2502,7 +2611,7 @@ Default: <empty>
 
 Example:
 ```
-SYS:MQTT:TOPIC:TEMP musername/feeds/temp%d
+SYS:MQTT:TOPIC:TEMP mysername/feeds/temp%d
 ```
 
 
@@ -2513,6 +2622,81 @@ Example:
 ```
 SYS:MQTT:TOPIC:TEMP?
 myusername/feeds/temp%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VTEMP
+Configure topic template for publishing virtual sensor temperature data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:VTEMP mysername/feeds/vtemp%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VTEMP?
+Query currently set topic template for virtual sensor temperature data.
+
+Example:
+```
+SYS:MQTT:TOPIC:VTEMP?
+myusername/feeds/vtemp%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VHUMidity
+Configure topic template for publishing virtual sensor humidity data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:VHUM mysername/feeds/humidity%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VHUMidity?
+Query currently set topic template for virtual sensor humidity data.
+
+Example:
+```
+SYS:MQTT:TOPIC:VHUM?
+myusername/feeds/humidity%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VPREssure
+Configure topic template for publishing virtual sensor pressure data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:VPRE mysername/feeds/pressure%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VPREssure?
+Query currently set topic template for virtual sensor pressure data.
+
+Example:
+```
+SYS:MQTT:TOPIC:VPRE?
+myusername/feeds/pressure%d
 ```
 
 

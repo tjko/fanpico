@@ -460,6 +460,24 @@ static char* json_ha_discovery_message(const char *type, int idx, int count)
 		cJSON_AddItemToObject(json, "device_class", cJSON_CreateString("temperature"));
 		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("°C"));
 	}
+	else if (!strncmp(type, "vtemp", 5)) {
+		snprintf(tmp, sizeof(tmp), "Sensor: %s", cfg->vsensors[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "device_class", cJSON_CreateString("temperature"));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("°C"));
+	}
+	else if (!strncmp(type, "vhumidity", 9)) {
+		snprintf(tmp, sizeof(tmp), "Sensor: %s", cfg->vsensors[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "device_class", cJSON_CreateString("humidity"));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("%"));
+	}
+	else if (!strncmp(type, "vpressure", 9)) {
+		snprintf(tmp, sizeof(tmp), "Sensor: %s", cfg->vsensors[idx - 1].name);
+		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
+		cJSON_AddItemToObject(json, "device_class", cJSON_CreateString("pressure"));
+		cJSON_AddItemToObject(json, "unit_of_measurement", cJSON_CreateString("hPa"));
+	}
 	else if (!strncmp(type, "fanrpm", 6)) {
 		snprintf(tmp, sizeof(tmp), "Fan: %s", cfg->fans[idx - 1].name);
 		cJSON_AddItemToObject(json, "name", cJSON_CreateString(tmp));
@@ -559,6 +577,24 @@ static void fanpico_mqtt_ha_discovery()
 		}
 	}
 
+	for (int i = 0; i < VSENSOR_COUNT; i++) {
+		if (cfg->mqtt_vtemp_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_vt%d/config", mqtt_ha_base_topic, i + 1);
+			if (send_ha_discovery_msg(topic, "vtemp", i + 1, count++))
+				return;
+		}
+		if (cfg->mqtt_vhumidity_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_vh%d/config", mqtt_ha_base_topic, i + 1);
+			if (send_ha_discovery_msg(topic, "vhumidity", i + 1, count++))
+				return;
+		}
+		if (cfg->mqtt_vpressure_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), "%s_vp%d/config", mqtt_ha_base_topic, i + 1);
+			if (send_ha_discovery_msg(topic, "vpressure", i + 1, count++))
+				return;
+		}
+	}
+
 	for (int i = 0; i < FAN_COUNT; i++) {
 		if (cfg->mqtt_fan_rpm_mask & (1 << i)) {
 			snprintf(topic, sizeof(topic), "%s_fr%d/config", mqtt_ha_base_topic, i + 1);
@@ -599,6 +635,21 @@ static char* json_ha_state_message()
 		if (cfg->mqtt_temp_mask & (1 << i)) {
 			snprintf(name, sizeof(name), "sensor%d", i + 1);
 			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->temp[i], 1)));
+		}
+	}
+
+	for (int i = 0; i < VSENSOR_COUNT; i++) {
+		if (cfg->mqtt_vtemp_mask & (1 << i)) {
+			snprintf(name, sizeof(name), "vtemp%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->vtemp[i], 1)));
+		}
+		if (cfg->mqtt_vhumidity_mask & (1 << i)) {
+			snprintf(name, sizeof(name), "vhumidity%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->vhumidity[i], 0)));
+		}
+		if (cfg->mqtt_vpressure_mask & (1 << i)) {
+			snprintf(name, sizeof(name), "vpressure%d", i + 1);
+			cJSON_AddItemToObject(json, name, cJSON_CreateNumber(round_decimal(st->vpressure[i], 0)));
 		}
 	}
 
@@ -768,6 +819,39 @@ void fanpico_mqtt_publish_temp()
 		}
 	}
 	log_msg(LOG_DEBUG, "fanpico_mqtt_publish_temp(): end");
+}
+
+void fanpico_mqtt_publish_vsensor()
+{
+	const struct fanpico_state *st = fanpico_state;
+	char topic[MQTT_MAX_TOPIC_LEN + 8];
+	char buf[64];
+
+	if (!mqtt_client)
+		return;
+
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish_vsensor(): start");
+	for (int i = 0; i < VSENSOR_COUNT; i++) {
+		if (strlen(cfg->mqtt_vtemp_topic) > 0 && cfg->mqtt_vtemp_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), cfg->mqtt_vtemp_topic, i + 1);
+			snprintf(buf, sizeof(buf), "%.1f", st->vtemp[i]);
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0,
+					cfg->mqtt_vtemp_topic);
+		}
+		if (strlen(cfg->mqtt_vhumidity_topic) > 0 && cfg->mqtt_vhumidity_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), cfg->mqtt_vhumidity_topic, i + 1);
+			snprintf(buf, sizeof(buf), "%.0f", st->vhumidity[i]);
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0,
+					cfg->mqtt_vhumidity_topic);
+		}
+		if (strlen(cfg->mqtt_vpressure_topic) > 0 && cfg->mqtt_vpressure_mask & (1 << i)) {
+			snprintf(topic, sizeof(topic), cfg->mqtt_vpressure_topic, i + 1);
+			snprintf(buf, sizeof(buf), "%.0f", st->vpressure[i]);
+			mqtt_publish_message(topic, buf, strlen(buf), mqtt_qos, 0,
+					cfg->mqtt_vpressure_topic);
+		}
+	}
+	log_msg(LOG_DEBUG, "fanpico_mqtt_publish_vsensor(): end");
 }
 
 void fanpico_mqtt_publish_rpm()
