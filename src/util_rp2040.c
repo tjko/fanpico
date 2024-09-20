@@ -98,17 +98,29 @@ const char *rp2040_model_str()
 	static char buf[32];
 	uint8_t version = 0;
 	uint8_t known_chip = 0;
-	uint8_t chip_version = rp2040_chip_version();
+	uint8_t chip_version = 0;
+	char *model;
+	char r;
+
+#if PICO_RP2350
+	model = "2350";
+	r = 'A';
+	chip_version = rp2350_chip_version();
+	if (chip_version <= 2)
+		known_chip = 1;
+	version = chip_version;
+#else
+	model = "2040";
+	r = 'B';
 	uint8_t rom_version = rp2040_rom_version();
-
-
+	chip_version = rp2040_chip_version();
 	if (chip_version <= 2 && rom_version <= 3)
 		known_chip = 1;
-
 	version = rom_version - 1;
+#endif
 
-	snprintf(buf, sizeof(buf), "RP2040-B%d%s",
-		version,
+	snprintf(buf, sizeof(buf), "RP%s-%c%d%s",
+		model, r, version,
 		(known_chip ? "" : " (?)"));
 
 	return buf;

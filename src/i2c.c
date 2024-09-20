@@ -63,6 +63,16 @@ void* dps310_init(i2c_inst_t *i2c, uint8_t addr);
 int dps310_start_measurement(void *ctx);
 int dps310_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_lps22.c */
+void* lps22_init(i2c_inst_t *i2c, uint8_t addr);
+int lps22_start_measurement(void *ctx);
+int lps22_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
+/* i2c_lps25.c */
+void* lps25_init(i2c_inst_t *i2c, uint8_t addr);
+int lps25_start_measurement(void *ctx);
+int lps25_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_mcp9808.c */
 void* mcp9808_init(i2c_inst_t *i2c, uint8_t addr);
 int mcp9808_start_measurement(void *ctx);
@@ -72,6 +82,11 @@ int mcp9808_get_measurement(void *ctx, float *temp, float *pressure, float *humi
 void* pct2075_init(i2c_inst_t *i2c, uint8_t addr);
 int pct2075_start_measurement(void *ctx);
 int pct2075_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
+/* i2c_shtc3.c */
+void* shtc3_init(i2c_inst_t *i2c, uint8_t addr);
+int shtc3_start_measurement(void *ctx);
+int shtc3_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 /* i2c_stts22h.c */
 void* stts22h_init(i2c_inst_t *i2c, uint8_t addr);
@@ -97,8 +112,11 @@ static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "BMP180", bmp180_init, bmp180_start_measurement, bmp180_get_measurement },
 	{ "BMP280", bmp280_init, bmp280_start_measurement, bmp280_get_measurement },
 	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
+	{ "LPS22", lps22_init, lps22_start_measurement, lps22_get_measurement },
+	{ "LPS25", lps25_init, lps25_start_measurement, lps25_get_measurement },
 	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement },
 	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement },
+	{ "SHTC3", shtc3_init, shtc3_start_measurement, shtc3_get_measurement },
 	{ "STTS22H", stts22h_init, stts22h_start_measurement, stts22h_get_measurement },
 	{ "TMP102", tmp102_init, tmp102_start_measurement, tmp102_get_measurement },
 	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement },
@@ -208,18 +226,10 @@ int i2c_read_register_u24(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint32_t *
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
-				I2C_WRITE_TIMEOUT(1));
-	if (res < 1) {
-		DEBUG_PRINT("write failed (%d)\n", res);
+	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf));
+	if (res) {
+		DEBUG_PRINT("failed to read register\n");
 		return -1;
-	}
-
-	res = i2c_read_timeout_us(i2c, addr, buf, 3, false,
-				I2C_READ_TIMEOUT(3));
-	if (res < 3) {
-		DEBUG_PRINT("read failed (%d)\n", res);
-		return -2;
 	}
 
 	*val = (buf[0] << 16) | (buf[1] << 8) | buf[2];
@@ -235,18 +245,10 @@ int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t *
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
-				I2C_WRITE_TIMEOUT(1));
-	if (res < 1) {
-		DEBUG_PRINT("write failed (%d)\n", res);
+	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf));
+	if (res) {
+		DEBUG_PRINT("failed to read register\n");
 		return -1;
-	}
-
-	res = i2c_read_timeout_us(i2c, addr, buf, 2, false,
-				I2C_READ_TIMEOUT(2));
-	if (res < 2) {
-		DEBUG_PRINT("read failed (%d)\n", res);
-		return -2;
 	}
 
 	*val = (buf[0] << 8) | buf[1];
@@ -258,26 +260,49 @@ int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t *
 
 int i2c_read_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *val)
 {
-	uint8_t buf;
+	uint8_t buf[1];
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_write_timeout_us(i2c, addr, &reg, 1, true,
-				I2C_WRITE_TIMEOUT(1));
-	if (res < 1) {
-		DEBUG_PRINT("write failed (%d)\n", res);
+	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf));
+	if (res) {
+		DEBUG_PRINT("failed to read register\n");
 		return -1;
 	}
 
-	res = i2c_read_timeout_us(i2c, addr, &buf, 1, false,
-				I2C_READ_TIMEOUT(1));
-	if (res < 1) {
-		DEBUG_PRINT("read failed (%d)\n", res);
-		return -2;
-	}
-
-	*val = buf;
+	*val = buf[0];
 	DEBUG_PRINT("read ok: %02x (%u)\n", *val, *val);
+
+	return 0;
+}
+
+
+int i2c_write_register_block(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, const uint8_t *buf, size_t len)
+{
+	uint8_t tmp[128];
+	int res;
+
+	DEBUG_PRINT("args=%p,%02x,%02x,%p,%u\n", i2c, addr, reg, buf, len);
+	tmp[0] = reg;
+	if (len >= sizeof(tmp)) {
+		DEBUG_PRINT("too large buffer: %d\n", len);
+		return -1;
+	}
+	memcpy(&tmp[1], buf, len);
+	res = i2c_write_timeout_us(i2c, addr, buf, len + 1, false,
+				I2C_WRITE_TIMEOUT(len + 1));
+	if (res < len + 1) {
+		DEBUG_PRINT("write register values failed (%d)\n", res);
+		return -2;
+	} else {
+#if I2C_DEBUG > 0
+		DEBUG_PRINT("write ok: %d [", res);
+		for(int i = 0; i <= len; i++) {
+			printf(" %02x", tmp[i]);
+		}
+		printf(" ]\n");
+#endif
+	}
 
 	return 0;
 }
@@ -316,6 +341,46 @@ int i2c_write_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t va
 	DEBUG_PRINT("args=%p,%02x,%02x,%02x (%u)\n", i2c, addr, reg, val, val);
 
 	res = i2c_write_timeout_us(i2c, addr, buf, 2, false,
+				I2C_WRITE_TIMEOUT(2));
+	if (res < 2) {
+		DEBUG_PRINT("write failed (%d)\n", res);
+		return -1;
+	}
+
+	return 0;
+}
+
+
+int i2c_read_raw(i2c_inst_t *i2c, uint8_t addr, uint8_t *buf, size_t len, bool nostop)
+{
+	int res;
+
+	DEBUG_PRINT("args=%p,%02x,%p,%u\n", i2c, addr, buf, len);
+
+	res = i2c_read_timeout_us(i2c, addr, buf, len, nostop,
+				I2C_READ_TIMEOUT(len));
+	if (res < len) {
+		DEBUG_PRINT("read failed (%d)\n", res);
+		return -2;
+	}
+
+	DEBUG_PRINT("read ok: %u\n", len);
+
+	return 0;
+}
+
+
+int i2c_write_raw_u16(i2c_inst_t *i2c, uint8_t addr, uint16_t cmd, bool nostop)
+{
+	uint8_t buf[2];
+	int res;
+
+	buf[0] = cmd >> 8;
+	buf[1] = cmd & 0xff;
+
+	DEBUG_PRINT("args=%p,%02x,%04x\n", i2c, addr, cmd);
+
+	res = i2c_write_timeout_us(i2c, addr, buf, 2, nostop,
 				I2C_WRITE_TIMEOUT(2));
 	if (res < 2) {
 		DEBUG_PRINT("write failed (%d)\n", res);
@@ -434,8 +499,8 @@ void setup_i2c_bus(struct fanpico_config *config)
 
 		res = i2c_init_sensor(v->i2c_type, v->i2c_addr, &ctx);
 		if (res) {
-			log_msg(LOG_NOTICE, "I2C Device %s (at 0x%02x): failed to initialize",
-				i2c_sensor_type_str(v->i2c_type), v->i2c_addr);
+			log_msg(LOG_NOTICE, "I2C Device %s (at 0x%02x): failed to initialize: %d",
+				i2c_sensor_type_str(v->i2c_type), v->i2c_addr, res);
 			continue;
 		}
 		config->i2c_context[i] = ctx;
@@ -501,9 +566,7 @@ int i2c_read_temps(struct fanpico_config *config)
 
 			res = i2c_get_measurement(v->i2c_type, config->i2c_context[i], &temp, &pressure, &humidity);
 			if (res == 0) {
-				if (pressure > 0.0 || humidity > 0.0 ) {
-					if (pressure > 0.0)
-						pressure /= 100.0;
+				if (pressure >= 0.0 || humidity >= 0.0 ) {
 					log_msg(LOG_DEBUG, "vsensor%d: temp=%0.4fC, pressure=%0.2fhPa, humidity=%0.2f%%",
 						i + 1, temp, pressure, humidity);
 				} else {
@@ -511,6 +574,8 @@ int i2c_read_temps(struct fanpico_config *config)
 				}
 				mutex_enter_blocking(config_mutex);
 				config->vtemp[i] = temp;
+				config->vpressure[i] = pressure;
+				config->vhumidity[i] = humidity;
 				config->vtemp_updated[i] = get_absolute_time();
 				mutex_exit(config_mutex);
 			} else {

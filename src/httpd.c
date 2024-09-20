@@ -81,11 +81,13 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 		}
 		for (i = 0; i < VSENSOR_COUNT; i++) {
 			pwm = sensor_get_duty(&cfg->vsensors[i].map, st->vtemp[i]);
-			snprintf(row, sizeof(row), "vsensor%d,\"%s\",%.1lf,%.1lf\n",
+			snprintf(row, sizeof(row), "vsensor%d,\"%s\",%.1lf,%.1lf,%.0f,%.0f\n",
 				i+1,
 				cfg->vsensors[i].name,
 				st->vtemp[i],
-				pwm);
+				pwm,
+				st->vhumidity[i],
+				st->vpressure[i]);
 			strncatenate(buf, row, BUF_LEN);
 		}
 
@@ -200,6 +202,10 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 			cJSON_AddItemToObject(o, "name", cJSON_CreateString(cfg->vsensors[i].name));
 			cJSON_AddItemToObject(o, "temperature", cJSON_CreateNumber(round_decimal(st->vtemp[i], 1)));
 			cJSON_AddItemToObject(o, "duty_cycle", cJSON_CreateNumber(round_decimal(pwm, 1)));
+			if (st->vhumidity[i] >= 0.0)
+				cJSON_AddItemToObject(o, "humidity", cJSON_CreateNumber(round_decimal(st->vhumidity[i], 1)));
+			if (st->vpressure[i] >= 0.0)
+				cJSON_AddItemToObject(o, "pressure", cJSON_CreateNumber(round_decimal(st->vpressure[i], 1)));
 			cJSON_AddItemToArray(array, o);
 		}
 		cJSON_AddItemToObject(json, "vsensors", array);
@@ -316,10 +322,23 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	else if (!strncmp(tag, "vsenrow", 7)) {
 		uint8_t i = tag[7] - '1';
 		if (i < VSENSOR_COUNT) {
-			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td align=\"right\">%0.1f &#x2103;",
-					i + 1,
-					cfg->vsensors[i].name,
-					st->vtemp[i]);
+			char other[24], tmp[12];
+
+			other[0] = 0;
+			if (st->vhumidity[i] >= 0.0) {
+				snprintf(tmp, sizeof(tmp), "%0.0f %%rh", st->vhumidity[i]);
+				strncatenate(other, tmp, sizeof(other));
+			}
+			if (st->vpressure[i] >= 0.0) {
+				snprintf(tmp, sizeof(tmp), "%0.0f hPa", st->vpressure[i]);
+				if (strlen(other) > 0)
+					strncatenate(other, ", ", sizeof(other));
+				strncatenate(other, tmp, sizeof(other));
+			}
+
+			printed = snprintf(insert, insertlen,
+					"<td>%d<td>%s<td align=\"right\">%0.1f &#x2103;<td>%s",
+					i + 1, cfg->vsensors[i].name, st->vtemp[i], other);
 		}
 	}
 	else if (!strncmp(tag, "csvstat", 7)) {

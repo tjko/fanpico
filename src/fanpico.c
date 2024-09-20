@@ -262,6 +262,8 @@ static void clear_state(struct fanpico_state *s)
 		s->vtemp[i] = 0.0;
 		s->vtemp_prev[i] = 0.0;
 		s->vtemp_updated[i] = from_us_since_boot(0);
+		s->vpressure[i] = -1.0;
+		s->vhumidity[i] = -1.0;
 	}
 }
 

@@ -256,16 +256,23 @@ struct fanpico_config {
 	char mqtt_cmd_topic[MQTT_MAX_TOPIC_LEN + 1];
 	char mqtt_resp_topic[MQTT_MAX_TOPIC_LEN + 1];
 	uint16_t mqtt_temp_mask;
+	uint16_t mqtt_vtemp_mask;
+	uint16_t mqtt_vhumidity_mask;
+	uint16_t mqtt_vpressure_mask;
 	uint16_t mqtt_fan_rpm_mask;
 	uint16_t mqtt_fan_duty_mask;
 	uint16_t mqtt_mbfan_rpm_mask;
 	uint16_t mqtt_mbfan_duty_mask;
 	char mqtt_temp_topic[MQTT_MAX_TOPIC_LEN + 1];
+	char mqtt_vtemp_topic[MQTT_MAX_TOPIC_LEN + 1];
+	char mqtt_vhumidity_topic[MQTT_MAX_TOPIC_LEN + 1];
+	char mqtt_vpressure_topic[MQTT_MAX_TOPIC_LEN + 1];
 	char mqtt_fan_rpm_topic[MQTT_MAX_TOPIC_LEN + 1];
 	char mqtt_fan_duty_topic[MQTT_MAX_TOPIC_LEN + 1];
 	char mqtt_mbfan_rpm_topic[MQTT_MAX_TOPIC_LEN + 1];
 	char mqtt_mbfan_duty_topic[MQTT_MAX_TOPIC_LEN + 1];
 	uint32_t mqtt_temp_interval;
+	uint32_t mqtt_vsensor_interval;
 	uint32_t mqtt_rpm_interval;
 	uint32_t mqtt_duty_interval;
 	char mqtt_ha_discovery_prefix[32 + 1];
@@ -278,6 +285,8 @@ struct fanpico_config {
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
+	float vhumidity[VSENSOR_MAX_COUNT];
+	float vpressure[VSENSOR_MAX_COUNT];
 	absolute_time_t vtemp_updated[VSENSOR_MAX_COUNT];
 	void *i2c_context[VSENSOR_MAX_COUNT];
 };
@@ -291,6 +300,8 @@ struct fanpico_state {
 	float temp[SENSOR_MAX_COUNT];
 	float temp_prev[SENSOR_MAX_COUNT];
 	float vtemp[VSENSOR_MAX_COUNT];
+	float vhumidity[VSENSOR_MAX_COUNT];
+	float vpressure[VSENSOR_MAX_COUNT];
 	absolute_time_t vtemp_updated[VSENSOR_MAX_COUNT];
 	float vtemp_prev[VSENSOR_MAX_COUNT];
 	float onewire_temp[ONEWIRE_MAX_COUNT];
@@ -412,6 +423,7 @@ int fanpico_mqtt_client_active();
 void fanpico_mqtt_reconnect();
 void fanpico_mqtt_publish();
 void fanpico_mqtt_publish_temp();
+void fanpico_mqtt_publish_vsensor();
 void fanpico_mqtt_publish_rpm();
 void fanpico_mqtt_publish_duty();
 void fanpico_mqtt_scpi_command();

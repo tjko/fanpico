@@ -68,6 +68,8 @@ Fanpico supports following commands:
 * [CONFigure:SENSORx:TEMPNominal?](#configuresensorxtempnominal-1)
 * [CONFigure:SENSORx:FILTER](#configuresensorxfilter)
 * [CONFigure:SENSORx:FILTER?](#configuresensorxfilter-1)
+* [CONFigure:VSENSORS?](#systemvsensors)
+* [CONFigure:VSENSORS:SOUrces?](#systemvsensorssources)
 * [CONFigure:VSENSORx:NAME](#configurevsensorxname)
 * [CONFigure:VSENSORx:NAME?](#configurevsensorxname-1)
 * [CONFigure:VSENSORx:SOUrce](#configurevsensorxsource)
@@ -90,7 +92,10 @@ Fanpico supports following commands:
 * [MEASure:SENSORx?](#measuresensorx)
 * [MEASure:SENSORx:Read?](#measuresensorxread)
 * [MEASure:SENSORx:TEMP?](#measuresensorxtemp)
+* [MEASure:VSENSORS?](#measurevsensors)
 * [MEASure:VSENSORx?](#measurevsensorx)
+* [MEASure:VSENSORx:HUMidity?](#measurevsensorxhumidity)
+* [MEASure:VSENSORx:PREssure?](#measurevsensorxpressure)
 * [MEASure:VSENSORx:Read?](#measurevsensorxread)
 * [MEASure:VSENSORx:TEMP?](#measurevsensorxtemp)
 * [Read?](#read)
@@ -142,12 +147,20 @@ Fanpico supports following commands:
 * [SYStem:MQTT:INTerval:STATUS?](#systemmqttintervalstatus-1)
 * [SYStem:MQTT:INTerval:TEMP](#systemmqttintervaltemp)
 * [SYStem:MQTT:INTerval:TEMP?](#systemmqttintervaltemp-1)
+* [SYStem:MQTT:INTerval:VSENsor](#systemmqttintervalvsensor)
+* [SYStem:MQTT:INTerval:VSENsor?](#systemmqttintervalvsensor-1)
 * [SYStem:MQTT:INTerval:RPM](#systemmqttintervalrpm)
 * [SYStem:MQTT:INTerval:RPM?](#systemmqttintervalrpm-1)
 * [SYStem:MQTT:INTerval:PWM](#systemmqttintervalpwm)
 * [SYStem:MQTT:INTerval:PWM?](#systemmqttintervalpwm-1)
 * [SYStem:MQTT:MASK:TEMP](#systemmqttmasktemp)
 * [SYStem:MQTT:MASK:TEMP?](#systemmqttmasktemp-1)
+* [SYStem:MQTT:MASK:VTEMP](#systemmqttmaskvtemp)
+* [SYStem:MQTT:MASK:VTEMP?](#systemmqttmaskvtemp-1)
+* [SYStem:MQTT:MASK:VHUMidity](#systemmqttmaskvhumidity)
+* [SYStem:MQTT:MASK:VHUMidity?](#systemmqttmaskvhumidity-1)
+* [SYStem:MQTT:MASK:VPREssure](#systemmqttmaskvpressure)
+* [SYStem:MQTT:MASK:VPREssure?](#systemmqttmaskvpressure-1)
 * [SYStem:MQTT:MASK:FANRPM](#systemmqttmaskfanrpm)
 * [SYStem:MQTT:MASK:FANRPM?](#systemmqttmaskfanrpm-1)
 * [SYStem:MQTT:MASK:FANPWM](#systemmqttmaskfanpwm)
@@ -164,6 +177,12 @@ Fanpico supports following commands:
 * [SYStem:MQTT:TOPIC:RESPonse?](#systemmqttopicresponse-1)
 * [SYStem:MQTT:TOPIC:TEMP](#systemmqtttopictemp)
 * [SYStem:MQTT:TOPIC:TEMP?](#systemmqttopictemp-1)
+* [SYStem:MQTT:TOPIC:VTEMP](#systemmqtttopicvtemp)
+* [SYStem:MQTT:TOPIC:VTEMP?](#systemmqttopicvtemp-1)
+* [SYStem:MQTT:TOPIC:VHUMidity](#systemmqtttopicvhumidity)
+* [SYStem:MQTT:TOPIC:VHUMidity?](#systemmqttopicvhumidity-1)
+* [SYStem:MQTT:TOPIC:VPREssure](#systemmqtttopicvpressure)
+* [SYStem:MQTT:TOPIC:VPREssure?](#systemmqttopicvpressure-1)
 * [SYStem:MQTT:TOPIC:FANRPM](#systemmqtttopicfanrpm)
 * [SYStem:MQTT:TOPIC:FANRPM?](#systemmqttopicfanrpm-1)
 * [SYStem:MQTT:TOPIC:FANPWM](#systemmqtttopicfanpwm)
@@ -208,7 +227,6 @@ Fanpico supports following commands:
 * [SYStem:VREFadc](#systemvrefadc)
 * [SYStem:VREFadc?](#systemvrefadc-1)
 * [SYStem:VSENSORS?](#systemvsensors)
-* [SYStem:VSENSORS:SOUrces?](#systemvsensorssources)
 * [SYStem:WIFI?](#systemwifi)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
@@ -1063,6 +1081,30 @@ CONF:SENSOR1:FILTER?
 sma,10
 ```
 
+#### CONFigure:VSENSORS?
+
+This is same as CONFigure::VSENSORS:SOUrces? command.
+
+
+#### CONFigure:VSENSORS:SOUrces?
+Return virtual sensor (source) configuration information for all
+virtual sensors in CSV format.
+
+Format: <vsensor>,<type>,<parameter1>,<parameter2>,...
+
+Example:
+```
+CONF:VSENSORS:SOURCES?
+vsensor1,onewire,22cd991800000020
+vsensor2,i2c,0x48,TMP117
+vsensor3,i2c,0x37,PCT2075
+vsensor4,i2c,0x77,DPS310
+vsensor5,i2c,0x76,BMP280
+vsensor6,i2c,0x49,ADT7410
+vsensor7,i2c,0x38,AHT2x
+vsensor8,manual,0.00,30
+```
+
 
 ### CONFigure:VSENSORx Commands
 VSENSORx (where x is the sensor number) commands are used to configure virtual temperature sensors.
@@ -1134,8 +1176,11 @@ AS621x||AS621x series: AS6212 (0.2C), AC6214 (0.4C), AC6218 (0.8C)
 BMP180||16bit, 0.5C accuracy
 BMP280|0x76, 0x77|20bit, 0.5C accuracy
 DPS310|0x77, 0x76|24bit, 0.5C accuracy
+LPS22|0x5d, 0x5c|Temperature and Pressure sensor
+LPS25|0x5d, 0x5c|Temperature and Pressure sensor, 2C accuracy
 MCP9808||13bit, 0.25C accuracy
 PCT2075||11bit, 1C accuracy
+SHTC3|0x70|Temperature and Humidity sensor, 0.2C accuracy
 STTS22H|0x38, 0x3c, 0x3e, 0x3f|16bit, 0.5C accuracy
 TMP102|0x48, 0x49, 0x4a, 0x4b|12bit, 2C accuracy
 TMP117|0x48, 0x49, 0x4a, 0x4b|16bit, 0.1C accuracy
@@ -1460,6 +1505,26 @@ MEAS:SENSOR1:TEMP?
 25
 ```
 
+
+#### MEASure:VSENSORS?
+Return all measurements for all virtual sensors.
+
+Format: sensor,temperature_C,humidity_%,pressure_hPa
+
+Example:
+```
+MEAS:VSENSORS?
+vsensor1,"vsensor1",24.4,0,0
+vsensor2,"vsensor2",24.9,0,0
+vsensor3,"vsensor3",24.8,43,0
+vsensor4,"vsensor4",26.5,0,997
+vsensor5,"vsensor5",25.1,0,991
+vsensor6,"vsensor6",0.0,0,0
+vsensor7,"vsensor7",0.0,0,0
+vsensor8,"vsensor8",0.0,0,0
+```
+
+
 #### MEASure:VENSORx?
 Return current temperature (C) measured by the sensor.
 
@@ -1467,6 +1532,24 @@ Example:
 ```
 MEAS:VSENSOR1?
 25
+```
+
+#### MEASure:VSENSORx:HUMidity?
+Return current humidity (%) measured by the sensor.
+
+Example:
+```
+MEAS:VSENSOR1:HUM?
+45
+```
+
+#### MEASure:VSENSORx:PREssure?
+Return current pressure (hPa) measured by the sensor.
+
+Example:
+```
+MEAS:VSENSOR1:PRE?
+1013
 ```
 
 #### MEASure:VSENSORx:Read?
@@ -2210,6 +2293,29 @@ SYS:MQTT:INT:TEMP?
 ```
 
 
+#### SYStem:MQTT:INTerval:VSENsor
+Configure how often unit will publish (send) virtual sensor status messages.
+Set this to 0 (seconds) to disable publishing status updates.
+Recommended values are 60 (seconds) or higher.
+
+Default: 0  (disabled)
+
+Example:
+```
+SYS:MQTT:INT:VSEN 60
+```
+
+
+#### SYStem:MQTT:INTerval:VSENsor?
+Query how often unit is setup to publish virtual sensor status messages.
+
+Example:
+```
+SYS:MQTT:INT:VSENP?
+60
+```
+
+
 #### SYStem:MQTT:INTerval:RPM
 Configure how often unit will publish (send) RPM status updates for
 fans (and mbfans).
@@ -2281,6 +2387,78 @@ Example:
 ```
 SYS:MQTT:MASK:TEMP?
 1,3
+```
+
+
+#### SYStem:MQTT:MASK:VTEMP
+Configure which virtual sensors should publish (send) temperature data to MQTT server.
+
+Sensors can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any sensor)
+
+Example:
+```
+SYS:MQTT:MASK:VTEMP 1,2,3,4
+```
+
+
+#### SYStem:MQTT:MASK:VTEMP?
+Query which virtual sensors are configured to publish (send) temperature data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:VTEMP?
+1-4
+```
+
+
+#### SYStem:MQTT:MASK:VHUMidity
+Configure which virtual sensors should publish (send) humidity data to MQTT server.
+
+Sensors can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any sensor)
+
+Example:
+```
+SYS:MQTT:MASK:VHUM 1,2
+```
+
+
+#### SYStem:MQTT:MASK:VHUMidity?
+Query which virtual sensors are configured to publish (send) humidity data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:VHUM?
+1-2
+```
+
+
+#### SYStem:MQTT:MASK:VPREssure
+Configure which virtual sensors should publish (send) pressure data to MQTT server.
+
+Sensors can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: <empty>   (do not publish data from any sensor)
+
+Example:
+```
+SYS:MQTT:MASK:VPRE 1,2
+```
+
+
+#### SYStem:MQTT:MASK:VPREssure?
+Query which virtual sensors are configured to publish (send) pressure data to MQTT server.
+
+Example:
+```
+SYS:MQTT:MASK:VPRE?
+1-2
 ```
 
 
@@ -2458,7 +2636,7 @@ Default: <empty>
 
 Example:
 ```
-SYS:MQTT:TOPIC:TEMP musername/feeds/temp%d
+SYS:MQTT:TOPIC:TEMP mysername/feeds/temp%d
 ```
 
 
@@ -2469,6 +2647,81 @@ Example:
 ```
 SYS:MQTT:TOPIC:TEMP?
 myusername/feeds/temp%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VTEMP
+Configure topic template for publishing virtual sensor temperature data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:VTEMP mysername/feeds/vtemp%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VTEMP?
+Query currently set topic template for virtual sensor temperature data.
+
+Example:
+```
+SYS:MQTT:TOPIC:VTEMP?
+myusername/feeds/vtemp%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VHUMidity
+Configure topic template for publishing virtual sensor humidity data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:VHUM mysername/feeds/humidity%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VHUMidity?
+Query currently set topic template for virtual sensor humidity data.
+
+Example:
+```
+SYS:MQTT:TOPIC:VHUM?
+myusername/feeds/humidity%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VPREssure
+Configure topic template for publishing virtual sensor pressure data to.
+If this is left to empty, then unit won't send response to any commands.
+
+This is template string where ```%d``` should be used to mark the port number.
+
+
+Default: <empty>
+
+Example:
+```
+SYS:MQTT:TOPIC:VPRE mysername/feeds/pressure%d
+```
+
+
+#### SYStem:MQTT:TOPIC:VPREssure?
+Query currently set topic template for virtual sensor pressure data.
+
+Example:
+```
+SYS:MQTT:TOPIC:VPRE?
+myusername/feeds/pressure%d
 ```
 
 
@@ -2983,26 +3236,6 @@ Example:
 SYS:VSENSORS?
 8
 ```
-
-#### SYStem:VSENSORS:SOUrces?
-Return virtual sensor (source) configuration information for all
-virtual sensors in CSV format.
-
-Format: <vsensor>,<type>,<parameter1>,<parameter2>,...
-
-Example:
-```
-SYS:VSENSORS:SOURCES?
-vsensor1,onewire,22cd991800000020
-vsensor2,i2c,0x48,TMP117
-vsensor3,i2c,0x37,PCT2075
-vsensor4,i2c,0x77,DPS310
-vsensor5,i2c,0x76,BMP280
-vsensor6,i2c,0x49,ADT7410
-vsensor7,i2c,0x38,AHT2x
-vsensor8,manual,0.00,30
-```
-
 
 #### SYStem:VREFadc
 <mark>new: release v1.6.4</mark>  \

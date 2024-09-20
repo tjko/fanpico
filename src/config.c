@@ -555,17 +555,24 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->mqtt_cmd_topic[0] = 0;
 	cfg->mqtt_resp_topic[0] = 0;
 	cfg->mqtt_temp_mask = 0;
+	cfg->mqtt_vtemp_mask = 0;
+	cfg->mqtt_vhumidity_mask = 0;
+	cfg->mqtt_vpressure_mask = 0;
 	cfg->mqtt_fan_rpm_mask = 0;
 	cfg->mqtt_fan_duty_mask = 0;
 	cfg->mqtt_mbfan_rpm_mask = 0;
 	cfg->mqtt_mbfan_duty_mask = 0;
 	cfg->mqtt_temp_topic[0] = 0;
+	cfg->mqtt_vtemp_topic[0] = 0;
+	cfg->mqtt_vhumidity_topic[0] = 0;
+	cfg->mqtt_vpressure_topic[0] = 0;
 	cfg->mqtt_fan_rpm_topic[0] = 0;
 	cfg->mqtt_fan_duty_topic[0] = 0;
 	cfg->mqtt_mbfan_rpm_topic[0] = 0;
 	cfg->mqtt_mbfan_duty_topic[0] = 0;
 	cfg->mqtt_status_interval = DEFAULT_MQTT_STATUS_INTERVAL;
 	cfg->mqtt_temp_interval = DEFAULT_MQTT_TEMP_INTERVAL;
+	cfg->mqtt_vsensor_interval = DEFAULT_MQTT_TEMP_INTERVAL;
 	cfg->mqtt_rpm_interval = DEFAULT_MQTT_RPM_INTERVAL;
 	cfg->mqtt_duty_interval = DEFAULT_MQTT_DUTY_INTERVAL;
 	cfg->mqtt_ha_discovery_prefix[0] = 0;
@@ -674,6 +681,9 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	if (cfg->mqtt_temp_interval != DEFAULT_MQTT_TEMP_INTERVAL)
 		cJSON_AddItemToObject(config, "mqtt_temp_interval",
 				cJSON_CreateNumber(cfg->mqtt_temp_interval));
+	if (cfg->mqtt_vsensor_interval != DEFAULT_MQTT_TEMP_INTERVAL)
+		cJSON_AddItemToObject(config, "mqtt_vsensor_interval",
+				cJSON_CreateNumber(cfg->mqtt_vsensor_interval));
 	if (cfg->mqtt_rpm_interval != DEFAULT_MQTT_RPM_INTERVAL)
 		cJSON_AddItemToObject(config, "mqtt_rpm_interval",
 				cJSON_CreateNumber(cfg->mqtt_rpm_interval));
@@ -684,6 +694,21 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "mqtt_temp_mask",
 				cJSON_CreateString(
 					bitmask_to_str(cfg->mqtt_temp_mask, SENSOR_MAX_COUNT,
+						1, true)));
+	if (cfg->mqtt_vtemp_mask)
+		cJSON_AddItemToObject(config, "mqtt_vtemp_mask",
+				cJSON_CreateString(
+					bitmask_to_str(cfg->mqtt_vtemp_mask, VSENSOR_MAX_COUNT,
+						1, true)));
+	if (cfg->mqtt_vhumidity_mask)
+		cJSON_AddItemToObject(config, "mqtt_vhumidity_mask",
+				cJSON_CreateString(
+					bitmask_to_str(cfg->mqtt_vhumidity_mask, VSENSOR_MAX_COUNT,
+						1, true)));
+	if (cfg->mqtt_vpressure_mask)
+		cJSON_AddItemToObject(config, "mqtt_vpressure_mask",
+				cJSON_CreateString(
+					bitmask_to_str(cfg->mqtt_vpressure_mask, VSENSOR_MAX_COUNT,
 						1, true)));
 	if (cfg->mqtt_fan_rpm_mask)
 		cJSON_AddItemToObject(config, "mqtt_fan_rpm_mask",
@@ -708,6 +733,15 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	if (strlen(cfg->mqtt_temp_topic) > 0)
 		cJSON_AddItemToObject(config, "mqtt_temp_topic",
 				cJSON_CreateString(cfg->mqtt_temp_topic));
+	if (strlen(cfg->mqtt_vtemp_topic) > 0)
+		cJSON_AddItemToObject(config, "mqtt_vtemp_topic",
+				cJSON_CreateString(cfg->mqtt_vtemp_topic));
+	if (strlen(cfg->mqtt_vhumidity_topic) > 0)
+		cJSON_AddItemToObject(config, "mqtt_vhumidity_topic",
+				cJSON_CreateString(cfg->mqtt_vhumidity_topic));
+	if (strlen(cfg->mqtt_vpressure_topic) > 0)
+		cJSON_AddItemToObject(config, "mqtt_vpressure_topic",
+				cJSON_CreateString(cfg->mqtt_vpressure_topic));
 	if (strlen(cfg->mqtt_fan_rpm_topic) > 0)
 		cJSON_AddItemToObject(config, "mqtt_fan_rpm_topic",
 				cJSON_CreateString(cfg->mqtt_fan_rpm_topic));
@@ -1018,6 +1052,9 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "mqtt_temp_interval"))) {
 		cfg->mqtt_temp_interval = cJSON_GetNumberValue(ref);
 	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_vsensor_interval"))) {
+		cfg->mqtt_vsensor_interval = cJSON_GetNumberValue(ref);
+	}
 	if ((ref = cJSON_GetObjectItem(config, "mqtt_rpm_interval"))) {
 		cfg->mqtt_rpm_interval = cJSON_GetNumberValue(ref);
 	}
@@ -1027,6 +1064,18 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "mqtt_temp_mask"))) {
 		if (!str_to_bitmask(cJSON_GetStringValue(ref), SENSOR_MAX_COUNT, &m, 1))
 			cfg->mqtt_temp_mask = m;
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_vtemp_mask"))) {
+		if (!str_to_bitmask(cJSON_GetStringValue(ref), VSENSOR_MAX_COUNT, &m, 1))
+			cfg->mqtt_vtemp_mask = m;
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_vhumidity_mask"))) {
+		if (!str_to_bitmask(cJSON_GetStringValue(ref), VSENSOR_MAX_COUNT, &m, 1))
+			cfg->mqtt_vhumidity_mask = m;
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_vpressure_mask"))) {
+		if (!str_to_bitmask(cJSON_GetStringValue(ref), VSENSOR_MAX_COUNT, &m, 1))
+			cfg->mqtt_vpressure_mask = m;
 	}
 	if ((ref = cJSON_GetObjectItem(config, "mqtt_fan_rpm_mask"))) {
 		if (!str_to_bitmask(cJSON_GetStringValue(ref), FAN_MAX_COUNT, &m, 1))
@@ -1047,6 +1096,18 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "mqtt_temp_topic"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->mqtt_temp_topic, val, sizeof(cfg->mqtt_temp_topic));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_vtemp_topic"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->mqtt_vtemp_topic, val, sizeof(cfg->mqtt_vtemp_topic));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_vhumidity_topic"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->mqtt_vhumidity_topic, val, sizeof(cfg->mqtt_vhumidity_topic));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "mqtt_vpressure_topic"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->mqtt_vpressure_topic, val, sizeof(cfg->mqtt_vpressure_topic));
 	}
 	if ((ref = cJSON_GetObjectItem(config, "mqtt_fan_rpm_topic"))) {
 		if ((val = cJSON_GetStringValue(ref)))

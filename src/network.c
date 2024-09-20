@@ -242,6 +242,7 @@ void wifi_poll()
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(test_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_status_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_temp_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_vsensor_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_rpm_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_duty_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(command_t, 0);
@@ -293,6 +294,11 @@ void wifi_poll()
 		if (cfg->mqtt_temp_interval > 0) {
 			if (time_passed(&publish_temp_t, cfg->mqtt_temp_interval * 1000)) {
 				fanpico_mqtt_publish_temp();
+			}
+		}
+		if (cfg->mqtt_vsensor_interval > 0) {
+			if (time_passed(&publish_vsensor_t, cfg->mqtt_vsensor_interval * 1000)) {
+				fanpico_mqtt_publish_vsensor();
 			}
 		}
 		if (cfg->mqtt_rpm_interval > 0) {

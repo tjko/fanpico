@@ -660,6 +660,24 @@ int cmd_read(const char *cmd, const char *args, int query, struct prev_cmd_t *pr
 	return 0;
 }
 
+int cmd_vsensors_read(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int i;
+
+	if (!query)
+		return 1;
+
+	for (i = 0; i < VSENSOR_COUNT; i++) {
+		printf("vsensor%d,\"%s\",%.1lf,%.0f,%0.0f\n", i+1,
+			conf->vsensors[i].name,
+			st->vtemp[i],
+			st->vhumidity[i],
+			st->vpressure[i]);
+	}
+
+	return 0;
+}
+
 int cmd_fan_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int fan;
@@ -2011,6 +2029,44 @@ int cmd_vsensor_temp(const char *cmd, const char *args, int query, struct prev_c
 	return 1;
 }
 
+int cmd_vsensor_humidity(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int sensor;
+	float d;
+
+	if (!query)
+		return 1;
+
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
+	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
+		d = st->vhumidity[sensor];
+		log_msg(LOG_DEBUG, "vsensor%d humidity = %f%%", sensor + 1, d);
+		printf("%.0f\n", d);
+		return 0;
+	}
+
+	return 1;
+}
+
+int cmd_vsensor_pressure(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int sensor;
+	float d;
+
+	if (!query)
+		return 1;
+
+	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
+	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
+		d = st->vpressure[sensor];
+		log_msg(LOG_DEBUG, "vsensor%d pressure = %fhPa", sensor + 1, d);
+		printf("%.0f\n", d);
+		return 0;
+	}
+
+	return 1;
+}
+
 int cmd_vsensor_filter(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	int sensor;
@@ -2219,6 +2275,12 @@ int cmd_mqtt_temp_interval(const char *cmd, const char *args, int query, struct 
 			&conf->mqtt_temp_interval, 0, (86400 * 30), "MQTT Publish Temp Interval");
 }
 
+int cmd_mqtt_vsensor_interval(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->mqtt_vsensor_interval, 0, (86400 * 30), "MQTT Publish VSENSOR Interval");
+}
+
 int cmd_mqtt_rpm_interval(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint32_setting(cmd, args, query, prev_cmd,
@@ -2265,6 +2327,27 @@ int cmd_mqtt_temp_topic(const char *cmd, const char *args, int query, struct pre
 			sizeof(conf->mqtt_temp_topic), "MQTT Temperature Topic", NULL);
 }
 
+int cmd_mqtt_vtemp_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_vtemp_topic,
+			sizeof(conf->mqtt_vtemp_topic), "MQTT VTemperature Topic", NULL);
+}
+
+int cmd_mqtt_vhumidity_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_vhumidity_topic,
+			sizeof(conf->mqtt_vhumidity_topic), "MQTT VHumidity Topic", NULL);
+}
+
+int cmd_mqtt_vpressure_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->mqtt_vpressure_topic,
+			sizeof(conf->mqtt_vpressure_topic), "MQTT VPressure Topic", NULL);
+}
+
 int cmd_mqtt_fan_rpm_topic(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
@@ -2305,6 +2388,27 @@ int cmd_mqtt_mask_temp(const char *cmd, const char *args, int query, struct prev
 	return bitmask16_setting(cmd, args, query, prev_cmd,
 				&conf->mqtt_temp_mask, SENSOR_MAX_COUNT,
 				1, "MQTT Temperature Mask");
+}
+
+int cmd_mqtt_mask_vtemp(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->mqtt_vtemp_mask, VSENSOR_MAX_COUNT,
+				1, "MQTT VSENSOR Temperature Mask");
+}
+
+int cmd_mqtt_mask_vhumidity(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->mqtt_vhumidity_mask, VSENSOR_MAX_COUNT,
+				1, "MQTT VSENSOR Humidity Mask");
+}
+
+int cmd_mqtt_mask_vpressure(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->mqtt_vpressure_mask, VSENSOR_MAX_COUNT,
+				1, "MQTT VSENSOR Pressure Mask");
 }
 
 int cmd_mqtt_mask_fan_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -2808,6 +2912,9 @@ const struct cmd_t wifi_commands[] = {
 #ifdef WIFI_SUPPORT
 const struct cmd_t mqtt_mask_commands[] = {
 	{ "TEMP",      4, NULL,              cmd_mqtt_mask_temp },
+	{ "VTEMP",     5, NULL,              cmd_mqtt_mask_vtemp },
+	{ "VHUMidity", 4, NULL,              cmd_mqtt_mask_vhumidity },
+	{ "VPREssure", 4, NULL,              cmd_mqtt_mask_vpressure },
 	{ "FANRPM",    6, NULL,              cmd_mqtt_mask_fan_rpm },
 	{ "FANPWM",    6, NULL,              cmd_mqtt_mask_fan_duty },
 	{ "MBFANRPM",  8, NULL,              cmd_mqtt_mask_mbfan_rpm },
@@ -2818,6 +2925,7 @@ const struct cmd_t mqtt_mask_commands[] = {
 const struct cmd_t mqtt_interval_commands[] = {
 	{ "STATUS",    6, NULL,              cmd_mqtt_status_interval },
 	{ "TEMP",      4, NULL,              cmd_mqtt_temp_interval },
+	{ "VSENsor",   4, NULL,              cmd_mqtt_vsensor_interval },
 	{ "RPM",       3, NULL,              cmd_mqtt_rpm_interval },
 	{ "PWM",       3, NULL,              cmd_mqtt_duty_interval },
 	{ 0, 0, 0, 0 }
@@ -2828,6 +2936,9 @@ const struct cmd_t mqtt_topic_commands[] = {
 	{ "COMMand",   4, NULL,              cmd_mqtt_cmd_topic },
 	{ "RESPonse",  4, NULL,              cmd_mqtt_resp_topic },
 	{ "TEMP",      4, NULL,              cmd_mqtt_temp_topic },
+	{ "VTEMP",     5, NULL,              cmd_mqtt_vtemp_topic },
+	{ "VHUMidity", 4, NULL,              cmd_mqtt_vhumidity_topic },
+	{ "VPREssure", 4, NULL,              cmd_mqtt_vpressure_topic },
 	{ "FANRPM",    6, NULL,              cmd_mqtt_fan_rpm_topic },
 	{ "FANPWM",    6, NULL,              cmd_mqtt_fan_duty_topic },
 	{ "MBFANRPM",  8, NULL,              cmd_mqtt_mbfan_rpm_topic },
@@ -2890,11 +3001,6 @@ const struct cmd_t onewire_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-const struct cmd_t vsensor_s_commands[] = {
-	{ "SOUrce",   3, NULL,               cmd_vsensors_sources },
-	{ 0, 0, 0, 0 }
-};
-
 const struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
 	{ "DISPlay",   4, display_commands,  cmd_display_type },
@@ -2926,8 +3032,8 @@ const struct cmd_t system_commands[] = {
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "UPTIme",    4, NULL,              cmd_uptime },
 	{ "VERsion",   3, NULL,              cmd_version },
-	{ "VSENSORS",  8, vsensor_s_commands, cmd_vsensors },
 	{ "VREFadc",   4, NULL,              cmd_sensor_adc_vref },
+	{ "VSENSORS",  8, NULL,              cmd_vsensors },
 	{ "WIFI",      4, wifi_commands,     cmd_wifi },
 	{ 0, 0, 0, 0 }
 };
@@ -2985,6 +3091,11 @@ const struct cmd_t vsensor_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t vsensors_c_commands[] = {
+	{ "SOUrce",   3, NULL,               cmd_vsensors_sources },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t config_commands[] = {
 	{ "DELete",    3, NULL,              cmd_delete_config },
 	{ "FAN",       3, fan_c_commands,    NULL },
@@ -2992,6 +3103,7 @@ const struct cmd_t config_commands[] = {
 	{ "Read",      1, NULL,              cmd_print_config },
 	{ "SAVe",      3, NULL,              cmd_save_config },
 	{ "SENSOR",    6, sensor_c_commands, NULL },
+	{ "VSENSORS",  8, vsensors_c_commands, cmd_vsensors_sources },
 	{ "VSENSOR",   7, vsensor_c_commands, NULL },
 	{ 0, 0, 0, 0 }
 };
@@ -3019,6 +3131,8 @@ const struct cmd_t sensor_commands[] = {
 };
 
 const struct cmd_t vsensor_commands[] = {
+	{ "HUMidity",  3, NULL,              cmd_vsensor_humidity },
+	{ "PREssure",  3, NULL,              cmd_vsensor_pressure },
 	{ "Read",      1, NULL,              cmd_vsensor_temp },
 	{ "TEMP",      4, NULL,              cmd_vsensor_temp },
 	{ 0, 0, 0, 0 }
@@ -3029,6 +3143,7 @@ const struct cmd_t measure_commands[] = {
 	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read },
 	{ "Read",      1, NULL,              cmd_read },
 	{ "SENSOR",    6, sensor_commands,   cmd_sensor_temp },
+	{ "VSENSORS",  8, NULL,              cmd_vsensors_read },
 	{ "VSENSOR",   7, vsensor_commands,  cmd_vsensor_temp },
 	{ 0, 0, 0, 0 }
 };
