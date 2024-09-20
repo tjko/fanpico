@@ -78,7 +78,7 @@
 		<table width="100%">
 		  <tr><td id="l1">
 		      <table class="pretty" width="100%">
-			<tr style="font-size: 14px;"><th>#</th><th>Name</th><th>Temp &#x2600;</th></tr>
+			<tr style="font-size: 14px;"><th>#</th><th>Name</th><th>Temp &#x2600;</th><th>Other</th>
 			<tr><!--#vsenrow1--></tr>
 			<tr><!--#vsenrow2--></tr>
 			<tr><!--#vsenrow3--></tr>

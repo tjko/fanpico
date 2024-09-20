@@ -3001,11 +3001,6 @@ const struct cmd_t onewire_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-const struct cmd_t vsensor_s_commands[] = {
-	{ "SOUrce",   3, NULL,               cmd_vsensors_sources },
-	{ 0, 0, 0, 0 }
-};
-
 const struct cmd_t system_commands[] = {
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
 	{ "DISPlay",   4, display_commands,  cmd_display_type },
@@ -3037,8 +3032,8 @@ const struct cmd_t system_commands[] = {
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "UPTIme",    4, NULL,              cmd_uptime },
 	{ "VERsion",   3, NULL,              cmd_version },
-	{ "VSENSORS",  8, vsensor_s_commands, cmd_vsensors },
 	{ "VREFadc",   4, NULL,              cmd_sensor_adc_vref },
+	{ "VSENSORS",  8, NULL,              cmd_vsensors },
 	{ "WIFI",      4, wifi_commands,     cmd_wifi },
 	{ 0, 0, 0, 0 }
 };
@@ -3096,6 +3091,11 @@ const struct cmd_t vsensor_c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t vsensors_c_commands[] = {
+	{ "SOUrce",   3, NULL,               cmd_vsensors_sources },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t config_commands[] = {
 	{ "DELete",    3, NULL,              cmd_delete_config },
 	{ "FAN",       3, fan_c_commands,    NULL },
@@ -3103,6 +3103,7 @@ const struct cmd_t config_commands[] = {
 	{ "Read",      1, NULL,              cmd_print_config },
 	{ "SAVe",      3, NULL,              cmd_save_config },
 	{ "SENSOR",    6, sensor_c_commands, NULL },
+	{ "VSENSORS",  8, vsensors_c_commands, cmd_vsensors_sources },
 	{ "VSENSOR",   7, vsensor_c_commands, NULL },
 	{ 0, 0, 0, 0 }
 };

@@ -68,6 +68,8 @@ Fanpico supports following commands:
 * [CONFigure:SENSORx:TEMPNominal?](#configuresensorxtempnominal-1)
 * [CONFigure:SENSORx:FILTER](#configuresensorxfilter)
 * [CONFigure:SENSORx:FILTER?](#configuresensorxfilter-1)
+* [CONFigure:VSENSORS?](#systemvsensors)
+* [CONFigure:VSENSORS:SOUrces?](#systemvsensorssources)
 * [CONFigure:VSENSORx:NAME](#configurevsensorxname)
 * [CONFigure:VSENSORx:NAME?](#configurevsensorxname-1)
 * [CONFigure:VSENSORx:SOUrce](#configurevsensorxsource)
@@ -225,7 +227,6 @@ Fanpico supports following commands:
 * [SYStem:VREFadc](#systemvrefadc)
 * [SYStem:VREFadc?](#systemvrefadc-1)
 * [SYStem:VSENSORS?](#systemvsensors)
-* [SYStem:VSENSORS:SOUrces?](#systemvsensorssources)
 * [SYStem:WIFI?](#systemwifi)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
@@ -1078,6 +1079,30 @@ For example:
 ```
 CONF:SENSOR1:FILTER?
 sma,10
+```
+
+#### CONFigure:VSENSORS?
+
+This is same as CONFigure::VSENSORS:SOUrces? command.
+
+
+#### CONFigure:VSENSORS:SOUrces?
+Return virtual sensor (source) configuration information for all
+virtual sensors in CSV format.
+
+Format: <vsensor>,<type>,<parameter1>,<parameter2>,...
+
+Example:
+```
+CONF:VSENSORS:SOURCES?
+vsensor1,onewire,22cd991800000020
+vsensor2,i2c,0x48,TMP117
+vsensor3,i2c,0x37,PCT2075
+vsensor4,i2c,0x77,DPS310
+vsensor5,i2c,0x76,BMP280
+vsensor6,i2c,0x49,ADT7410
+vsensor7,i2c,0x38,AHT2x
+vsensor8,manual,0.00,30
 ```
 
 
@@ -3211,26 +3236,6 @@ Example:
 SYS:VSENSORS?
 8
 ```
-
-#### SYStem:VSENSORS:SOUrces?
-Return virtual sensor (source) configuration information for all
-virtual sensors in CSV format.
-
-Format: <vsensor>,<type>,<parameter1>,<parameter2>,...
-
-Example:
-```
-SYS:VSENSORS:SOURCES?
-vsensor1,onewire,22cd991800000020
-vsensor2,i2c,0x48,TMP117
-vsensor3,i2c,0x37,PCT2075
-vsensor4,i2c,0x77,DPS310
-vsensor5,i2c,0x76,BMP280
-vsensor6,i2c,0x49,ADT7410
-vsensor7,i2c,0x38,AHT2x
-vsensor8,manual,0.00,30
-```
-
 
 #### SYStem:VREFadc
 <mark>new: release v1.6.4</mark>  \

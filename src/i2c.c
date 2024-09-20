@@ -574,10 +574,8 @@ int i2c_read_temps(struct fanpico_config *config)
 				}
 				mutex_enter_blocking(config_mutex);
 				config->vtemp[i] = temp;
-				if (pressure >= 0.0)
-					config->vpressure[i] = pressure;
-				if (humidity >= 0.0)
-					config->vhumidity[i] = humidity;
+				config->vpressure[i] = pressure;
+				config->vhumidity[i] = humidity;
 				config->vtemp_updated[i] = get_absolute_time();
 				mutex_exit(config_mutex);
 			} else {
