@@ -1729,6 +1729,7 @@ Currently supported values:
 Value|Description|Notes
 -----|-----------|-----
 default|Use default settings (auto-detect).
+none|Disable OLED support|Skips scanning for OLED panel.
 128x64|OLED 128x64 module installed.|OLED
 128x128|OLED 128x128 module installed.|OLED
 132x64|OLED 132x64 installed (some 1.3" 128x64 modules need this setting!)|OLED
