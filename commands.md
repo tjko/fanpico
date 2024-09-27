@@ -1180,7 +1180,8 @@ LPS22|0x5d, 0x5c|Temperature and Pressure sensor
 LPS25|0x5d, 0x5c|Temperature and Pressure sensor, 2C accuracy
 MCP9808||13bit, 0.25C accuracy
 PCT2075||11bit, 1C accuracy
-SHT4x|0x44|SHT4x Series Temperature and Humidity sensors (SHT40, SHT41, SHT43, SHT45)|Not found when scanning bus (SYS:I2C:SCAN?)
+SHT3x|0x44, 0x34|SHT3x Series Temperature and Humidity sensors (SHT30, SHT31, SHT35)|Not always found when scanning bus (SYS:I2C:SCAN?)
+SHT4x|0x44|SHT4x Series Temperature and Humidity sensors (SHT40, SHT41, SHT43, SHT45)|Not always found when scanning bus (SYS:I2C:SCAN?)
 SHTC3|0x70|Temperature and Humidity sensor, 0.2C accuracy
 STTS22H|0x38, 0x3c, 0x3e, 0x3f|16bit, 0.5C accuracy
 TMP102|0x48, 0x49, 0x4a, 0x4b|12bit, 2C accuracy

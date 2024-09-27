@@ -88,6 +88,11 @@ void* shtc3_init(i2c_inst_t *i2c, uint8_t addr);
 int shtc3_start_measurement(void *ctx);
 int shtc3_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_sht3x.c */
+void* sht3x_init(i2c_inst_t *i2c, uint8_t addr);
+int sht3x_start_measurement(void *ctx);
+int sht3x_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_sht4x.c */
 void* sht4x_init(i2c_inst_t *i2c, uint8_t addr);
 int sht4x_start_measurement(void *ctx);
@@ -122,6 +127,7 @@ static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement, false },
 	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement, false },
 	{ "SHTC3", shtc3_init, shtc3_start_measurement, shtc3_get_measurement, false },
+	{ "SHT3x", sht3x_init, sht3x_start_measurement, sht3x_get_measurement, true },
 	{ "SHT4x", sht4x_init, sht4x_start_measurement, sht4x_get_measurement, true },
 	{ "STTS22H", stts22h_init, stts22h_start_measurement, stts22h_get_measurement, false },
 	{ "TMP102", tmp102_init, tmp102_start_measurement, tmp102_get_measurement, false },
