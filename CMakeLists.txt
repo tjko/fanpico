@@ -112,6 +112,7 @@ add_executable(fanpico
   src/i2c_mcp9808.c
   src/i2c_pct2075.c
   src/i2c_shtc3.c
+  src/i2c_sht4x.c
   src/i2c_stts22h.c
   src/i2c_tmp102.c
   src/i2c_tmp117.c

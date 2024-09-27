@@ -97,7 +97,7 @@ void* bmp180_init(i2c_inst_t *i2c, uint8_t addr)
 
 
 	/* Read calibration data */
-	res = i2c_read_register_block(i2c, addr, REG_CALIB, buf, 22);
+	res = i2c_read_register_block(i2c, addr, REG_CALIB, buf, 22, 0);
 	if (res)
 		goto panic;
 
