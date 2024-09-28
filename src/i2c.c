@@ -78,6 +78,11 @@ void* mcp9808_init(i2c_inst_t *i2c, uint8_t addr);
 int mcp9808_start_measurement(void *ctx);
 int mcp9808_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_ms8607.c */
+void* ms8607_init(i2c_inst_t *i2c, uint8_t addr);
+int ms8607_start_measurement(void *ctx);
+int ms8607_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_pct2075.c */
 void* pct2075_init(i2c_inst_t *i2c, uint8_t addr);
 int pct2075_start_measurement(void *ctx);
@@ -125,6 +130,7 @@ static const i2c_sensor_entry_t i2c_sensor_types[] = {
 	{ "LPS22", lps22_init, lps22_start_measurement, lps22_get_measurement, false },
 	{ "LPS25", lps25_init, lps25_start_measurement, lps25_get_measurement, false },
 	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement, false },
+	{ "MS8607", ms8607_init, ms8607_start_measurement, ms8607_get_measurement, true },
 	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement, false },
 	{ "SHTC3", shtc3_init, shtc3_start_measurement, shtc3_get_measurement, false },
 	{ "SHT3x", sht3x_init, sht3x_start_measurement, sht3x_get_measurement, true },

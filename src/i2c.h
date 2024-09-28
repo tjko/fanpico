@@ -32,9 +32,9 @@
 #if I2C_DEBUG > 0
 #define DEBUG_PRINT(fmt, ...)						\
 	do {								\
-		uint64_t t = to_us_since_boot(get_absolute_time());	\
+		uint64_t ttt = to_us_since_boot(get_absolute_time());	\
 		printf("[%6llu.%06llu] %s:%d: %s(): " fmt,		\
-			(t / 1000000), (t % 1000000),			\
+			(ttt / 1000000), (ttt % 1000000),		\
 			__FILE__, __LINE__, __func__,			\
 			##__VA_ARGS__);					\
 	} while (0)
