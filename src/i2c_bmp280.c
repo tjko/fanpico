@@ -105,7 +105,7 @@ void* bmp280_init(i2c_inst_t *i2c, uint8_t addr)
 
 
 	/* Read calibration data */
-	res = i2c_read_register_block(i2c, addr, REG_CALIB, buf, 26);
+	res = i2c_read_register_block(i2c, addr, REG_CALIB, buf, 26, 0);
 	if (res)
 		goto panic;
 
@@ -197,7 +197,7 @@ int bmp280_get_measurement(void *ctx, float *temp, float *pressure, float *humid
 
 
 	/* Read Pressure & Temperature registers */
-	res = i2c_read_register_block(c->i2c, c->addr, REG_PRESS_MSB, buf, 6);
+	res = i2c_read_register_block(c->i2c, c->addr, REG_PRESS_MSB, buf, 6, 0);
 	if (res)
 		return -2;
 

@@ -140,9 +140,11 @@ void oled_display_init()
 		if (args) {
 			tok = strtok_r(args, ",", &saveptr);
 			while (tok) {
-				if (!strncmp(tok, "132x64", 6))
+				if (!strncmp(tok, "none", 4))
+					dtype = -1;
+				else if (!strncmp(tok, "132x64", 6))
 					dtype = OLED_132x64;
-				if (!strncmp(tok, "128x128", 7)) {
+				else if (!strncmp(tok, "128x128", 7)) {
 					dtype = OLED_128x128;
 					oled_height = 128;
 					r_lines = 10;
@@ -162,6 +164,11 @@ void oled_display_init()
 			}
 			free(args);
 		}
+	}
+
+	if (dtype < 0) {
+		log_msg(LOG_NOTICE, "OLED display support disabled.");
+		return;
 	}
 
 	if (strlen(cfg->display_layout_r) > 1) {

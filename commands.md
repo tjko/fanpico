@@ -1167,8 +1167,8 @@ Sensor numbering:
 
 Supporte I2C sensors:
 
-Sensor Model|Possible Addresses|Notes
-------------|------------------|-----
+Sensor Model|Possible Addresses|Description|Notes
+------------|------------------|-----------|-----
 ADT7410|0x48, 0x49, 0x4a, 0x4b|16bit, 0.5C accuracy
 AHT1x||AHT1x (AHT10, AHT11 ,...)
 AHT2x||AHT2x (AHT20, AHT21 ,...)
@@ -1179,7 +1179,10 @@ DPS310|0x77, 0x76|24bit, 0.5C accuracy
 LPS22|0x5d, 0x5c|Temperature and Pressure sensor
 LPS25|0x5d, 0x5c|Temperature and Pressure sensor, 2C accuracy
 MCP9808||13bit, 0.25C accuracy
+MS8607|0x77|Temperature, Humidity and Pressure Sensor
 PCT2075||11bit, 1C accuracy
+SHT3x|0x44, 0x34|SHT3x Series Temperature and Humidity sensors (SHT30, SHT31, SHT35)|Not always found when scanning bus (SYS:I2C:SCAN?)
+SHT4x|0x44|SHT4x Series Temperature and Humidity sensors (SHT40, SHT41, SHT43, SHT45)|Not always found when scanning bus (SYS:I2C:SCAN?)
 SHTC3|0x70|Temperature and Humidity sensor, 0.2C accuracy
 STTS22H|0x38, 0x3c, 0x3e, 0x3f|16bit, 0.5C accuracy
 TMP102|0x48, 0x49, 0x4a, 0x4b|12bit, 2C accuracy
@@ -1729,6 +1732,7 @@ Currently supported values:
 Value|Description|Notes
 -----|-----------|-----
 default|Use default settings (auto-detect).
+none|Disable OLED support|Skips scanning for OLED panel.
 128x64|OLED 128x64 module installed.|OLED
 128x128|OLED 128x128 module installed.|OLED
 132x64|OLED 132x64 installed (some 1.3" 128x64 modules need this setting!)|OLED

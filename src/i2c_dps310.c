@@ -136,7 +136,7 @@ void* dps310_init(i2c_inst_t *i2c, uint8_t addr)
 		goto panic;
 
 	/* Read calibration coefficients */
-	res = i2c_read_register_block(i2c, addr, REG_COEF, buf, 18);
+	res = i2c_read_register_block(i2c, addr, REG_COEF, buf, 18, 0);
 	if (res)
 		goto panic;
 

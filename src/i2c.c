@@ -78,6 +78,11 @@ void* mcp9808_init(i2c_inst_t *i2c, uint8_t addr);
 int mcp9808_start_measurement(void *ctx);
 int mcp9808_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
+/* i2c_ms8607.c */
+void* ms8607_init(i2c_inst_t *i2c, uint8_t addr);
+int ms8607_start_measurement(void *ctx);
+int ms8607_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
 /* i2c_pct2075.c */
 void* pct2075_init(i2c_inst_t *i2c, uint8_t addr);
 int pct2075_start_measurement(void *ctx);
@@ -87,6 +92,16 @@ int pct2075_get_measurement(void *ctx, float *temp, float *pressure, float *humi
 void* shtc3_init(i2c_inst_t *i2c, uint8_t addr);
 int shtc3_start_measurement(void *ctx);
 int shtc3_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
+/* i2c_sht3x.c */
+void* sht3x_init(i2c_inst_t *i2c, uint8_t addr);
+int sht3x_start_measurement(void *ctx);
+int sht3x_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
+
+/* i2c_sht4x.c */
+void* sht4x_init(i2c_inst_t *i2c, uint8_t addr);
+int sht4x_start_measurement(void *ctx);
+int sht4x_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 /* i2c_stts22h.c */
 void* stts22h_init(i2c_inst_t *i2c, uint8_t addr);
@@ -104,23 +119,26 @@ int tmp117_start_measurement(void *ctx);
 int tmp117_get_measurement(void *ctx, float *temp, float *pressure, float *humidity);
 
 static const i2c_sensor_entry_t i2c_sensor_types[] = {
-	{ "NONE", NULL, NULL, NULL }, /* this needs to be first so that valid sensors have index > 0 */
-	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement },
-	{ "AHT1x", aht1x_init, aht_start_measurement, aht_get_measurement },
-	{ "AHT2x", aht2x_init, aht_start_measurement, aht_get_measurement },
-	{ "AS621x", as621x_init, as621x_start_measurement, as621x_get_measurement },
-	{ "BMP180", bmp180_init, bmp180_start_measurement, bmp180_get_measurement },
-	{ "BMP280", bmp280_init, bmp280_start_measurement, bmp280_get_measurement },
-	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement },
-	{ "LPS22", lps22_init, lps22_start_measurement, lps22_get_measurement },
-	{ "LPS25", lps25_init, lps25_start_measurement, lps25_get_measurement },
-	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement },
-	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement },
-	{ "SHTC3", shtc3_init, shtc3_start_measurement, shtc3_get_measurement },
-	{ "STTS22H", stts22h_init, stts22h_start_measurement, stts22h_get_measurement },
-	{ "TMP102", tmp102_init, tmp102_start_measurement, tmp102_get_measurement },
-	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement },
-	{ NULL, NULL, NULL, NULL }
+	{ "NONE", NULL, NULL, NULL, false }, /* this needs to be first so that valid sensors have index > 0 */
+	{ "ADT7410", adt7410_init, adt7410_start_measurement, adt7410_get_measurement, false },
+	{ "AHT1x", aht1x_init, aht_start_measurement, aht_get_measurement, false },
+	{ "AHT2x", aht2x_init, aht_start_measurement, aht_get_measurement, false },
+	{ "AS621x", as621x_init, as621x_start_measurement, as621x_get_measurement, false },
+	{ "BMP180", bmp180_init, bmp180_start_measurement, bmp180_get_measurement, false },
+	{ "BMP280", bmp280_init, bmp280_start_measurement, bmp280_get_measurement, false },
+	{ "DPS310", dps310_init, dps310_start_measurement, dps310_get_measurement, false },
+	{ "LPS22", lps22_init, lps22_start_measurement, lps22_get_measurement, false },
+	{ "LPS25", lps25_init, lps25_start_measurement, lps25_get_measurement, false },
+	{ "MCP9808", mcp9808_init, mcp9808_start_measurement, mcp9808_get_measurement, false },
+	{ "MS8607", ms8607_init, ms8607_start_measurement, ms8607_get_measurement, true },
+	{ "PCT2075", pct2075_init, pct2075_start_measurement, pct2075_get_measurement, false },
+	{ "SHTC3", shtc3_init, shtc3_start_measurement, shtc3_get_measurement, false },
+	{ "SHT3x", sht3x_init, sht3x_start_measurement, sht3x_get_measurement, true },
+	{ "SHT4x", sht4x_init, sht4x_start_measurement, sht4x_get_measurement, true },
+	{ "STTS22H", stts22h_init, stts22h_start_measurement, stts22h_get_measurement, false },
+	{ "TMP102", tmp102_init, tmp102_start_measurement, tmp102_get_measurement, false },
+	{ "TMP117", tmp117_init, tmp117_start_measurement, tmp117_get_measurement, false },
+	{ NULL, NULL, NULL, NULL, false }
 };
 
 static bool i2c_bus_active = false;
@@ -138,9 +156,11 @@ static int i2c_init_sensor(uint8_t type, uint8_t addr, void **ctx)
 		return -1;
 
 	/* Check for a device on given address... */
-	if (i2c_read_timeout_us(i2c_bus, addr, buf, 1, false,
-					I2C_READ_TIMEOUT(1)) < 0)
+	if (!i2c_sensor_types[type].no_scan) {
+		if (i2c_read_timeout_us(i2c_bus, addr, buf, 1, false,
+						I2C_READ_TIMEOUT(1)) < 0)
 			return -2;
+	}
 
 	/* Initialize sensor */
 	*ctx = i2c_sensor_types[type].init(i2c_bus, addr);
@@ -189,7 +209,8 @@ inline bool i2c_reserved_address(uint8_t addr)
 }
 
 
-int i2c_read_register_block(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, size_t len)
+int i2c_read_register_block(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *buf, size_t len,
+			uint32_t read_delay_us)
 {
 	int res;
 
@@ -200,6 +221,9 @@ int i2c_read_register_block(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t 
 		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
 	}
+
+	if (read_delay_us > 0)
+		sleep_us(read_delay_us);
 
 	res = i2c_read_timeout_us(i2c, addr, buf, len, false,
 				I2C_READ_TIMEOUT(len));
@@ -226,7 +250,7 @@ int i2c_read_register_u24(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint32_t *
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf));
+	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf), 0);
 	if (res) {
 		DEBUG_PRINT("failed to read register\n");
 		return -1;
@@ -245,7 +269,7 @@ int i2c_read_register_u16(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint16_t *
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf));
+	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf), 0);
 	if (res) {
 		DEBUG_PRINT("failed to read register\n");
 		return -1;
@@ -264,7 +288,7 @@ int i2c_read_register_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t reg, uint8_t *va
 	int res;
 
 	DEBUG_PRINT("args=%p,%02x,%02x,%p\n", i2c, addr, reg, val);
-	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf));
+	res = i2c_read_register_block(i2c, addr, reg, buf, sizeof(buf), 0);
 	if (res) {
 		DEBUG_PRINT("failed to read register\n");
 		return -1;
@@ -383,6 +407,23 @@ int i2c_write_raw_u16(i2c_inst_t *i2c, uint8_t addr, uint16_t cmd, bool nostop)
 	res = i2c_write_timeout_us(i2c, addr, buf, 2, nostop,
 				I2C_WRITE_TIMEOUT(2));
 	if (res < 2) {
+		DEBUG_PRINT("write failed (%d)\n", res);
+		return -1;
+	}
+
+	return 0;
+}
+
+
+int i2c_write_raw_u8(i2c_inst_t *i2c, uint8_t addr, uint8_t cmd, bool nostop)
+{
+	int res;
+
+	DEBUG_PRINT("args=%p,%02x,%04x\n", i2c, addr, cmd);
+
+	res = i2c_write_timeout_us(i2c, addr, &cmd, 1, nostop,
+				I2C_WRITE_TIMEOUT(1));
+	if (res < 1) {
 		DEBUG_PRINT("write failed (%d)\n", res);
 		return -1;
 	}

@@ -147,7 +147,7 @@ int lps22_get_measurement(void *ctx, float *temp, float *pressure, float *humidi
 		return 1;
 
 	/* Get Measurement */
-	res = i2c_read_register_block(c->i2c, c->addr, PRES_OUT_XL, buf, sizeof(buf));
+	res = i2c_read_register_block(c->i2c, c->addr, PRES_OUT_XL, buf, sizeof(buf), 0);
 	if (res)
 		return -2;
 
