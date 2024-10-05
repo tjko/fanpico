@@ -442,11 +442,7 @@ uint64_t onewire_address(uint sensor);
 void scan_i2c_bus();
 void display_i2c_status();
 void setup_i2c_bus(struct fanpico_config *config);
-uint get_i2c_sensor_type(const char *name);
-const char *i2c_sensor_type_str(uint type);
-bool i2c_reserved_address(uint8_t addr);
 int i2c_read_temps(struct fanpico_config *config);
-
 
 /* tls.c */
 int read_pem_file(char *buf, uint32_t size, uint32_t timeout, bool append);

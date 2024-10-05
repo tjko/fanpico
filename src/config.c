@@ -26,6 +26,7 @@
 #include "pico/stdlib.h"
 #include "pico/mutex.h"
 #include "cJSON.h"
+#include "pico_sensor_lib.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
 #endif

@@ -34,6 +34,7 @@
 #include "pico/rand.h"
 #include "hardware/watchdog.h"
 #include "cJSON.h"
+#include "pico_sensor_lib.h"
 #include "fanpico.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"

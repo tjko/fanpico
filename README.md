@@ -201,6 +201,7 @@ Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 * [libb64](https://github.com/libb64/libb64)
 * [pico-telnetd](https://github.com/tjko/pico-telnetd)
 * [pico-1wire-lib](https://github.com/tjko/pico-1wire-lib)
+* [pico-sensor-lib](https://github.com/tjko/pico-sensor-lib)
 
 ##### Install Pico SDK
 Pico SDK must be installed working before you can compile fanpico.
