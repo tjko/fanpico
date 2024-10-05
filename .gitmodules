@@ -19,3 +19,6 @@
 [submodule "libs/pico-1wire-lib"]
 	path = libs/pico-1wire-lib
 	url = https://github.com/tjko/pico-1wire-lib.git
+[submodule "libs/pico-sensor-lib"]
+	path = libs/pico-sensor-lib
+	url = https://github.com/tjko/pico-sensor-lib.git

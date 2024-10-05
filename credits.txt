@@ -1,4 +1,4 @@
-FanPico: Smart PWM (PC) Fan Controller 
+FanPico: Smart PWM (PC) Fan Controller
 Copyright (C) 2021-2024 Timo Kokkonen <tjko@iki.fi>
 https://github.com/tjko/fanpico
 
@@ -43,3 +43,7 @@ https://github.com/tjko/pico-telnetd
 pico-1wire-lib
 Copryight (c) 2024 Timo Kokkonen (tjko@iki.fi)
 https://github.com/tjko/pico-1wire-lib
+
+pico-sensor-lib
+Copryight (c) 2024 Timo Kokkonen (tjko@iki.fi)
+https://github.com/tjko/pico-sensor-lib

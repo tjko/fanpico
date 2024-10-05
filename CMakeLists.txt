@@ -80,8 +80,11 @@ target_sources(libb64 INTERFACE
 # pico-telnetd
 add_subdirectory(libs/pico-telnetd)
 
-# pico-1wire-libe
+# pico-1wire-lib
 add_subdirectory(libs/pico-1wire-lib)
+
+# pico-sensor-lib
+add_subdirectory(libs/pico-sensor-lib)
 
 
 # fanpico firmware
@@ -101,23 +104,6 @@ add_executable(fanpico
   src/tacho.c
   src/sensors.c
   src/i2c.c
-  src/i2c_adt7410.c
-  src/i2c_aht.c
-  src/i2c_as621x.c
-  src/i2c_bmp180.c
-  src/i2c_bmp280.c
-  src/i2c_dps310.c
-  src/i2c_lps22.c
-  src/i2c_lps25.c
-  src/i2c_mcp9808.c
-  src/i2c_ms8607.c
-  src/i2c_pct2075.c
-  src/i2c_shtc3.c
-  src/i2c_sht3x.c
-  src/i2c_sht4x.c
-  src/i2c_stts22h.c
-  src/i2c_tmp102.c
-  src/i2c_tmp117.c
   src/onewire.c
   src/filters.c
   src/filter_lossypeak.c
@@ -179,6 +165,7 @@ target_link_libraries(fanpico PRIVATE
   bb_spi_lcd-lib
   libb64
   pico_1wire_lib
+  pico_sensor_lib
   )
 
 if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
