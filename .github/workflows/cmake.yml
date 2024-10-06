@@ -125,7 +125,7 @@ jobs:
         path: main/build/dist
 
     - name: Gather License Files
-      if: ${{ matrix.fanpico_board == '0804' && matrix.pico_board = 'pico' }}
+      if: ${{ matrix.fanpico_board == '0804' && matrix.pico_board == 'pico' }}
       working-directory: ${{github.workspace}}/main
       run: |
         mkdir -p licenses/licenses
@@ -139,7 +139,7 @@ jobs:
         done
 
     - name: Upload License Artifact
-      if: ${{ matrix.fanpico_board == '0804' && matrix.pico_board = 'pico' }}
+      if: ${{ matrix.fanpico_board == '0804' && matrix.pico_board == 'pico' }}
       uses: actions/upload-artifact@v4
       with:
         name: licenses
