@@ -44,14 +44,14 @@ jobs:
         path: pico-sdk
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
 
-    - if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
-      name: Checkout Pico-SDK
+    - name: Checkout Pico-SDK
+      if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
       uses: actions/checkout@v4
       with:
         repository: raspberrypi/pico-sdk
         ref: ${{env.PICO_SDK_REF}}
         path: pico-sdk
-        submodules: true
+        submodules: recursive
 
     - name: Add PICO_SDK_PATH to Environment
       run: |
@@ -64,8 +64,8 @@ jobs:
         path: picotool
         key: ${{runner.os}}-picotool-${{env.PICOTOOL_REF}}
 
-    - if: ${{steps.cache-picotool.outputs.cache-hit != 'true' }}
-      name: Checkout picotool
+    - name: Checkout picotool
+      if: ${{steps.cache-picotool.outputs.cache-hit != 'true' }}
       uses: actions/checkout@v4
       with:
         repository: raspberrypi/picotool
@@ -73,8 +73,8 @@ jobs:
         path: picotool-src
         submodules: recursive
 
-    - if: ${{steps.cache-picotool.outputs.cache-hit != 'true' }}
-      name: Build picotool
+    - name: Build picotool
+      if: ${{steps.cache-picotool.outputs.cache-hit != 'true' }}
       run: |
         cmake -S picotool-src -B picotool-src/build -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/picotool -DPICOTOOL_FLAT_INSTALL=1
         cd picotool-src/build
@@ -124,6 +124,27 @@ jobs:
         name: firmware-${{matrix.fanpico_board}}-${{matrix.pico_board}}-build${{github.run_number}}-${{env.BUILD_DATE}}
         path: main/build/dist
 
+    - name: Gather License Files
+      if: ${{ matrix.fanpico_board == '0804' && matrix.pico_board = 'pico' }}
+      working-directory: ${{github.workspace}}/main
+      run: |
+        mkdir -p licenses/licenses
+	cp -v LICENSE credits.txt licenses/
+        licenses=$(find libs/ -name 'LICENSE*'; find ${PICO_SDK_PATH}/ -maxdepth 3 -name 'LICENSE*')
+        for file in $licenses; do
+          dir=$(dirname $file)
+          name=$(basename $file)
+          lib=$(basename $dir)
+          cp -v "$file" "licenses/licenses/${name}.${lib}"
+        done
+
+    - name: Upload License Artifact
+      if: ${{ matrix.fanpico_board == '0804' && matrix.pico_board = 'pico' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: licenses
+        path: main/licenses
+
   merge:
     runs-on: ubuntu-latest
     needs: build
@@ -163,6 +184,6 @@ jobs:
       uses: actions/upload-artifact/merge@v4
       with:
         name: fanpico-firmware-${{env.BUILD_DATE}}-${{env.FANPICO_VERSION}}-build${{github.run_number}}
-        pattern: firmware-*
+        pattern: firmware-* licenses
         delete-merged: true
 

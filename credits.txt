@@ -11,6 +11,10 @@ or (at your option) any later version.
 
 Libraries used in FanPico:
 
+pico-sdk
+Copyright 2020 (c) 2020 Raspberry Pi (Trading) Ltd.
+https://github.com/raspberrypi/pico-sdk
+
 cJSON
 Copyright (c) 2009-2017 Dave Gamble and cJSON contributors
 https://github.com/DaveGamble/cJSON
