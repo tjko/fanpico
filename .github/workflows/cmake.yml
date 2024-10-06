@@ -129,7 +129,7 @@ jobs:
       working-directory: ${{github.workspace}}/main
       run: |
         mkdir -p licenses/licenses
-	cp -v LICENSE credits.txt licenses/
+        cp -v LICENSE credits.txt licenses/
         licenses=$(find libs/ -name 'LICENSE*'; find ${PICO_SDK_PATH}/ -maxdepth 3 -name 'LICENSE*')
         for file in $licenses; do
           dir=$(dirname $file)
