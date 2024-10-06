@@ -184,8 +184,5 @@ jobs:
       uses: actions/upload-artifact/merge@v4
       with:
         name: fanpico-firmware-${{env.BUILD_DATE}}-${{env.FANPICO_VERSION}}-build${{github.run_number}}
-        pattern:
-          - firmware-*
-          - licenses
         delete-merged: true
 
