@@ -24,6 +24,8 @@ PCB should have at least 2oz copper thickness for adequate current carrying capa
 
 ## Change Log
 
+v1.1
+- Make tracks thicker for ground pins on power connectors.
 v1.0 
 - Initial revision.
 
