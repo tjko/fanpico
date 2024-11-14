@@ -1,35 +1,59 @@
-Ref,Qnty,Value,Cmp name,Footprint,Description,Vendor,Mouser P/N,LCSC P/N
-"C1, C2, C3, C4, C6, C11, C14, C17, C20, C22, C24, C26, C28, C29, C31, C32",16,0.1uF,C_Small,Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,"Unpolarized capacitor, small symbol",,,C1591
-"C5,",1,10uF 25V,C Tantalum,Capacitor_Tantalum_SMD:CP_EIA-3528-12_Kemet-T_Pad1.50x2.35mm_HandSolder,"Polarized capacitor, small symbol",,,C110053 or C7194
-"C7, C8, C30",3,10uF 16V,C Tantalum,Capacitor_Tantalum_SMD:CP_EIA-3216-18_Kemet-A_Pad1.58x1.35mm_HandSolder,Polarized capacitor,,80--T491A106K016,C7171
-"C10, C13, C16, C19, C21, C23, C25, C27,",8,1nF,C,Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,Unpolarized capacitor,,,C1588
-"D1,",1,SM5819PL 1A 40V,D_Schottky,Diode_SMD:D_SMA,Schottky diode,,833-SM5819PL-TP,C669023
-"D2, D4, D5, D6, D7, D8, D11, D12, D15, D16, D19, D20, D23, D26, D29, D32,",16,LED 0805 (green),LED,LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder,Light emitting diode,,710-150080GS75000,C434432
-"D3, D10, D14, D18, D22, D25, D28, D31, D34,",9,ES1D 1A 200V,D,Diode_SMD:D_SMA_Handsoldering,Diode,,512-ES1D,C445494
-"D9, D13, D17, D21, D24, D27, D30, D33,",8,BAT54C,D,Diode_SMD:D_SOT-23_ANK,Diode,,241-BAT54C_R1_00001,C2992451 or C2844172
-"F1,",1,Polyfuse 3A,Polyfuse,Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCF0300BF2C,C20829 or C2977527
-"F2,",1,Polyfuse 0.5A,Polyfuse,Fuse:Fuse_1206_3216Metric_Pad1.42x1.75mm_HandSolder,"Resettable fuse, polymeric positive temperature coefficient",,530-0ZCJ0050AF2E,C70072
-"J1,",1,171826-4,Berg Connector,Connector_TE-Connectivity:TE 171826-4 Floppy 4-pin,Floppy Power Connector,TE,571-1718264,C590635
-"J2, J3",2,Header,Header,Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Vertical,Header 2.54mm,,,C2935910
-J4 - J15,12,47053-1000,4-pin Fan Connector,Connector:FanPinHeader_1x04_P2.54mm_Vertical,PC 4-pin (PWM) fan connector,Molex,538-47053-1000,C240840
-"J16, J17",2,JST-XH,2-pin JST XH 2.5mm,Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,2-pin connector,,,C158012
-J18,1,Header,Header,Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical,Header 2.54mm,,,C492422
-"JP1 - JP11, J19",11,Header,Header,Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,Header 2.54mm,,,C124376
-JP1 - JP11,11,Jumper,Jumper_3_Bridged12,Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical,Jumper 2.54mm,,,C5305
-"Q1, Q2, Q3, Q4,",4,2N7002K,2N7002K,Package_TO_SOT_SMD:SOT-23,"0.38A Id, 60V Vds, N-Channel MOSFET, SOT-23",,512-2N7002K,C85047
-"R1, R4, R8, R11, R15, R18, R22, R25, R29, R32,",10,1k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C22548
-"R2, R10, R12, R17, R19, R24, R26, R31, R33, R36, R39, R42, R45,",13,49.9k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C114624
-"R3, R48,",2,330,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C105881
-"R5, R7, R13, R20, R27, R34, R37, R40, R43, R46, R50, R51,",12,10k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C98220
-"R6,",1,4.99k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C114621
-"R9, R16, R23, R30,",4,30k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C100001
-"R14, R21, R28, R35, R38, R41, R44, R47,",8,680,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C115415
-"R49, R55, R57",3,0,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C100044 or C21189
-"R52, R53",2,100k,R,Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,Resistor,,,C14675
-SW1,1,SW_Push,SW_Push,Button_Switch_THT:SW_PUSH_6mm_SMD_2,"Push button switch, generic, two pins",,,C221880
-"U1, U2",2,SN74AHCT126,SN74AHCT126,Package_SO:SOIC-14_3.9x8.7mm_P1.27mm,Low (3.3V) to High (5V) TTL level converter,TI,,C163728
-U3,1,CD74HC4050NSR,CD74HC4050M,Package_SO:SOIC-16_3.9x9.9mm_P1.27mm,High (5-12V) to Low (3.3V) TTL level converter,TI,,C131932
-U4,1,Pico / Pico W,Pico,MCU_RaspberryPi_and_Boards:RPi_Pico_SMD_TH,Raspberry Pi Pico,RPi,474-DEV-17829,
-U5,1,SPX1117-ADJ,LM1117-ADJ,Package_TO_SOT_SMD:SOT-223,"800mA Low-Dropout Linear Regulator, adjustable output, TO-220/TO-252/TO-263/SOT-223",Maxim,701-SPX1117M3-L/TR,C67402
-U6,1,LM4040BIM3-3.0,LM4040 3.0V,Package_TO_SOT_SMD:SOT-23,"3.000V Precision Micropower Shunt Voltage Reference, SOT-23",,926-LM4040BIM330NOPB,C143326
-U7,1,74HC4051,74HC4051,Package_SO:SOIC-16_3.9x9.9mm_P1.27mm,"8-channel analog multiplexer/demultiplexer, DIP-16/SOIC-16/TSSOP-16",,771-74HC4051D-T,C9386
+"Reference","Value","Datasheet","Footprint","Qty","DNP","LCSC Part Number","Mouser Part Number"
+"C1,C2,C3,C4,C6,C11,C14,C17,C20,C22,C24,C26,C28,C29,C31,C32","0.1uF","~","Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder","16","","C1591",""
+"C5","10uF 25V","~","Capacitor_Tantalum_SMD:CP_EIA-3528-12_Kemet-T_Pad1.50x2.35mm_HandSolder","1","","C7194",""
+"C7,C8,C30","10uF 16V","~","Capacitor_Tantalum_SMD:CP_EIA-3216-18_Kemet-A_Pad1.58x1.35mm_HandSolder","3","","C7171",""
+"C10,C13,C16,C19,C21,C23,C25,C27","1nF","~","Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder","8","","C1588",""
+"D1","SM5819PL 1A 40V","~","Diode_SMD:D_SMA","1","","C669023",""
+"D2,D4,D5,D6,D7,D8,D11,D12,D15,D16,D19,D20,D23,D26,D29,D32,D35","LED 0805 (green)","~","LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder","17","","C434432",""
+"D3,D10,D14,D18,D22,D25,D28,D31,D34","ES1D 1A 200V","~","Diode_SMD:D_SMA_Handsoldering","9","","C445494",""
+"D9,D13,D17,D21,D24,D27,D30,D33","BAT54C","~","FanPico:D_SOT-23_ANK","8","","C2844172",""
+"D36,D37,D38,D39,D40,D41,D42,D72,D73,D74","3.3V TVS","~","Diode_SMD:D_SOD-323_HandSoldering","10","","C78439",""
+"D43,D44,D45,D46,D47,D48,D49,D50,D51,D52,D53,D54,D55,D60,D61,D62,D63","12V TVS","~","Diode_SMD:D_SOD-323_HandSoldering","17","","C502541 or C5199168",""
+"D56,D57,D58,D59,D64,D65,D66,D67,D68,D69,D70,D71","5V TVS","~","Diode_SMD:D_SOD-323_HandSoldering","12","","C5180216",""
+"F1","Polyfuse 3A","~","Fuse:Fuse_2920_7451Metric_Pad2.10x5.45mm_HandSolder","1","","C2977527",""
+"F2","Polyfuse 0.5A","~","Fuse:Fuse_1206_3216Metric_Pad1.42x1.75mm_HandSolder","1","","C70072",""
+"H1,H2,H3,H4","MountingHole_Pad","~","MountingHole:MountingHole_3.2mm_M3_Pad_Via","4","DNP","",""
+"J1","Floppy / DC Connector","~","FanPico:TE 171826-4 Floppy 4-pin Combo","1","","C590635 / C720558",""
+"J2","I2C (OLED ALT)","~","Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Vertical","1","","",""
+"J3","I2C (OLED)","~","Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Vertical","1","","",""
+"J4","MB Fan1 Input","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J5","MB Fan2 Input","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J6","MB Fan3 Input","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J7","MB Fan4 Input","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J8","Fan1 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J9","Fan2 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J10","Fan3 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J11","Fan4 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J12","Fan5 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J13","Fan6 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J14","Fan7 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J15","Fan8 Output","~","Connector:FanPinHeader_1x04_P2.54mm_Vertical","1","","",""
+"J16","Sensor1","~","Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical","1","","",""
+"J17","Sensor2","~","Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical","1","","",""
+"J18","LCD (SPI)","~","Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical","1","","",""
+"J19","Serial Console (TTL)","~","Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical","1","","",""
+"J20","1-Wire","~","TerminalBlock_TE-Connectivity:TerminalBlock_TE_282834-3_1x03_P2.54mm_Horizontal","1","","C68305 or C5188443",""
+"J21","QWIIC","~","Connector_JST:JST_SH_SM04B-SRSS-TB_1x04-1MP_P1.00mm_Horizontal","1","","C160404",""
+"JP1","Power Selector","~","Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical","1","","",""
+"JP2,JP3,JP4,JP5,JP6,JP7,JP8,JP9","Fan Power","~","Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical","8","","",""
+"JP10,JP11","NTC Value","~","Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical","2","","",""
+"JP12","1-Wire Pull-Up Enable","~","Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical","1","","",""
+"Q1,Q2,Q3,Q4","2N7002K","https://www.diodes.com/assets/Datasheets/ds30896.pdf","Package_TO_SOT_SMD:SOT-23","4","","C85047",""
+"R1,R4,R8,R11,R15,R18,R22,R25,R29,R32","1k","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","10","","C22548",""
+"R2,R10,R12,R17,R19,R24,R26,R31,R33,R36,R39,R42,R45,R58","49.9k","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","14","","C114624",""
+"R3,R48","330","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","2","","C105881",""
+"R5,R7,R13,R20,R27,R34,R37,R40,R43,R46,R50,R51","10k","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","12","","C98220",""
+"R6","4.99k","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","1","","C114621",""
+"R9,R16,R23,R30","30k","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","4","","C100001",""
+"R14,R21,R28,R35,R38,R41,R44,R47","680","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","8","","C115415",""
+"R49,R55,R57","0","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","3","","C21189",""
+"R52,R53","100k","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","2","","C14675",""
+"R54,R56","DNF","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","2","","",""
+"R59","4.7k","~","Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder","1","","C99782",""
+"SW1","SW_Push","~","FanPico:SW_PUSH_6mm_SMD_2","1","","C221880",""
+"U1,U2","SN74AHCT126","","Package_SO:SOIC-14_3.9x8.7mm_P1.27mm","2","","C155176",""
+"U3","CD74HC4050NSR","","Package_SO:SOIC-16_3.9x9.9mm_P1.27mm","1","","C131932",""
+"U4","Pico","","FanPico:RPi_Pico_PicoW_SMD_TH","1","","",""
+"U5","SPX1117-ADJ","http://www.diodes.com/datasheets/AP1117.pdf","Package_TO_SOT_SMD:SOT-223-3_TabPin2","1","","C67402",""
+"U6","LM4040DBZ-3","http://www.ti.com/lit/ds/symlink/lm4040-n.pdf","Package_TO_SOT_SMD:SOT-23","1","","C143326",""
+"U7","74HC4051","http://www.ti.com/lit/ds/symlink/cd74hc4051.pdf","Package_SO:SOIC-16_3.9x9.9mm_P1.27mm","1","","C9386",""
