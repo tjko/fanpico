@@ -6,6 +6,12 @@ PCB Size: 135mm x 81.5mm
 
 ## Change Log
 
+v1.3
+- Add QWIIC connector (to simplify connecting I2C sensors).
+- Add 1-Wire connector
+- Change J1 to a combination footprint (allows mounting either Floppy or DC connector).
+- Slightly improved ESD protection (TVS diodes added for most connectors)
+
 v1.2c
 - Add support for using either SN74AHCT125 or SN74AHCT126 (as U1 and U2).
 
@@ -30,3 +36,4 @@ v1.0
 - Errata:
   - U7 pin 7 (VEE) should be grounded.
     Workaround: add solder bridge between pins 7 & 8.
+
