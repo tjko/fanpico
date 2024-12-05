@@ -10,8 +10,8 @@ env:
   BUILD_THREADS: 4
   BUILD_TYPE: Release
   # Pico-SDK version
-  PICO_SDK_REF: 2.0.0
-  PICOTOOL_REF: 2.0.0
+  PICO_SDK_REF: 2.1.0
+  PICOTOOL_REF: 2.1.0
 
 jobs:
   build:
@@ -23,8 +23,8 @@ jobs:
 
     strategy:
       matrix:
-        fanpico_board: ["0804", "0804D", "0401D" ]
-        pico_board: ["pico", "pico_w", "pico2"]
+        fanpico_board: ["0804", "0804D", "0401D"]
+        pico_board: ["pico", "pico_w", "pico2", "pico2_w"]
 
     steps:
     - name: Arm GNU Toolchain (arm-none-eabi-gcc)
