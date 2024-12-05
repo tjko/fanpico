@@ -23,7 +23,7 @@ on:
 env:
   BUILD_TYPE: Release
   # Pico-SDK version
-  PICO_SDK_REF: 2.0.0
+  PICO_SDK_REF: 2.1.0
 
 jobs:
   analyze:

@@ -23,7 +23,6 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
-#include "hardware/rtc.h"
 #include "pico/stdlib.h"
 #include "cJSON.h"
 
@@ -253,10 +252,9 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	/* printf("ssi_handler(\"%s\",%lx,%d,%u,%u)\n", tag, (uint32_t)insert, insertlen, current_tag_part, *next_tag_part); */
 
 	if (!strncmp(tag, "datetime", 8)) {
-		datetime_t t;
-		if (rtc_get_datetime(&t)) {
-			printed = snprintf(insert, insertlen, "%04d-%02d-%02d %02d:%02d:%02d",
-					t.year, t.month, t.day, t.hour, t.min, t.sec);
+		time_t t;
+		if (rtc_get_time(&t)) {
+			time_t_to_str(insert, insertlen, t);
 		}
 	}
 	if (!strncmp(tag, "uptime", 6)) {

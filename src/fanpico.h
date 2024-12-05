@@ -508,6 +508,7 @@ struct timespec* time_t_to_timespec(time_t t, struct timespec *ts);
 char* time_t_to_str(char *buf, size_t size, const time_t t);
 bool str_to_time_t(const char *str, time_t *t);
 bool rtc_get_tm(struct tm *tm);
+bool rtc_get_time(time_t *t);
 const char *mac_address_str(const uint8_t *mac);
 int valid_wifi_country(const char *country);
 int valid_hostname(const char *name);
