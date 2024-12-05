@@ -165,6 +165,20 @@ bool rtc_get_tm(struct tm *tm)
 }
 
 
+bool rtc_get_time(time_t *t)
+{
+	struct timespec ts;
+
+	if (!t || !aon_timer_is_running())
+		return false;
+
+	aon_timer_get_time(&ts);
+	*t = timespec_to_time_t(&ts);
+
+	return true;
+}
+
+
 const char *mac_address_str(const uint8_t *mac)
 {
 	static char buf[32];

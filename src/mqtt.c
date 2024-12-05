@@ -23,9 +23,7 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
-#include "hardware/rtc.h"
 #include "pico/stdlib.h"
-#include "pico/util/datetime.h"
 #include "cJSON.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
@@ -695,7 +693,7 @@ static char* json_status_message()
 	cJSON *json, *l, *o;
 	int i;
 	float rpm;
-	datetime_t t;
+	time_t t;
 
 	if (!(json = cJSON_CreateObject()))
 		goto panic;
@@ -745,10 +743,10 @@ static char* json_status_message()
 		cJSON_AddItemToArray(l, o);
 	}
 
-	if ( rtc_get_datetime(&t) ) {
+	if ( rtc_get_time(&t) ) {
 		/* Send Data Time stamp to broker for possible use */
 		char datetime_buf[32];
-		datetime_to_str(datetime_buf, sizeof(datetime_buf), &t);
+		time_t_to_str(datetime_buf, sizeof(datetime_buf), t);
 		cJSON_AddItemToObject(json, "datetime", cJSON_CreateString( datetime_buf ));
 	}
 
