@@ -23,7 +23,6 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
-#include "pico/aon_timer.h"
 #include "pico/stdlib.h"
 #include "cJSON.h"
 
@@ -253,10 +252,9 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	/* printf("ssi_handler(\"%s\",%lx,%d,%u,%u)\n", tag, (uint32_t)insert, insertlen, current_tag_part, *next_tag_part); */
 
 	if (!strncmp(tag, "datetime", 8)) {
-		struct timespec ts;
-		if (aon_timer_is_running()) {
-			aon_timer_get_time(&ts);
-			time_t_to_str(insert, insertlen, timespec_to_time_t(&ts));
+		time_t t;
+		if (rtc_get_time(&t)) {
+			time_t_to_str(insert, insertlen, t);
 		}
 	}
 	if (!strncmp(tag, "uptime", 6)) {
