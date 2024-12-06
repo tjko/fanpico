@@ -8,7 +8,7 @@ include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 
 project(fanpico
-  VERSION 1.7.1
+  VERSION 1.7.2
   DESCRIPTION "FanPico - Programmable PWM (PC) Fan Controller"
   HOMEPAGE_URL https://kokkonen.net/fanpico/
   LANGUAGES C CXX ASM

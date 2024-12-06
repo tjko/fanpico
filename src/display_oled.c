@@ -185,7 +185,7 @@ void oled_display_init()
 	do {
 		sleep_ms(50);
 		res = oledInit(&oled, dtype, -1, flip, invert, I2C_HW,
-			SDA_PIN, SCL_PIN, LCD_RESET_PIN, 0);
+			SDA_PIN, SCL_PIN, LCD_RESET_PIN, cfg->i2c_speed, true);
 	} while (res == OLED_NOT_FOUND && retries++ < 10);
 
 	if (res == OLED_NOT_FOUND) {
