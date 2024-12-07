@@ -144,7 +144,6 @@ void wifi_init()
 	/* Get adapter MAC address */
 	if ((res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, cyw43_mac))) {
 		log_msg(LOG_ALERT, "Cannot get WiFi MAC address: %d", res);
-		cyw43_arch_deinit();
 		return;
 	}
 	log_msg(LOG_NOTICE, "WiFi MAC: %s", mac_address_str(cyw43_mac));
@@ -156,7 +155,7 @@ void wifi_init()
 			/* Default is to initiate asynchronous connection. */
 			res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
 							cfg->wifi_passwd,
-							CYW43_AUTH_WPA2_AES_PSK);
+							CYW43_AUTH_WPA3_WPA2_AES_PSK);
 		} else {
 			/* If "SYS:WIFI:MODE 1" has been used, attempt synchronous connection
 			   as connection to some buggy(?) APs don't seem to always work with
@@ -173,12 +172,10 @@ void wifi_init()
 		}
 		if (res != 0) {
 			log_msg(LOG_ERR, "WiFi connect failed: %d", res);
-			cyw43_arch_deinit();
 			return;
 		}
 	} else {
 		log_msg(LOG_ERR, "No WiFi SSID configured");
-		cyw43_arch_deinit();
 		return;
 	}
 
