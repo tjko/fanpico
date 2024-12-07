@@ -178,7 +178,6 @@ void wifi_init()
 		}
 	} else {
 		log_msg(LOG_ERR, "No WiFi SSID configured");
-		cyw43_arch_deinit();
 		return;
 	}
 
