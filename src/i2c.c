@@ -93,7 +93,7 @@ void setup_i2c_bus(struct fanpico_config *config)
 	baudrate = i2c_init(i2c_bus, config->i2c_speed);
 	baudrate /= 1000;
 	i2c_sensor_baudrate(baudrate);
-	log_msg(LOG_INFO, "I2C Bus initalized at %u kHz", baudrate);
+	log_msg(LOG_INFO, "I2C Bus initialized at %u kHz", baudrate);
 	gpio_set_function(SDA_PIN, GPIO_FUNC_I2C);
 	gpio_set_function(SCL_PIN, GPIO_FUNC_I2C);
 	gpio_pull_up(SDA_PIN);
