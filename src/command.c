@@ -2234,7 +2234,7 @@ int cmd_wifi_hostname(const char *cmd, const char *args, int query, struct prev_
 			"WiFi Hostname", valid_hostname);
 }
 
-int cmd_wifi_auth_mode(const char *cmd, const char *args, int query, char *prev_cmd)
+int cmd_wifi_auth_mode(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	uint32_t type;
 
