@@ -2234,6 +2234,25 @@ int cmd_wifi_hostname(const char *cmd, const char *args, int query, struct prev_
 			"WiFi Hostname", valid_hostname);
 }
 
+int cmd_wifi_auth_mode(const char *cmd, const char *args, int query, char *prev_cmd)
+{
+	uint32_t type;
+
+	if (query) {
+		printf("%s\n", conf->wifi_auth_mode);
+	} else {
+		if (!wifi_get_auth_type(args, &type))
+			return 1;
+		if (strncmp(conf->wifi_auth_mode, args, sizeof(conf->wifi_auth_mode))) {
+			log_msg(LOG_NOTICE, "WiFi Auth Type change %s --> %s",
+				conf->wifi_auth_mode, args);
+			strncopy(conf->wifi_auth_mode, args, sizeof(conf->wifi_auth_mode));
+		}
+	}
+
+	return 0;
+}
+
 int cmd_wifi_mode(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return uint8_setting(cmd, args, query, prev_cmd,
@@ -2893,6 +2912,7 @@ const struct cmd_t lfs_commands[] = {
 
 const struct cmd_t wifi_commands[] = {
 #ifdef WIFI_SUPPORT
+	{ "AUTHmode",  4, NULL,              cmd_wifi_auth_mode },
 	{ "COUntry",   3, NULL,              cmd_wifi_country },
 	{ "GATEway",   4, NULL,              cmd_wifi_gateway },
 	{ "HOSTname",  4, NULL,              cmd_wifi_hostname },
