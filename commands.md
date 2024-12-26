@@ -228,6 +228,8 @@ Fanpico supports following commands:
 * [SYStem:VREFadc?](#systemvrefadc-1)
 * [SYStem:VSENSORS?](#systemvsensors)
 * [SYStem:WIFI?](#systemwifi)
+* [SYStem:WIFI:AUTHmode](#systemwifiauthmode)
+* [SYStem:WIFI:AUTHmode?](#systemwifiauthmode-1)
 * [SYStem:WIFI:COUntry](#systemwificountry)
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
 * [SYStem:WIFI:HOSTname](#systemwifihostname)
@@ -3278,6 +3280,40 @@ Example:
 SYS:WIFI?
 1
 ```
+
+#### SYStem:WIFI:AUTHmode
+Set Wi-Fi Authentication mode.
+
+Following modes are currently supported:
+
+
+Mode|Description|Notes
+----|-----------|-----
+default|Use system default|Currently default is WPA2
+WPA3_WPA2|Use WPA3/WPA2 (mixed) mode|
+WPA3|Use WPA3 only|
+WPA2|Use WPA2 only|
+WPA2_WPA|Use WPA2/WPA (mixed) mode|Not recommended.
+WPA|Use WPA only|Not recommended.
+OPEN|Use "Open" mode|No authentication.
+
+
+Example:
+```
+SYS:WIFI:AUTH WPA3_WPA2
+```
+
+
+#### SYStem:WIFI:AUTHmode?
+Return currently configured Authentication mode for the WiFi interface.
+
+Example:
+
+```
+SYS:WIFI:AUTH?
+default
+```
+
 
 #### SYStem:WIFI:COUntry
 Set Wi-Fi Country code. By default, the country setting for the wireless adapter is unset.

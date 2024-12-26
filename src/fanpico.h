@@ -238,6 +238,7 @@ struct fanpico_config {
 	char wifi_ssid[WIFI_SSID_MAX_LEN + 1];
 	char wifi_passwd[WIFI_PASSWD_MAX_LEN + 1];
 	char wifi_country[WIFI_COUNTRY_MAX_LEN + 1];
+	char wifi_auth_mode[16];
 	uint8_t wifi_mode;
 	char hostname[32];
 	ip_addr_t syslog_server;
@@ -412,10 +413,12 @@ const char *network_ip();
 const char *network_hostname();
 
 #if WIFI_SUPPORT
+bool wifi_get_auth_type(const char *name, uint32_t *type);
+const char* wifi_auth_type_name(uint32_t type);
+
 /* httpd.c */
 u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 			u16_t current_tag_part, u16_t *next_tag_part);
-
 
 /* mqtt.c */
 void fanpico_setup_mqtt_client();

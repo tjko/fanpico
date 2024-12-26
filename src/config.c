@@ -538,6 +538,7 @@ void clear_config(struct fanpico_config *cfg)
 #ifdef WIFI_SUPPORT
 	cfg->wifi_ssid[0] = 0;
 	cfg->wifi_passwd[0] = 0;
+	strncopy(cfg->wifi_auth_mode, "default", sizeof(cfg->wifi_auth_mode));
 	cfg->wifi_mode = 0;
 	cfg->hostname[0] = 0;
 	strncopy(cfg->wifi_country, "XX", sizeof(cfg->wifi_country));
@@ -635,6 +636,9 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 			cJSON_AddItemToObject(config, "wifi_passwd", cJSON_CreateString(p));
 			free(p);
 		}
+	}
+	if (strlen(cfg->wifi_auth_mode) > 0) {
+		cJSON_AddItemToObject(config, "wifi_auth_mode", cJSON_CreateString(cfg->wifi_auth_mode));
 	}
 	if (cfg->wifi_mode != 0) {
 		cJSON_AddItemToObject(config, "wifi_mode", cJSON_CreateNumber(cfg->wifi_mode));
@@ -985,6 +989,10 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 				free(p);
 			}
 		}
+	}
+	if ((ref = cJSON_GetObjectItem(config, "wifi_auth_mode"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->wifi_auth_mode, val, sizeof(cfg->wifi_auth_mode));
 	}
 	if ((ref = cJSON_GetObjectItem(config, "wifi_mode"))) {
 		cfg->wifi_mode = cJSON_GetNumberValue(ref);
