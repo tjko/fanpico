@@ -255,9 +255,10 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 		time_t t;
 		if (rtc_get_time(&t)) {
 			time_t_to_str(insert, insertlen, t);
+			printed = strnlen(insert, insertlen);
 		}
 	}
-	if (!strncmp(tag, "uptime", 6)) {
+	else if (!strncmp(tag, "uptime", 6)) {
 		uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
 		uint32_t mins =  secs / 60;
 		uint32_t hours = mins / 60;
@@ -269,7 +270,7 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 				mins % 60,
 				secs % 60);
 	}
-	if (!strncmp(tag, "watchdog", 8)) {
+	else if (!strncmp(tag, "watchdog", 8)) {
 		printed = snprintf(insert, insertlen, "%s",
 				(rebooted_by_watchdog ? "&#x2639;" : "&#x263a;"));
 	}
