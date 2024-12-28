@@ -746,7 +746,7 @@ Supported signal types:
 Signal Type|Setting|Notes
 -----------|-------|-----
 Tachometer|TACHO|Send normal tachometer pulses to indicate rotation speed.
-Locked Rotor (Alarm)|LRA,treshold_rpm,locked_signal_level|Send Locked Rotor Alarm signal, when RPM is below treshold RPM speed send the indicated signal (HIGH or LOW).
+Locked Rotor (Alarm)|LRA,threshold_rpm,locked_signal_level|Send Locked Rotor Alarm signal, when RPM is below threshold RPM speed send the indicated signal (HIGH or LOW).
 
 *NOTE!* When changing RPM Mode for a mbfan (output), system must be reset before change takes effect.
 
@@ -1167,7 +1167,7 @@ Sensor numbering:
  - VSENSORS: 101, 102, ...
 
 
-Supporte I2C sensors:
+Supported I2C sensors:
 
 Sensor Model|Possible Addresses|Description|Notes
 ------------|------------------|-----------|-----
@@ -1910,7 +1910,7 @@ Unused flash memory:                   1151488
 
 ### SYStem:I2C?
 Returns status if I2C bus is active (available) currently.
-Depening on board model I2C may not be available at all
+Depending on board model I2C may not be available at all
 or may only be available if SPI is not active.
 
 Returns:

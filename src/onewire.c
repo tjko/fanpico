@@ -167,7 +167,7 @@ void setup_onewire_bus()
 
 		onewire_bus->ctx = pico_1wire_init(ONEWIRE_PIN, -1, true);
 		if (!onewire_bus->ctx) {
-			log_msg(LOG_ERR, "1-Wire intialization failed!");
+			log_msg(LOG_ERR, "1-Wire initialization failed!");
 			return;
 		}
 		onewire_scan_bus();

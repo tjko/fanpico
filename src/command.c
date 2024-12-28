@@ -70,7 +70,7 @@ extern const char fanpico_credits_text[];
 
 
 /**
- * Exract (unsigned) number from end of command string.
+ * Extract (unsigned) number from end of command string.
  *
  * If string is "MBFAN3" return value is 3.
  *
@@ -110,7 +110,7 @@ static int get_cmd_index(const char *cmd)
 
 
 /**
- * Return ealier (sub)command string
+ * Return earlier (sub)command string
  *
  * If full command was "CONF:FAN2:HYST:PWM". Depth 0 returns "HYST"
  * and depth 1 returns "FAN2".
@@ -141,7 +141,7 @@ static const char* get_prev_cmd(const struct prev_cmd_t *prev_cmd, uint depth)
  * If full command was "CONF:FAN3:NAME?", then depth 0 returns "FAN3"
  * and depth 1 returns "CONF".
  *
- * @param prev_cmd Strucutre storing previous sub commands
+ * @param prev_cmd Structure storing previous sub commands
  * @param depth Which command to return (0=last, 1=2nd to last, ...)
  *
  * @return number extracted from specified subcommand (negative value indicates error)
@@ -367,7 +367,7 @@ int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t 
 	if (query) {
 		printf("%s\n", credits);
 #ifdef __GNUC__
-		printf("Compiled with: gcc v%s\n\n", __VERSION__);
+		printf("Compiled with: GCC v%s\n\n", __VERSION__);
 #endif
 	}
 
@@ -3278,7 +3278,7 @@ static const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, str
 /**
  * Process command string received from user.
  *
- * Splits command string into multiple commads by ';' character.
+ * Splits command string into multiple commands by ';' character.
  * And executes each command using run_cmd() function.
  *
  * @param state Current system state.
