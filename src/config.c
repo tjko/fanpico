@@ -1,5 +1,5 @@
 /* config.c
-   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -286,12 +286,17 @@ void json2filter(cJSON *item, enum signal_filter_types *filter, void **filter_ct
 cJSON* filter2json(enum signal_filter_types filter, void *filter_ctx)
 {
 	cJSON *o;
+	char *s;
 
 	if ((o = cJSON_CreateObject()) == NULL)
 		return NULL;
 
 	cJSON_AddItemToObject(o, "name", cJSON_CreateString(filter2str(filter)));
-	cJSON_AddItemToObject(o, "args", cJSON_CreateString(filter_print_args(filter, filter_ctx)));
+	if ((s = filter_print_args(filter, filter_ctx))) {
+		cJSON_AddItemToObject(o, "args", cJSON_CreateString(s));
+		free(s);
+	}
+
 	return o;
 }
 
