@@ -94,9 +94,9 @@ Fanpico is Open Source Hardware, reference design is provided for the "0804" mod
 
 Additional models with different combinations of fan inputs/outputs could be easily designed (takining into account limitations of Raspberry Pi Pico I/O limits). New and improved PCB models/designs are most welcome.
 
-Model "0840D" with (with right-angle connectors):
+Model "0840D" with (with right-angle connectors and DC power connector):
 
-[![Fanpico-0804D](images/fanpico-0804D-v1.2b.jpg)](images/fanpico-0804D-v1.2b-large.jpg?raw=true)
+[![Fanpico-0804D](images/fanpico-0804D-v1.3-dc.jpg)](images/fanpico-0804D-v1.3-dc-large.jpg?raw=true)
 
 Model "0804" without display (with straight connectors):
 
