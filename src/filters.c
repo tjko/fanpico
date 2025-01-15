@@ -1,5 +1,5 @@
 /* filters.c
-   Copyright (C) 2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2023-2025 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -55,11 +55,8 @@ int str2filter(const char *s)
 
 const char* filter2str(enum signal_filter_types source)
 {
-	for (int i = 0; filters[i].name; i++) {
-		if (source == i) {
-			return filters[i].name;
-		}
-	}
+	if (source <= FILTER_ENUM_MAX)
+		return filters[source].name;
 
 	return "none";
 }
