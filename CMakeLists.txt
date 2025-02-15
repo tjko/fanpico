@@ -3,8 +3,13 @@
 
 cmake_minimum_required(VERSION 3.18)
 
-# Include Pico-SDK ($PICO_SDK_PATH must be set)
-include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
+# Include Pico-SDK
+if (DEFINED ENV{PICO_SDK_PATH})
+   include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
+else ()
+   include(cmake/pico_sdk_import.cmake)
+endif ()
+
 
 
 project(fanpico
