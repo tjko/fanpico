@@ -1181,7 +1181,8 @@ DPS310|0x77, 0x76|24bit, 0.5C accuracy
 LPS22|0x5d, 0x5c|Temperature and Pressure sensor
 LPS25|0x5d, 0x5c|Temperature and Pressure sensor, 2C accuracy
 MCP9808||13bit, 0.25C accuracy
-MS8607|0x77|Temperature, Humidity and Pressure Sensor
+MS5611|0x76, 0x77|Temperature and Pressure Sensor|Not found when scanning bus (SYS:I2C:SCAN?)
+MS8607|0x76|Temperature, Humidity and Pressure Sensor|Not found when scanning bus (SYS:I2C:SCAN?)
 PCT2075||11bit, 1C accuracy
 SHT3x|0x44, 0x34|SHT3x Series Temperature and Humidity sensors (SHT30, SHT31, SHT35)|Not always found when scanning bus (SYS:I2C:SCAN?)
 SHT4x|0x44|SHT4x Series Temperature and Humidity sensors (SHT40, SHT41, SHT43, SHT45)|Not always found when scanning bus (SYS:I2C:SCAN?)
