@@ -11,6 +11,12 @@ else ()
 endif ()
 
 
+message("Pico SDK version: ${PICO_SDK_VERSION_STRING}")
+
+if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
+   message(FATAL_ERROR "Pico-SDK version 2.0.0 or later required.")
+endif()
+
 
 project(fanpico
   VERSION 1.7.3
@@ -216,6 +222,7 @@ target_compile_definitions(fanpico PRIVATE PICO_STACK_SIZE=0x2000)
 target_compile_definitions(fanpico PRIVATE PICO_CORE1_STACK_SIZE=0x1000)
 target_compile_definitions(fanpico PRIVATE PICO_USE_STACK_GUARDS=1)
 target_compile_definitions(fanpico PRIVATE PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
+target_compile_definitions(fanpico PRIVATE PICO_USE_FASTEST_SUPPORTED_CLOCK=1)
 
 target_compile_definitions(fanpico PRIVATE
   LFS_THREADSAFE=1
