@@ -1156,7 +1156,7 @@ MIN|Minimum temperature between source sensors|2+|sensor_a,sensor_b, ...
 AVG|Average temperature between source sensors|2+|sensor_a,sensor_b, ...
 DELTA|Temperature delta between to source sensors|2|sensor_a,sensor_b
 ONEWIRE|Temperature reading from digital 1-Wire sensor|1|onewire_address
-I2C|Temperature reading from digital I2C sensor|2|i2c_address,sensor_model
+I2C|Temperature reading from digital I2C sensor|2|i2c_address,sensor_type_or_alias
 
 
 Note, in "manual" mode if timeout_ms is set to zero, then sensor's temperature reading
@@ -1169,27 +1169,35 @@ Sensor numbering:
 
 Supported I2C sensors:
 
-Sensor Model|Possible Addresses|Description|Notes
-------------|------------------|-----------|-----
-ADT7410|0x48, 0x49, 0x4a, 0x4b|16bit, 0.5C accuracy
-AHT1x||AHT1x (AHT10, AHT11 ,...)
-AHT2x||AHT2x (AHT20, AHT21 ,...)
-AS621x||AS621x series: AS6212 (0.2C), AC6214 (0.4C), AC6218 (0.8C)
-BMP180||16bit, 0.5C accuracy
-BMP280|0x76, 0x77|20bit, 0.5C accuracy
-DPS310|0x77, 0x76|24bit, 0.5C accuracy
-LPS22|0x5d, 0x5c|Temperature and Pressure sensor
-LPS25|0x5d, 0x5c|Temperature and Pressure sensor, 2C accuracy
-MCP9808||13bit, 0.25C accuracy
-MS5611|0x76, 0x77|Temperature and Pressure Sensor|Not found when scanning bus (SYS:I2C:SCAN?)
-MS8607|0x76|Temperature, Humidity and Pressure Sensor|Not found when scanning bus (SYS:I2C:SCAN?)
-PCT2075||11bit, 1C accuracy
-SHT3x|0x44, 0x34|SHT3x Series Temperature and Humidity sensors (SHT30, SHT31, SHT35)|Not always found when scanning bus (SYS:I2C:SCAN?)
-SHT4x|0x44|SHT4x Series Temperature and Humidity sensors (SHT40, SHT41, SHT43, SHT45)|Not always found when scanning bus (SYS:I2C:SCAN?)
-SHTC3|0x70|Temperature and Humidity sensor, 0.2C accuracy
-STTS22H|0x38, 0x3c, 0x3e, 0x3f|16bit, 0.5C accuracy
-TMP102|0x48, 0x49, 0x4a, 0x4b|12bit, 2C accuracy
-TMP117|0x48, 0x49, 0x4a, 0x4b|16bit, 0.1C accuracy
+Sensor Type|Aliases|Possible Addresses|Description|Notes
+-----------|-------|------------------|-----------|-----
+ADT7410||0x48, 0x49, 0x4a, 0x4b|16bit Digital Temperature Sensor, 0.5C accuracy
+AHT1x|||AHT1x Series Temperature and Humidity sensors (AHT10, AHT11 ,...)
+AHT2x|||AHT2x Series Temperature and Humidity sensors (AHT20, AHT21 ,...)
+AM2320||0x5c|Temperature and Humidity Sensor, 0.5C accuracy|Not found when scanning bus. May not work above 100kHz bus speeds.
+AS621x|AS6212, AS6214, AS6218||AS621x Series sensors: AS6212 (0.2C), AS6214 (0.4C), AC6218 (0.8C)
+BMP180|||16bit, 0.5C accuracy
+BMP280||0x76, 0x77|20bit, 0.5C accuracy
+DPS310||0x77, 0x76|24bit, 0.5C accuracy
+HDC302x|HDC3022, HDC3021, HDC3020|0x44, 0x45, 0x46, 0x47|HDC302x Series Temperature and Humiditysensors
+HTS221||0x5f|Temperature and Humidity Sensor
+HTU21D||0x40|Temperature and Humidity Sensor, 0.4C accuracy|Not found when scanning bus (SYS:I2C:SCAN?)
+HTU31D||0x40, 0x41|Temperature and Humidity Sensor, 0.3C accuracy
+LPSxx|LPS22, LPS25, LPS28, LPS33, LPS35|0x5d, 0x5c|LPSxx Series Temperature and Pressure sensors
+MCP9808|||Digital Temperature Sensor, 0.5C accuracy
+MPL115A2||0x60|Digital Barometer|Temperature sensor not calibrated.
+MPL3115A2||0x60|Temperature and Pressure sensor with Altimetry, 1C accuracy
+MS5611||0x76, 0x77|Temperature and Pressure Sensor|Not found when scanning bus (SYS:I2C:SCAN?)
+MS8607||0x76 and 0x40|Temperature, Humidity and Pressure Sensor|Not found when scanning bus (SYS:I2C:SCAN?), appears as two seprate devices.
+PCT2075|||Digital Temperature Sensor, 1C accuracy
+SHT3x|SHT30, SHT31, SHT35|0x44, 0x34|SHT3x Series Temperature and Humidity sensors|Not always found when scanning bus (SYS:I2C:SCAN?)
+SHT4x|SHT40, SHT41, SHT43, SHT45|0x44|SHT4x Series Temperature and Humidity sensors|Not always found when scanning bus (SYS:I2C:SCAN?)
+SHTC3||0x70|Temperature and Humidity sensor, 0.2C accuracy
+SI7021||0x40|Temperature and Humidity sensor, 0.4C accuracy
+STTS22H||0x38, 0x3c, 0x3e, 0x3f|Temperature Sensor, 0.5C accuracy
+TC74|TC74A0|0x48 - 0x4f|Digital Thermal Sensor, 2C accuracy
+TMP102||0x48, 0x49, 0x4a, 0x4b|Temperature Sensor, 2C accuracy
+TMP117||0x48, 0x49, 0x4a, 0x4b|Temperature Sensor, 0.1C accuracy
 
 
 Defaults:
