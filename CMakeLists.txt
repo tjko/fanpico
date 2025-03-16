@@ -19,7 +19,7 @@ endif()
 
 
 project(fanpico
-  VERSION 1.7.3
+  VERSION 1.7.4
   DESCRIPTION "FanPico - Programmable PWM (PC) Fan Controller"
   HOMEPAGE_URL https://kokkonen.net/fanpico/
   LANGUAGES C CXX ASM
@@ -186,12 +186,14 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
     src/httpd.c
     src/mqtt.c
     src/telnetd.c
+    src/snmp.c
     )
   target_link_libraries(fanpico PRIVATE
     pico_cyw43_arch_lwip_threadsafe_background
     pico_lwip_sntp
     pico_lwip_http
     pico_lwip_mqtt
+    pico_lwip_snmp
     pico-telnetd-lib
     )
   if (TLS_SUPPORT)

@@ -2657,6 +2657,40 @@ int cmd_telnet_pass(const char *cmd, const char *args, int query, struct prev_cm
 	}
 	return 0;
 }
+
+int cmd_snmp_agent(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->snmp_active, "SNMP Agent");
+}
+
+int cmd_snmp_community(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->snmp_community, sizeof(conf->snmp_community),
+			"SNMP Community", NULL);
+}
+
+int cmd_snmp_community_write(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->snmp_community_write, sizeof(conf->snmp_community_write),
+			"SNMP Community (Write)", NULL);
+}
+
+int cmd_snmp_contact(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->snmp_contact, sizeof(conf->snmp_contact),
+			"SNMP sysContact", NULL);
+}
+
+int cmd_snmp_location(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->snmp_location, sizeof(conf->snmp_location),
+			"SNMP sysLocation", NULL);
+}
 #endif /* WIFI_SUPPOERT */
 
 int cmd_time(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -2987,6 +3021,15 @@ const struct cmd_t mqtt_commands[] = {
 	{ "TOPIC",     5, mqtt_topic_commands, NULL },
 	{ 0, 0, 0, 0 }
 };
+
+const struct cmd_t snmp_commands[] = {
+	{ "AGENT",     5, NULL,              cmd_snmp_agent },
+	{ "COMMunity", 4, NULL,              cmd_snmp_community },
+	{ "CONTact",   4, NULL,              cmd_snmp_contact },
+	{ "LOCAtion",  4, NULL,              cmd_snmp_location },
+	{ "WRITecommunity", 4, NULL,         cmd_snmp_community_write },
+	{ 0, 0, 0, 0 }
+};
 #endif
 
 const struct cmd_t tls_commands[] = {
@@ -3044,6 +3087,9 @@ const struct cmd_t system_commands[] = {
 #endif
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "SERIAL",    6, NULL,              cmd_serial },
+#if WIFI_SUPPORT
+	{ "SNMP",      4, snmp_commands,     NULL },
+#endif
 	{ "SPI",       3, NULL,              cmd_spi },
 	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
 	{ "TELNET",    6, telnet_commands,   NULL },

@@ -80,6 +80,11 @@ void pico_set_system_time(long int sec);
 #define LWIP_HTTPD_SSI_INCLUDE_TAG      0
 #define LWIP_HTTPD_SSI_EXTENSIONS       ".shtml", ".xml", ".json", ".csv"
 
+#define LWIP_SNMP                       1
+#define SNMP_LWIP_MIB2                  1
+#define LWIP_STATS                      1
+#define MIB2_STATS                      1
+
 #if TLS_SUPPORT
 #define HTTPD_ENABLE_HTTPS              1
 #define LWIP_ALTCP                      1

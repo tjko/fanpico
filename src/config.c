@@ -589,6 +589,11 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->telnet_port = 0;
 	cfg->telnet_user[0] = 0;
 	cfg->telnet_pwhash[0] = 0;
+	cfg->snmp_active = 0;
+	strncopy(cfg->snmp_community, "public", sizeof(cfg->snmp_community));
+	strncopy(cfg->snmp_community_write, "private", sizeof(cfg->snmp_community_write));
+	cfg->snmp_contact[0] = 0;
+	cfg->snmp_location[0] = 0;
 #endif
 
 	mutex_exit(config_mutex);
@@ -779,6 +784,16 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "telnet_user", cJSON_CreateString(cfg->telnet_user));
 	if (strlen(cfg->telnet_pwhash) > 0)
 		cJSON_AddItemToObject(config, "telnet_pwhash", cJSON_CreateString(cfg->telnet_pwhash));
+	if (cfg->snmp_active)
+		cJSON_AddItemToObject(config, "snmp_active", cJSON_CreateNumber(cfg->snmp_active));
+	if (strlen(cfg->snmp_community) > 0)
+		cJSON_AddItemToObject(config, "snmp_community", cJSON_CreateString(cfg->snmp_community));
+	if (strlen(cfg->snmp_community_write) > 0)
+		cJSON_AddItemToObject(config, "snmp_community_write", cJSON_CreateString(cfg->snmp_community_write));
+	if (strlen(cfg->snmp_contact) > 0)
+		cJSON_AddItemToObject(config, "snmp_contact", cJSON_CreateString(cfg->snmp_contact));
+	if (strlen(cfg->snmp_location) > 0)
+		cJSON_AddItemToObject(config, "snmp_location", cJSON_CreateString(cfg->snmp_location));
 #endif
 
 	/* Fan outputs */
@@ -1162,6 +1177,25 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "telnet_pwhash"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->telnet_pwhash, val, sizeof(cfg->telnet_pwhash));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "snmp_active"))) {
+		cfg->snmp_active = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "snmp_community"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->snmp_community, val, sizeof(cfg->snmp_community));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "snmp_community_write"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->snmp_community_write, val, sizeof(cfg->snmp_community_write));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "snmp_contact"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->snmp_contact, val, sizeof(cfg->snmp_contact));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "snmp_location"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->snmp_location, val, sizeof(cfg->snmp_location));
 	}
 #endif
 

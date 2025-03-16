@@ -55,7 +55,7 @@ struct wifi_auth_type {
 	uint32_t type;
 };
 
-static struct wifi_auth_type auth_types[] = {
+static const struct wifi_auth_type auth_types[] = {
 	{ "default",    CYW43_AUTH_WPA2_AES_PSK },
 
 	{ "WPA3_WPA2",  CYW43_AUTH_WPA3_WPA2_AES_PSK },
@@ -273,6 +273,12 @@ void wifi_init()
 	if (cfg->telnet_active) {
 		log_msg(LOG_NOTICE, "Telnet Server enabled");
 		telnetserver_init();
+	}
+
+	/* Enable SNMP agent */
+	if (cfg->snmp_active) {
+		log_msg(LOG_NOTICE,"SNMP Agent enabled");
+		fanpico_snmp_init();
 	}
 
 	cyw43_arch_lwip_end();
