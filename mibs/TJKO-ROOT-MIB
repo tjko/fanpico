@@ -1,0 +1,33 @@
+TJKO-ROOT-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	MODULE-IDENTITY,
+	OBJECT-IDENTITY,
+	enterprises
+				FROM SNMPv2-SMI
+	;
+
+
+tjko MODULE-IDENTITY
+	LAST-UPDATED "202503180000Z"
+	ORGANIZATION "TJKO Industries"
+	CONTACT-INFO
+		"Timo Kokkonen
+		 EMail: tjko@iki.fi"
+
+	DESCRIPTION
+		 "The TJKO root MIB."
+
+	REVISION  "202503180000Z"
+	DESCRIPTION "Initial revision of this MIB module."
+	::= { enterprises 63264 }
+
+
+devices OBJECT-IDENTITY
+	STATUS current
+	DESCRIPTION
+		"Device specific MIBs are defined under this object."
+	::= { tjko 1 }
+
+
+END

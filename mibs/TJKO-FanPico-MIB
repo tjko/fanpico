@@ -1,0 +1,470 @@
+TJKO-FanPico-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	devices
+					FROM TJKO-ROOT-MIB
+	MODULE-IDENTITY,
+	OBJECT-TYPE,
+	Unsigned32,
+	Integer32
+					FROM SNMPv2-SMI
+	OBJECT-GROUP,
+	MODULE-COMPLIANCE
+					FROM SNMPv2-CONF
+	TEXTUAL-CONVENTION,
+	DisplayString
+					FROM SNMPv2-TC
+	;
+
+
+fanpico MODULE-IDENTITY
+	LAST-UPDATED "202503190000Z"
+	ORGANIZATION "TJKO Industries"
+	CONTACT-INFO
+		"Timo Kokkonen
+		 EMail: tjko@iki.fi
+		 https://kokkonen.net/fanpico/"
+
+	DESCRIPTION
+		 "The MIB module for FanPico Smart PWM (PC) Fan Controllers."
+
+	REVISION  "202503190000Z"
+	DESCRIPTION "Initial revision of this MIB module."
+	::= { devices 1 }
+
+
+
+fanpicoObjects 	     OBJECT IDENTIFIER ::= { fanpico 1 }
+fanpicoTraps  	     OBJECT IDENTIFIER ::= { fanpico 2 }
+fanpicoConformance   OBJECT IDENTIFIER ::= { fanpico 3 }
+
+fanpicoCompliance    OBJECT IDENTIFIER ::= { fanpicoConformance 1 }
+fanpicoGroups        OBJECT IDENTIFIER ::= { fanpicoConformance 2 }
+
+
+fanpicoBasicCompliance MODULE-COMPLIANCE
+	STATUS current
+	DESCRIPTION
+		"Compliance statement for the entities in this fanpico MIB."
+	MODULE
+	MANDATORY-GROUPS {
+			 fanpicoFanGroup,
+			 fanpicoMBFanGroup,
+			 fanpicoSensorGroup
+	}
+	::= { fanpicoCompliance 1 }
+
+
+fanpicoFanGroup OBJECT-GROUP
+	OBJECTS {
+		fanCount,
+		fanName,
+		fanRPM,
+		fanDutyCycle,
+		fanFrequency
+	}
+	STATUS current
+	DESCRIPTION
+		"Fan Information Objects"
+	::= { fanpicoGroups 1 }
+
+fanpicoMBFanGroup OBJECT-GROUP
+	OBJECTS {
+		mbfanCount,
+		mbfanName,
+		mbfanRPM,
+		mbfanDutyCycle,
+		mbfanFrequency
+	}
+	STATUS current
+	DESCRIPTION
+		"MBFan Information Objects"
+	::= { fanpicoGroups 2 }
+
+fanpicoSensorGroup OBJECT-GROUP
+	OBJECTS {
+		sensorCount,
+		sensorName,
+		sensorTemperature,
+		sensorDutyCycle,
+		vsensorCount,
+		vsensorName,
+		vsensorTemperature,
+		vsensorHumidity,
+		vsensorPressure,
+		vsensorDutyCycle
+	}
+	STATUS current
+	DESCRIPTION
+		"Sensor Information Objects"
+	::= { fanpicoGroups 3 }
+
+
+--
+-- Textual Conventions
+--
+
+SpeedRPM ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT	"d-0"
+	STATUS		current
+	DESCRIPTION
+		"This data type represents fan speed
+		 expressed in RPM."
+	SYNTAX		Unsigned32
+
+TachoHz ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT	"d-0"
+	STATUS		current
+	DESCRIPTION
+		"This data type represents tachometer signal
+		 frequency expressed in Hz."
+	SYNTAX		Unsigned32
+
+DutyCycle ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT	"d-0"
+	STATUS		current
+	DESCRIPTION
+		"This data type represents PWM signal duty cycle
+		 expressed in %."
+	SYNTAX		Unsigned32 (0..100)
+
+TemperatureC ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT	"d-1"
+	STATUS		current
+	DESCRIPTION
+		"This data type represents temperature in Celcius."
+	SYNTAX		Integer32
+
+HumidityPercent ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT	"d-1"
+	STATUS		current
+	DESCRIPTION
+		"This data type represents relative humidity
+		 expressed in %."
+	SYNTAX		Unsigned32 (0..100)
+
+BarometricPressure ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT	"d-1"
+	STATUS		current
+	DESCRIPTION
+		"This data type represents barometric pressure
+		 expressed in hPa."
+	SYNTAX		Unsigned32
+
+
+--
+-- "Fan" Information
+--
+
+fanCount OBJECT-TYPE
+	SYNTAX		Integer32 (0..255)
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Number of Fan (output) ports present on the device."
+	::= { fanpicoObjects 1 }
+
+fanTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF FanTableEntry
+	MAX-ACCESS     	not-accessible
+	STATUS         	current
+	DESCRIPTION
+		"This table contains current Fan statuses."
+	::= { fanpicoObjects 2 }
+
+fanTableEntry OBJECT-TYPE
+	SYNTAX		FanTableEntry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"Fan status table entry."
+	INDEX { fanID }
+	::= { fanTable 1 }
+
+FanTableEntry ::= SEQUENCE {
+	 fanID		Integer32,
+	 fanName	DisplayString,
+	 fanRPM		SpeedRPM,
+	 fanFrequency   TachoHz,
+	 fanDutyCycle	DutyCycle
+	 }
+
+fanID OBJECT-TYPE
+	SYNTAX		Integer32 (1..255)
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"Fan port number."
+	::= { fanTableEntry 1 }
+
+fanName OBJECT-TYPE
+	SYNTAX		DisplayString
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Fan port name."
+	::= { fanTableEntry 2 }
+
+fanRPM OBJECT-TYPE
+	SYNTAX		SpeedRPM
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Fan RPM."
+	::= { fanTableEntry 3 }
+
+fanFrequency OBJECT-TYPE
+	SYNTAX		TachoHz
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Fan tachometer signal frequency."
+	::= { fanTableEntry 4 }
+
+fanDutyCycle OBJECT-TYPE
+	SYNTAX		DutyCycle
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Fan PWM signal duty cycle."
+	::= { fanTableEntry 5 }
+
+
+
+--
+-- "MB Fan" Information
+--
+
+mbfanCount OBJECT-TYPE
+	SYNTAX		Integer32 (0..255)
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Number of MB Fan (input) ports present on the device."
+	::= { fanpicoObjects 3 }
+
+mbfanTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF MbfanTableEntry
+	MAX-ACCESS     	not-accessible
+	STATUS         	current
+	DESCRIPTION
+		"This table contains current MB Fan statuses."
+	::= { fanpicoObjects 4 }
+
+mbfanTableEntry OBJECT-TYPE
+	SYNTAX		MbfanTableEntry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"MB Fan status table entry."
+	INDEX { mbfanID }
+	::= { mbfanTable 1 }
+
+MbfanTableEntry ::= SEQUENCE {
+	 mbfanID	Integer32,
+	 mbfanName	DisplayString,
+	 mbfanRPM	SpeedRPM,
+	 mbfanFrequency TachoHz,
+	 mbfanDutyCycle	DutyCycle
+	 }
+
+mbfanID OBJECT-TYPE
+	SYNTAX		Integer32 (1..255)
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"MB Fan port number."
+	::= { mbfanTableEntry 1 }
+
+mbfanName OBJECT-TYPE
+	SYNTAX		DisplayString
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"MB Fan port name."
+	::= { mbfanTableEntry 2 }
+
+mbfanRPM OBJECT-TYPE
+	SYNTAX		SpeedRPM
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"MB Fan RPM."
+	::= { mbfanTableEntry 3 }
+
+mbfanFrequency OBJECT-TYPE
+	SYNTAX		TachoHz
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"MB Fan tachometer signal frequency."
+	::= { mbfanTableEntry 4 }
+
+mbfanDutyCycle OBJECT-TYPE
+	SYNTAX		DutyCycle
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"MB Fan PWM signal duty cycle."
+	::= { mbfanTableEntry 5 }
+
+
+
+--
+-- "Sensor" Information
+--
+
+sensorCount OBJECT-TYPE
+	SYNTAX		Integer32 (0..255)
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Number of analog sensor ports present on the device."
+	::= { fanpicoObjects 5 }
+
+sensorTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF SensorTableEntry
+	MAX-ACCESS     	not-accessible
+	STATUS         	current
+	DESCRIPTION
+		"This table contains current Sensor temperatures."
+	::= { fanpicoObjects 6 }
+
+sensorTableEntry OBJECT-TYPE
+	SYNTAX		SensorTableEntry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"Sensor status table entry."
+	INDEX { sensorID }
+	::= { sensorTable 1 }
+
+SensorTableEntry ::= SEQUENCE {
+	 sensorID		Integer32,
+	 sensorName		DisplayString,
+	 sensorTemperature 	TemperatureC,
+	 sensorDutyCycle   	DutyCycle
+	 }
+
+sensorID OBJECT-TYPE
+	SYNTAX		Integer32 (1..255)
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"Sensor port number."
+	::= { sensorTableEntry 1 }
+
+sensorName OBJECT-TYPE
+	SYNTAX		DisplayString
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Sensor port name."
+	::= { sensorTableEntry 2 }
+
+sensorTemperature OBJECT-TYPE
+	SYNTAX		TemperatureC
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Sensor Temperature (C)."
+	::= { sensorTableEntry 3 }
+
+sensorDutyCycle OBJECT-TYPE
+	SYNTAX		DutyCycle
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Sensor gnerated PWM signal duty cycle."
+	::= { sensorTableEntry 4 }
+
+
+
+--
+-- "VSensor" Information
+--
+
+vsensorCount OBJECT-TYPE
+	SYNTAX		Integer32 (0..255)
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Number of virtual sensor ports present on the device."
+	::= { fanpicoObjects 7 }
+
+vsensorTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF VsensorTableEntry
+	MAX-ACCESS     	not-accessible
+	STATUS         	current
+	DESCRIPTION
+		"This table contains current virtual sensor outputs."
+	::= { fanpicoObjects 8 }
+
+vsensorTableEntry OBJECT-TYPE
+	SYNTAX		VsensorTableEntry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"Virtual Sensor status table entry."
+	INDEX { vsensorID }
+	::= { vsensorTable 1 }
+
+VsensorTableEntry ::= SEQUENCE {
+	 vsensorID		Integer32,
+	 vsensorName		DisplayString,
+	 vsensorTemperature 	TemperatureC,
+	 vsensorHumidity   	HumidityPercent,
+	 vsensorPressure   	BarometricPressure,
+	 vsensorDutyCycle   	DutyCycle
+	 }
+
+vsensorID OBJECT-TYPE
+	SYNTAX		Integer32 (1..255)
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"Virtual Sensor number."
+	::= { vsensorTableEntry 1 }
+
+vsensorName OBJECT-TYPE
+	SYNTAX		DisplayString
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Virtual Sensor name."
+	::= { vsensorTableEntry 2 }
+
+vsensorTemperature OBJECT-TYPE
+	SYNTAX		TemperatureC
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Virtual Sensor Temperature (C)."
+	::= { vsensorTableEntry 3 }
+
+vsensorHumidity OBJECT-TYPE
+	SYNTAX		HumidityPercent
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Virtual Sensor Humidity (%)."
+	::= { vsensorTableEntry 4 }
+
+vsensorPressure OBJECT-TYPE
+	SYNTAX		BarometricPressure
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Virtual Sensor Pressure (hPa)."
+	::= { vsensorTableEntry 5 }
+
+vsensorDutyCycle OBJECT-TYPE
+	SYNTAX		DutyCycle
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Virtual Sensor generated PWM signal duty cycle."
+	::= { vsensorTableEntry 6 }
+
+
+END
