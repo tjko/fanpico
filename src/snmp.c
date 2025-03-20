@@ -122,10 +122,7 @@ static snmp_err_t fan_table_get(const u32_t* column, const u32_t* row,
 static snmp_err_t fan_table_get_cell_val(const u32_t* column, const u32_t* row_oid, u8_t row_oid_len,
 				union snmp_variant_value* value, u32_t* value_len)
 {
-	log_msg(LOG_INFO, "fan_table_get_cell_val(column=%lu,row_oid=%lu,row_oid_len=%u,value=%p,value_len=%lu)", *column, *row_oid, row_oid_len, value, *value_len);
-
-	if (!snmp_oid_in_range(row_oid, row_oid_len,
-				fan_table_oid_ranges,
+	if (!snmp_oid_in_range(row_oid, row_oid_len, fan_table_oid_ranges,
 				LWIP_ARRAYSIZE(fan_table_oid_ranges)))
 		return SNMP_ERR_NOSUCHINSTANCE;
 
@@ -138,9 +135,8 @@ static snmp_err_t fan_table_get_next_cell_inst_and_val(const u32_t* column, stru
 	struct snmp_next_oid_state state;
 	u32_t result_temp[LWIP_ARRAYSIZE(fan_table_oid_ranges)];
 
-	//log_msg(LOG_INFO, "fan_table_get_next(column=%lu,row_oid={%u:%lu},value=%p,value_len=%lu)", *column, row_oid->len, row_oid->id[0], value, *value_len);
-
-	snmp_next_oid_init(&state, row_oid->id, row_oid->len, result_temp, LWIP_ARRAYSIZE(fan_table_oid_ranges));
+	snmp_next_oid_init(&state, row_oid->id, row_oid->len, result_temp,
+			LWIP_ARRAYSIZE(fan_table_oid_ranges));
 
 	for (u32_t i = 1; i <= FAN_COUNT; i++) {
 		u32_t test_oid[LWIP_ARRAYSIZE(fan_table_oid_ranges)];
@@ -196,10 +192,7 @@ static snmp_err_t mbfan_table_get(const u32_t* column, const u32_t* row,
 static snmp_err_t mbfan_table_get_cell_val(const u32_t* column, const u32_t* row_oid, u8_t row_oid_len,
 				union snmp_variant_value* value, u32_t* value_len)
 {
-	log_msg(LOG_INFO, "mbfan_table_get_cell_val(column=%lu,row_oid=%lu,row_oid_len=%u,value=%p,value_len=%lu)", *column, *row_oid, row_oid_len, value, *value_len);
-
-	if (!snmp_oid_in_range(row_oid, row_oid_len,
-				mbfan_table_oid_ranges,
+	if (!snmp_oid_in_range(row_oid, row_oid_len, mbfan_table_oid_ranges,
 				LWIP_ARRAYSIZE(mbfan_table_oid_ranges)))
 		return SNMP_ERR_NOSUCHINSTANCE;
 
@@ -212,9 +205,9 @@ static snmp_err_t mbfan_table_get_next_cell_inst_and_val(const u32_t* column, st
 	struct snmp_next_oid_state state;
 	u32_t result_temp[LWIP_ARRAYSIZE(mbfan_table_oid_ranges)];
 
-	//log_msg(LOG_INFO, "fan_table_get_next(column=%lu,row_oid={%u:%lu},value=%p,value_len=%lu)", *column, row_oid->len, row_oid->id[0], value, *value_len);
 
-	snmp_next_oid_init(&state, row_oid->id, row_oid->len, result_temp, LWIP_ARRAYSIZE(mbfan_table_oid_ranges));
+	snmp_next_oid_init(&state, row_oid->id, row_oid->len, result_temp,
+			LWIP_ARRAYSIZE(mbfan_table_oid_ranges));
 
 	for (u32_t i = 1; i <= MBFAN_COUNT; i++) {
 		u32_t test_oid[LWIP_ARRAYSIZE(mbfan_table_oid_ranges)];
@@ -267,10 +260,7 @@ static snmp_err_t sensor_table_get(const u32_t* column, const u32_t* row,
 static snmp_err_t sensor_table_get_cell_val(const u32_t* column, const u32_t* row_oid, u8_t row_oid_len,
 				union snmp_variant_value* value, u32_t* value_len)
 {
-	log_msg(LOG_INFO, "mbfan_table_get_cell_val(column=%lu,row_oid=%lu,row_oid_len=%u,value=%p,value_len=%lu)", *column, *row_oid, row_oid_len, value, *value_len);
-
-	if (!snmp_oid_in_range(row_oid, row_oid_len,
-				sensor_table_oid_ranges,
+	if (!snmp_oid_in_range(row_oid, row_oid_len, sensor_table_oid_ranges,
 				LWIP_ARRAYSIZE(sensor_table_oid_ranges)))
 		return SNMP_ERR_NOSUCHINSTANCE;
 
@@ -284,7 +274,8 @@ static snmp_err_t sensor_table_get_next_cell_inst_and_val(const u32_t* column, s
 	u32_t result_temp[LWIP_ARRAYSIZE(sensor_table_oid_ranges)];
 
 
-	snmp_next_oid_init(&state, row_oid->id, row_oid->len, result_temp, LWIP_ARRAYSIZE(sensor_table_oid_ranges));
+	snmp_next_oid_init(&state, row_oid->id, row_oid->len, result_temp,
+			LWIP_ARRAYSIZE(sensor_table_oid_ranges));
 
 	for (u32_t i = 1; i <= SENSOR_COUNT; i++) {
 		u32_t test_oid[LWIP_ARRAYSIZE(sensor_table_oid_ranges)];
@@ -342,10 +333,7 @@ static snmp_err_t vsensor_table_get(const u32_t* column, const u32_t* row,
 static snmp_err_t vsensor_table_get_cell_val(const u32_t* column, const u32_t* row_oid, u8_t row_oid_len,
 				union snmp_variant_value* value, u32_t* value_len)
 {
-	log_msg(LOG_INFO, "mbfan_table_get_cell_val(column=%lu,row_oid=%lu,row_oid_len=%u,value=%p,value_len=%lu)", *column, *row_oid, row_oid_len, value, *value_len);
-
-	if (!snmp_oid_in_range(row_oid, row_oid_len,
-				vsensor_table_oid_ranges,
+	if (!snmp_oid_in_range(row_oid, row_oid_len, vsensor_table_oid_ranges,
 				LWIP_ARRAYSIZE(vsensor_table_oid_ranges)))
 		return SNMP_ERR_NOSUCHINSTANCE;
 
@@ -359,7 +347,8 @@ static snmp_err_t vsensor_table_get_next_cell_inst_and_val(const u32_t* column, 
 	u32_t result_temp[LWIP_ARRAYSIZE(vsensor_table_oid_ranges)];
 
 
-	snmp_next_oid_init(&state, row_oid->id, row_oid->len, result_temp, LWIP_ARRAYSIZE(vsensor_table_oid_ranges));
+	snmp_next_oid_init(&state, row_oid->id, row_oid->len, result_temp,
+			LWIP_ARRAYSIZE(vsensor_table_oid_ranges));
 
 	for (u32_t i = 1; i <= VSENSOR_COUNT; i++) {
 		u32_t test_oid[LWIP_ARRAYSIZE(vsensor_table_oid_ranges)];
