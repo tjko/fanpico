@@ -199,6 +199,16 @@ Fanpico supports following commands:
 * [SYStem:SENSORS?](#systemsensors)
 * [SYStem:SERIAL](#systemserial)
 * [SYStem:SERIAL?](#systemserial-1)
+* [SYStem:SNMP:AGENT](#systemsnmpagent)
+* [SYStem:SNMP:AGENT?](#systemsnmpagent-1)
+* [SYStem:SNMP:COMmunity](#systemsnmpcommunity)
+* [SYStem:SNMP:COMmunity?](#systemsnmpcommunity-1)
+* [SYStem:SNMP:CONTact](#systemsnmpcontact)
+* [SYStem:SNMP:CONTact?](#systemsnmpcontact-1)
+* [SYStem:SNMP:LOCAtion](#systemsnmplocation)
+* [SYStem:SNMP:LOCAtion?](#systemsnmplocation-1)
+* [SYStem:SNMP:WRITecommunity](#systemsnmpwritecommunity)
+* [SYStem:SNMP:WRITecommunity?](#systemsnmpwritecommunity-1)
 * [SYStem:SPI](#systemspi)
 * [SYStem:SPI?](#systemspi-1)
 * [SYStem:TELNET:SERVer](#systemtelnetserver)
@@ -2859,7 +2869,7 @@ HomeServer
 ```
 
 
-#### SYStem:ONEWIRE 
+#### SYStem:ONEWIRE
 <mark>new: release v1.6.4</mark>  \
 Enable or disable 1-Wire Bus. This is disabled by default.
 Enabling 1-Wire bus allows use of 1-Wire temperature sensors.
@@ -2936,6 +2946,110 @@ Example:
 SYS:SERIAL?
 ON
 ```
+
+
+### SYStem:SNMP Commands
+
+#### SYStem:SNMP:AGENT
+Enable or disable SNMP Agent. This is disabled by default.
+
+Example (enable SNMP Agent):
+```
+SYS:SNMP:AGET ON
+CONF:SAVE
+*RST
+```
+
+#### SYStem:SNMP:AGENT?
+Return status of SNMP Agent.
+
+Status|Description
+------|-----------
+ON|Enabled
+OFF|Disabled
+
+Example:
+```
+SYS:SNMP:AGENT?
+ON
+```
+
+#### SYStem:SNMP:COMMunity
+Set SNMP (read-only) community name. (Default: public)
+
+Example:
+```
+SYS:SNMP:COMM secret123
+```
+
+
+#### SYStem:SNMP:COMMunity?
+Display current SNMP (read-only) community name.
+
+Example:
+```
+SYS:SNMP:COMM?
+public
+```
+
+
+#### SYStem:SNMP:CONTact
+Set system contact information (sysContact). (Default is no contact information.)
+
+Example:
+```
+SYS:SNMP:CONTACT B.O.F.H.
+```
+
+
+#### SYStem:SNMP:CONTact?
+Display current SNMP system contact information (sysContact).
+
+Example:
+```
+SYS:SNMP:CONT?
+B.O.F.H.
+```
+
+
+#### SYStem:SNMP:LOCAtion
+Set system location information (sysLocation). (Default is no location information.)
+
+Example:
+```
+SYS:SNMP:LOCA Server Room
+```
+
+
+#### SYStem:SNMP:LOCAtion?
+Display current SNMP system location information (sysLocation).
+
+Example:
+```
+SYS:SNMP:LOCA?
+Server Room
+```
+
+
+#### SYStem:SNMP:WRITecommunity
+Set SNMP (write) community name. (Default: private)
+
+Example:
+```
+SYS:SNMP:WRIT secret456
+```
+
+
+#### SYStem:SNMP:WRITecommunity?
+Display current SNMP (write) community name.
+
+Example:
+```
+SYS:SNMP:WRIT?
+private
+```
+
+
 
 #### SYStem:SPI
 Enable or disable SPI bus (on boards that have "SPI" connector).

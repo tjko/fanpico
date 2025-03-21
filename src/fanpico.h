@@ -283,6 +283,11 @@ struct fanpico_config {
 	uint32_t telnet_port;
 	char telnet_user[16 + 1];
 	char telnet_pwhash[128 + 1];
+	bool snmp_active;
+	char snmp_community[32 + 1];
+	char snmp_community_write[32 + 1];
+	char snmp_contact[32 + 1];
+	char snmp_location[32 + 1];
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
@@ -433,6 +438,9 @@ void fanpico_mqtt_scpi_command();
 
 /* telnetd.c */
 void telnetserver_init();
+
+/* snmp.c */
+void fanpico_snmp_init();
 
 #endif
 
