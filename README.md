@@ -39,6 +39,7 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * [MQTT client](https://github.com/tjko/fanpico/wiki/FanPico-MQTT-Tutorial) with TLS support for logging data and to receive commands.
 * [Home Assistant](https://github.com/tjko/fanpico/wiki/FanPico-Home-Assistant-(MQTT-Discovery)-Support) support using MQTT Discovery feature.
 * Telnet server for configuration and monitoring.
+* SNMP Agent for monitoring.
 
 ### Interfaces
 
