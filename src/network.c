@@ -333,9 +333,10 @@ void wifi_poll()
 			init_msg_sent = true;
 			log_msg(LOG_INFO, "Network initialization complete.%s",
 				(rebooted_by_watchdog ? " [Rebooted by watchdog]" : ""));
-			if (strlen(cfg->mqtt_server) > 0) {
+			if (cfg->snmp_active)
+				fanpico_snmp_startup_trap(persistent_mem->warmstart);
+			if (strlen(cfg->mqtt_server) > 0)
 				fanpico_setup_mqtt_client();
-			}
 		}
 	}
 	if (time_passed(&test_t, 3600 * 1000)) {

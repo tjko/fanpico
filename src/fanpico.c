@@ -83,8 +83,9 @@ static void init_persistent_memory()
 				aon_timer_start(&m->saved_time);
 			if (m->uptime) {
 				m->prev_uptime = m->uptime;
-				update_persistent_memory_crc();
 			}
+			m->warmstart = true;
+			update_persistent_memory_crc();
 			return;
 		}
 		printf("Found corrupt persistent memory block"
