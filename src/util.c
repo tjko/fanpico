@@ -165,6 +165,20 @@ bool rtc_get_tm(struct tm *tm)
 }
 
 
+#if PICO_SDK_VERSION_MAJOR == 2
+#if PICO_SDK_VERSION_MINOR <= 1
+#if PICO_SDK_VERSION_REVISION <= 1
+/* Temporary workaround to a SDK issue (#2374) in datetime_to_tm() ... */
+time_t pico_mktime(struct tm *tm)
+{
+	printf(foo);
+	tm->tm_isdst = -1;
+	return mktime(tm);
+}
+#endif
+#endif
+#endif
+
 bool rtc_get_time(time_t *t)
 {
 	struct timespec ts;
