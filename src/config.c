@@ -594,6 +594,9 @@ void clear_config(struct fanpico_config *cfg)
 	strncopy(cfg->snmp_community_write, "private", sizeof(cfg->snmp_community_write));
 	cfg->snmp_contact[0] = 0;
 	cfg->snmp_location[0] = 0;
+	cfg->snmp_community_trap[0] = 0;
+	cfg->snmp_auth_traps = false;
+	ip_addr_set_any(0, &cfg->snmp_trap_dst);
 #endif
 
 	mutex_exit(config_mutex);
@@ -794,6 +797,12 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "snmp_contact", cJSON_CreateString(cfg->snmp_contact));
 	if (strlen(cfg->snmp_location) > 0)
 		cJSON_AddItemToObject(config, "snmp_location", cJSON_CreateString(cfg->snmp_location));
+	if (strlen(cfg->snmp_community_trap) > 0)
+		cJSON_AddItemToObject(config, "snmp_community_trap", cJSON_CreateString(cfg->snmp_community_trap));
+	if (cfg->snmp_auth_traps)
+		cJSON_AddItemToObject(config, "snmp_auth_traps", cJSON_CreateNumber(cfg->snmp_auth_traps));
+	if (!ip_addr_isany(&cfg->snmp_trap_dst))
+		cJSON_AddItemToObject(config, "snmp_trap_dst", cJSON_CreateString(ipaddr_ntoa(&cfg->snmp_trap_dst)));
 #endif
 
 	/* Fan outputs */
@@ -1196,6 +1205,17 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "snmp_location"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->snmp_location, val, sizeof(cfg->snmp_location));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "snmp_community_trap"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->snmp_community_trap, val, sizeof(cfg->snmp_community_trap));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "snmp_auth_traps"))) {
+		cfg->snmp_auth_traps = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "snmp_trap_dst"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			ipaddr_aton(val, &cfg->snmp_trap_dst);
 	}
 #endif
 

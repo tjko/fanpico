@@ -2691,6 +2691,24 @@ int cmd_snmp_location(const char *cmd, const char *args, int query, struct prev_
 			conf->snmp_location, sizeof(conf->snmp_location),
 			"SNMP sysLocation", NULL);
 }
+
+int cmd_snmp_auth_traps(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->snmp_auth_traps, "SNMP Authentication Traps");
+}
+
+int cmd_snmp_community_trap(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->snmp_community_trap, sizeof(conf->snmp_community_trap),
+			"SNMP Traps Community", NULL);
+}
+
+int cmd_snmp_trap_dst(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return ip_change(cmd, args, query, prev_cmd, "SNMP Trap Destination", &conf->snmp_trap_dst);
+}
 #endif /* WIFI_SUPPOERT */
 
 int cmd_time(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -3022,11 +3040,19 @@ const struct cmd_t mqtt_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+const struct cmd_t snmp_trap_commands[] = {
+	{ "AUTH",      4, NULL,              cmd_snmp_auth_traps },
+	{ "COMMunity", 4, NULL,              cmd_snmp_community_trap },
+	{ "DESTination", 4, NULL,            cmd_snmp_trap_dst }, 
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t snmp_commands[] = {
 	{ "AGENT",     5, NULL,              cmd_snmp_agent },
 	{ "COMMunity", 4, NULL,              cmd_snmp_community },
 	{ "CONTact",   4, NULL,              cmd_snmp_contact },
 	{ "LOCAtion",  4, NULL,              cmd_snmp_location },
+	{ "TRAPs",     4, snmp_trap_commands, NULL },
 	{ "WRITecommunity", 4, NULL,         cmd_snmp_community_write },
 	{ 0, 0, 0, 0 }
 };

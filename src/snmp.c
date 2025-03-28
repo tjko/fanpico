@@ -40,6 +40,7 @@
 
 #ifdef WIFI_SUPPORT
 
+static bool snmp_traps_active = false;
 
 
 /* NOTE! Private MIB for FanPico uses Private Enterprise Number (PEN)
@@ -471,8 +472,33 @@ void fanpico_snmp_init()
 	snmp_mib2_set_syslocation_readonly((const uint8_t*)cfg->snmp_location, NULL);
 	snmp_mib2_set_sysname_readonly((const uint8_t*)cfg->name, NULL);
 
+
+	/* SNMP Traps */
+	if (strlen(cfg->snmp_community_trap) > 0 && !ip_addr_isany(&cfg->snmp_trap_dst)) {
+		log_msg(LOG_NOTICE, "SNMP Traps destination: %s", ip4addr_ntoa(&cfg->snmp_trap_dst));
+		snmp_set_community_trap(cfg->snmp_community_trap);
+		snmp_set_auth_traps_enabled(cfg->snmp_auth_traps);
+		snmp_trap_dst_ip_set(0, &cfg->snmp_trap_dst);
+		snmp_trap_dst_enable(0, true);
+		snmp_traps_active = true;
+	}
+
 	snmp_set_mibs(mibs, LWIP_ARRAYSIZE(mibs));
 	snmp_init();
+}
+
+
+void fanpico_snmp_startup_trap(bool warmstart)
+{
+	err_t err;
+
+	if (!snmp_traps_active)
+		return;
+
+	err = snmp_send_trap_generic(warmstart ? SNMP_GENTRAP_WARMSTART : SNMP_GENTRAP_COLDSTART);
+	if (err != ERR_OK) {
+		log_msg(LOG_NOTICE, "Failed to send SNMP startup trap: %d", err);
+	}
 }
 
 #endif /* WIFI_SUPPORT */
