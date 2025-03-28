@@ -112,8 +112,8 @@ struct timespec* time_t_to_timespec(time_t t, struct timespec *ts)
 	if (!ts)
 		return NULL;
 
+	memset(ts, 0, sizeof(*ts));
 	ts->tv_sec = t;
-	ts->tv_nsec = 0;
 
 	return ts;
 }
@@ -151,15 +151,15 @@ bool str_to_time_t(const char *str, time_t *t)
 
 bool rtc_get_tm(struct tm *tm)
 {
-	struct timespec ts;
 	time_t t;
 
-	if (!tm || !aon_timer_is_running())
+	if (!tm)
 		return false;
 
-	aon_timer_get_time(&ts);
-	t = timespec_to_time_t(&ts);
-	localtime_r(&t, tm);
+	if (!rtc_get_time(&t))
+		return false;
+	if (!localtime_r(&t, tm))
+		return false;
 
 	return true;
 }
@@ -172,7 +172,9 @@ bool rtc_get_time(time_t *t)
 	if (!t || !aon_timer_is_running())
 		return false;
 
-	aon_timer_get_time(&ts);
+	if (!aon_timer_get_time(&ts))
+		return false;
+
 	*t = timespec_to_time_t(&ts);
 
 	return true;
