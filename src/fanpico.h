@@ -325,10 +325,12 @@ struct fanpico_state {
 
 struct persistent_memory_block {
 	uint32_t id;
+	uint32_t len;
 	struct timespec saved_time;
 	uint64_t uptime;
 	uint64_t prev_uptime;
-	bool warmstart;
+	uint32_t warmstart;
+	char timezone[64];
 	uint32_t crc32;
 };
 
@@ -356,6 +358,7 @@ extern bool rebooted_by_watchdog;
 extern mutex_t *state_mutex;
 void update_display_state();
 void update_persistent_memory();
+void update_persistent_memory_tz(const char *tz);
 
 /* bi_decl.c */
 void set_binary_info();

@@ -397,6 +397,11 @@ const char* wifi_ip()
 	return ipaddr_ntoa(&current_ip);
 }
 
+
+
+#define DHCP_OPTION_LOG        7
+#define DHCP_OPTION_POSIX_TZ   100
+
 /* LwIP DHCP hook to customize option 55 (Parameter-Request) when DHCP
  * client send DHCP_REQUEST message...
  */
@@ -404,8 +409,8 @@ void pico_dhcp_option_add_hook(struct netif *netif, struct dhcp *dhcp, u8_t stat
 			u8_t msg_type, u16_t *options_len_ptr)
 {
 	u8_t new_parameters[] = {
-		7,   /* LOG */
-		100, /* POSIX-TZ */
+		DHCP_OPTION_LOG,
+		DHCP_OPTION_POSIX_TZ,
 		0
 	};
 	u16_t extra_len = sizeof(new_parameters) - 1;
@@ -447,8 +452,9 @@ void pico_dhcp_option_add_hook(struct netif *netif, struct dhcp *dhcp, u8_t stat
 void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t state, struct dhcp_msg *msg,
              u8_t msg_type, u8_t option, u8_t option_len, struct pbuf *pbuf, u16_t option_value_offset)
 {
-	char dhcp_timezone[64];
+	struct persistent_memory_block *m = persistent_mem;
 	ip4_addr_t log_ip;
+	char timezone[64];
 
 	if (msg_type != DHCP_ACK)
 		return;
@@ -456,26 +462,29 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 	log_msg(LOG_DEBUG, "Parse DHCP option (msg=%02x): %u (len=%u,offset=%u)",
 		msg_type, option, option_len, option_value_offset);
 
-	if (option == 7 && option_len >= 4) {
+	if (option == DHCP_OPTION_LOG && option_len >= 4) {
 		memcpy(&log_ip.addr, pbuf->payload + option_value_offset, 4);
 		if (ip_addr_isany(&syslog_server)) {
 			/* no syslog server configured, use one from DHCP... */
 			ip_addr_copy(syslog_server, log_ip);
 			log_msg(LOG_INFO, "Using Log Server from DHCP: %s", ip4addr_ntoa(&log_ip));
 		} else {
-			log_msg(LOG_INFO, "Ignoring Log Server from DHCP: %s", ip4addr_ntoa(&log_ip));
+			log_msg(LOG_DEBUG, "Ignoring Log Server from DHCP: %s", ip4addr_ntoa(&log_ip));
 		}
 	}
-	else if (option == 100 && option_len > 0) {
-		int  len = (option_len < sizeof(dhcp_timezone) ? option_len : sizeof(dhcp_timezone) - 1);
-		memcpy(dhcp_timezone, pbuf->payload + option_value_offset, len);
-		dhcp_timezone[len] = 0;
+	else if (option == DHCP_OPTION_POSIX_TZ && option_len > 0) {
+		int  len = (option_len < sizeof(timezone) ? option_len : sizeof(timezone) - 1);
+		memcpy(timezone, pbuf->payload + option_value_offset, len);
+		timezone[len] = 0;
 		if (strlen(cfg->timezone) < 1) {
-			log_msg(LOG_INFO, "Set (POSIX) Timezone from DHCP: %s", dhcp_timezone);
-			setenv("TZ", dhcp_timezone, 1);
-			tzset();
+			log_msg(LOG_INFO, "Using timezone from DHCP: %s", timezone);
+			if (strncmp(timezone, m->timezone, len + 1)) {
+				update_persistent_memory_tz(timezone);
+				setenv("TZ", m->timezone, 1);
+				tzset();
+			}
 		} else {
-			log_msg(LOG_INFO, "Ignore (POSIX) Timezone from DHCP: %s", dhcp_timezone);
+			log_msg(LOG_DEBUG, "Ignoring timezone from DHCP: %s", timezone);
 		}
 	}
 }
@@ -489,14 +498,14 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 void pico_set_system_time(long int sec)
 {
 	struct timespec ts;
-	struct tm *ntp;
+	struct tm *ntp, ntp_r;
 	time_t ntp_time = sec;
 
 
-	if (!(ntp = localtime(&ntp_time)))
+	if (!(ntp = localtime_r(&ntp_time, &ntp_r)))
 		return;
-
 	time_t_to_timespec(ntp_time, &ts);
+
 	if (aon_timer_is_running()) {
 		aon_timer_set_time(&ts);
 	} else {

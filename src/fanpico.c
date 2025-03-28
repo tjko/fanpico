@@ -75,16 +75,21 @@ static void init_persistent_memory()
 	struct persistent_memory_block *m = persistent_mem;
 	uint32_t crc;
 
-	if (m->id == PERSISTENT_MEMORY_ID) {
+	if (m->id == PERSISTENT_MEMORY_ID && m->len == sizeof(persistent_memory)) {
 		crc = xcrc32((unsigned char*)m, PERSISTENT_MEMORY_CRC_LEN, 0);
 		if (crc == m->crc32) {
 			printf("Found persistent memory block\n");
+			if (strlen(m->timezone) > 0) {
+				/* Restore timezone */
+				setenv("TZ", m->timezone, 1);
+				tzset();
+			}
 			if (m->saved_time.tv_sec > 0)
 				aon_timer_start(&m->saved_time);
 			if (m->uptime) {
 				m->prev_uptime = m->uptime;
 			}
-			m->warmstart = true;
+			m->warmstart++;
 			update_persistent_memory_crc();
 			return;
 		}
@@ -95,6 +100,7 @@ static void init_persistent_memory()
 	printf("Initializing persistent memory block...\n");
 	memset(m, 0, sizeof(*m));
 	m->id = PERSISTENT_MEMORY_ID;
+	m->len = sizeof(persistent_memory);
 	update_persistent_memory_crc();
 }
 
@@ -116,6 +122,19 @@ void update_persistent_memory()
 	}
 }
 
+void update_persistent_memory_tz(const char *tz)
+{
+	struct persistent_memory_block *m = persistent_mem;
+
+	if (mutex_enter_timeout_us(pmem_mutex, 100)) {
+		strncopy(m->timezone, tz, sizeof(m->timezone));
+		update_persistent_memory_crc();
+		mutex_exit(pmem_mutex);
+	} else {
+		log_msg(LOG_DEBUG, "update_persistent_memory_tz(): Failed to get pmem_mutex");
+	}
+}
+
 
 void boot_reason()
 {
@@ -128,6 +147,7 @@ void boot_reason()
 
 static void setup()
 {
+	struct persistent_memory_block *m = persistent_mem;
 	char buf[32];
 	int i = 0;
 
@@ -173,10 +193,19 @@ static void setup()
 	printf("\n");
 
 	log_msg(LOG_NOTICE, "System starting...");
-	if (persistent_mem->prev_uptime) {
-		log_msg(LOG_NOTICE, "Uptime before soft reset: %llus\n",
-			persistent_mem->prev_uptime / 1000000);
+	if (m->prev_uptime) {
+		log_msg(LOG_NOTICE, "Uptime before soft reset: %llus (soft reset count: %lu)",
+			m->prev_uptime / 1000000, m->warmstart);
 	}
+
+	/* Setup timezone */
+	if (strlen(cfg->timezone) > 1) {
+		log_msg(LOG_NOTICE, "Set timezone: %s", cfg->timezone);
+		update_persistent_memory_tz(cfg->timezone);
+		setenv("TZ", cfg->timezone, 1);
+		tzset();
+	}
+
 	if (aon_timer_is_running()) {
 		struct timespec ts;
 		aon_timer_get_time(&ts);
@@ -227,13 +256,6 @@ static void setup()
 
 	/* Configure 1-Wire pins... */
 	setup_onewire_bus();
-
-	/* Setup timezone */
-	if (strlen(cfg->timezone) > 1) {
-		log_msg(LOG_NOTICE, "Set Timezone: %s", cfg->timezone);
-		setenv("TZ", cfg->timezone, 1);
-		tzset();
-	}
 
 	log_msg(LOG_NOTICE, "System initialization complete.");
 }
