@@ -209,6 +209,12 @@ Fanpico supports following commands:
 * [SYStem:SNMP:LOCAtion?](#systemsnmplocation-1)
 * [SYStem:SNMP:WRITecommunity](#systemsnmpwritecommunity)
 * [SYStem:SNMP:WRITecommunity?](#systemsnmpwritecommunity-1)
+* [SYStem:SNMP:TRAPs:AUTH](#systemsnmptrapsauth)
+* [SYStem:SNMP:TRAPs:AUTH?](#systemsnmptrapsauth-1)
+* [SYStem:SNMP:TRAPs:COMMunity](#systemsnmptrapscommunity)
+* [SYStem:SNMP:TRAPs:COMMunity?](#systemsnmptrapscommunity-1)
+* [SYStem:SNMP:TRAPs:DESTination](#systemsnmptrapsdestination)
+* [SYStem:SNMP:TRAPs:DESTination?](#systemsnmptrapsdestination-1)
 * [SYStem:SPI](#systemspi)
 * [SYStem:SPI?](#systemspi-1)
 * [SYStem:TELNET:SERVer](#systemtelnetserver)
@@ -3049,6 +3055,65 @@ SYS:SNMP:WRIT?
 private
 ```
 
+
+#### SYStem:SNMP:TRAPs:AUTH
+Enable or disable sending authentication traps.
+
+Example:
+```
+SYS:SNMP:TRAP:AUTH ON
+```
+
+#### SYStem:SNMP:TRAPs:AUTH?
+Display status of sending of authentication traps.
+
+Example:
+```
+SYS:SNMP:TRAP:AUTH?
+OFF
+```
+
+
+#### SYStem:SNMP:TRAP:COMMunity
+Set SNMP traps community name. (Default: <one>)
+
+To enable SNMP traps both trap community and trap destination (IP) must be set.
+
+Example:
+```
+SYS:SNMP:TRAP:COMM public
+```
+
+#### SYStem:SNMP:TRAP:COMMunity?
+Display current SNMP traps community name.
+
+Example:
+```
+SYS:SNMP:TRAP:COMM?
+public
+```
+
+
+#### SYStem:SNMP:TRAP:DESTination
+Set destination IP address for sending SNMP traps to.
+
+To disable sending traps, set IP to: 0.0.0.0
+
+(Default: 0.0.0.0)
+
+Example:
+```
+SYS:SNMP:TRAP:DEST 192.168.42.42
+```
+
+#### SYStem:SNMP:TRAP:DESTination?
+Display current SNMP trap destination IP?
+
+Example:
+```
+SYS:SNMP:TRAP:DEST?
+192.168.42.42
+```
 
 
 #### SYStem:SPI
