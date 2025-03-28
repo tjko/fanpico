@@ -171,7 +171,6 @@ bool rtc_get_tm(struct tm *tm)
 /* Temporary workaround to a SDK issue (#2374) in datetime_to_tm() ... */
 time_t pico_mktime(struct tm *tm)
 {
-	printf(foo);
 	tm->tm_isdst = -1;
 	return mktime(tm);
 }
