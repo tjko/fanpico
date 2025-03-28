@@ -134,6 +134,23 @@ char* time_t_to_str(char *buf, size_t size, const time_t t)
 }
 
 
+char* uptime_to_str(char *buf, size_t size, uint64_t uptime)
+{
+	uint32_t secs = uptime / 1000000;
+	uint32_t mins =  secs / 60;
+	uint32_t hours = mins / 60;
+	uint32_t days = hours / 24;
+
+	if (!buf)
+		return NULL;
+
+	snprintf(buf, size, "%lu days, %02lu:%02lu:%02lu",
+		days, hours % 24, mins % 60, secs % 60);
+
+	return buf;
+}
+
+
 bool str_to_time_t(const char *str, time_t *t)
 {
 	struct tm tm;
