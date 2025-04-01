@@ -144,8 +144,7 @@ char* uptime_to_str(char *buf, size_t size, uint64_t uptime)
 	if (!buf)
 		return NULL;
 
-	snprintf(buf, size, "%lu days, %02lu:%02lu:%02lu",
-		days, hours % 24, mins % 60, secs % 60);
+	snprintf(buf, size, "%lu days, %02lu:%02lu", days, hours % 24, mins % 60);
 
 	return buf;
 }

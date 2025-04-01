@@ -3391,12 +3391,15 @@ SYS:TLS:CERT?
 
 
 #### SYStem:UPTIme?
-Return time elapsed since unit was last rebooted.
+Return time elapsed since unit was last rebooted (soft reset).
+Command also returns total time unit has been on since last cold reset
+and number of times unit has been soft reset since.
 
 Example:
 ```
 SYS:UPTIME?
-up 4 days, 22 hours, 27 minutes
+10:58:40 up 0 days, 02:32
+since cold boot 1 days, 11:39 (soft reset count: 5)
 ```
 
 
