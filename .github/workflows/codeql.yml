@@ -48,6 +48,11 @@ jobs:
     - name: Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
 
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
     - name: Cache Pico-SDK
       id: cache-pico-sdk
       uses: actions/cache@v4
@@ -91,10 +96,6 @@ jobs:
         cd picotool-src/build
         make -j ${{env.BUILD_THREADS}} install
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
 
     # Initializes the CodeQL tools for scanning.
