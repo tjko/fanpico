@@ -24,6 +24,7 @@ env:
   BUILD_TYPE: Release
   # Pico-SDK version
   PICO_SDK_REF: 2.1.1
+  PICOTOOL_REF: 2.1.1
 
 jobs:
   analyze:
@@ -47,11 +48,6 @@ jobs:
     - name: Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
     - name: Cache Pico-SDK
       id: cache-pico-sdk
       uses: actions/cache@v4
@@ -59,8 +55,8 @@ jobs:
         path: pico-sdk
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
 
-    - if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
-      name: Checkout Pico-SDK
+    - name: Checkout Pico-SDK
+      if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
       uses: actions/checkout@v4
       with:
         repository: raspberrypi/pico-sdk
@@ -71,6 +67,34 @@ jobs:
     - name: Add PICO_SDK_PATH to Environment
       run: |
         echo "PICO_SDK_PATH=${{github.workspace}}/pico-sdk" >> $GITHUB_ENV
+
+    - name: Cache picotool
+      id: cache-picotool
+      uses: actions/cache@v4
+      with:
+        path: picotool
+        key: ${{runner.os}}-picotool-${{env.PICOTOOL_REF}}
+
+    - name: Checkout picotool
+      if: ${{steps.cache-picotool.outputs.cache-hit != 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: raspberrypi/picotool
+        ref: ${{env.PICOTOOL_REF}}
+        path: picotool-src
+        submodules: recursive
+
+    - name: Build picotool
+      if: ${{steps.cache-picotool.outputs.cache-hit != 'true' }}
+      run: |
+        cmake -S picotool-src -B picotool-src/build -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/picotool -DPICOTOOL_FLAT_INSTALL=1
+        cd picotool-src/build
+        make -j ${{env.BUILD_THREADS}} install
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
 
     # Initializes the CodeQL tools for scanning.
@@ -86,23 +110,8 @@ jobs:
         # queries: security-extended,security-and-quality
 
 
-    # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, or Java).
-    # If this step fails, then you should remove it and run the build manually (see below)
-    #- name: Autobuild
-    #  uses: github/codeql-action/autobuild@v2
-
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-
-    #   If the Autobuild fails above, remove it and uncomment the following three lines.
-    #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
-
-    # - run: |
-    #     echo "Run, Build Application using script"
-    #     ./location_of_script_within_repo/buildscript.sh
-
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=pico_w -DFANPICO_BOARD=0804D
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DPICO_BOARD=pico_w -DFANPICO_BOARD=0804D -Dpicotool_DIR=${{github.workspace}}/picotool/picotool
 
     - name: Build
       run: cmake --build build --config ${{env.BUILD_TYPE}}
