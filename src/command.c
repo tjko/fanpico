@@ -2749,17 +2749,29 @@ int cmd_timezone(const char *cmd, const char *args, int query, struct prev_cmd_t
 
 int cmd_uptime(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	uint32_t secs = to_us_since_boot(get_absolute_time()) / 1000000;
-	uint32_t mins =  secs / 60;
-	uint32_t hours = mins / 60;
-	uint32_t days = hours / 24;
+	const struct persistent_memory_block *m = persistent_mem;
+	struct timespec ts;
+	uint64_t uptime;
+	char buf[32];
 
 	if (!query)
 		return 1;
 
-	printf("up %lu days, %lu hours, %lu minutes%s\n", days, hours % 24, mins % 60,
-		(rebooted_by_watchdog ? " [rebooted by watchdog]" : ""));
 
+	if (aon_timer_is_running()) {
+		if (aon_timer_get_time(&ts)) {
+			time_t_to_str(buf, sizeof(buf), timespec_to_time_t(&ts));
+			printf("%s ", buf + 11);
+		}
+	}
+
+	uptime = to_us_since_boot(get_absolute_time());
+	uptime_to_str(buf, sizeof(buf), uptime);
+	printf("up %s%s\n", buf,
+		(rebooted_by_watchdog ? " [rebooted by watchdog]" : ""));
+	uptime_to_str(buf, sizeof(buf), uptime + m->total_uptime);
+	printf("since cold boot %s (soft reset count: %lu)\n",
+		buf, m->warmstart);
 	return 0;
 }
 

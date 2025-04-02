@@ -88,6 +88,7 @@ static void init_persistent_memory()
 				aon_timer_start(&m->saved_time);
 			if (m->uptime) {
 				m->prev_uptime = m->uptime;
+				m->total_uptime += m->uptime;
 			}
 			m->warmstart++;
 			update_persistent_memory_crc();
@@ -194,8 +195,11 @@ static void setup()
 
 	log_msg(LOG_NOTICE, "System starting...");
 	if (m->prev_uptime) {
-		log_msg(LOG_NOTICE, "Uptime before soft reset: %llus (soft reset count: %lu)",
-			m->prev_uptime / 1000000, m->warmstart);
+		uptime_to_str(buf, sizeof(buf), m->prev_uptime);
+		log_msg(LOG_NOTICE, "Uptime before last soft reset: %s", buf);
+		uptime_to_str(buf, sizeof(buf), m->total_uptime);
+		log_msg(LOG_NOTICE, "Uptime since cold boot: %s (soft reset count: %lu)",
+			buf, m->warmstart);
 	}
 
 	/* Setup timezone */

@@ -323,12 +323,14 @@ struct fanpico_state {
 	float mbfan_freq_prev[MBFAN_MAX_COUNT];
 };
 
+/* Memory structure that persists over soft resets */
 struct persistent_memory_block {
 	uint32_t id;
 	uint32_t len;
 	struct timespec saved_time;
 	uint64_t uptime;
 	uint64_t prev_uptime;
+	uint64_t total_uptime;
 	uint32_t warmstart;
 	char timezone[64];
 	uint32_t crc32;
@@ -525,6 +527,7 @@ int str_to_float(const char *str, float *val);
 time_t timespec_to_time_t(const struct timespec *ts);
 struct timespec* time_t_to_timespec(time_t t, struct timespec *ts);
 char* time_t_to_str(char *buf, size_t size, const time_t t);
+char* uptime_to_str(char *buf, size_t size, uint64_t uptime);
 bool str_to_time_t(const char *str, time_t *t);
 bool rtc_get_tm(struct tm *tm);
 bool rtc_get_time(time_t *t);

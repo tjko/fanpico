@@ -3074,7 +3074,7 @@ OFF
 ```
 
 
-#### SYStem:SNMP:TRAP:COMMunity
+#### SYStem:SNMP:TRAPs:COMMunity
 Set SNMP traps community name. (Default: <one>)
 
 To enable SNMP traps both trap community and trap destination (IP) must be set.
@@ -3084,7 +3084,7 @@ Example:
 SYS:SNMP:TRAP:COMM public
 ```
 
-#### SYStem:SNMP:TRAP:COMMunity?
+#### SYStem:SNMP:TRAPs:COMMunity?
 Display current SNMP traps community name.
 
 Example:
@@ -3094,7 +3094,7 @@ public
 ```
 
 
-#### SYStem:SNMP:TRAP:DESTination
+#### SYStem:SNMP:TRAPs:DESTination
 Set destination IP address for sending SNMP traps to.
 
 To disable sending traps, set IP to: 0.0.0.0
@@ -3106,7 +3106,7 @@ Example:
 SYS:SNMP:TRAP:DEST 192.168.42.42
 ```
 
-#### SYStem:SNMP:TRAP:DESTination?
+#### SYStem:SNMP:TRAPs:DESTination?
 Display current SNMP trap destination IP?
 
 Example:
@@ -3391,12 +3391,15 @@ SYS:TLS:CERT?
 
 
 #### SYStem:UPTIme?
-Return time elapsed since unit was last rebooted.
+Return time elapsed since unit was last rebooted (soft reset).
+Command also returns total time unit has been on since last cold reset
+and number of times unit has been soft reset since.
 
 Example:
 ```
 SYS:UPTIME?
-up 4 days, 22 hours, 27 minutes
+10:58:40 up 0 days, 02:32
+since cold boot 1 days, 11:39 (soft reset count: 5)
 ```
 
 
