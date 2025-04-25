@@ -469,7 +469,7 @@ void clear_config(struct fanpico_config *cfg)
 		vs->mode = VSMODE_MANUAL;
 		vs->default_temp = 0.0;
 		vs->timeout = 60;
-		for (j = 0; j < SENSOR_MAX_COUNT; j++)
+		for (j = 0; j < VSENSOR_SOURCE_MAX_COUNT; j++)
 			vs->sensors[j] = 0;
 		vs->onewire_addr = 0;
 		vs->i2c_type = 0;
@@ -483,6 +483,8 @@ void clear_config(struct fanpico_config *cfg)
 		vs->filter_ctx = NULL;
 
 		cfg->vtemp[i] = 0.0;
+		cfg->vhumidity[i] = 0.0;
+		cfg->vpressure[i] = 0.0;
 		cfg->vtemp_updated[i] = from_us_since_boot(0);
 		cfg->i2c_context[i] = NULL;
 	}
