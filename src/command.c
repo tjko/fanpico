@@ -2214,6 +2214,15 @@ int cmd_wifi_stats(const char *cmd, const char *args, int query, struct prev_cmd
 	return 1;
 }
 
+int cmd_wifi_rejoin(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (!query) {
+		network_rejoin();
+		return 0;
+	}
+	return 1;
+}
+
 int cmd_wifi_country(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return string_setting(cmd, args, query, prev_cmd,
@@ -2989,6 +2998,7 @@ const struct cmd_t wifi_commands[] = {
 	{ "NTP",       3, NULL,              cmd_wifi_ntp },
 	{ "MODE",      4, NULL,              cmd_wifi_mode },
 	{ "PASSword",  4, NULL,              cmd_wifi_password },
+	{ "REJOIN",    6, NULL,              cmd_wifi_rejoin },
 	{ "SSID",      4, NULL,              cmd_wifi_ssid },
 	{ "STATS",     5, NULL,              cmd_wifi_stats },
 	{ "STATus",    4, NULL,              cmd_wifi_status },

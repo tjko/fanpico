@@ -1,5 +1,5 @@
 /* network.c
-   Copyright (C) 2022-2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2022-2025 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -42,11 +42,15 @@
 
 #include "syslog.h"
 
+
+#define FANPICO_WIFI_INACTIVE -255
+
 static absolute_time_t t_network_initialized;
 static bool wifi_initialized = false;
 static bool network_initialized = false;
 static uint8_t cyw43_mac[6];
 static char wifi_hostname[32];
+static uint32_t wifi_auth_mode = CYW43_AUTH_OPEN;
 static ip_addr_t syslog_server;
 static ip_addr_t current_ip;
 
@@ -68,6 +72,32 @@ static const struct wifi_auth_type auth_types[] = {
 	{ NULL, 0 }
 };
 
+
+
+static const char* wifi_link_status_text(int status)
+{
+	switch (status) {
+	case CYW43_LINK_DOWN:
+		return "Link Down";
+	case CYW43_LINK_JOIN:
+		return "Joining";
+	case CYW43_LINK_NOIP:
+		return "No IP";
+	case CYW43_LINK_UP:
+		return "Link Up";
+	case CYW43_LINK_FAIL:
+		return "Link Fail";
+	case CYW43_LINK_NONET:
+		return "Network Fail";
+	case CYW43_LINK_BADAUTH:
+		return "Auth Fail";
+
+	case FANPICO_WIFI_INACTIVE:
+		return "<Inactive>";
+	}
+
+	return "Unknown";
+}
 
 bool wifi_get_auth_type(const char *name, uint32_t *type)
 {
@@ -139,7 +169,6 @@ void wifi_init()
 {
 	uint32_t country_code = CYW43_COUNTRY_WORLDWIDE;
 	struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
-	uint32_t wifi_auth_mode;
 	int res;
 
 	memset(cyw43_mac, 0, sizeof(cyw43_mac));
@@ -287,22 +316,53 @@ void wifi_init()
 }
 
 
+
+void wifi_rejoin()
+{
+	int res;
+
+	if (!wifi_initialized)
+		return;
+
+	res = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+	if (res == CYW43_LINK_JOIN) {
+		res = cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
+		if (res) {
+			log_msg(LOG_ERR, "WiFi leave from network failed: %d", res);
+		}
+	}
+
+	log_msg(LOG_NOTICE, "Attempt to rejoin to WiFi network: %s",
+		cfg->wifi_ssid);
+
+	res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
+					cfg->wifi_passwd, wifi_auth_mode);
+	if (res != 0) {
+		log_msg(LOG_ERR, "WiFi rejoin failed: %d", res);
+		return;
+	}
+
+}
+
 void wifi_status()
 {
 	int res;
 
 	if (!wifi_initialized) {
-		printf("0,,,\n");
-		return;
+		res = FANPICO_WIFI_INACTIVE;
+	} else {
+		res = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
 	}
+	printf("%s,", wifi_link_status_text(res));
 
-	res = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
-	printf("%d,", res);
-
-	struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
-	printf("%s,", ipaddr_ntoa(netif_ip_addr4(n)));
-	printf("%s,", ipaddr_ntoa(netif_ip_netmask4(n)));
-	printf("%s\n", ipaddr_ntoa(netif_ip_gw4(n)));
+	if (res != FANPICO_WIFI_INACTIVE) {
+		struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
+		printf("%s,", ipaddr_ntoa(netif_ip_addr4(n)));
+		printf("%s,", ipaddr_ntoa(netif_ip_netmask4(n)));
+		printf("%s,%d\n", ipaddr_ntoa(netif_ip_gw4(n)), res);
+	} else {
+		printf(",,,%d\n", res);
+	}
 }
 
 
@@ -316,6 +376,9 @@ void wifi_poll()
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_duty_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(command_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(reconnect_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(wifi_status_check_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(wifi_status_t, 0);
+	static int wifi_status = FANPICO_WIFI_INACTIVE;
 	static bool init_msg_sent = false;
 
 	if (!wifi_initialized)
@@ -324,6 +387,24 @@ void wifi_poll()
 #if PICO_CYW43_ARCH_POLL
 	cyw43_arch_poll();
 #endif
+
+	if (time_passed(&wifi_status_check_t, 1000)) {
+		int status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
+		if (status != wifi_status) {
+			log_msg(LOG_INFO, "WiFi status change: %s -> %s",
+				wifi_link_status_text(wifi_status),
+				wifi_link_status_text(status));
+			wifi_status = status;
+			wifi_status_t = get_absolute_time();
+		} else {
+			if ((absolute_time_diff_us(wifi_status_t, get_absolute_time()) > 90000) &&
+				(wifi_status == CYW43_LINK_FAIL	|| wifi_status == CYW43_LINK_NONET
+					|| wifi_status == CYW43_LINK_BADAUTH)) {
+				wifi_rejoin();
+				return;
+			}
+		}
+	}
 
 	if (!network_initialized)
 		return;
@@ -529,6 +610,13 @@ void network_status()
 #endif
 }
 
+
+void network_rejoin()
+{
+#ifdef WIFI_SUPPORT
+	wifi_rejoin();
+#endif
+}
 
 void network_poll()
 {

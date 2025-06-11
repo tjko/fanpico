@@ -3719,10 +3719,21 @@ SYS:WIFI:MAC?
 ```
 
 
+#### SYStem:WIFI:REJOIN
+Attempt to re-join to the WiFi network.
+
+Example:
+```
+SYS:WIFI:REJOIN
+```
+
+
+
+
 #### SYStem:WIFI:SSID
 Set Wi-Fi network SSID. FanPico will automatically try joining to this network.
 
-Example
+Example:
 ```
 SYS:WIFI:SSID mynetwork
 ```
@@ -3741,25 +3752,25 @@ mynetwork
 #### SYStem:WIFI:STATus?
 Display WiFi Link status.
 
-Return value: linkstatus,current_ip,current_netmask,current_gateway
+Return value: link_status,current_ip,current_netmask,current_gateway,link_status_code
 
 Link Status:
 
-Value|Description
+Link Status|Description
 -----|-----------
-0    |Link is down.
-1    |Connected to WiFi.
-2    |Connected to WiFi, but no IP address.
-3    |Connected to WiFi with and IP address.
--1   |Connection failed.
--2   |No matching SSID found(could be out of range, or down).
--3   |Authentication failed (wrong password?)
+Link Down|Not connected to a WiFi network.
+Joining|Connecting to WiFi.
+No IP|Connected to WiFi, but no IP address.
+Link Up|Connected to WiFi with and IP address.
+Link Fail|Connection failed.
+Network Fail|No matching SSID found (could be out of range, or down).
+Auth Fail|Authentication failed (wrong password)
 
 Example:
 
 ```
 SYS:WIFI:STAT?
-1,192.168.1.42,255.255.255.0,192.168.1.1
+Link Up,192.168.1.42,255.255.255.0,192.168.1.1,3
 ```
 
 #### SYStem:WIFI:STATS?

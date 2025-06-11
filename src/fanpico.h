@@ -422,6 +422,7 @@ void network_init();
 void network_mac();
 void network_poll();
 void network_status();
+void network_rejoin();
 void set_pico_system_time(long unsigned int sec);
 const char *network_ip();
 const char *network_hostname();
