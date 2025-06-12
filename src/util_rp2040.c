@@ -158,6 +158,17 @@ int time_passed(absolute_time_t *t, uint32_t ms)
 }
 
 
+int time_elapsed(absolute_time_t t, uint32_t ms)
+{
+	absolute_time_t t_now = get_absolute_time();
+
+	if (absolute_time_diff_us(t, t_now) > (uint64_t)ms * 1000)
+		return 1;
+
+	return 0;
+}
+
+
 int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout)
 {
 	absolute_time_t t_timeout = get_absolute_time();

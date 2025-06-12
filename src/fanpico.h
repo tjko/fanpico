@@ -557,7 +557,8 @@ void watchdog_disable();
 #endif
 const char *rp2040_model_str();
 const char *pico_serial_str();
-int time_passed(absolute_time_t *t, uint32_t us);
+int time_passed(absolute_time_t *t, uint32_t ms);
+int time_elapsed(absolute_time_t t, uint32_t ms);
 int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
 
 

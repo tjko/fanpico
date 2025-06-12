@@ -42,7 +42,7 @@
 
 #include "syslog.h"
 
-
+#define WIFI_REJOIN_DELAY 10000 // Delay before attempting to re-join to WiFi (ms)
 #define FANPICO_WIFI_INACTIVE -255
 
 static absolute_time_t t_network_initialized;
@@ -50,7 +50,6 @@ static bool wifi_initialized = false;
 static bool network_initialized = false;
 static uint8_t cyw43_mac[6];
 static char wifi_hostname[32];
-static uint32_t wifi_auth_mode = CYW43_AUTH_OPEN;
 static ip_addr_t syslog_server;
 static ip_addr_t current_ip;
 
@@ -169,6 +168,7 @@ void wifi_init()
 {
 	uint32_t country_code = CYW43_COUNTRY_WORLDWIDE;
 	struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
+	uint32_t wifi_auth_mode;
 	int res;
 
 	memset(cyw43_mac, 0, sizeof(cyw43_mac));
@@ -260,7 +260,7 @@ void wifi_init()
 			do {
 				res = cyw43_arch_wifi_connect_timeout_ms(cfg->wifi_ssid,
 									cfg->wifi_passwd,
-									wifi_auth_mode,	30000);
+									wifi_auth_mode,	10000);
 				log_msg(LOG_INFO, "cyw43_arch_wifi_connect_timeout_ms(): %d", res);
 			} while (res != 0 && --retries > 0);
 		}
@@ -320,23 +320,28 @@ void wifi_init()
 void wifi_rejoin()
 {
 	int res;
+	uint32_t wifi_auth_mode;
 
 	if (!wifi_initialized)
 		return;
+	if (strlen(cfg->wifi_ssid) < 1)
+		return;
 
+	wifi_get_auth_type(cfg->wifi_auth_mode, &wifi_auth_mode);
+	if (wifi_auth_mode != CYW43_AUTH_OPEN && strlen(cfg->wifi_passwd) < 1)
+		return;
+
+	/* Disconnect if currently joined to a network */
 	res = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
 	if (res == CYW43_LINK_JOIN) {
-		res = cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
-		if (res) {
+		if ((res = cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA))) {
 			log_msg(LOG_ERR, "WiFi leave from network failed: %d", res);
 		}
 	}
 
-	log_msg(LOG_NOTICE, "Attempt to rejoin to WiFi network: %s",
-		cfg->wifi_ssid);
-
-	res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid,
-					cfg->wifi_passwd, wifi_auth_mode);
+	/* Initiate asynchronous join to the network */
+	log_msg(LOG_NOTICE, "Attempt to rejoin to WiFi network: %s", cfg->wifi_ssid);
+	res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid, cfg->wifi_passwd, wifi_auth_mode);
 	if (res != 0) {
 		log_msg(LOG_ERR, "WiFi rejoin failed: %d", res);
 		return;
@@ -388,6 +393,7 @@ void wifi_poll()
 	cyw43_arch_poll();
 #endif
 
+	/* Periodically check for WiFi (link) status... */
 	if (time_passed(&wifi_status_check_t, 1000)) {
 		int status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
 		if (status != wifi_status) {
@@ -397,11 +403,14 @@ void wifi_poll()
 			wifi_status = status;
 			wifi_status_t = get_absolute_time();
 		} else {
-			if ((absolute_time_diff_us(wifi_status_t, get_absolute_time()) > 90000) &&
-				(wifi_status == CYW43_LINK_FAIL	|| wifi_status == CYW43_LINK_NONET
-					|| wifi_status == CYW43_LINK_BADAUTH)) {
-				wifi_rejoin();
-				return;
+			/* Attempt to rejoin if connection has been in failed state
+			   for a while... */
+			if (wifi_status < 0 && wifi_status != FANPICO_WIFI_INACTIVE) {
+				if (time_elapsed(wifi_status_t, WIFI_REJOIN_DELAY)) {
+					wifi_rejoin();
+					wifi_status_t = get_absolute_time();
+					return;
+				}
 			}
 		}
 	}
