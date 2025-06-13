@@ -3720,7 +3720,11 @@ SYS:WIFI:MAC?
 
 
 #### SYStem:WIFI:REJOIN
-Attempt to re-join to the WiFi network.
+Trigger attempt to rejoin to WiFi network. If system is currently joined to a network,
+this causes system leaving from the current network first.
+
+System will automatically attempt to rejoin WiFi network if connection fails,
+so this command should normally not be needed.
 
 Example:
 ```
