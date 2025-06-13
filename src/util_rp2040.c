@@ -1,5 +1,5 @@
 /* util_rp2040.c
-   Copyright (C) 2021-2024 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 

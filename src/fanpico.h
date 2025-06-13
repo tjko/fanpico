@@ -300,6 +300,23 @@ struct fanpico_config {
 	void *i2c_context[VSENSOR_MAX_COUNT];
 };
 
+
+#if WIFI_SUPPORT
+struct fanpico_network_state {
+	ip_addr_t syslog_server;
+	ip_addr_t ntp_server;
+	ip_addr_t ip;
+	ip_addr_t netmask;
+	ip_addr_t gateway;
+	uint8_t mac[6];
+	char hostname[32];
+	bool netif_up;
+	int wifi_status;
+	absolute_time_t wifi_status_change;
+};
+#endif
+
+
 struct fanpico_state {
 	/* inputs */
 	float mbfan_duty[MBFAN_MAX_COUNT];
@@ -356,6 +373,9 @@ struct cmd_t {
 /* fanpico.c */
 extern struct persistent_memory_block *persistent_mem;
 extern const struct fanpico_state *fanpico_state;
+#if WIFI_SUPPORT
+extern struct fanpico_network_state *net_state;
+#endif
 extern bool rebooted_by_watchdog;
 extern mutex_t *state_mutex;
 void update_display_state();
@@ -418,19 +438,22 @@ void print_rp2040_flashinfo();
 
 
 /* network.c */
+#if WIFI_SUPPORT
+bool wifi_get_auth_type(const char *name, uint32_t *type);
+const char* wifi_auth_type_name(uint32_t type);
+const char* wifi_link_status_text(int status);
+void set_pico_system_time(long unsigned int sec);
+#endif
 void network_init();
 void network_mac();
 void network_poll();
 void network_status();
 void network_rejoin();
-void set_pico_system_time(long unsigned int sec);
 const char *network_ip();
 const char *network_hostname();
 
-#if WIFI_SUPPORT
-bool wifi_get_auth_type(const char *name, uint32_t *type);
-const char* wifi_auth_type_name(uint32_t type);
 
+#if WIFI_SUPPORT
 /* httpd.c */
 u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 			u16_t current_tag_part, u16_t *next_tag_part);

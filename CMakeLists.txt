@@ -183,6 +183,7 @@ target_link_libraries(fanpico PRIVATE
 if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
   message("Enabling WiFi stuff...")
   target_sources(fanpico PRIVATE
+    src/dhcp.c
     src/syslog.c
     src/httpd.c
     src/mqtt.c

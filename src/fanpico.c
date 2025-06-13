@@ -48,6 +48,11 @@ static struct fanpico_state transfer_state;
 static struct fanpico_state system_state;
 const struct fanpico_state *fanpico_state = &system_state;
 
+#ifdef WIFI_SUPPORT
+static struct fanpico_network_state network_state;
+struct fanpico_network_state *net_state = &network_state;
+#endif
+
 struct persistent_memory_block __uninitialized_ram(persistent_memory);
 struct persistent_memory_block *persistent_mem = &persistent_memory;
 
@@ -269,6 +274,8 @@ static void clear_state(struct fanpico_state *s)
 {
 	int i;
 
+	memset(s, 0, sizeof(struct fanpico_state));
+
 	for (i = 0; i < MBFAN_MAX_COUNT; i++) {
 		s->mbfan_duty[i] = 0.0;
 		s->mbfan_duty_prev[i] = 0.0;
@@ -292,6 +299,7 @@ static void clear_state(struct fanpico_state *s)
 		s->vpressure[i] = -1.0;
 		s->vhumidity[i] = -1.0;
 	}
+
 }
 
 
@@ -489,6 +497,10 @@ int main()
 	set_binary_info();
 	clear_state(&system_state);
 	clear_state(&transfer_state);
+
+#ifdef WIFI_SUPPORT
+	memset(&network_state, 0, sizeof(network_state));
+#endif
 
 	/* Initialize MCU and other hardware... */
 	if (get_debug_level() >= 2)

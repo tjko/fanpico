@@ -447,6 +447,8 @@ void clear_config(struct fanpico_config *cfg)
 
 	mutex_enter_blocking(config_mutex);
 
+	memset(cfg, 0, sizeof(struct fanpico_config));
+
 	for (i = 0; i < SENSOR_MAX_COUNT; i++) {
 		s = &cfg->sensors[i];
 
