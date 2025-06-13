@@ -1,5 +1,5 @@
 /* network.c
-   Copyright (C) 2022-2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2022-2025 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -22,15 +22,11 @@
 #include <stdio.h>
 #include <time.h>
 #include <assert.h>
-#include "hardware/watchdog.h"
 #include "pico/stdlib.h"
 #include "pico/util/datetime.h"
 #include "pico/aon_timer.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
-#include "lwip/pbuf.h"
-#include "lwip/tcp.h"
-#include "lwip/prot/dhcp.h"
 #include "lwip/apps/sntp.h"
 #include "lwip/apps/httpd.h"
 #endif
@@ -42,13 +38,12 @@
 
 #include "syslog.h"
 
-static absolute_time_t t_network_initialized;
+#define WIFI_REJOIN_DELAY 10000 // Delay before attempting to re-join to WiFi (ms)
+#define FANPICO_WIFI_INACTIVE -255
+
+static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_network_initialized, 0);
 static bool wifi_initialized = false;
 static bool network_initialized = false;
-static uint8_t cyw43_mac[6];
-static char wifi_hostname[32];
-static ip_addr_t syslog_server;
-static ip_addr_t current_ip;
 
 struct wifi_auth_type {
 	char *name;
@@ -67,6 +62,7 @@ static const struct wifi_auth_type auth_types[] = {
 
 	{ NULL, 0 }
 };
+
 
 
 bool wifi_get_auth_type(const char *name, uint32_t *type)
@@ -108,44 +104,135 @@ const char* wifi_auth_type_name(uint32_t type)
 	return "Unknown";
 }
 
-void wifi_mac()
+const char* wifi_link_status_text(int status)
 {
-	printf("%s\n", mac_address_str(cyw43_mac));
+	switch (status) {
+	case CYW43_LINK_DOWN:
+		return "Link Down";
+	case CYW43_LINK_JOIN:
+		return "Joining";
+	case CYW43_LINK_NOIP:
+		return "No IP";
+	case CYW43_LINK_UP:
+		return "Link Up";
+	case CYW43_LINK_FAIL:
+		return "Link Fail";
+	case CYW43_LINK_NONET:
+		return "Network Fail";
+	case CYW43_LINK_BADAUTH:
+		return "Auth Fail";
+
+	case FANPICO_WIFI_INACTIVE:
+		return "<Inactive>";
+	}
+
+	return "Unknown";
 }
 
-void wifi_link_cb(struct netif *netif)
+static void wifi_mac()
 {
-	log_msg(LOG_WARNING, "WiFi Link: %s", (netif_is_link_up(netif) ? "UP" : "DOWN"));
+	printf("%s\n", mac_address_str(net_state->mac));
 }
 
-void wifi_status_cb(struct netif *netif)
+
+static void wifi_rejoin()
 {
-	if (netif_is_up(netif)) {
-		log_msg(LOG_WARNING, "WiFi Status: UP (%s)", ipaddr_ntoa(netif_ip_addr4(netif)));
-		ip_addr_set(&current_ip, netif_ip_addr4(netif));
+	int res;
+	uint32_t wifi_auth_mode;
+
+
+	if (!wifi_initialized)
+		return;
+
+	net_state->wifi_status_change = get_absolute_time();
+
+	if (strlen(cfg->wifi_ssid) < 1)
+		return;
+	wifi_get_auth_type(cfg->wifi_auth_mode, &wifi_auth_mode);
+	if (wifi_auth_mode != CYW43_AUTH_OPEN && strlen(cfg->wifi_passwd) < 1)
+		return;
+
+	/* Disconnect if currently joined to a network */
+	res = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+	if (res == CYW43_LINK_JOIN) {
+		if ((res = cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA))) {
+			log_msg(LOG_ERR, "WiFi leave from network failed: %d", res);
+		}
+	}
+
+	/* Initiate asynchronous join to the network */
+	log_msg(LOG_NOTICE, "Attempt rejoining to WiFi network: %s", cfg->wifi_ssid);
+	res = cyw43_arch_wifi_connect_async(cfg->wifi_ssid, cfg->wifi_passwd, wifi_auth_mode);
+	if (res != 0) {
+		log_msg(LOG_ERR, "WiFi rejoin failed: %d", res);
+		return;
+	}
+
+}
+
+
+static bool wifi_check_status()
+{
+	int status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
+
+	if (status != net_state->wifi_status) {
+		log_msg(LOG_INFO, "WiFi Status: %s ", wifi_link_status_text(status));
+		net_state->wifi_status = status;
+		net_state->wifi_status_change = get_absolute_time();
 	} else {
-		log_msg(LOG_WARNING, "WiFi Status: DOWN");
+		/* Check if should try rejoining to the network... */
+		if (net_state->wifi_status < 0 && net_state->wifi_status != FANPICO_WIFI_INACTIVE) {
+			if (time_elapsed(net_state->wifi_status_change, WIFI_REJOIN_DELAY)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+static void wifi_link_cb(struct netif *netif)
+{
+	wifi_check_status();
+	log_msg(LOG_WARNING, "Network Link: %s", (netif_is_link_up(netif) ? "UP" : "DOWN"));
+}
+
+static void wifi_status_cb(struct netif *netif)
+{
+	wifi_check_status();
+	if (netif_is_up(netif)) {
+		log_msg(LOG_WARNING, "Network Interface: UP (%s)", ipaddr_ntoa(netif_ip_addr4(netif)));
+		net_state->netif_up = true;
+		ip_addr_set(&net_state->ip, netif_ip_addr4(netif));
+		ip_addr_set(&net_state->netmask, netif_ip_netmask4(netif));
+		ip_addr_set(&net_state->gateway, netif_ip_gw4(netif));
+	} else {
+		log_msg(LOG_WARNING, "Network Interface: DOWN");
+		net_state->netif_up = false;
 	}
 
 	if (netif_is_up(netif) && !network_initialized) {
 		/* Network interface came up, first time... */
-		syslog_open(&syslog_server, 0, LOG_USER, wifi_hostname);
+		syslog_open(&net_state->syslog_server, 0, LOG_USER, net_state->hostname);
 		network_initialized = true;
 		t_network_initialized = get_absolute_time();
 	}
 }
 
-void wifi_init()
+static void wifi_init()
 {
 	uint32_t country_code = CYW43_COUNTRY_WORLDWIDE;
 	struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
 	uint32_t wifi_auth_mode;
 	int res;
 
-	memset(cyw43_mac, 0, sizeof(cyw43_mac));
-	ip_addr_set_zero(&syslog_server);
-	ip_addr_set_zero(&current_ip);
-	wifi_hostname[0] = 0;
+	memset(net_state->mac, 0, sizeof(net_state->mac));
+	ip_addr_set_zero(&net_state->ip);
+	ip_addr_set_zero(&net_state->netmask);
+	ip_addr_set_zero(&net_state->gateway);
+	net_state->hostname[0] = 0;
+	net_state->netif_up = false;
+	net_state->wifi_status = FANPICO_WIFI_INACTIVE;
 
 	log_msg(LOG_NOTICE, "Initializing WiFi...");
 
@@ -173,12 +260,12 @@ void wifi_init()
 
 	/* Set WiFi interface hostname... */
 	if (strlen(cfg->hostname) > 0) {
-		strncopy(wifi_hostname, cfg->hostname, sizeof(wifi_hostname));
+		strncopy(net_state->hostname, cfg->hostname, sizeof(net_state->hostname));
 	} else {
-		snprintf(wifi_hostname, sizeof(wifi_hostname), "FanPico-%s", pico_serial_str());
+		snprintf(net_state->hostname, sizeof(net_state->hostname), "FanPico-%s", pico_serial_str());
 	}
-	log_msg(LOG_NOTICE, "WiFi hostname: %s", wifi_hostname);
-	netif_set_hostname(n, wifi_hostname);
+	log_msg(LOG_NOTICE, "WiFi hostname: %s", net_state->hostname);
+	netif_set_hostname(n, net_state->hostname);
 
 	/* Set callback for link/interface status changes */
 	netif_set_link_callback(n, wifi_link_cb);
@@ -202,11 +289,11 @@ void wifi_init()
 
 
 	/* Get adapter MAC address */
-	if ((res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, cyw43_mac))) {
+	if ((res = cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, net_state->mac))) {
 		log_msg(LOG_ALERT, "Cannot get WiFi MAC address: %d", res);
 		return;
 	}
-	log_msg(LOG_NOTICE, "WiFi MAC: %s", mac_address_str(cyw43_mac));
+	log_msg(LOG_NOTICE, "WiFi MAC: %s", mac_address_str(net_state->mac));
 	wifi_get_auth_type(cfg->wifi_auth_mode, &wifi_auth_mode);
 	log_msg(LOG_INFO, "WiFi Authentication mode: %s",
 		wifi_auth_type_name(wifi_auth_mode));
@@ -231,7 +318,7 @@ void wifi_init()
 			do {
 				res = cyw43_arch_wifi_connect_timeout_ms(cfg->wifi_ssid,
 									cfg->wifi_passwd,
-									wifi_auth_mode,	30000);
+									wifi_auth_mode,	10000);
 				log_msg(LOG_INFO, "cyw43_arch_wifi_connect_timeout_ms(): %d", res);
 			} while (res != 0 && --retries > 0);
 		}
@@ -250,9 +337,10 @@ void wifi_init()
 
 	/* Enable SNTP client... */
 	sntp_init();
-	if (!ip_addr_isany(&cfg->ntp_server)) {
-		log_msg(LOG_NOTICE, "NTP Server: %s", ipaddr_ntoa(&cfg->ntp_server));
-		sntp_setserver(0, &cfg->ntp_server);
+	ip_addr_copy(net_state->ntp_server, cfg->ntp_server);
+	if (!ip_addr_isany(&net_state->ntp_server)) {
+		log_msg(LOG_NOTICE, "NTP Server: %s", ipaddr_ntoa(&net_state->ntp_server));
+		sntp_setserver(0, &net_state->ntp_server);
 	} else {
 		log_msg(LOG_NOTICE, "NTP Server: DHCP");
 		sntp_servermode_dhcp(1);
@@ -283,30 +371,33 @@ void wifi_init()
 
 	cyw43_arch_lwip_end();
 
-	ip_addr_copy(syslog_server, cfg->syslog_server);
+	ip_addr_copy(net_state->syslog_server, cfg->syslog_server);
 }
 
 
-void wifi_status()
+static void wifi_status()
 {
 	int res;
 
 	if (!wifi_initialized) {
-		printf("0,,,\n");
-		return;
+		res = FANPICO_WIFI_INACTIVE;
+	} else {
+		res = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
 	}
+	printf("%s,", wifi_link_status_text(res));
 
-	res = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
-	printf("%d,", res);
-
-	struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
-	printf("%s,", ipaddr_ntoa(netif_ip_addr4(n)));
-	printf("%s,", ipaddr_ntoa(netif_ip_netmask4(n)));
-	printf("%s\n", ipaddr_ntoa(netif_ip_gw4(n)));
+	if (res != FANPICO_WIFI_INACTIVE) {
+		struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
+		printf("%s,", ipaddr_ntoa(netif_ip_addr4(n)));
+		printf("%s,", ipaddr_ntoa(netif_ip_netmask4(n)));
+		printf("%s,%d\n", ipaddr_ntoa(netif_ip_gw4(n)), res);
+	} else {
+		printf(",,,%d\n", res);
+	}
 }
 
 
-void wifi_poll()
+static void wifi_poll()
 {
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(test_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_status_t, 0);
@@ -316,6 +407,7 @@ void wifi_poll()
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(publish_duty_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(command_t, 0);
 	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(reconnect_t, 0);
+	static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(wifi_status_check_t, 0);
 	static bool init_msg_sent = false;
 
 	if (!wifi_initialized)
@@ -324,6 +416,15 @@ void wifi_poll()
 #if PICO_CYW43_ARCH_POLL
 	cyw43_arch_poll();
 #endif
+
+	/* Periodically check for WiFi (link) status... */
+	if (time_passed(&wifi_status_check_t, 1000)) {
+		if (wifi_check_status()) {
+			/* Attempt to rejoin if connection has been in failed state
+			   for a while... */
+			wifi_rejoin();
+		}
+	}
 
 	if (!network_initialized)
 		return;
@@ -389,114 +490,18 @@ void wifi_poll()
 
 }
 
-const char* wifi_ip()
+static const char* wifi_ip()
 {
-	if (ip_addr_isany(&current_ip))
+	if (ip_addr_isany(&net_state->ip))
 		return NULL;
 
-	return ipaddr_ntoa(&current_ip);
+	return ipaddr_ntoa(&net_state->ip);
 }
-
-
-
-#define DHCP_OPTION_LOG        7
-#define DHCP_OPTION_POSIX_TZ   100
-
-/* LwIP DHCP hook to customize option 55 (Parameter-Request) when DHCP
- * client send DHCP_REQUEST message...
- */
-void pico_dhcp_option_add_hook(struct netif *netif, struct dhcp *dhcp, u8_t state, struct dhcp_msg *msg,
-			u8_t msg_type, u16_t *options_len_ptr)
-{
-	u8_t new_parameters[] = {
-		DHCP_OPTION_LOG,
-		DHCP_OPTION_POSIX_TZ,
-		0
-	};
-	u16_t extra_len = sizeof(new_parameters) - 1;
-	u16_t orig_len = *options_len_ptr;
-	u16_t old_ptr = 0;
-	u16_t new_ptr = 0;
-	struct dhcp_msg tmp;
-
-	if (msg_type != DHCP_REQUEST)
-		return;
-
-	LWIP_ASSERT("dhcp option overflow", *options_len_ptr + extra_len <= DHCP_OPTIONS_LEN);
-
-	/* Copy options to temporary buffer, so we can 'edit' option 55... */
-	memcpy(tmp.options, msg->options, sizeof(tmp.options));
-
-	/* Rebuild options... */
-	while (old_ptr < orig_len) {
-		u8_t code = tmp.options[old_ptr++];
-		u8_t len = tmp.options[old_ptr++];
-
-		msg->options[new_ptr++] = code;
-		msg->options[new_ptr++] = (code == 55 ? len + extra_len : len);
-		for (int i = 0; i < len; i++) {
-			msg->options[new_ptr++] = tmp.options[old_ptr++];
-		}
-		if (code == 55) {
-			for (int i = 0; i < extra_len; i++) {
-				msg->options[new_ptr++] = new_parameters[i];
-			}
-		}
-	}
-	*options_len_ptr = new_ptr;
-}
-
-
-/* LwIP DHCP hook to parse additional DHCP options received.
- */
-void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t state, struct dhcp_msg *msg,
-             u8_t msg_type, u8_t option, u8_t option_len, struct pbuf *pbuf, u16_t option_value_offset)
-{
-	struct persistent_memory_block *m = persistent_mem;
-	ip4_addr_t log_ip;
-	char timezone[64];
-
-	if (msg_type != DHCP_ACK)
-		return;
-
-	log_msg(LOG_DEBUG, "Parse DHCP option (msg=%02x): %u (len=%u,offset=%u)",
-		msg_type, option, option_len, option_value_offset);
-
-	if (option == DHCP_OPTION_LOG && option_len >= 4) {
-		memcpy(&log_ip.addr, pbuf->payload + option_value_offset, 4);
-		if (ip_addr_isany(&syslog_server)) {
-			/* no syslog server configured, use one from DHCP... */
-			ip_addr_copy(syslog_server, log_ip);
-			log_msg(LOG_INFO, "Using Log Server from DHCP: %s", ip4addr_ntoa(&log_ip));
-		} else {
-			log_msg(LOG_DEBUG, "Ignoring Log Server from DHCP: %s", ip4addr_ntoa(&log_ip));
-		}
-	}
-	else if (option == DHCP_OPTION_POSIX_TZ && option_len > 0) {
-		int  len = (option_len < sizeof(timezone) ? option_len : sizeof(timezone) - 1);
-		memcpy(timezone, pbuf->payload + option_value_offset, len);
-		timezone[len] = 0;
-		if (strlen(cfg->timezone) < 1) {
-			log_msg(LOG_INFO, "Using timezone from DHCP: %s", timezone);
-			if (strncmp(timezone, m->timezone, len + 1)) {
-				update_persistent_memory_tz(timezone);
-				setenv("TZ", m->timezone, 1);
-				tzset();
-			}
-		} else {
-			log_msg(LOG_DEBUG, "Ignoring timezone from DHCP: %s", timezone);
-		}
-	}
-}
-
-#endif /* WIFI_SUPPORT */
-
-
-/****************************************************************************/
 
 
 void pico_set_system_time(long int sec)
 {
+	const ip_addr_t *ntp_server;
 	struct timespec ts;
 	struct tm *ntp, ntp_r;
 	time_t ntp_time = sec;
@@ -512,8 +517,25 @@ void pico_set_system_time(long int sec)
 		aon_timer_start(&ts);
 	}
 
+	/* Check current NTP server (if DHCP in use) */
+	if (ip_addr_isany(&cfg->ntp_server)) {
+		if ((ntp_server = sntp_getserver(0))) {
+			if (!ip_addr_cmp(ntp_server, &net_state->ntp_server)) {
+				log_msg(LOG_INFO, "SNTP Server: %s", ipaddr_ntoa(ntp_server));
+				ip_addr_copy(net_state->ntp_server, *ntp_server);
+			}
+		}
+	}
+
 	log_msg(LOG_NOTICE, "SNTP Set System time: %s", asctime(ntp));
 }
+
+#endif /* WIFI_SUPPORT */
+
+
+/****************************************************************************/
+
+
 
 void network_init()
 {
@@ -529,6 +551,13 @@ void network_status()
 #endif
 }
 
+
+void network_rejoin()
+{
+#ifdef WIFI_SUPPORT
+	wifi_rejoin();
+#endif
+}
 
 void network_poll()
 {
@@ -558,7 +587,7 @@ const char *network_ip()
 const char *network_hostname()
 {
 #ifdef WIFI_SUPPORT
-	return wifi_hostname;
+	return net_state->hostname;
 #else
 	return "";
 #endif

@@ -1,5 +1,5 @@
 /* util_rp2040.c
-   Copyright (C) 2021-2024 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -153,6 +153,17 @@ int time_passed(absolute_time_t *t, uint32_t ms)
 		*t = t_now;
 		return 1;
 	}
+
+	return 0;
+}
+
+
+int time_elapsed(absolute_time_t t, uint32_t ms)
+{
+	absolute_time_t t_now = get_absolute_time();
+
+	if (absolute_time_diff_us(t, t_now) > (uint64_t)ms * 1000)
+		return 1;
 
 	return 0;
 }

@@ -27,6 +27,7 @@ project(fanpico
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+
 set(FANPICO_BUILD beta CACHE STRING "Fanpico Build Tag")
 set(FANPICO_BOARD 0804D CACHE STRING "Fanpico Board Model")
 #set_property(CACHE FANPICO_BOARD PROPERTY STRINGS 0804 0804D 0401D)
@@ -182,6 +183,7 @@ target_link_libraries(fanpico PRIVATE
 if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
   message("Enabling WiFi stuff...")
   target_sources(fanpico PRIVATE
+    src/dhcp.c
     src/syslog.c
     src/httpd.c
     src/mqtt.c
@@ -211,6 +213,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
 endif()
 
 target_compile_options(fanpico PRIVATE -Wall)
+#target_compile_options(fanpico PRIVATE -fstack-protector-all)
 target_compile_options(fanpico PRIVATE -fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=)
 
 target_compile_definitions(fanpico PRIVATE USBD_MANUFACTURER="TJKO Industries")
