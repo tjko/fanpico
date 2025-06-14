@@ -29,6 +29,7 @@
 #ifdef LIB_PICO_CYW43_ARCH
 #define WIFI_SUPPORT 1
 #include "lwip/ip_addr.h"
+#include "lwip/apps/sntp.h"
 #endif
 
 #ifndef FANPICO_MODEL
@@ -241,6 +242,7 @@ struct fanpico_config {
 	char wifi_auth_mode[16];
 	uint8_t wifi_mode;
 	char hostname[32];
+	ip_addr_t dns_servers[DNS_MAX_SERVERS];
 	ip_addr_t syslog_server;
 	ip_addr_t ntp_server;
 	ip_addr_t ip;
@@ -303,11 +305,12 @@ struct fanpico_config {
 
 #if WIFI_SUPPORT
 struct fanpico_network_state {
-	ip_addr_t syslog_server;
-	ip_addr_t ntp_server;
 	ip_addr_t ip;
 	ip_addr_t netmask;
 	ip_addr_t gateway;
+	ip_addr_t syslog_server;
+	ip_addr_t ntp_servers[SNTP_MAX_SERVERS];
+	ip_addr_t dns_servers[DNS_MAX_SERVERS];
 	uint8_t mac[6];
 	char hostname[32];
 	bool netif_up;
@@ -443,14 +446,14 @@ bool wifi_get_auth_type(const char *name, uint32_t *type);
 const char* wifi_auth_type_name(uint32_t type);
 const char* wifi_link_status_text(int status);
 void set_pico_system_time(long unsigned int sec);
+void wifi_status();
+void wifi_info_display();
+void wifi_rejoin();
+void wifi_mac();
 #endif
 void network_init();
-void network_mac();
 void network_poll();
-void network_status();
-void network_rejoin();
 const char *network_ip();
-const char *network_hostname();
 
 
 #if WIFI_SUPPORT
@@ -551,7 +554,7 @@ int str_to_float(const char *str, float *val);
 time_t timespec_to_time_t(const struct timespec *ts);
 struct timespec* time_t_to_timespec(time_t t, struct timespec *ts);
 char* time_t_to_str(char *buf, size_t size, const time_t t);
-char* uptime_to_str(char *buf, size_t size, uint64_t uptime);
+char* uptime_to_str(char *buf, size_t size, uint64_t uptime, bool show_secs);
 bool str_to_time_t(const char *str, time_t *t);
 bool rtc_get_tm(struct tm *tm);
 bool rtc_get_time(time_t *t);

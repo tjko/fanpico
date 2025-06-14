@@ -302,6 +302,49 @@ static int ip_change(const char *cmd, const char *args, int query, struct prev_c
 	}
 	return 0;
 }
+
+static int ip_list_change(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd, const char *name, ip_addr_t *ip, uint32_t list_len)
+{
+	ip_addr_t tmpip;
+	char buf[255], tmp[20];
+	char *t, *arg, *saveptr;
+	int idx = 0;
+
+
+	if (query) {
+		for (int i = 0; i < list_len; i++) {
+			if (i > 0)
+				printf(", ");
+			printf("%s", ipaddr_ntoa(&ip[i]));
+		}
+		printf("\n");
+	} else {
+		arg = strdup(args);
+		t = strtok_r(arg, ",", &saveptr);
+		while (t && idx < list_len) {
+			if (ipaddr_aton(t, &tmpip)) {
+				ip_addr_copy(ip[idx], tmpip);
+				idx++;
+			}
+
+			t = strtok_r(NULL, ",", &saveptr);
+		}
+		free(arg);
+		if (idx == 0)
+			return 1;
+
+		buf[0] = 0;
+		for (int i = 0; i < list_len; i++) {
+			if (i >= idx)
+				ip_addr_set_zero(&ip[i]);
+			snprintf(tmp, sizeof(tmp), "%s%s",
+				(i > 0 ? ", " : ""), ipaddr_ntoa(&ip[i]));
+			strncatenate(buf, tmp, sizeof(buf));
+		}
+		log_msg(LOG_NOTICE, "%s changed to '%s'", name, buf);
+	}
+	return 0;
+}
 #endif
 
 
@@ -2171,6 +2214,12 @@ int cmd_wifi_gateway(const char *cmd, const char *args, int query, struct prev_c
 	return ip_change(cmd, args, query, prev_cmd, "Default Gateway", &conf->gateway);
 }
 
+int cmd_wifi_dns(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return ip_list_change(cmd, args, query, prev_cmd, "DNS Servers", conf->dns_servers,
+		DNS_MAX_SERVERS);
+}
+
 int cmd_wifi_syslog(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return ip_change(cmd, args, query, prev_cmd, "Syslog Server", &conf->syslog_server);
@@ -2184,7 +2233,7 @@ int cmd_wifi_ntp(const char *cmd, const char *args, int query, struct prev_cmd_t
 int cmd_wifi_mac(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query) {
-		network_mac();
+		printf("%s\n", mac_address_str(net_state->mac));
 		return 0;
 	}
 	return 1;
@@ -2199,7 +2248,7 @@ int cmd_wifi_ssid(const char *cmd, const char *args, int query, struct prev_cmd_
 int cmd_wifi_status(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query) {
-		network_status();
+		wifi_status();
 		return 0;
 	}
 	return 1;
@@ -2214,10 +2263,19 @@ int cmd_wifi_stats(const char *cmd, const char *args, int query, struct prev_cmd
 	return 1;
 }
 
+int cmd_wifi_info(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (query) {
+		wifi_info_display();
+		return 0;
+	}
+	return 1;
+}
+
 int cmd_wifi_rejoin(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query) {
-		network_rejoin();
+		wifi_rejoin();
 		return 0;
 	}
 	return 1;
@@ -2775,10 +2833,10 @@ int cmd_uptime(const char *cmd, const char *args, int query, struct prev_cmd_t *
 	}
 
 	uptime = to_us_since_boot(get_absolute_time());
-	uptime_to_str(buf, sizeof(buf), uptime);
+	uptime_to_str(buf, sizeof(buf), uptime, false);
 	printf("up %s%s\n", buf,
 		(rebooted_by_watchdog ? " [rebooted by watchdog]" : ""));
-	uptime_to_str(buf, sizeof(buf), uptime + m->total_uptime);
+	uptime_to_str(buf, sizeof(buf), uptime + m->total_uptime, false);
 	printf("since cold boot %s (soft reset count: %lu)\n",
 		buf, m->warmstart);
 	return 0;
@@ -2995,6 +3053,7 @@ const struct cmd_t wifi_commands[] = {
 	{ "IPaddress", 2, NULL,              cmd_wifi_ip },
 	{ "MAC",       3, NULL,              cmd_wifi_mac },
 	{ "NETMask",   4, NULL,              cmd_wifi_netmask },
+	{ "DNS",       3, NULL,              cmd_wifi_dns },
 	{ "NTP",       3, NULL,              cmd_wifi_ntp },
 	{ "MODE",      4, NULL,              cmd_wifi_mode },
 	{ "PASSword",  4, NULL,              cmd_wifi_password },
@@ -3002,6 +3061,7 @@ const struct cmd_t wifi_commands[] = {
 	{ "SSID",      4, NULL,              cmd_wifi_ssid },
 	{ "STATS",     5, NULL,              cmd_wifi_stats },
 	{ "STATus",    4, NULL,              cmd_wifi_status },
+	{ "INFO",      4, NULL,              cmd_wifi_info },
 	{ "SYSLOG",    6, NULL,              cmd_wifi_syslog },
 #endif
 	{ 0, 0, 0, 0 }

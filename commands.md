@@ -258,13 +258,17 @@ Fanpico supports following commands:
 * [SYStem:WIFI:NETMASK?](#systemwifinetmask-1)
 * [SYStem:WIFI:GATEWAY](#systemwifigateway)
 * [SYStem:WIFI:GATEWAY?](#systemwifigateway-1)
+* [SYStem:WIFI:DNS](#systemwifidns)
+* [SYStem:WIFI:DNS?](#systemwifidns-1)
 * [SYStem:WIFI:NTP](#systemwifintp)
 * [SYStem:WIFI:NTP?](#systemwifintp-1)
 * [SYStem:WIFI:SYSLOG](#systemwifisyslog)
 * [SYStem:WIFI:SYSLOG?](#systemwifisyslog-1)
 * [SYStem:WIFI:MAC?](#systemwifimac)
+* [SYStem:WIFI:REJOIN](#systemwifirejoin)
 * [SYStem:WIFI:SSID](#systemwifissid)
 * [SYStem:WIFI:SSID?](#systemwifissid-1)
+* [SYStem:WIFI:INFO?](#systemwifiinfo-1)
 * [SYStem:WIFI:STATus?](#systemwifistatus)
 * [SYStem:WIFI:STATS?](#systemwifistats)
 * [SYStem:WIFI:PASSword](#systemwifipassword)
@@ -3659,6 +3663,36 @@ SYS:WIFI:GATEWAY?
 ```
 
 
+#### SYStem:WIFI:DNS
+Configure (static) DNS Server IP addresses.
+
+Note, set to "0.0.0.0" to use servers provided by DHCP.
+
+Example (configure two DNS servers):
+
+```
+SYS:WIFI:DNS 8.8.8.8,8.8.4.4
+```
+
+Example (configure one DNS server):
+```
+SYS:WIFI:DNS 192.168.1.1
+```
+
+#### SYStem:WIFI:DNS?
+Display currently configured (static) DNS Server IP addresses.
+
+If DHCP is active, it may configure DNS servers. To see currently
+active DNS servers see SYS:WIFI:INFO?
+
+Example:
+
+```
+SYS:WIFI:DNS?
+8.8.8.8, 8.8.4.4
+```
+
+
 #### SYStem:WIFI:NTP
 Configure IP for NTP server to use.
 
@@ -3681,7 +3715,6 @@ Example:
 SYS:WIFI:NTP?
 192.168.1.10
 ```
-
 
 
 #### SYStem:WIFI:SYSLOG
@@ -3751,6 +3784,28 @@ Example:
 ```
 SYS:WIFI:SSID?
 mynetwork
+```
+
+#### SYStem:WIFI:INFO?
+Display information about the WiFi network current state.
+
+Example:
+
+```
+SYS:WIFI:INFO?
+ Network Link: Up
+  WiFi Status: Link Up (2 days, 00:11:42 since last change)
+  MAC Address: 28:cd:c1:xx:xx:xx
+  DHCP Client: Enabled
+DHCP Hostname: FanPico-e6614c31xxxxxxxxx
+
+   IP Address: 192.168.1.170
+      Netmask: 255.255.255.0
+      Gateway: 192.168.1.1
+
+  DNS Servers: 8.8.8.8, 8.8.4.4
+  NTP Servers: 192.168.1.10
+   Log Server: 0.0.0.0
 ```
 
 #### SYStem:WIFI:STATus?

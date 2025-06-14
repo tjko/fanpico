@@ -699,7 +699,7 @@ static char* json_status_message()
 		goto panic;
 
 	cJSON_AddItemToObject(json, "name", cJSON_CreateString(cfg->name));
-	cJSON_AddItemToObject(json, "hostname", cJSON_CreateString(network_hostname()));
+	cJSON_AddItemToObject(json, "hostname", cJSON_CreateString(net_state->hostname));
 	if (network_ip())
 		cJSON_AddItemToObject(json, "ip", cJSON_CreateString(network_ip()));
 

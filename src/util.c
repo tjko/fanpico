@@ -134,7 +134,7 @@ char* time_t_to_str(char *buf, size_t size, const time_t t)
 }
 
 
-char* uptime_to_str(char *buf, size_t size, uint64_t uptime)
+char* uptime_to_str(char *buf, size_t size, uint64_t uptime, bool show_secs)
 {
 	uint32_t secs = uptime / 1000000;
 	uint32_t mins =  secs / 60;
@@ -144,7 +144,12 @@ char* uptime_to_str(char *buf, size_t size, uint64_t uptime)
 	if (!buf)
 		return NULL;
 
-	snprintf(buf, size, "%lu days, %02lu:%02lu", days, hours % 24, mins % 60);
+	if (show_secs)
+		snprintf(buf, size, "%lu days, %02lu:%02lu:%02lu",
+			days, hours % 24, mins % 60, secs % 60);
+	else
+		snprintf(buf, size, "%lu days, %02lu:%02lu",
+			days, hours % 24, mins % 60);
 
 	return buf;
 }
