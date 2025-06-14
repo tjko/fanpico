@@ -27,6 +27,7 @@
 #include "pico/aon_timer.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
+#include "lwip/dns.h"
 #include "lwip/apps/sntp.h"
 #include "lwip/apps/httpd.h"
 #endif
@@ -129,13 +130,8 @@ const char* wifi_link_status_text(int status)
 	return "Unknown";
 }
 
-static void wifi_mac()
-{
-	printf("%s\n", mac_address_str(net_state->mac));
-}
 
-
-static void wifi_rejoin()
+void wifi_rejoin()
 {
 	int res;
 	uint32_t wifi_auth_mode;
@@ -206,6 +202,20 @@ static void wifi_status_cb(struct netif *netif)
 		ip_addr_set(&net_state->ip, netif_ip_addr4(netif));
 		ip_addr_set(&net_state->netmask, netif_ip_netmask4(netif));
 		ip_addr_set(&net_state->gateway, netif_ip_gw4(netif));
+		for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+			const ip_addr_t *s = dns_getserver(i);
+			if (s)
+				ip_addr_set(&net_state->dns_servers[i], s);
+			else
+				ip_addr_set_zero(&net_state->dns_servers[i]);
+		}
+		for (int i = 0; i < SNTP_MAX_SERVERS; i++) {
+			const ip_addr_t *s = sntp_getserver(i);
+			if (s)
+				ip_addr_set(&net_state->ntp_servers[i], s);
+			else
+				ip_addr_set_zero(&net_state->ntp_servers[i]);
+		}
 	} else {
 		log_msg(LOG_WARNING, "Network Interface: DOWN");
 		net_state->netif_up = false;
@@ -285,6 +295,18 @@ static void wifi_init()
 	}
 	netif_set_up(n);
 
+	if (!ip_addr_isany(&cfg->dns_servers[0])) {
+		for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+			const ip_addr_t *ip = &cfg->dns_servers[i];
+
+			if (!ip_addr_isany(ip)) {
+				log_msg(LOG_INFO, "Set DNS server (%d): %s", i + 1,
+					ipaddr_ntoa(ip));
+				dns_setserver(i, ip);
+			}
+		}
+	}
+
 	cyw43_arch_lwip_end();
 
 
@@ -337,14 +359,14 @@ static void wifi_init()
 
 	/* Enable SNTP client... */
 	sntp_init();
-	ip_addr_copy(net_state->ntp_server, cfg->ntp_server);
-	if (!ip_addr_isany(&net_state->ntp_server)) {
-		log_msg(LOG_NOTICE, "NTP Server: %s", ipaddr_ntoa(&net_state->ntp_server));
-		sntp_setserver(0, &net_state->ntp_server);
+	if (!ip_addr_isany(&cfg->ntp_server)) {
+		log_msg(LOG_NOTICE, "NTP Server: %s", ipaddr_ntoa(&cfg->ntp_server));
+		sntp_setserver(0, &cfg->ntp_server);
 	} else {
 		log_msg(LOG_NOTICE, "NTP Server: DHCP");
 		sntp_servermode_dhcp(1);
 	}
+	ip_addr_copy(net_state->ntp_servers[0], cfg->ntp_server);
 
 	/* Enable HTTP server */
 	httpd_init();
@@ -375,7 +397,7 @@ static void wifi_init()
 }
 
 
-static void wifi_status()
+void wifi_status()
 {
 	int res;
 
@@ -396,6 +418,41 @@ static void wifi_status()
 	}
 }
 
+void wifi_info_display()
+{
+	char buf[32];
+
+	printf(" Network Link: %s\n", (net_state->netif_up ? "Up" : "Down"));
+	uptime_to_str(buf, sizeof(buf),
+		absolute_time_diff_us(net_state->wifi_status_change, get_absolute_time()),
+		true);
+	printf("  WiFi Status: %s (%s since last change)\n",
+		wifi_link_status_text(net_state->wifi_status), buf);
+	printf("  MAC Address: %s\n", mac_address_str(net_state->mac));
+	printf("  DHCP Client: %s\n", (ip_addr_isany(&cfg->ip) ? "Enabled" : "Disabled"));
+	printf("DHCP Hostname: %s\n", net_state->hostname);
+	printf("\n");
+	printf("   IP Address: %s\n", ipaddr_ntoa(&net_state->ip));
+	printf("      Netmask: %s\n", ipaddr_ntoa(&net_state->netmask));
+	printf("      Gateway: %s\n", ipaddr_ntoa(&net_state->gateway));
+	printf("\n");
+	printf("  DNS Servers: %s", ipaddr_ntoa(&net_state->dns_servers[0]));
+	for (int i = 1; i < DNS_MAX_SERVERS; i++) {
+		if (!ip_addr_isany(&net_state->dns_servers[i])) {
+			printf(", %s", ipaddr_ntoa(&net_state->dns_servers[i]));
+		}
+	}
+	printf(" (%d)\n", DNS_MAX_SERVERS);
+	printf("  NTP Servers: %s", ipaddr_ntoa(&net_state->ntp_servers[0]));
+	for (int i = 1; i < SNTP_MAX_SERVERS; i++) {
+		if (!ip_addr_isany(&net_state->ntp_servers[i])) {
+			printf(", %s", ipaddr_ntoa(&net_state->ntp_servers[i]));
+		}
+	}
+	printf(" (%d)\n", SNTP_MAX_SERVERS);
+	printf("   Log Server: %s\n", ipaddr_ntoa(&net_state->syslog_server));
+
+}
 
 static void wifi_poll()
 {
@@ -492,16 +549,17 @@ static void wifi_poll()
 
 static const char* wifi_ip()
 {
+	static char ip_str[16 + 1];
+
 	if (ip_addr_isany(&net_state->ip))
 		return NULL;
 
-	return ipaddr_ntoa(&net_state->ip);
+	return ipaddr_ntoa_r(&net_state->ip, ip_str, sizeof(ip_str));
 }
 
 
 void pico_set_system_time(long int sec)
 {
-	const ip_addr_t *ntp_server;
 	struct timespec ts;
 	struct tm *ntp, ntp_r;
 	time_t ntp_time = sec;
@@ -515,16 +573,6 @@ void pico_set_system_time(long int sec)
 		aon_timer_set_time(&ts);
 	} else {
 		aon_timer_start(&ts);
-	}
-
-	/* Check current NTP server (if DHCP in use) */
-	if (ip_addr_isany(&cfg->ntp_server)) {
-		if ((ntp_server = sntp_getserver(0))) {
-			if (!ip_addr_cmp(ntp_server, &net_state->ntp_server)) {
-				log_msg(LOG_INFO, "SNTP Server: %s", ipaddr_ntoa(ntp_server));
-				ip_addr_copy(net_state->ntp_server, *ntp_server);
-			}
-		}
 	}
 
 	log_msg(LOG_NOTICE, "SNTP Set System time: %s", asctime(ntp));
@@ -544,32 +592,10 @@ void network_init()
 #endif
 }
 
-void network_status()
-{
-#ifdef WIFI_SUPPORT
-	wifi_status();
-#endif
-}
-
-
-void network_rejoin()
-{
-#ifdef WIFI_SUPPORT
-	wifi_rejoin();
-#endif
-}
-
 void network_poll()
 {
 #ifdef WIFI_SUPPORT
 	wifi_poll();
-#endif
-}
-
-void network_mac()
-{
-#ifdef WIFI_SUPPORT
-	wifi_mac();
 #endif
 }
 
@@ -583,12 +609,3 @@ const char *network_ip()
 #endif
 }
 
-
-const char *network_hostname()
-{
-#ifdef WIFI_SUPPORT
-	return net_state->hostname;
-#else
-	return "";
-#endif
-}

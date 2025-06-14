@@ -437,6 +437,40 @@ cJSON* vsensors2json(const uint8_t *s)
 }
 
 
+void json2iplist(cJSON *item, ip_addr_t *list, uint32_t len)
+{
+	cJSON *o;
+	char *val;
+	ip_addr_t tmpip;
+	int count = 0;
+
+	for (int i = 0; i < len; i++)
+		ip_addr_set_any(0, &list[i]);
+
+	cJSON_ArrayForEach(o, item) {
+		val = cJSON_GetStringValue(o);
+		if (val && count < len) {
+			if (ipaddr_aton(val, &tmpip)) {
+				ip_addr_copy(list[count++], tmpip);
+			}
+		}
+	}
+}
+
+cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
+{
+	cJSON *o;
+
+	if ((o = cJSON_CreateArray()) == NULL)
+		return NULL;
+
+	for (int i = 0; i < len; i++) {
+		cJSON_AddItemToArray(o, cJSON_CreateString(ipaddr_ntoa(&list[i])));
+	}
+
+	return o;
+}
+
 void clear_config(struct fanpico_config *cfg)
 {
 	int i, j;
@@ -551,6 +585,9 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->wifi_mode = 0;
 	cfg->hostname[0] = 0;
 	strncopy(cfg->wifi_country, "XX", sizeof(cfg->wifi_country));
+	for (int i = 0; i < DNS_MAX_SERVERS; i++) {
+		ip_addr_set_any(0, &cfg->dns_servers[i]);
+	}
 	ip_addr_set_any(0, &cfg->syslog_server);
 	ip_addr_set_any(0, &cfg->ntp_server);
 	ip_addr_set_any(0, &cfg->ip);
@@ -660,6 +697,8 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	if (cfg->wifi_mode != 0) {
 		cJSON_AddItemToObject(config, "wifi_mode", cJSON_CreateNumber(cfg->wifi_mode));
 	}
+	if (!ip_addr_isany(&cfg->dns_servers[0]))
+		cJSON_AddItemToObject(config, "dns_servers", iplist2json(cfg->dns_servers, DNS_MAX_SERVERS));
 	if (!ip_addr_isany(&cfg->syslog_server))
 		cJSON_AddItemToObject(config, "syslog_server", cJSON_CreateString(ipaddr_ntoa(&cfg->syslog_server)));
 	if (!ip_addr_isany(&cfg->ntp_server))
@@ -1029,6 +1068,9 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	}
 	if ((ref = cJSON_GetObjectItem(config, "wifi_mode"))) {
 		cfg->wifi_mode = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "dns_servers"))) {
+		json2iplist(ref, cfg->dns_servers, DNS_MAX_SERVERS);
 	}
 	if ((ref = cJSON_GetObjectItem(config, "syslog_server"))) {
 		if ((val = cJSON_GetStringValue(ref)))

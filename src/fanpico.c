@@ -200,9 +200,9 @@ static void setup()
 
 	log_msg(LOG_NOTICE, "System starting...");
 	if (m->prev_uptime) {
-		uptime_to_str(buf, sizeof(buf), m->prev_uptime);
+		uptime_to_str(buf, sizeof(buf), m->prev_uptime, true);
 		log_msg(LOG_NOTICE, "Uptime before last soft reset: %s", buf);
-		uptime_to_str(buf, sizeof(buf), m->total_uptime);
+		uptime_to_str(buf, sizeof(buf), m->total_uptime, true);
 		log_msg(LOG_NOTICE, "Uptime since cold boot: %s (soft reset count: %lu)",
 			buf, m->warmstart);
 	}
@@ -224,7 +224,7 @@ static void setup()
 
 	setup_i2c_bus((struct fanpico_config *)cfg);
 	display_init();
-	network_init(&system_state);
+	network_init();
 
 	/* Enable ADC */
 	log_msg(LOG_NOTICE, "Initialize ADC...");
