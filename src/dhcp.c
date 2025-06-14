@@ -97,9 +97,10 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 		memcpy(&log_ip.addr, pbuf->payload + option_value_offset, 4);
 		if (ip_addr_isany(&cfg->syslog_server)) {
 			/* If no syslog server configured, use one from DHCP... */
-			ip_addr_copy(net_state->syslog_server, log_ip);
-			mutex_exit(config_mutex);
-			log_msg(LOG_INFO, "Using Log Server from DHCP: %s", ip4addr_ntoa(&log_ip));
+			if (!ip_addr_cmp(&net_state->syslog_server, &log_ip)) {
+				ip_addr_copy(net_state->syslog_server, log_ip);
+				log_msg(LOG_INFO, "Using Log Server from DHCP: %s", ip4addr_ntoa(&log_ip));
+			}
 		} else {
 			log_msg(LOG_DEBUG, "Ignoring Log Server from DHCP: %s",
 				ip4addr_ntoa(&log_ip));
@@ -110,8 +111,8 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 		memcpy(timezone, pbuf->payload + option_value_offset, len);
 		timezone[len] = 0;
 		if (strlen(cfg->timezone) < 1) {
-			log_msg(LOG_INFO, "Using timezone from DHCP: %s", timezone);
 			if (strncmp(timezone, m->timezone, len + 1)) {
+				log_msg(LOG_INFO, "Using timezone from DHCP: %s", timezone);
 				update_persistent_memory_tz(timezone);
 				setenv("TZ", m->timezone, 1);
 				tzset();
