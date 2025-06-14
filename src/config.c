@@ -436,7 +436,7 @@ cJSON* vsensors2json(const uint8_t *s)
 	return o;
 }
 
-
+#ifdef WIFI_SUPPORT
 void json2iplist(cJSON *item, ip_addr_t *list, uint32_t len)
 {
 	cJSON *o;
@@ -470,6 +470,7 @@ cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
 
 	return o;
 }
+#endif
 
 void clear_config(struct fanpico_config *cfg)
 {
