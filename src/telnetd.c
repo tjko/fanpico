@@ -69,3 +69,35 @@ void telnetserver_init()
 	telnet_server_start(telnet_srv, true);
 }
 
+
+void telnetserver_disconnect()
+{
+	if (!telnet_srv)
+		return;
+
+	telnet_server_disconnect_client(telnet_srv);
+}
+
+
+void telnetserver_who()
+{
+	ip_addr_t ip;
+	uint16_t port;
+	const char *user, *mode;
+
+	if (!telnet_srv)
+		return;
+
+	if (telnet_server_client_connected(telnet_srv)) {
+		ip_addr_set_zero(&ip);
+		port = 0;
+		telnet_server_get_client_ip(telnet_srv, &ip, &port);
+		user = (strlen((char*)telnet_srv->login) > 0 ? (char*)telnet_srv->login : "<none>");
+		mode = (telnet_srv->mode == TELNET_MODE ? "telnet" : "tcp");
+
+		printf("%-8s %-8s %s:%u (%s)\n", user, mode, ipaddr_ntoa(&ip), port,
+			tcp_connection_state_name(telnet_srv->cstate));
+	} else {
+		printf("No active telnet connection(s)\n");
+	}
+}

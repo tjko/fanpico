@@ -442,14 +442,14 @@ void wifi_info_display()
 			printf(", %s", ipaddr_ntoa(&net_state->dns_servers[i]));
 		}
 	}
-	printf(" (%d)\n", DNS_MAX_SERVERS);
+	printf("\n");
 	printf("  NTP Servers: %s", ipaddr_ntoa(&net_state->ntp_servers[0]));
 	for (int i = 1; i < SNTP_MAX_SERVERS; i++) {
 		if (!ip_addr_isany(&net_state->ntp_servers[i])) {
 			printf(", %s", ipaddr_ntoa(&net_state->ntp_servers[i]));
 		}
 	}
-	printf(" (%d)\n", SNTP_MAX_SERVERS);
+	printf("\n");
 	printf("   Log Server: %s\n", ipaddr_ntoa(&net_state->syslog_server));
 
 }
