@@ -367,6 +367,28 @@ int cmd_idn(const char *cmd, const char *args, int query, struct prev_cmd_t *pre
 	return 0;
 }
 
+int cmd_exit(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (query)
+		return 1;
+
+#if WIFI_SUPPORT
+	telnetserver_disconnect();
+#endif
+	return 0;
+}
+
+int cmd_who(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+#if WIFI_SUPPORT
+	telnetserver_who();
+#endif
+	return 0;
+}
+
 int cmd_usb_boot(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	char buf[64];
@@ -3343,9 +3365,11 @@ const struct cmd_t commands[] = {
 	{ "*TST",      4, NULL,              cmd_zero },
 	{ "*WAI",      4, NULL,              cmd_null },
 	{ "CONFigure", 4, config_commands,   cmd_print_config },
+	{ "EXIT",      4, NULL,              cmd_exit },
 	{ "MEAsure",   3, measure_commands,  NULL },
 	{ "SYStem",    3, system_commands,   NULL },
 	{ "Read",      1, NULL,              cmd_read },
+	{ "WHO",       3, NULL,              cmd_who },
 	{ "WRIte",     3, write_commands,    NULL },
 	{ 0, 0, 0, 0 }
 };

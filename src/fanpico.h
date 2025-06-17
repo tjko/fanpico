@@ -474,6 +474,8 @@ void fanpico_mqtt_scpi_command();
 
 /* telnetd.c */
 void telnetserver_init();
+void telnetserver_disconnect();
+void telnetserver_who();
 
 /* snmp.c */
 void fanpico_snmp_init();

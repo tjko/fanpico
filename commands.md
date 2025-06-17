@@ -78,6 +78,7 @@ Fanpico supports following commands:
 * [CONFigure:VSENSORx:TEMPMap?](#configurevsensorxtempmap-1)
 * [CONFigure:VSENSORx:FILTER](#configurevsensorxfilter)
 * [CONFigure:VSENSORx:FILTER?](#configurevsensorxfilter-1)
+* [EXIT](#exit)
 * [MEASure:Read?](#measureread)
 * [MEASure:FANx?](#measurefanx)
 * [MEASure:FANx:Read?](#measurefanxread)
@@ -250,6 +251,7 @@ Fanpico supports following commands:
 * [SYStem:WIFI:COUntry?](#systemwificountry-1)
 * [SYStem:WIFI:HOSTname](#systemwifihostname)
 * [SYStem:WIFI:HOSTname?](#systemwifihostname-1)
+* [SYStem:WIFI:INFO?](#systemwifiinfo)
 * [SYStem:WIFI:IPaddress](#systemwifiipaddress)
 * [SYStem:WIFI:IPaddress?](#systemwifiipaddress-1)
 * [SYStem:WIFI:MODE](#systemwifimode)
@@ -268,11 +270,11 @@ Fanpico supports following commands:
 * [SYStem:WIFI:REJOIN](#systemwifirejoin)
 * [SYStem:WIFI:SSID](#systemwifissid)
 * [SYStem:WIFI:SSID?](#systemwifissid-1)
-* [SYStem:WIFI:INFO?](#systemwifiinfo-1)
 * [SYStem:WIFI:STATus?](#systemwifistatus)
 * [SYStem:WIFI:STATS?](#systemwifistats)
 * [SYStem:WIFI:PASSword](#systemwifipassword)
 * [SYStem:WIFI:PASSword?](#systemwifipassword-1)
+* [WHO?](#who)
 * [WRIte:VSENSORx](#writevsensorx)
 
 
@@ -306,11 +308,11 @@ TJKO Industries,FANPICO-0804,e660c0d1c768a330,1.0
 ```
 
 #### *RST
-  Reset unit. This triggers Fanpico to perform (warm) reboot.
+Reset unit. This triggers Fanpico to perform (warm) reboot.
 
-  ```
-  *RST
-  ```
+```
+*RST
+```
 
 ### CONFigure:
 Commands for configuring the device settings.
@@ -1338,6 +1340,13 @@ For example:
 ```
 CONF:VENSOR1:FILTER?
 sma,10
+```
+
+#### EXIT
+Disconnect remote connection. This will disconnect active telnet connection.
+
+```
+EXIT
 ```
 
 
@@ -3859,6 +3868,17 @@ Example:
 ```
 SYS:WIFI:PASS?
 mynetworkpassword
+```
+
+
+### WHO?
+Display remote connection information. This displays information about currently
+connected telnet session.
+
+Example:
+```
+WHO?
+admin    telnet   192.168.1.10:59422 (Connected)
 ```
 
 
