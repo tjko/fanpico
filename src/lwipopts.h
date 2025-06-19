@@ -84,6 +84,7 @@ void pico_set_system_time(long int sec);
 #define SNMP_LWIP_MIB2                  1
 #define LWIP_STATS                      1
 #define MIB2_STATS                      1
+#define SNMP_MAX_COMMUNITY_STR_LEN      32
 
 #if TLS_SUPPORT
 #define HTTPD_ENABLE_HTTPS              1

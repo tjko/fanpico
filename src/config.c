@@ -633,7 +633,7 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->telnet_pwhash[0] = 0;
 	cfg->snmp_active = 0;
 	strncopy(cfg->snmp_community, "public", sizeof(cfg->snmp_community));
-	strncopy(cfg->snmp_community_write, "private", sizeof(cfg->snmp_community_write));
+	cfg->snmp_community_write[0] = 0;
 	cfg->snmp_contact[0] = 0;
 	cfg->snmp_location[0] = 0;
 	cfg->snmp_community_trap[0] = 0;

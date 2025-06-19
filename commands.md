@@ -3051,7 +3051,9 @@ Server Room
 
 
 #### SYStem:SNMP:WRITecommunity
-Set SNMP (write) community name. (Default: private)
+Set SNMP (write) community name. (Default: <empty>)
+
+Note, when this is set to empty value (string), SNMP write access is disabled.
 
 Example:
 ```
