@@ -286,11 +286,11 @@ struct fanpico_config {
 	char telnet_user[16 + 1];
 	char telnet_pwhash[128 + 1];
 	bool snmp_active;
-	char snmp_community[32 + 1];
-	char snmp_community_write[32 + 1];
+	char snmp_community[SNMP_MAX_COMMUNITY_STR_LEN + 1];
+	char snmp_community_write[SNMP_MAX_COMMUNITY_STR_LEN + 1];
 	char snmp_contact[32 + 1];
 	char snmp_location[32 + 1];
-	char snmp_community_trap[32 + 1];
+	char snmp_community_trap[SNMP_MAX_COMMUNITY_STR_LEN + 1];
 	bool snmp_auth_traps;
 	ip_addr_t snmp_trap_dst;
 #endif
