@@ -335,11 +335,30 @@ CONF:SAVE
 ```
 
 #### CONFigure:Read?
-Display current configuration in JSON format.
+Display (backup) current configuration in JSON format.
 
 Example:
 ```
 CONF:READ?
+```
+
+#### CONFigure:UPLOAD?
+Upload (previous backed up) configuration in JSON format.
+This command waits up to 10 seconds for the configuration to be uploaded.
+
+End of configuration is signified by empty line (after end of configuration).
+(To cancel uploading configuration, two empty lines can be sent.)
+
+Example:
+```
+CONF:UPLOAD
+Paste FanPico configuration in JSON format:
+[Received 5937 bytes]
+
+Clearing config...
+Loading config...
+[   112.487339][0] Config version: fanpico-config-v1
+Configuration successfully loaded.
 ```
 
 #### CONFigure:DELete

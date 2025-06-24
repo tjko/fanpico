@@ -659,6 +659,21 @@ int cmd_print_config(const char *cmd, const char *args, int query, struct prev_c
 	return 0;
 }
 
+int cmd_upload_config(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (query)
+		return 1;
+#if WATCHDOG_ENABLED
+	watchdog_disable();
+#endif
+	upload_config();
+#if WATCHDOG_ENABLED
+	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
+#endif
+
+	return 0;
+}
+
 int cmd_delete_config(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query)
@@ -3150,7 +3165,7 @@ const struct cmd_t mqtt_commands[] = {
 const struct cmd_t snmp_trap_commands[] = {
 	{ "AUTH",      4, NULL,              cmd_snmp_auth_traps },
 	{ "COMMunity", 4, NULL,              cmd_snmp_community_trap },
-	{ "DESTination", 4, NULL,            cmd_snmp_trap_dst }, 
+	{ "DESTination", 4, NULL,            cmd_snmp_trap_dst },
 	{ 0, 0, 0, 0 }
 };
 
@@ -3303,6 +3318,7 @@ const struct cmd_t config_commands[] = {
 	{ "Read",      1, NULL,              cmd_print_config },
 	{ "SAVe",      3, NULL,              cmd_save_config },
 	{ "SENSOR",    6, sensor_c_commands, NULL },
+	{ "UPLOAD",    6, NULL,              cmd_upload_config },
 	{ "VSENSORS",  8, vsensors_c_commands, cmd_vsensors_sources },
 	{ "VSENSOR",   7, vsensor_c_commands, NULL },
 	{ 0, 0, 0, 0 }

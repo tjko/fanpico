@@ -410,6 +410,7 @@ void read_config();
 void save_config();
 void delete_config();
 void print_config();
+void upload_config();
 
 /* display.c */
 void display_init();
