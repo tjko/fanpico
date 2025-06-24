@@ -11,6 +11,7 @@ Fanpico supports following commands:
 * [CONFigure?](#configure)
 * [CONFigure:SAVe](#configuresave)
 * [CONFigure:Read?](#configureread)
+* [CONFigure:UPLOAD](#configureupload)
 * [CONFigure:DELete](#configuredelete)
 * [CONFigure:FANx:NAME](#configurefanxname)
 * [CONFigure:FANx:NAME?](#configurefanxname-1)
