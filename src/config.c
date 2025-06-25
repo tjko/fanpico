@@ -1513,13 +1513,12 @@ void upload_config()
 	cJSON *config = NULL;
 	cJSON *ref;
 	char *buf = NULL;
-	char tmp[256], *line;
+	char tmp[256];
 	uint32_t buf_len = CONFIG_READ_BUF_SIZE * 3;
 	uint32_t buf_used = 0;
-	uint32_t line_len;
 	int state = 0;
 	int blank_count = 0;
-	int r;
+
 
 	if (!(buf = malloc(buf_len))) {
 		log_msg(LOG_ERR,"upload_config(): not enough memory (%lu)", buf_len);
@@ -1529,38 +1528,41 @@ void upload_config()
 	tmp[0] = 0;
 	printf("Paste FanPico configuration in JSON format:\n");
 	while (1) {
+		char *line;
+		uint32_t line_len;
+		int r;
+
 		if ((r = getstring_timeout_ms(tmp, sizeof(tmp), 100)) < 0)
 			break;
 		if (r > 0) {
 			line = trim_str(tmp);
 			line_len = strnlen(line, sizeof(tmp));
 
-			if (line_len == 0)
-				blank_count++;
-			else
-				blank_count = 0;
-
+			blank_count = (line_len ? 0 : blank_count + 1);
 			if (blank_count >= BLANK_LINE_COUNT)
 				break;
 
 			if (state == 0) {
-				if (line_len > 0)
+				if (line_len)
 					state = 1;
 				else
 					continue;
 			}
 			if (state == 1) {
-				if (line_len == 0) {
+				if (!line_len) {
 					if (blank_count >= 1)
 						break;
 					continue;
 				}
 				if ((buf_len - buf_used) < line_len + 1) {
+					char *new_buf;
+
 					buf_len += CONFIG_READ_BUF_SIZE;
-					if (!(buf = realloc(buf, buf_len))) {
+					if (!(new_buf = realloc(buf, buf_len))) {
 						log_msg(LOG_ERR,"upload_config(): not enough memory (%lu)", buf_len);
 						goto panic;
 					}
+					buf = new_buf;
 				}
 				memcpy(&buf[buf_used], line, line_len);
 				buf_used += line_len;
@@ -1582,8 +1584,7 @@ void upload_config()
 		goto panic;
 	}
 	if (!(config = cJSON_Parse(buf))) {
-		const char *error = cJSON_GetErrorPtr();
-		printf("Failed to parse uploaded config: %s", (error ? error : ""));
+		printf("Failed to parse uploaded config");
 		goto panic;
 	}
 	if (!(ref = cJSON_GetObjectItem(config, "id"))) {

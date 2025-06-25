@@ -2921,6 +2921,16 @@ int cmd_lfs(const char *cmd, const char *args, int query, struct prev_cmd_t *pre
 	return 0;
 }
 
+int cmd_lfs_dir(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	flash_list_directory("/", true);
+
+	return 0;
+}
+
 int cmd_lfs_format(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (query)
@@ -3077,6 +3087,7 @@ const struct cmd_t display_commands[] = {
 };
 
 const struct cmd_t lfs_commands[] = {
+	{ "DIRectory", 3, NULL,              cmd_lfs_dir },
 	{ "FORMAT",    6, NULL,              cmd_lfs_format },
 	{ 0, 0, 0, 0 }
 };

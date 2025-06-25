@@ -127,6 +127,7 @@ Fanpico supports following commands:
 * [SYStem:LED](#systemled)
 * [SYStem:LED?](#systemled-1)
 * [SYStem:LFS?](#systemlfs)
+* [SYStem:LFS:DIR?](#systemlfsdir)
 * [SYStem:LFS:FORMAT](#systemlfsformat)
 * [SYStem:MBFANS?](#systemmbfans)
 * [SYStem:MEM](#systemmem)
@@ -2063,6 +2064,23 @@ Filesystem used:                       24576
 Filesystem free:                       237568
 Number of files:                       3
 Number of subdirectories:              0
+```
+
+
+#### SYStem:LFS:DIR?
+List contents of the flash filesystem (littlefs).
+
+Example:
+```
+SYS:LFS:DIR?
+Directory: /
+
+.                                                       <DIR>
+..                                                      <DIR>
+cert.pem                                                 1286
+fanpico.cfg                                              7012
+key.pem                                                  1709
+
 ```
 
 
