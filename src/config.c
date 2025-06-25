@@ -480,8 +480,6 @@ void clear_config(struct fanpico_config *cfg)
 	struct fan_output *f;
 	struct mb_input *m;
 
-	mutex_enter_blocking(config_mutex);
-
 	memset(cfg, 0, sizeof(struct fanpico_config));
 
 	for (i = 0; i < SENSOR_MAX_COUNT; i++) {
@@ -641,7 +639,6 @@ void clear_config(struct fanpico_config *cfg)
 	ip_addr_set_any(0, &cfg->snmp_trap_dst);
 #endif
 
-	mutex_exit(config_mutex);
 }
 
 
@@ -988,7 +985,6 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if (!config || !cfg)
 		return -1;
 
-	mutex_enter_blocking(config_mutex);
 
 	/* Parse JSON configuration */
 
@@ -1405,7 +1401,6 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		}
 	}
 
-	mutex_exit(config_mutex);
 	return 0;
 }
 
@@ -1448,10 +1443,12 @@ void read_config()
 
 
         /* Parse JSON configuration */
+	mutex_enter_blocking(config_mutex);
 	clear_config(&fanpico_config);
 	if (json_to_config(config, &fanpico_config) < 0) {
 		log_msg(LOG_ERR, "Error parsing JSON configuration");
 	}
+	mutex_exit(config_mutex);
 
 	cJSON_Delete(config);
 }
@@ -1496,13 +1493,124 @@ void print_config()
 	if ((str = cJSON_Print(config)) == NULL) {
 		log_msg(LOG_ERR, "Failed to generate JSON output");
 	} else {
-		printf("Current Configuration:\n%s\n---\n", str);
+		printf("Current Configuration:\n%s\n\n", str);
 		free(str);
 	}
 
 	cJSON_Delete(config);
 }
 
+
+
+
+#define CONFIG_READ_TIMEOUT 10000 // 10s
+#define CONFIG_READ_BUF_SIZE 2048
+#define BLANK_LINE_COUNT 2  // Number of blank lines to signify end of config...
+
+void upload_config()
+{
+	absolute_time_t t_timeout = get_absolute_time();
+	cJSON *config = NULL;
+	cJSON *ref;
+	char *buf = NULL;
+	char tmp[256];
+	uint32_t buf_len = CONFIG_READ_BUF_SIZE * 3;
+	uint32_t buf_used = 0;
+	int state = 0;
+	int blank_count = 0;
+
+
+	if (!(buf = malloc(buf_len))) {
+		log_msg(LOG_ERR,"upload_config(): not enough memory (%lu)", buf_len);
+		return;
+	}
+
+	tmp[0] = 0;
+	printf("Paste FanPico configuration in JSON format:\n");
+	while (1) {
+		char *line;
+		uint32_t line_len;
+		int r;
+
+		if ((r = getstring_timeout_ms(tmp, sizeof(tmp), 100)) < 0)
+			break;
+		if (r > 0) {
+			line = trim_str(tmp);
+			line_len = strnlen(line, sizeof(tmp));
+
+			blank_count = (line_len ? 0 : blank_count + 1);
+			if (blank_count >= BLANK_LINE_COUNT)
+				break;
+
+			if (state == 0) {
+				if (line_len)
+					state = 1;
+				else
+					continue;
+			}
+			if (state == 1) {
+				if (!line_len) {
+					if (blank_count >= 1)
+						break;
+					continue;
+				}
+				if ((buf_len - buf_used) < line_len + 1) {
+					char *new_buf;
+
+					buf_len += CONFIG_READ_BUF_SIZE;
+					if (!(new_buf = realloc(buf, buf_len))) {
+						log_msg(LOG_ERR,"upload_config(): not enough memory (%lu)", buf_len);
+						goto panic;
+					}
+					buf = new_buf;
+				}
+				memcpy(&buf[buf_used], line, line_len);
+				buf_used += line_len;
+				buf[buf_used++] = '\n';
+				tmp[0] = 0;
+			}
+		}
+		if (time_passed(&t_timeout, CONFIG_READ_TIMEOUT)) {
+			printf("Timeout!\n");
+			break;
+		}
+	}
+
+	buf[buf_used] = 0;
+	printf("[Received %lu bytes]\n\n", buf_used);
+
+	if (buf_used < 1) {
+		printf("No configuration received.\n");
+		goto panic;
+	}
+	if (!(config = cJSON_Parse(buf))) {
+		printf("Failed to parse uploaded config");
+		goto panic;
+	}
+	if (!(ref = cJSON_GetObjectItem(config, "id"))) {
+		printf("Uploaded JSON object missing 'id' field.\n");
+		goto panic;
+	}
+	if (strncmp(ref->valuestring, "fanpico-config-v", 16)) {
+		printf("Invalid configuration uploaded.\n");
+		goto panic;
+	}
+
+	printf("Clearing config...\n");
+	clear_config(&fanpico_config);
+	printf("Loading config...\n");
+	if (json_to_config(config, &fanpico_config) < 0) {
+		printf("Error parsing JSON configuration\n");
+	} else {
+		printf("Configuration successfully loaded.\n");
+	}
+
+panic:
+	if (buf)
+		free(buf);
+	if (config)
+		cJSON_Delete(config);
+}
 
 void delete_config()
 {

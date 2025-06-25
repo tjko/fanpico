@@ -19,7 +19,7 @@ endif()
 
 
 project(fanpico
-  VERSION 1.7.5
+  VERSION 1.7.6
   DESCRIPTION "FanPico - Programmable PWM (PC) Fan Controller"
   HOMEPAGE_URL https://kokkonen.net/fanpico/
   LANGUAGES C CXX ASM
@@ -99,7 +99,7 @@ add_subdirectory(libs/pico-1wire-lib)
 add_subdirectory(libs/pico-sensor-lib)
 
 
-# fanpico firmware
+# FanPico Firmware
 
 add_executable(fanpico
   src/fanpico.c

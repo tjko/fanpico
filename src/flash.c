@@ -318,6 +318,94 @@ int flash_get_fs_info(size_t *size, size_t *free, size_t *files,
 }
 
 
+static int littlefs_list_dir(const char *path, bool recursive)
+{
+	lfs_dir_t dir;
+	struct lfs_info info;
+	char separator[2] = "/";
+	char *dirname;
+	size_t path_len;
+	int res;
+
+	if (!path)
+		return LFS_ERR_INVAL;
+
+	/* Check if path ends with "/" ... */
+	path_len = strnlen(path, LFS_NAME_MAX);
+	if (path_len > 0) {
+		if (path[path_len - 1] == '/')
+			separator[0] = 0;
+	}
+
+	printf("Directory: %s\n\n", path);
+
+	/* Open directory */
+	if ((res = lfs_dir_open(&lfs, &dir, path)) != LFS_ERR_OK)
+		return res;
+
+	/* First scan for directories... */
+	while ((res = lfs_dir_read(&lfs, &dir, &info)) > 0) {
+		if (info.type == LFS_TYPE_DIR)
+			printf("%-50s %10s\n", info.name, "<DIR>");
+	}
+
+	/* Next scan for files... */
+	lfs_dir_rewind(&lfs, &dir);
+	while ((res = lfs_dir_read(&lfs, &dir, &info)) > 0) {
+		if (info.type == LFS_TYPE_REG)
+			printf("%-50s %10lu\n", info.name, info.size);
+	}
+	printf("\n");
+
+	if (recursive) {
+		/* Scan subdirectories recursively... */
+		lfs_dir_rewind(&lfs, &dir);
+		while ((res = lfs_dir_read(&lfs, &dir, &info)) > 0) {
+			if (info.type != LFS_TYPE_DIR)
+				continue;
+			/* Skip special directories ("." and "..") */
+			if (info.name[0] == '.') {
+				if (info.name[1] == 0)
+					continue;
+				if (info.name[1] == '.' && info.name[2] == 0)
+					continue;
+			}
+			if ((dirname = malloc(LFS_NAME_MAX + 1))) {
+				snprintf(dirname, LFS_NAME_MAX + 1, "%s%s%s",
+					path, separator, info.name);
+				flash_list_directory(dirname, recursive);
+				free(dirname);
+			}
+		}
+	}
+
+	lfs_dir_close(&lfs, &dir);
+
+	return LFS_ERR_OK;
+}
+
+
+int flash_list_directory(const char *path, bool recursive)
+{
+	int res;
+
+	if (!path)
+		return -1;
+
+	/* Mount flash filesystem... */
+	if ((res = lfs_mount(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "lfs_mount() failed: %d", res);
+		return -2;
+	}
+
+	res = littlefs_list_dir(path, recursive);
+
+	lfs_unmount(&lfs);
+
+	return res;
+}
+
+
 void print_rp2040_flashinfo()
 {
 	size_t binary_size = &__flash_binary_end - &__flash_binary_start;
