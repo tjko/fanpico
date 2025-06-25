@@ -41,6 +41,8 @@ string(RANDOM LENGTH ${EXTRA_ENTROPY_LEN} EXTRA_ENTROPY)
 
 #set(CMAKE_BUILD_TYPE Debug)
 
+set(WOLFSSL_SUPPORT 1)
+
 pico_sdk_init()
 
 message("---------------------------------")
@@ -97,6 +99,13 @@ add_subdirectory(libs/pico-1wire-lib)
 
 # pico-sensor-lib
 add_subdirectory(libs/pico-sensor-lib)
+
+# wolfSSL/wolfSSH
+set(WOLFSSL_ROOT libs/wolfssl)
+include(cmake/wolfssl_pico.cmake)
+include_directories(src/wolfssl)
+set(WOLFSSH_ROOT libs/wolfssh)
+include(cmake/wolfssh_pico.cmake)
 
 
 # FanPico Firmware
@@ -208,6 +217,15 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
       ${PICO_LWIP_PATH}/src/apps/altcp_tls/altcp_tls_mbedtls.c
       PROPERTIES
       COMPILE_OPTIONS "-Wno-unused-result"
+      )
+  endif()
+  if (WOLFSSL_SUPPORT)
+    target_sources(fanpico PRIVATE
+      ${WOLFSSL_ROOT}/wolfcrypt/test/test.c
+      )
+    target_link_libraries(fanpico PRIVATE
+      wolfssl
+      wolfssh
       )
   endif()
 endif()

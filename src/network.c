@@ -37,6 +37,9 @@
 
 #ifdef WIFI_SUPPORT
 
+#include "wolfssl/wolfcrypt/settings.h"
+#include <wolfssl/ssl.h>
+
 #include "syslog.h"
 
 #define WIFI_REJOIN_DELAY 10000 // Delay before attempting to re-join to WiFi (ms)
@@ -588,6 +591,9 @@ void pico_set_system_time(long int sec)
 void network_init()
 {
 #ifdef WIFI_SUPPORT
+	wolfSSL_Init();
+	wolfSSL_Debugging_ON();
+
 	wifi_init();
 #endif
 }
