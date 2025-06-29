@@ -31,9 +31,6 @@
 #include "pico/aon_timer.h"
 #ifdef LIB_PICO_CYW43_ARCH
 #include "pico/cyw43_arch.h"
-#include "wolfssl/wolfcrypt/settings.h"
-#include <wolfssl/ssl.h>
-#include <wolfcrypt/test/test.h>
 #endif
 #include "hardware/adc.h"
 #include "hardware/gpio.h"
@@ -153,11 +150,6 @@ void boot_reason()
 	printf("WATCHDOG_REASON: %08lx\n", watchdog_hw->reason);
 }
 
-time_t myTime(time_t *t)
-{
-	rtc_get_time(t);
-	return *t;
-}
 
 static void setup()
 {
@@ -273,14 +265,6 @@ static void setup()
 
 	/* Configure 1-Wire pins... */
 	setup_onewire_bus();
-
-
-#ifdef WIFI_SUPPORT
-#if 1
-	int ret = wolfcrypt_test(NULL);
-	printf("End: %d\n", ret);
-#endif
-#endif
 
 	log_msg(LOG_NOTICE, "System initialization complete.");
 }

@@ -8,7 +8,7 @@
     file(GLOB WOLFSSH_SRC
         "${WOLFSSH_ROOT}/src/*.c"
     )
-    list(REMOVE_ITEM WOLFSSH_SRC EXCLUDE REGEX
+    list(REMOVE_ITEM WOLFSSH_SRC
         "${WOLFSSH_ROOT}/src/misc.c"
     )
 

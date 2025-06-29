@@ -201,6 +201,33 @@ int flash_delete_file(const char *filename)
 }
 
 
+int flash_file_size(const char *filename)
+{
+	struct lfs_info stat;
+	int res;
+
+	if (!filename)
+		return -42;
+
+
+	/* Mount flash filesystem... */
+	if ((res = lfs_mount(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "lfs_mount() failed: %d", res);
+		return -1;
+	}
+
+	/* Check if file exists... */
+	if ((res = lfs_stat(&lfs, filename, &stat)) != LFS_ERR_OK) {
+		res = -2;
+	} else {
+		res = stat.size;
+	}
+	lfs_unmount(&lfs);
+
+	return res;
+}
+
+
 static int littlefs_scan_dir(const char *path, size_t *files, size_t *dirs, size_t *used)
 {
 	lfs_dir_t dir;

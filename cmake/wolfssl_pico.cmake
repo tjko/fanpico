@@ -10,7 +10,7 @@
         "${WOLFSSL_ROOT}/wolfcrypt/src/*.c"
         "${WOLFSSL_ROOT}/wolfcrypt/src/port/rpi_pico/*"
     )
-    list(REMOVE_ITEM WOLFSSL_SRC EXCLUDE REGEX
+    list(REMOVE_ITEM WOLFSSL_SRC
         "${WOLFSSL_ROOT}/src/bio.c"
         "${WOLFSSL_ROOT}/src/conf.c"
         "${WOLFSSL_ROOT}/src/pk.c"

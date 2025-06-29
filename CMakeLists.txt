@@ -101,10 +101,10 @@ add_subdirectory(libs/pico-1wire-lib)
 add_subdirectory(libs/pico-sensor-lib)
 
 # wolfSSL/wolfSSH
-set(WOLFSSL_ROOT libs/wolfssl)
+set(WOLFSSL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssl)
 include(cmake/wolfssl_pico.cmake)
 include_directories(src/wolfssl)
-set(WOLFSSH_ROOT libs/wolfssh)
+set(WOLFSSH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssh)
 include(cmake/wolfssh_pico.cmake)
 
 
@@ -221,6 +221,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
   endif()
   if (WOLFSSL_SUPPORT)
     target_sources(fanpico PRIVATE
+      src/sshd.c
       ${WOLFSSL_ROOT}/wolfcrypt/test/test.c
       )
     target_link_libraries(fanpico PRIVATE

@@ -637,6 +637,11 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->snmp_community_trap[0] = 0;
 	cfg->snmp_auth_traps = false;
 	ip_addr_set_any(0, &cfg->snmp_trap_dst);
+	cfg->ssh_active = false;
+	cfg->ssh_auth = true;
+	cfg->ssh_port = 0;
+	cfg->ssh_user[0] = 0;
+	cfg->ssh_pwhash[0] = 0;
 #endif
 
 }
@@ -844,6 +849,16 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "snmp_auth_traps", cJSON_CreateNumber(cfg->snmp_auth_traps));
 	if (!ip_addr_isany(&cfg->snmp_trap_dst))
 		cJSON_AddItemToObject(config, "snmp_trap_dst", cJSON_CreateString(ipaddr_ntoa(&cfg->snmp_trap_dst)));
+	if (cfg->ssh_active)
+		cJSON_AddItemToObject(config, "ssh_active", cJSON_CreateNumber(cfg->ssh_active));
+	if (cfg->ssh_auth != true)
+		cJSON_AddItemToObject(config, "ssh_auth", cJSON_CreateNumber(cfg->ssh_auth));
+	if (cfg->ssh_port > 0)
+		cJSON_AddItemToObject(config, "ssh_port", cJSON_CreateNumber(cfg->ssh_port));
+	if (strlen(cfg->ssh_user) > 0)
+		cJSON_AddItemToObject(config, "ssh_user", cJSON_CreateString(cfg->ssh_user));
+	if (strlen(cfg->ssh_pwhash) > 0)
+		cJSON_AddItemToObject(config, "ssh_pwhash", cJSON_CreateString(cfg->ssh_pwhash));
 #endif
 
 	/* Fan outputs */
@@ -1259,6 +1274,23 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "snmp_trap_dst"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			ipaddr_aton(val, &cfg->snmp_trap_dst);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_active"))) {
+		cfg->ssh_active = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_auth"))) {
+		cfg->ssh_auth = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_port"))) {
+		cfg->ssh_port = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_user"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->ssh_user, val, sizeof(cfg->ssh_user));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_pwhash"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->ssh_pwhash, val, sizeof(cfg->ssh_pwhash));
 	}
 #endif
 

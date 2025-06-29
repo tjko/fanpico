@@ -293,6 +293,11 @@ struct fanpico_config {
 	char snmp_community_trap[SNMP_MAX_COMMUNITY_STR_LEN + 1];
 	bool snmp_auth_traps;
 	ip_addr_t snmp_trap_dst;
+	bool ssh_active;
+	bool ssh_auth;
+	uint32_t ssh_port;
+	char ssh_user[16 + 1];
+	char ssh_pwhash[128 + 1];
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
@@ -436,6 +441,7 @@ int flash_format(bool multicore);
 int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename);
 int flash_write_file(const char *buf, uint32_t size, const char *filename);
 int flash_delete_file(const char *filename);
+int flash_file_size(const char *filename);
 int flash_get_fs_info(size_t *size, size_t *free, size_t *files,
 		size_t *directories, size_t *filesizetotal);
 int flash_list_directory(const char *path, bool recursive);
@@ -478,6 +484,14 @@ void fanpico_mqtt_scpi_command();
 void telnetserver_init();
 void telnetserver_disconnect();
 void telnetserver_who();
+
+/* sshd.c */
+void sshserver_init();
+void sshserver_disconnect();
+void sshserver_who();
+void sshserver_list_pkeys();
+int sshserver_create_pkey(const char* args);
+int sshserver_delete_pkey(const char* args);
 
 /* snmp.c */
 void fanpico_snmp_init();

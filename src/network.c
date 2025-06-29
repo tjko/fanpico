@@ -37,8 +37,6 @@
 
 #ifdef WIFI_SUPPORT
 
-#include "wolfssl/wolfcrypt/settings.h"
-#include <wolfssl/ssl.h>
 
 #include "syslog.h"
 
@@ -388,6 +386,12 @@ static void wifi_init()
 		telnetserver_init();
 	}
 
+	/* Enable SSH server */
+	if (cfg->ssh_active) {
+		log_msg(LOG_NOTICE, "SSH Server enabled");
+		sshserver_init();
+	}
+
 	/* Enable SNMP agent */
 	if (cfg->snmp_active) {
 		log_msg(LOG_NOTICE,"SNMP Agent enabled");
@@ -591,9 +595,6 @@ void pico_set_system_time(long int sec)
 void network_init()
 {
 #ifdef WIFI_SUPPORT
-	wolfSSL_Init();
-	wolfSSL_Debugging_ON();
-
 	wifi_init();
 #endif
 }
