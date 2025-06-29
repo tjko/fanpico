@@ -29,6 +29,7 @@
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 #include "wolfssl/wolfcrypt/settings.h"
+#include <wolfssl/wolfcrypt/ed25519.h>
 #include <wolfssl/ssl.h>
 #include <wolfssh/ssh.h>
 #include <wolfssh/keygen.h>
@@ -126,15 +127,62 @@ typedef struct ssh_pkey_alg_t {
 } ssh_pkey_alg_t;
 
 
+#ifndef NO_RSA
+static int create_rsa_key(void *buf, size_t buf_size)
+{
+	return wolfSSH_MakeRsaKey(buf, buf_size, WOLFSSH_RSAKEY_DEFAULT_SZ,
+		WOLFSSH_RSAKEY_DEFAULT_E);
+}
+#endif
+
 static int create_ecdsa_key(void *buf, size_t buf_size)
 {
-	int ret = wolfSSH_MakeEcdsaKey(buf, buf_size, WOLFSSH_ECDSAKEY_PRIME256);
-	return ret;
+	return wolfSSH_MakeEcdsaKey(buf, buf_size, WOLFSSH_ECDSAKEY_PRIME256);
 }
+
+static int create_ed25519_key(void *buf, size_t buf_size)
+{
+    WC_RNG rng;
+    ed25519_key key;
+    int ret = WS_SUCCESS;
+    int key_size;
+
+    if (wc_InitRng(&rng))
+	return WS_CRYPTO_FAILED;
+
+    if (wc_ed25519_init(&key))
+            ret = WS_CRYPTO_FAILED;
+
+    if (ret == WS_SUCCESS) {
+            ret = wc_ed25519_make_key(&rng, 256/8, &key);
+            if (ret)
+		    ret = WS_CRYPTO_FAILED;
+            else
+		    ret = WS_SUCCESS;
+    }
+
+    if (ret == WS_SUCCESS) {
+            if ((key_size = wc_Ed25519KeyToDer(&key, buf, buf_size)) < 0)
+                    ret = WS_CRYPTO_FAILED;
+            else
+		    ret = key_size;
+        }
+
+    wc_ed25519_free(&key);
+
+    if (wc_FreeRng(&rng))
+            ret = WS_CRYPTO_FAILED;
+
+    return ret;
+}
+
 
 static const ssh_pkey_alg_t pkey_algorithms[] = {
 	{ "ecdsa", "ssh-ecdsa.key", create_ecdsa_key },
-	{ "ed25519", "ssh-ed25519.key", create_ecdsa_key },
+	{ "ed25519", "ssh-ed25519.key", create_ed25519_key },
+#ifndef NO_RSA
+	{ "rsa", "ssh-rsa.key", create_rsa_key },
+#endif
 	{ NULL, NULL, NULL }
 };
 
@@ -1101,7 +1149,8 @@ void sshserver_init()
 
 		res = flash_read_file(&buf, &buf_size, alg->filename);
 		if (res == 0 && pkey_count < MAX_SERVER_PKEYS) {
-			log_msg(LOG_INFO, "Found SSH private key: %s (%lu)", alg->filename, buf_size);
+			log_msg(LOG_DEBUG, "Found SSH private key: %s (%lu)",
+				alg->filename, buf_size);
 			ssh_srv->pkeys[pkey_count].key = (uint8_t*)buf;
 			ssh_srv->pkeys[pkey_count].key_len = buf_size;
 			ssh_srv->pkeys[pkey_count].key_type = WOLFSSH_FORMAT_ASN1;
@@ -1163,7 +1212,7 @@ void sshserver_list_pkeys()
 
 int sshserver_create_pkey(const char* args)
 {
-	const size_t buf_size = 1024;
+	const size_t buf_size = 4096;
 	int kcount = 0;
 	bool create_all = false;
 	byte *buf;
@@ -1193,13 +1242,13 @@ int sshserver_create_pkey(const char* args)
 		if (res > 0) {
 			res = flash_write_file((const char*)buf, res, alg->filename);
 			if (res) {
-				printf("Failed to save private key!\n");
+				printf("Failed to save private key! (%d)\n", res);
 			} else {
 				printf("OK\n");
 				kcount++;
 			}
 		} else {
-			printf("Failed to generate key!\n");
+			printf("Failed to generate key! (%d)\n", res);
 		}
 		free(buf);
 	}

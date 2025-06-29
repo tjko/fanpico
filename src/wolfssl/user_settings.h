@@ -116,7 +116,7 @@ extern time_t ssh_server_myTime(time_t *);
 /* ------------------------------------------------------------------------- */
 /* RSA */
 #undef NO_RSA
-#if 1
+#if 0
 #ifdef USE_FAST_MATH
 /* Maximum math bits (Max RSA key bits * 2) */
 #define FP_MAX_BITS 4096
@@ -252,6 +252,9 @@ extern time_t ssh_server_myTime(time_t *);
 #if 1
 #define HAVE_CURVE25519
 #define HAVE_ED25519 /* ED25519 Requires SHA512 */
+#define HAVE_ED25519_KEY_IMPORT
+#define HAVE_ED25519_KEY_EXPORT
+#define WOLFSSL_ED25519_STREAMING_VERIFY
 
     /* Optionally use small math (less flash usage, but much slower) */
 #if 0
