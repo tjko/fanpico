@@ -221,6 +221,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
   endif()
   if (WOLFSSL_SUPPORT)
     target_sources(fanpico PRIVATE
+      src/ssh_server.c
       src/sshd.c
       ${WOLFSSL_ROOT}/wolfcrypt/test/test.c
       )
