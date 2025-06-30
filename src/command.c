@@ -2783,6 +2783,80 @@ int cmd_ssh_pkey_del(const char *cmd, const char *args, int query, struct prev_c
 	return sshserver_delete_pkey(args);
 }
 
+int cmd_ssh_pubkey(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int count = 0;
+	char tmp[255];
+
+	if (!query)
+		return 1;
+
+	for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+		if (conf->ssh_pub_keys[i].pubkey_size == 0)
+			continue;
+		printf("%d: %s\n", ++count,
+			ssh_pubkey_to_str(&conf->ssh_pub_keys[i], tmp, sizeof(tmp)));
+	}
+	if (count < 1) {
+		printf("No (authentication) public keys found.\n");
+	}
+
+	return 0;
+}
+
+int cmd_ssh_pubkey_add(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	struct ssh_public_key pubkey;
+	int idx = -1;
+	int i;
+
+	if (query)
+		return 1;
+
+	if (str_to_ssh_pubkey(args, &pubkey))
+		return 2;
+
+	/* Check for first available slot */
+	for(i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+		if (conf->ssh_pub_keys[i].pubkey_size == 0) {
+			idx = i;
+			break;
+		}
+	}
+	if (idx < 0) {
+		printf("Maximum number of public keys already added.\n");
+		return 2;
+	}
+
+	conf->ssh_pub_keys[idx] = pubkey;
+	log_msg(LOG_INFO, "SSH Public key added: slot %d: %s (%s)\n", idx + 1, pubkey.type,
+		pubkey.name);
+
+	return 0;
+}
+
+int cmd_ssh_pubkey_del(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int idx;
+
+	if (query)
+		return 1;
+
+	if (!str_to_int(args, &idx, 10))
+		return 2;
+	if (idx < 1 || idx > SSH_MAX_PUB_KEYS)
+		return 2;
+
+	idx--;
+	if (conf->ssh_pub_keys[idx].pubkey_size > 0) {
+		log_msg(LOG_INFO, "SSH Public key deleted: slot %d: %s (%s)\n", idx + 1,
+			conf->ssh_pub_keys[idx].type, conf->ssh_pub_keys[idx].name);
+		memset(&conf->ssh_pub_keys[idx], 0, sizeof(struct ssh_public_key));
+	}
+
+	return 0;
+}
+
 int cmd_telnet_auth(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
@@ -3263,6 +3337,14 @@ const struct cmd_t snmp_commands[] = {
 const struct cmd_t ssh_pkey_commands[] = {
 	{ "CREate",    3, NULL,              cmd_ssh_pkey_create },
 	{ "DELete",    3, NULL,              cmd_ssh_pkey_del },
+	{ "LIST",      4, NULL,              cmd_ssh_pkey },
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t ssh_pubkey_commands[] = {
+	{ "ADD",       3, NULL,              cmd_ssh_pubkey_add },
+	{ "DELete",    3, NULL,              cmd_ssh_pubkey_del },
+	{ "LIST",      4, NULL,              cmd_ssh_pubkey },
 	{ 0, 0, 0, 0 }
 };
 
@@ -3272,7 +3354,8 @@ const struct cmd_t ssh_commands[] = {
 	{ "SERVer",    4, NULL,              cmd_ssh_server },
 	{ "PASSword",  4, NULL,              cmd_ssh_pass },
 	{ "USER",      4, NULL,              cmd_ssh_user },
-	{ "PKEY",      4, ssh_pkey_commands, cmd_ssh_pkey },
+	{ "KEY",       3, ssh_pkey_commands, cmd_ssh_pkey },
+	{ "PUBKEY",    6, ssh_pubkey_commands, cmd_ssh_pubkey },
 	{ 0, 0, 0, 0 }
 };
 

@@ -723,7 +723,8 @@ static int user_auth_cb(byte auth_type, WS_UserAuthData* auth_data, void *ctx)
 	if (!auth_data || !st)
 		return ret;
 
-//	printf("username='%s' (%d)\n", auth_data->username, auth_data->usernameSz);
+	printf("auth_type=%d, username='%s' (%d)\n", auth_type,
+		auth_data->username, auth_data->usernameSz);
 
 	if (auth_type == WOLFSSH_USERAUTH_PASSWORD) {
 		if (st->pw_auth_cb) {

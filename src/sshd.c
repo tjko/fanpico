@@ -187,7 +187,7 @@ static int password_auth_cb(void *ctx, const byte *login, word32 login_len,
 static int pubkey_auth_cb(void *ctx, const byte *login, word32 login_len,
 			const byte *pkey, word32 pkey_len)
 {
-//	user_pwhash_entry_t *users = (user_pwhash_entry_t*)ctx;
+	struct ssh_public_key *pubkeys = (struct ssh_public_key*)ctx;
 	char username[32 + 1];
 	int res = 2;
 
@@ -197,8 +197,26 @@ static int pubkey_auth_cb(void *ctx, const byte *login, word32 login_len,
 	memcpy(username, login, login_len);
 	username[login_len] = 0;
 
-	printf("pubkey: %s (%u)\n", username, pkey_len);
+//	printf("pubkey: %s (%u)\n", username, pkey_len);
 
+	for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+		struct ssh_public_key *k = &pubkeys[i];
+
+		if (k->pubkey_size == 0)
+			continue;
+
+		if (k->pubkey_size != pkey_len)
+			continue;
+
+		if (!memcmp(k->pubkey, pkey, pkey_len)) {
+			log_msg(LOG_NOTICE, "SSH Successfull public key authentication for: %s (%s)",
+				username, k->name);
+			res = 0;
+			break;
+		}
+	}
+
+//	printf("pubkey_auth_cb: %d\n", res);
 	return res;
 }
 
@@ -253,11 +271,14 @@ void sshserver_init()
 		ssh_srv->pw_auth_cb_ctx = (void*)ssh_users;
 	}
 
+	/* Setup SSH public key authentication */
 	ssh_srv->pkey_auth_cb = pubkey_auth_cb;
+	ssh_srv->pkey_auth_cb_ctx = (void*)cfg->ssh_pub_keys;
+
 	ssh_srv->banner = ssh_banner;
 //	ssh_srv->auth_none = true;
 
-	ssh_server_log_level(LOG_DEBUG);
+	ssh_server_log_level(LOG_INFO);
 
 	if (!ssh_server_start(ssh_srv, true)) {
 		log_msg(LOG_ERR, "Failed to start SSH server.");
@@ -378,6 +399,78 @@ int sshserver_delete_pkey(const char* args)
 	}
 
 	return 1;
+}
+
+
+int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk)
+{
+	char *t, *str, *saveptr;
+	void *buf = NULL;
+	int idx = 0;
+	int len, key_len;
+
+	if (!s || !pk)
+		return -1;
+	if (!(str = strdup(s)))
+		return -2;
+
+	pk->type[0] = 0;
+	pk->name[0] = 0;
+	pk->pubkey_size = 0;
+	memset(pk->pubkey, 0, sizeof(pk->pubkey));
+
+	t = strtok_r(str, " ", &saveptr);
+	while (t && idx < 3) {
+		if ((len = strlen(t)) > 0) {
+			//printf("%d: '%s'\n", idx, t);
+			if (idx == 0) {
+				/* key type */
+				strncopy(pk->type, t, sizeof(pk->type));
+			}
+			else if (idx == 1) {
+				/* key (base64 encoded) */
+				key_len = base64decode_raw(t, len, &buf);
+				if (key_len > 0 && key_len <= sizeof(pk->pubkey) &&
+					memmem(buf, key_len, pk->type, strlen(pk->type))) {
+					memcpy(pk->pubkey, buf, key_len);
+					pk->pubkey_size = key_len;
+				} else {
+					printf("Invalid key!\n");
+					break;
+				}
+			}
+			else if (idx == 2) {
+				/* key name */
+				strncopy(pk->name, t, sizeof(pk->name));
+			}
+			idx++;
+		}
+		t = strtok_r(NULL, " ", &saveptr);
+	}
+
+	free(str);
+	if (buf)
+		free(buf);
+
+	return (idx >= 2 ? 0 : 1);
+}
+
+
+const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len)
+{
+	char *e;
+
+	if (!pk || !s || s_len < 1)
+		return NULL;
+
+	if (!(e = base64encode_raw(pk->pubkey, pk->pubkey_size)))
+		return NULL;
+
+	snprintf(s, s_len, "%s %s %s", pk->type, e, pk->name);
+	s[s_len - 1] = 0;
+	free(e);
+
+	return s;
 }
 
 

@@ -70,6 +70,8 @@
 #define DEFAULT_MQTT_RPM_INTERVAL     60
 #define DEFAULT_MQTT_DUTY_INTERVAL    60
 
+#define SSH_MAX_PUB_KEYS  4
+
 #ifdef NDEBUG
 #define WATCHDOG_ENABLED      1
 #define WATCHDOG_REBOOT_DELAY 8000
@@ -131,6 +133,13 @@ enum rpm_modes {
 };
 #define RPMMODE_ENUM_MAX 1
 
+
+struct ssh_public_key {
+	char type[32 + 1];
+	char name[32 + 1];
+	uint8_t pubkey[128];
+	uint16_t pubkey_size;
+};
 
 struct pwm_map {
 	uint8_t points;
@@ -298,6 +307,7 @@ struct fanpico_config {
 	uint32_t ssh_port;
 	char ssh_user[16 + 1];
 	char ssh_pwhash[128 + 1];
+	struct ssh_public_key ssh_pub_keys[SSH_MAX_PUB_KEYS];
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
@@ -492,6 +502,8 @@ void sshserver_who();
 void sshserver_list_pkeys();
 int sshserver_create_pkey(const char* args);
 int sshserver_delete_pkey(const char* args);
+int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk);
+const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len);
 
 /* snmp.c */
 void fanpico_snmp_init();
@@ -582,6 +594,8 @@ int valid_hostname(const char *name);
 int check_for_change(double oldval, double newval, double threshold);
 int64_t pow_i64(int64_t x, uint8_t y);
 double round_decimal(double val, unsigned int decimal);
+char* base64encode_raw(const void *input, size_t input_len);
+int base64decode_raw(const void *input, size_t input_len, void **output);
 char* base64encode(const char *input);
 char* base64decode(const char *input);
 char *strncopy(char *dst, const char *src, size_t size);

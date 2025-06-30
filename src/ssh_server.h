@@ -64,7 +64,7 @@ typedef struct ssh_server_t {
 	ssh_ringbuffer_t rb_tcp_in;
 	ssh_ringbuffer_t rb_in;
 	ssh_ringbuffer_t rb_out;
-	uint8_t login[32];
+	uint8_t login[MAX_LOGIN_LENGTH + 1];
 
 	/* Configuration options... set before calling ssg_server_start() */
 	uint16_t port;             /* Listen port (default tcp/22) */
