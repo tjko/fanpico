@@ -72,14 +72,19 @@ typedef struct ssh_server_t {
 	ssh_server_pkey_t pkeys[MAX_SERVER_PKEYS];  /* server private key(s) */
 	void (*log_cb)(int priority, const char *format, ...);
 	bool auth_none;
-	int (*pw_auth_cb)(void* ctx, const byte *login, word32 login_len,
-			const byte *password, word32 password_len);
-	int (*pkey_auth_cb)(void* ctx, const byte *login, word32 login_len,
-			const byte *pubkey, word32 pubkey_len);
-	void *pw_auth_cb_ctx;
-	void *pkey_auth_cb_ctx;
+	int (*auth_cb)(void* ctx, const byte *login, word32 login_len,
+		const byte *auth, word32 auth_len, int auth_type);
+	void *auth_cb_ctx;
 } ssh_server_t;
 
+
+
+typedef struct ssh_user_auth_entry_t {
+	int type;
+	const char *username;
+	const uint8_t *auth;
+	uint32_t auth_len;
+} ssh_user_auth_entry_t;
 
 
 ssh_server_t* ssh_server_init(size_t rxbuf_size, size_t txbuf_size);
@@ -89,6 +94,7 @@ bool ssh_server_client_connected(ssh_server_t *st);
 err_t ssh_server_get_client_ip(const ssh_server_t *st, ip_addr_t *ip, uint16_t *port);
 const char* ssh_server_connection_state_name(enum ssh_connection_state state);
 err_t ssh_server_disconnect_client(ssh_server_t *st);
+const char *ssh_server_get_pubkey_hash(const void *pkey, uint32_t pkey_len, char *str_buf, uint32_t str_buf_len);
 
 void ssh_server_log_level(int priority);
 

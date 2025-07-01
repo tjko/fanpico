@@ -71,6 +71,8 @@
 #define DEFAULT_MQTT_DUTY_INTERVAL    60
 
 #define SSH_MAX_PUB_KEYS  4
+#define MAX_USERNAME_LEN  16
+#define MAX_PWHASH_LEN    128
 
 #ifdef NDEBUG
 #define WATCHDOG_ENABLED      1
@@ -135,6 +137,7 @@ enum rpm_modes {
 
 
 struct ssh_public_key {
+	char username[MAX_USERNAME_LEN + 1];
 	char type[32 + 1];
 	char name[32 + 1];
 	uint8_t pubkey[128];
@@ -292,8 +295,8 @@ struct fanpico_config {
 	bool telnet_auth;
 	bool telnet_raw_mode;
 	uint32_t telnet_port;
-	char telnet_user[16 + 1];
-	char telnet_pwhash[128 + 1];
+	char telnet_user[MAX_USERNAME_LEN + 1];
+	char telnet_pwhash[MAX_PWHASH_LEN + 1];
 	bool snmp_active;
 	char snmp_community[SNMP_MAX_COMMUNITY_STR_LEN + 1];
 	char snmp_community_write[SNMP_MAX_COMMUNITY_STR_LEN + 1];
@@ -305,8 +308,8 @@ struct fanpico_config {
 	bool ssh_active;
 	bool ssh_auth;
 	uint32_t ssh_port;
-	char ssh_user[16 + 1];
-	char ssh_pwhash[128 + 1];
+	char ssh_user[MAX_USERNAME_LEN + 1];
+	char ssh_pwhash[MAX_PWHASH_LEN + 1];
 	struct ssh_public_key ssh_pub_keys[SSH_MAX_PUB_KEYS];
 #endif
 	/* Non-config items */

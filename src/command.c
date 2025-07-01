@@ -2792,13 +2792,15 @@ int cmd_ssh_pubkey(const char *cmd, const char *args, int query, struct prev_cmd
 		return 1;
 
 	for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
-		if (conf->ssh_pub_keys[i].pubkey_size == 0)
+		struct ssh_public_key *k = &conf->ssh_pub_keys[i];
+
+		if (k->pubkey_size == 0 || strlen(k->username) < 1)
 			continue;
-		printf("%d: %s\n", ++count,
-			ssh_pubkey_to_str(&conf->ssh_pub_keys[i], tmp, sizeof(tmp)));
+		printf("%d: %s, %s\n", ++count, k->username,
+			ssh_pubkey_to_str(k, tmp, sizeof(tmp)));
 	}
 	if (count < 1) {
-		printf("No (authentication) public keys found.\n");
+		printf("No SSH (authentication) public keys found.\n");
 	}
 
 	return 0;
@@ -2807,32 +2809,52 @@ int cmd_ssh_pubkey(const char *cmd, const char *args, int query, struct prev_cmd
 int cmd_ssh_pubkey_add(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	struct ssh_public_key pubkey;
-	int idx = -1;
-	int i;
+	char *s, *username, *pkey, *saveptr;
+	int res = 0;
 
 	if (query)
 		return 1;
 
-	if (str_to_ssh_pubkey(args, &pubkey))
+	if (!(s = strdup(args)))
 		return 2;
 
-	/* Check for first available slot */
-	for(i = 0; i < SSH_MAX_PUB_KEYS; i++) {
-		if (conf->ssh_pub_keys[i].pubkey_size == 0) {
-			idx = i;
-			break;
+	if ((username = strtok_r(s, " ", &saveptr))) {
+		username = trim_str(username);
+		if (strlen(username) < 1)
+			username = NULL;
+	}
+
+	if ((pkey = strtok_r(NULL, ",", &saveptr))) {
+		pkey = trim_str(pkey);
+		if (str_to_ssh_pubkey(pkey, &pubkey))
+			pkey = NULL;
+	}
+
+	if (username && pkey) {
+		int idx = -1;
+
+		/* Check for first available slot */
+		for(int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+			if (conf->ssh_pub_keys[i].pubkey_size == 0) {
+				idx = i;
+				break;
+			}
+		}
+
+		if (idx < 0) {
+			printf("Maximum number of public keys already added.\n");
+			res = 2;
+		} else {
+			strncopy(pubkey.username, username, sizeof(pubkey.username));
+			conf->ssh_pub_keys[idx] = pubkey;
+			log_msg(LOG_INFO, "SSH Public key added: slot %d: %s (%s)\n", idx + 1,
+				pubkey.type, pubkey.username);
 		}
 	}
-	if (idx < 0) {
-		printf("Maximum number of public keys already added.\n");
-		return 2;
-	}
 
-	conf->ssh_pub_keys[idx] = pubkey;
-	log_msg(LOG_INFO, "SSH Public key added: slot %d: %s (%s)\n", idx + 1, pubkey.type,
-		pubkey.name);
+	free(s);
 
-	return 0;
+	return res;
 }
 
 int cmd_ssh_pubkey_del(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -2849,8 +2871,10 @@ int cmd_ssh_pubkey_del(const char *cmd, const char *args, int query, struct prev
 
 	idx--;
 	if (conf->ssh_pub_keys[idx].pubkey_size > 0) {
-		log_msg(LOG_INFO, "SSH Public key deleted: slot %d: %s (%s)\n", idx + 1,
-			conf->ssh_pub_keys[idx].type, conf->ssh_pub_keys[idx].name);
+		log_msg(LOG_INFO, "SSH Public key deleted: slot %d: %s:%s (%s)\n", idx + 1,
+			conf->ssh_pub_keys[idx].username,
+			conf->ssh_pub_keys[idx].type,
+			conf->ssh_pub_keys[idx].name);
 		memset(&conf->ssh_pub_keys[idx], 0, sizeof(struct ssh_public_key));
 	}
 

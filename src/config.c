@@ -474,18 +474,27 @@ cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
 
 void json2sshpubkeys(cJSON *list, struct ssh_public_key *keys)
 {
-	cJSON *o;
+	cJSON *r, *user, *pkey;
+	struct ssh_public_key *k;
 	int idx = 0;
 
 	for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+		keys[i].username[0] = 0;
 		keys[i].type[0] = 0;
 		keys[i].name[0] = 0;
 		keys[i].pubkey_size = 0;
 	}
 
-	cJSON_ArrayForEach(o, list) {
-		if (str_to_ssh_pubkey(cJSON_GetStringValue(o), &keys[idx]) == 0) {
-			idx++;
+	cJSON_ArrayForEach(r, list) {
+		k = &keys[idx];
+		user = cJSON_GetObjectItem(r, "user");
+		pkey = cJSON_GetObjectItem(r, "pubkey");
+		if (user && pkey) {
+			if (str_to_ssh_pubkey(cJSON_GetStringValue(pkey), k) == 0) {
+				strncopy(k->username, cJSON_GetStringValue(user),
+					sizeof(k->username));
+				idx++;
+			}
 		}
 		if (idx >= SSH_MAX_PUB_KEYS)
 			break;
@@ -495,29 +504,37 @@ void json2sshpubkeys(cJSON *list, struct ssh_public_key *keys)
 cJSON* sshpubkeys2json(const struct ssh_public_key *keys)
 {
 	const size_t buf_len = 256;
-	int count = 0;
-	cJSON *o;
 	char *buf;
+	int count = 0;
+	cJSON *o, *r;
 
 	if (!(buf = calloc(1, buf_len)))
 		return NULL;
 
 	if ((o = cJSON_CreateArray())) {
 		for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
-			if (keys[i].pubkey_size > 0) {
-				if (ssh_pubkey_to_str(&keys[i], buf, buf_len)) {
-					cJSON_AddItemToArray(o, cJSON_CreateString(buf));
-					count++;
+			const struct ssh_public_key *k = &keys[i];
+			if (k->pubkey_size > 0 && strlen(k->username) > 0) {
+				if (ssh_pubkey_to_str(k, buf, buf_len)) {
+					if ((r = cJSON_CreateObject())) {
+						cJSON_AddItemToObject(r, "pubkey",
+								cJSON_CreateString(buf));
+						cJSON_AddItemToObject(r, "user",
+								cJSON_CreateString(k->username));
+						cJSON_AddItemToArray(o, r);
+						count++;
+					}
 				}
 			}
 		}
 	}
 
+	free(buf);
 	if (count < 1) {
 		cJSON_Delete(o);
 		o = NULL;
 	}
-	free(buf);
+
 	return o;
 }
 #endif
@@ -693,6 +710,7 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->ssh_user[0] = 0;
 	cfg->ssh_pwhash[0] = 0;
 	for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+		cfg->ssh_pub_keys[i].username[0] = 0;
 		cfg->ssh_pub_keys[i].type[0] = 0;
 		cfg->ssh_pub_keys[i].name[0] = 0;
 		cfg->ssh_pub_keys[i].pubkey_size = 0;

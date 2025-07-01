@@ -42,25 +42,15 @@
 
 
 static const char *ssh_banner = "\r\n"
-	"  _____           ____  _           \r\n"
-	" |  ___|_ _ _ __ |  _ \\(_) ___ ___  \r\n"
-	" | |_ / _` | '_ \\| |_) | |/ __/ _ \\ \r\n"
+	"  _____           ____  _\r\n"
+	" |  ___|_ _ _ __ |  _ \\(_) ___ ___\r\n"
+	" | |_ / _` | '_ \\| |_) | |/ __/ _ \\\r\n"
 	" |  _| (_| | | | |  __/| | (_| (_) |\r\n"
-	" |_|  \\__,_|_| |_|_|   |_|\\___\\___/ \r\n"
-	" ...ssh...                           \r\n\r\n";
+	" |_|  \\__,_|_| |_|_|   |_|\\___\\___/\r\n"
+	" ...ssh...\r\n\r\n";
 
 
-typedef struct user_pwhash_entry {
-	const char *login;
-	const char *hash;
-} user_pwhash_entry_t;
-
-
-static user_pwhash_entry_t ssh_users[] = {
-	{ NULL, NULL },
-	{ NULL, NULL }
-};
-
+static ssh_user_auth_entry_t *ssh_users = NULL;
 static ssh_server_t *ssh_srv = NULL;
 
 
@@ -134,94 +124,6 @@ static const ssh_pkey_alg_t pkey_algorithms[] = {
 
 
 
-static int password_auth_cb(void *ctx, const byte *login, word32 login_len,
-			const byte *password, word32 password_len)
-{
-	user_pwhash_entry_t *users = (user_pwhash_entry_t*)ctx;
-	char username[32 + 1];
-	char pw[64 + 1];
-	int i = 0;
-	int res = 2;
-
-	if (login_len >= sizeof(username))
-		return -1;
-	if (password_len > sizeof(pw))
-		return -2;
-
-	memcpy(username, login, login_len);
-	username[login_len] = 0;
-	memcpy(pw, password, password_len);
-	pw[password_len] = 0;
-
-	while (users[i].login) {
-		if (!strcmp(username, users[i].login)) {
-			/* Found user */
-			char *hash = sha512_crypt(pw, users[i].hash);
-			if (!strcmp(hash, users[i].hash)) {
-				/* password matches */
-				log_msg(LOG_NOTICE, "SSH Successful password authentication for: %s",
-					username);
-				res = 0;
-				break;
-			} else {
-				/* password does not match */
-				log_msg(LOG_NOTICE, "SSH Invalid password for: %s", username);
-				res = 1;
-				break;
-			}
-		}
-		i++;
-	}
-
-	if (res == 2) {
-		log_msg(LOG_NOTICE, "SSH Unknown user: %s", username);
-	}
-
-	memset(pw, 0, sizeof(pw));
-
-	return res;
-}
-
-
-
-static int pubkey_auth_cb(void *ctx, const byte *login, word32 login_len,
-			const byte *pkey, word32 pkey_len)
-{
-	struct ssh_public_key *pubkeys = (struct ssh_public_key*)ctx;
-	char username[32 + 1];
-	int res = 2;
-
-	if (login_len >= sizeof(username))
-		return -1;
-
-	memcpy(username, login, login_len);
-	username[login_len] = 0;
-
-//	printf("pubkey: %s (%u)\n", username, pkey_len);
-
-	for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
-		struct ssh_public_key *k = &pubkeys[i];
-
-		if (k->pubkey_size == 0)
-			continue;
-
-		if (k->pubkey_size != pkey_len)
-			continue;
-
-		if (!memcmp(k->pubkey, pkey, pkey_len)) {
-			log_msg(LOG_NOTICE, "SSH Successfull public key authentication for: %s (%s)",
-				username, k->name);
-			res = 0;
-			break;
-		}
-	}
-
-//	printf("pubkey_auth_cb: %d\n", res);
-	return res;
-}
-
-
-
 void sshserver_init()
 {
 	int res;
@@ -243,7 +145,9 @@ void sshserver_init()
 //	wolfSSH_Debugging_ON();
 
 	ssh_srv = ssh_server_init(2048, 8192);
-	if (!ssh_srv) {
+	ssh_users = calloc(SSH_MAX_PUB_KEYS + 1 + 1, sizeof(ssh_user_auth_entry_t));
+
+	if (!ssh_srv || !ssh_users) {
 		log_msg(LOG_ERR, "Failed to initialize SSH server.");
 		return;
 	}
@@ -263,17 +167,18 @@ void sshserver_init()
 		}
 	}
 
-	/* Enable password authentication (only if username configured...) */
-	if (strlen(cfg->ssh_user) > 0) {
-		ssh_users[0].login = cfg->ssh_user;
-		ssh_users[0].hash = cfg->ssh_pwhash;
-		ssh_srv->pw_auth_cb = password_auth_cb;
-		ssh_srv->pw_auth_cb_ctx = (void*)ssh_users;
+	/* Setup context for default authentication callback... */
+	ssh_users[0].type = WOLFSSH_USERAUTH_PASSWORD;
+	ssh_users[0].username = cfg->ssh_user;
+	ssh_users[0].auth = (uint8_t*)cfg->ssh_pwhash;
+	for (int i = 1; i <= SSH_MAX_PUB_KEYS; i++) {
+		const struct ssh_public_key *k = &cfg->ssh_pub_keys[i - 1];
+		ssh_users[i].type = WOLFSSH_USERAUTH_PUBLICKEY;
+		ssh_users[i].username = k->username;
+		ssh_users[i].auth = k->pubkey;
+		ssh_users[i].auth_len = k->pubkey_size;
 	}
-
-	/* Setup SSH public key authentication */
-	ssh_srv->pkey_auth_cb = pubkey_auth_cb;
-	ssh_srv->pkey_auth_cb_ctx = (void*)cfg->ssh_pub_keys;
+	ssh_srv->auth_cb_ctx = (void*)ssh_users;
 
 	ssh_srv->banner = ssh_banner;
 //	ssh_srv->auth_none = true;
