@@ -274,44 +274,11 @@ size_t ssh_ringbuffer_peek(ssh_ringbuffer_t *rb, void **ptr, size_t size)
 
 static int global_log_level = LOG_ERR;
 
-#if 1
-struct log_priority {
-	uint8_t  priority;
-	const char *name;
-};
-
-static const struct log_priority log_priorities[] = {
-	{ LOG_EMERG,   "EMERG" },
-	{ LOG_ALERT,   "ALERT" },
-	{ LOG_CRIT,    "CRIT" },
-	{ LOG_ERR,     "ERR" },
-	{ LOG_WARNING, "WARNING" },
-	{ LOG_NOTICE,  "NOTICE" },
- 	{ LOG_INFO,    "INFO" },
-	{ LOG_DEBUG,   "DEBUG" },
-	{ 0, NULL }
-};
-
-static const char* log_priority2str(int pri)
-{
-	int i = 0;
-
-	while(log_priorities[i].name) {
-		if (log_priorities[i].priority == pri)
-			return log_priorities[i].name;
-		i++;
-	}
-
-	return NULL;
-}
-#endif
 
 void ssh_server_log_level(int priority)
 {
 	global_log_level = priority;
 }
-
-
 
 
 static void sshd_log_msg(int priority, const char *format, ...)
@@ -342,7 +309,7 @@ static void sshd_log_msg(int priority, const char *format, ...)
 	uint64_t t = to_us_since_boot(get_absolute_time());
 	snprintf(tstamp, sizeof(tstamp), "[%6llu.%06llu][%u]",
 		(t / 1000000), (t % 1000000), core);
-	printf("%s %s %s\n", tstamp, log_priority2str(priority), buf);
+	printf("%s %s %s\n", tstamp, "SSH", buf);
 
 	free(buf);
 }
@@ -359,53 +326,57 @@ static int ssh_server_default_auth_cb(void *ctx, const byte *login, word32 login
 				const byte *auth, word32 auth_len, int auth_type)
 {
 	ssh_user_auth_entry_t *users = (ssh_user_auth_entry_t*)ctx;
-	char *pw;
+	char *pw, *hash;
 	int i = 0;
 	int res = 2;
 
 	//printf("ssh_server_default_auth_cb(%p,'%s',%u,%p,%u,%d)\n",ctx,login,login_len,auth,auth_len,auth_type);
 
 	if (!ctx || !login || !auth)
-		return 2;
+		return res;
 
-	if (!(pw = malloc(auth_len + 1)))
-		return 2;
-	memcpy(pw, auth, auth_len);
-	pw[auth_len] = 0;
 
 	while (users[i].username) {
 		ssh_user_auth_entry_t *u = &users[i++];
 
-		if (!u->username || !u->auth || auth_type != u->type)
+		if (!u->auth || auth_type != u->type)
+			continue;
+		if (strlen(u->username) < 1)
 			continue;
 		if (strcasecmp((const char*)login, u->username))
 			continue;
 
 		if (auth_type == WOLFSSH_USERAUTH_PASSWORD) {
-			char *hash = sha512_crypt(pw, (const char*)u->auth);
-			if (!strcmp(hash, (char*)u->auth)) {
-				/* password matches */
-				res = 0;
-				break;
-			} else {
-				/* password does not match */
-				res = 1;
-				break;
+			hash = NULL;
+			if (strlen((char*)u->auth) > 0) {
+				if ((pw = malloc(auth_len + 1))) {
+					memcpy(pw, auth, auth_len);
+					pw[auth_len] = 0;
+					hash = sha512_crypt(pw, (const char*)u->auth);
+					memset(pw, 0, auth_len);
+					free(pw);
+				}
 			}
-		}
-		else if (auth_type == WOLFSSH_USERAUTH_PUBLICKEY) {
-			if (u->auth_len == auth_len) {
-				if (!memcmp(auth, u->auth, u->auth_len)) {
-					/* public key matches */
+			if (hash) {
+				if (!strcmp(hash, (char*)u->auth)) {
+					/* password matches */
 					res = 0;
+					break;
+				} else {
+					/* password does not match */
+					res = 1;
 					break;
 				}
 			}
 		}
+		else if (auth_type == WOLFSSH_USERAUTH_PUBLICKEY) {
+			if (!memcmp(auth, u->auth, auth_len)) {
+				/* public key matches */
+				res = 0;
+				break;
+			}
+		}
 	}
-
-	memset(pw, 0, auth_len);
-	free(pw);
 
 	//printf("ssh_server_default_auth_cb(): %d\n", res);
 	return res;
@@ -474,6 +445,7 @@ static err_t ssh_close_client_connection(ssh_server_t *st)
 	err_t err = ERR_OK;
 
 	st->cstate = CS_NONE;
+	st->login[0] = 0;
 	if (st->client) {
 		err = close_client_connection(st->client);
 		st->client = NULL;
@@ -625,6 +597,8 @@ static err_t ssh_server_poll(void *arg, struct tcp_pcb *pcb)
 		if ((res = wolfSSH_accept(st->ssh)) == WS_SUCCESS) {
 			LOG_MSG(LOG_DEBUG, "wolfSSH_accept(): ok");
 			st->cstate = CS_CONNECT;
+			strncpy(st->login, wolfSSH_GetUsername(st->ssh), sizeof(st->login) - 1);
+			st->login[sizeof(st->login) - 1] = 0;
 			ssh_ringbuffer_add(&st->rb_out, connected_text, strlen(connected_text), true);
 		} else {
 			err = wolfSSH_get_error(st->ssh);
@@ -1105,7 +1079,7 @@ err_t ssh_server_disconnect_client(ssh_server_t *st)
 		port = st->client->remote_port;
 		res = ssh_close_client_connection(st);
 		cyw43_arch_lwip_end();
-		LOG_MSG(LOG_INFO,"Client disconnected: %s:%u", ip4addr_ntoa(&ip), port);
+		LOG_MSG(LOG_INFO,"SSH Client disconnected: %s:%u", ip4addr_ntoa(&ip), port);
 	}
 	st->cstate = CS_NONE;
 

@@ -54,8 +54,6 @@ static ssh_user_auth_entry_t *ssh_users = NULL;
 static ssh_server_t *ssh_srv = NULL;
 
 
-// --ssh-keygen--
-
 typedef struct ssh_pkey_alg_t {
 	char *name;
 	char *filename;
@@ -181,9 +179,10 @@ void sshserver_init()
 	ssh_srv->auth_cb_ctx = (void*)ssh_users;
 
 	ssh_srv->banner = ssh_banner;
+	ssh_srv->log_cb = log_msg;
 //	ssh_srv->auth_none = true;
 
-	ssh_server_log_level(LOG_INFO);
+//	ssh_server_log_level(LOG_INFO);
 
 	if (!ssh_server_start(ssh_srv, true)) {
 		log_msg(LOG_ERR, "Failed to start SSH server.");
@@ -226,8 +225,24 @@ void sshserver_who()
 
 void sshserver_list_pkeys()
 {
-	printf("list pkeys\n");
+	char *buf = NULL;
+	char tmp[64];
+	uint32_t buf_size = 0;
+	int i = 0;
 
+	while(pkey_algorithms[i].name) {
+		const ssh_pkey_alg_t *alg = &pkey_algorithms[i++];
+		int res = flash_read_file(&buf, &buf_size, alg->filename);
+
+		printf("%-20s ", alg->name);
+		if (res == 0) {
+			printf("%8lu SHA256:%s\n", buf_size,
+				ssh_server_get_pubkey_hash(buf, buf_size, tmp, sizeof(tmp)));
+			free(buf);
+		} else {
+			printf("<No Key>\n");
+		}
+	}
 }
 
 int sshserver_create_pkey(const char* args)
@@ -381,9 +396,7 @@ const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s
 
 time_t ssh_server_myTime(time_t *t)
 {
-	printf("myTime(%p)\n", t);
 	rtc_get_time(t);
-	printf("myTime: %llu\n", *t);
 	return *t;
 }
 
