@@ -59,3 +59,7 @@ https://github.com/wolfSSL/wolfssl
 wolfssh
 Copyright (C) 2014-2024 wolfSSL Inc.
 https://github.com/wolfSSL/wolfssh
+
+pico-sshd
+Copryight (c) 2025 Timo Kokkonen (tjko@iki.fi)
+https://github.com/tjko/pico-sshd
