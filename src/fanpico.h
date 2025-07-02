@@ -424,6 +424,10 @@ int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id);
 int str2tacho_source(const char *s);
 const char* tacho_source2str(enum tacho_source_types source);
 int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id);
+#if WIFI_SUPPORT
+int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk);
+const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len);
+#endif
 void read_config();
 void save_config();
 void delete_config();
@@ -505,8 +509,6 @@ void sshserver_who();
 void sshserver_list_pkeys();
 int sshserver_create_pkey(const char* args);
 int sshserver_delete_pkey(const char* args);
-int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk);
-const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len);
 
 /* snmp.c */
 void fanpico_snmp_init();

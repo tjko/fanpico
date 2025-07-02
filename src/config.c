@@ -234,7 +234,7 @@ int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id)
 }
 
 
-void json2pwm_map(cJSON *item, struct pwm_map *map)
+static void json2pwm_map(cJSON *item, struct pwm_map *map)
 {
 	cJSON *row;
 	int c = 0;
@@ -251,7 +251,7 @@ void json2pwm_map(cJSON *item, struct pwm_map *map)
 }
 
 
-cJSON* pwm_map2json(const struct pwm_map *map)
+static cJSON* pwm_map2json(const struct pwm_map *map)
 {
 	int i;
 	cJSON *o, *row;
@@ -270,7 +270,7 @@ cJSON* pwm_map2json(const struct pwm_map *map)
 }
 
 
-void json2filter(cJSON *item, enum signal_filter_types *filter, void **filter_ctx)
+static void json2filter(cJSON *item, enum signal_filter_types *filter, void **filter_ctx)
 {
 	cJSON *args;
 
@@ -283,7 +283,7 @@ void json2filter(cJSON *item, enum signal_filter_types *filter, void **filter_ct
 }
 
 
-cJSON* filter2json(enum signal_filter_types filter, void *filter_ctx)
+static cJSON* filter2json(enum signal_filter_types filter, void *filter_ctx)
 {
 	cJSON *o;
 	char *s;
@@ -301,7 +301,7 @@ cJSON* filter2json(enum signal_filter_types filter, void *filter_ctx)
 }
 
 
-void json2tacho_map(cJSON *item, struct tacho_map *map)
+static void json2tacho_map(cJSON *item, struct tacho_map *map)
 {
 	cJSON *row;
 	int c = 0;
@@ -317,7 +317,7 @@ void json2tacho_map(cJSON *item, struct tacho_map *map)
 	map->points = c;
 }
 
-cJSON* tacho_map2json(const struct tacho_map *map)
+static cJSON* tacho_map2json(const struct tacho_map *map)
 {
 	int i;
 	cJSON *o, *row;
@@ -335,7 +335,7 @@ cJSON* tacho_map2json(const struct tacho_map *map)
 	return o;
 }
 
-void json2tacho_sources(cJSON *item, uint8_t *sources)
+static void json2tacho_sources(cJSON *item, uint8_t *sources)
 {
 	int i;
 	cJSON *o;
@@ -350,7 +350,7 @@ void json2tacho_sources(cJSON *item, uint8_t *sources)
 	}
 }
 
-cJSON* tacho_sources2json(const uint8_t *sources)
+static cJSON* tacho_sources2json(const uint8_t *sources)
 {
 	int i;
 	cJSON *o;
@@ -366,7 +366,7 @@ cJSON* tacho_sources2json(const uint8_t *sources)
 	return o;
 }
 
-void json2temp_map(cJSON *item, struct temp_map *map)
+static void json2temp_map(cJSON *item, struct temp_map *map)
 {
 	cJSON *row;
 	int c = 0;
@@ -383,7 +383,7 @@ void json2temp_map(cJSON *item, struct temp_map *map)
 }
 
 
-cJSON* temp_map2json(const struct temp_map *map)
+static cJSON* temp_map2json(const struct temp_map *map)
 {
 	int i;
 	cJSON *o, *row;
@@ -402,7 +402,7 @@ cJSON* temp_map2json(const struct temp_map *map)
 }
 
 
-void json2vsensors(cJSON *item, uint8_t *s)
+static void json2vsensors(cJSON *item, uint8_t *s)
 {
 	cJSON *o;
 	int i,val;
@@ -420,7 +420,7 @@ void json2vsensors(cJSON *item, uint8_t *s)
 }
 
 
-cJSON* vsensors2json(const uint8_t *s)
+static cJSON* vsensors2json(const uint8_t *s)
 {
 	int i;
 	cJSON *o;
@@ -437,7 +437,7 @@ cJSON* vsensors2json(const uint8_t *s)
 }
 
 #ifdef WIFI_SUPPORT
-void json2iplist(cJSON *item, ip_addr_t *list, uint32_t len)
+static void json2iplist(cJSON *item, ip_addr_t *list, uint32_t len)
 {
 	cJSON *o;
 	char *val;
@@ -457,7 +457,7 @@ void json2iplist(cJSON *item, ip_addr_t *list, uint32_t len)
 	}
 }
 
-cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
+static cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
 {
 	cJSON *o;
 
@@ -472,7 +472,79 @@ cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
 }
 
 
-void json2sshpubkeys(cJSON *list, struct ssh_public_key *keys)
+int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk)
+{
+	char *t, *str, *saveptr;
+	void *buf = NULL;
+	int idx = 0;
+	int len, key_len;
+
+	if (!s || !pk)
+		return -1;
+	if (!(str = strdup(s)))
+		return -2;
+
+	pk->type[0] = 0;
+	pk->name[0] = 0;
+	pk->pubkey_size = 0;
+	memset(pk->pubkey, 0, sizeof(pk->pubkey));
+
+	t = strtok_r(str, " ", &saveptr);
+	while (t && idx < 3) {
+		if ((len = strlen(t)) > 0) {
+			//printf("%d: '%s'\n", idx, t);
+			if (idx == 0) {
+				/* key type */
+				strncopy(pk->type, t, sizeof(pk->type));
+			}
+			else if (idx == 1) {
+				/* key (base64 encoded) */
+				key_len = base64decode_raw(t, len, &buf);
+				if (key_len > 0 && key_len <= sizeof(pk->pubkey) &&
+					memmem(buf, key_len, pk->type, strlen(pk->type))) {
+					memcpy(pk->pubkey, buf, key_len);
+					pk->pubkey_size = key_len;
+				} else {
+					printf("Invalid key!\n");
+					break;
+				}
+			}
+			else if (idx == 2) {
+				/* key name */
+				strncopy(pk->name, t, sizeof(pk->name));
+			}
+			idx++;
+		}
+		t = strtok_r(NULL, " ", &saveptr);
+	}
+
+	free(str);
+	if (buf)
+		free(buf);
+
+	return (idx >= 2 ? 0 : 1);
+}
+
+
+const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len)
+{
+	char *e;
+
+	if (!pk || !s || s_len < 1)
+		return NULL;
+
+	if (!(e = base64encode_raw(pk->pubkey, pk->pubkey_size)))
+		return NULL;
+
+	snprintf(s, s_len, "%s %s %s", pk->type, e, pk->name);
+	s[s_len - 1] = 0;
+	free(e);
+
+	return s;
+}
+
+
+static void json2sshpubkeys(cJSON *list, struct ssh_public_key *keys)
 {
 	cJSON *r, *user, *pkey;
 	struct ssh_public_key *k;
@@ -501,7 +573,7 @@ void json2sshpubkeys(cJSON *list, struct ssh_public_key *keys)
 	}
 }
 
-cJSON* sshpubkeys2json(const struct ssh_public_key *keys)
+static cJSON* sshpubkeys2json(const struct ssh_public_key *keys)
 {
 	const size_t buf_len = 256;
 	char *buf;

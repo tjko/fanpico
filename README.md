@@ -39,7 +39,9 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * [MQTT client](https://github.com/tjko/fanpico/wiki/FanPico-MQTT-Tutorial) with TLS support for logging data and to receive commands.
 * [Home Assistant](https://github.com/tjko/fanpico/wiki/FanPico-Home-Assistant-(MQTT-Discovery)-Support) support using MQTT Discovery feature.
 * Telnet server for configuration and monitoring.
+* SSH server for configuration and monitoring (experimental).
 * SNMP Agent for monitoring.
+
 
 ### Interfaces
 
@@ -203,6 +205,8 @@ Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 * [pico-telnetd](https://github.com/tjko/pico-telnetd)
 * [pico-1wire-lib](https://github.com/tjko/pico-1wire-lib)
 * [pico-sensor-lib](https://github.com/tjko/pico-sensor-lib)
+* [wolfSSL](https://github.com/wolfSSL/wolfssl)
+* [wolfSSH](https://github.com/wolfSSL/wolfssh)
 
 ##### Install Pico SDK
 Pico SDK must be installed working before you can compile fanpico.

@@ -28,66 +28,66 @@
 #include "lwip/tcp.h"
 #include <wolfssh/ssh.h>
 
+#include "ssh/ringbuffer.h"
+
 #define MAX_LOGIN_LENGTH 32
-#define MAX_PASSWORD_LENGTH 64
-#define MAX_LOGIN_FAILURES 3
 #define MAX_SERVER_PKEYS 3
 
+
+/* Client connection state */
 typedef enum ssh_connection_state {
 	CS_NONE = 0,
 	CS_ACCEPT,
 	CS_CONNECT,
 } ssh_connection_state_t;
 
-typedef struct ssh_ringbuffer {
-	uint8_t *buf;
-	bool free_buf;
-	size_t size;
-	size_t free;
-	size_t head;
-	size_t tail;
-} ssh_ringbuffer_t;
-
-
+/* SSH Server Private Key */
 typedef struct ssh_server_pkey_t {
-	uint8_t *key;
+	const uint8_t *key;
 	uint32_t key_len;
 	int key_type;
 } ssh_server_pkey_t;
 
+/* SSH Server Instance */
 typedef struct ssh_server_t {
-	struct tcp_pcb *listen;
-	struct tcp_pcb *client;
-	ssh_connection_state_t cstate;
-	WOLFSSH_CTX *ssh_ctx;
-	WOLFSSH* ssh;
-	ssh_ringbuffer_t rb_tcp_in;
-	ssh_ringbuffer_t rb_in;
-	ssh_ringbuffer_t rb_out;
-	char login[MAX_LOGIN_LENGTH + 1];
+	struct tcp_pcb *listen;            /* lwIP listenig socket */
+	struct tcp_pcb *client;            /* lwIP client connection socket */
+	ssh_connection_state_t cstate;     /* Current client connection state */
+	WOLFSSH_CTX *ssh_ctx;              /* SSH server context */
+	WOLFSSH* ssh;                      /* SSH (client) connection context */
+	ssh_ringbuffer_t rb_tcp_in;        /* TCP (encrypted) input buffer */
+	ssh_ringbuffer_t rb_in;            /* Decrypted input buffer */
+	ssh_ringbuffer_t rb_out;           /* Unencrypted output buffer */
+	char login[MAX_LOGIN_LENGTH + 1];  /* Currently logged in user */
 
 	/* Configuration options... set before calling ssg_server_start() */
 	uint16_t port;             /* Listen port (default tcp/22) */
 	const char *banner;        /* Login banner string to display when connection starts. */
 	ssh_server_pkey_t pkeys[MAX_SERVER_PKEYS];  /* server private key(s) */
-	void (*log_cb)(int priority, const char *format, ...);
-	bool auth_none;
+	bool auth_enabled;         /* Set false to disable authentication. */
+
+	/* Callback functions */
 	int (*auth_cb)(void* ctx, const byte *login, word32 login_len,
 		const byte *auth, word32 auth_len, int auth_type);
 	void *auth_cb_ctx;
+	void (*log_cb)(int priority, const char *format, ...);
 } ssh_server_t;
 
-
-
+/* Authentication entry used by default authentication callback routine. */
 typedef struct ssh_user_auth_entry_t {
-	int type;
-	const char *username;
-	const uint8_t *auth;
-	uint32_t auth_len;
+	int type;              /* Entry type:
+				    WOLFSSH_USERAUTH_PASSWORD,
+				    WOLFSSH_USERAUTH_PUBLICKEY
+			       */
+	const char *username;  /* User name (string) */
+	const uint8_t *auth;   /* Password hash (string) or public key (binary) */
+	uint32_t auth_len;     /* Needed when type is WOLFSSH_USERAUTH_PUBLICKEY */
 } ssh_user_auth_entry_t;
 
 
-ssh_server_t* ssh_server_init(size_t rxbuf_size, size_t txbuf_size);
+
+/* ssh_server.c */
+ssh_server_t* ssh_server_new(size_t rxbuf_size, size_t txbuf_size);
 bool ssh_server_start(ssh_server_t *st, bool stdio);
 void ssh_server_destroy(ssh_server_t *st);
 bool ssh_server_client_connected(ssh_server_t *st);
@@ -95,8 +95,10 @@ err_t ssh_server_get_client_ip(const ssh_server_t *st, ip_addr_t *ip, uint16_t *
 const char* ssh_server_connection_state_name(enum ssh_connection_state state);
 err_t ssh_server_disconnect_client(ssh_server_t *st);
 const char *ssh_server_get_pubkey_hash(const void *pkey, uint32_t pkey_len, char *str_buf, uint32_t str_buf_len);
-
 void ssh_server_log_level(int priority);
+int ssh_server_add_priv_key(ssh_server_t *st, int type, const uint8_t *key, uint32_t key_len);
 
+/* sha512crypt.c */
+char *ssh_server_sha512_crypt (const char *key, const char *salt);
 
 #endif /* SSH_SERVER_H */

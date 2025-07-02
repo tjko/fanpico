@@ -33,11 +33,11 @@
 #include <wolfssl/ssl.h>
 #include <wolfssh/ssh.h>
 #include <wolfssh/keygen.h>
+#ifdef WOLFCRYPT_TEST
 #include <wolfcrypt/test/test.h>
-#include <pico_telnetd/sha512crypt.h>
+#endif
 
-#include "ssh_server.h"
-
+#include "ssh/ssh_server.h"
 #include "fanpico.h"
 
 
@@ -124,16 +124,14 @@ static const ssh_pkey_alg_t pkey_algorithms[] = {
 
 void sshserver_init()
 {
-	int res;
 	char *buf = NULL;
 	uint32_t buf_size = 0;
 	int pkey_count = 0;
 
 	wolfSSL_Init();
 //	wolfSSL_Debugging_ON();
-#if 0
-	res = wolfcrypt_test(NULL);
-	printf("End: %d\n", res);
+#ifdef WOLFCRYPT_TEST
+	printf("wolfcrypt_test(): %d\n", wolfcrypt_test(NULL));
 #endif
 
 	if (wolfSSH_Init() != WS_SUCCESS) {
@@ -142,33 +140,45 @@ void sshserver_init()
 	}
 //	wolfSSH_Debugging_ON();
 
-	ssh_srv = ssh_server_init(2048, 8192);
-	ssh_users = calloc(SSH_MAX_PUB_KEYS + 1 + 1, sizeof(ssh_user_auth_entry_t));
-
-	if (!ssh_srv || !ssh_users) {
+	/* Create SSH server instance */
+	if (!(ssh_srv = ssh_server_new(2048, 8192))) {
 		log_msg(LOG_ERR, "Failed to initialize SSH server.");
 		return;
 	}
 
-	/* Load server private keys */
+	/* Load SSH server private keys */
 	for (int i = 0; pkey_algorithms[i].name; i++) {
 		const ssh_pkey_alg_t *alg = &pkey_algorithms[i];
 
-		res = flash_read_file(&buf, &buf_size, alg->filename);
-		if (res == 0 && pkey_count < MAX_SERVER_PKEYS) {
+		if (flash_read_file(&buf, &buf_size, alg->filename) == 0) {
 			log_msg(LOG_DEBUG, "Found SSH private key: %s (%lu)",
 				alg->filename, buf_size);
-			ssh_srv->pkeys[pkey_count].key = (uint8_t*)buf;
-			ssh_srv->pkeys[pkey_count].key_len = buf_size;
-			ssh_srv->pkeys[pkey_count].key_type = WOLFSSH_FORMAT_ASN1;
-			pkey_count++;
+			if (ssh_server_add_priv_key(ssh_srv, WOLFSSH_FORMAT_ASN1,
+							(uint8_t*)buf, buf_size)) {
+				log_msg(LOG_NOTICE, "Failed to add private key.\n");
+			} else {
+				pkey_count++;
+			}
 		}
+	}
+	if (pkey_count < 1) {
+		log_msg(LOG_ERR, "No private key(s) found for SSH server.");
+		return;
 	}
 
 	/* Setup context for default authentication callback... */
+	ssh_users = calloc(SSH_MAX_PUB_KEYS + 1 + 1, sizeof(ssh_user_auth_entry_t));
+	if (!ssh_users) {
+		log_msg(LOG_ERR, "Not enough memory for SSH server.");
+		return;
+	}
+
+	/* Add password authenticated user */
 	ssh_users[0].type = WOLFSSH_USERAUTH_PASSWORD;
 	ssh_users[0].username = cfg->ssh_user;
 	ssh_users[0].auth = (uint8_t*)cfg->ssh_pwhash;
+
+	/* Add publickey authenticated users */
 	for (int i = 1; i <= SSH_MAX_PUB_KEYS; i++) {
 		const struct ssh_public_key *k = &cfg->ssh_pub_keys[i - 1];
 		ssh_users[i].type = WOLFSSH_USERAUTH_PUBLICKEY;
@@ -176,13 +186,11 @@ void sshserver_init()
 		ssh_users[i].auth = k->pubkey;
 		ssh_users[i].auth_len = k->pubkey_size;
 	}
-	ssh_srv->auth_cb_ctx = (void*)ssh_users;
 
+	ssh_srv->auth_enabled = cfg->ssh_auth;
+	ssh_srv->auth_cb_ctx = (void*)ssh_users;
 	ssh_srv->banner = ssh_banner;
 	ssh_srv->log_cb = log_msg;
-//	ssh_srv->auth_none = true;
-
-//	ssh_server_log_level(LOG_INFO);
 
 	if (!ssh_server_start(ssh_srv, true)) {
 		log_msg(LOG_ERR, "Failed to start SSH server.");
@@ -245,6 +253,7 @@ void sshserver_list_pkeys()
 	}
 }
 
+
 int sshserver_create_pkey(const char* args)
 {
 	const size_t buf_size = 4096;
@@ -291,11 +300,11 @@ int sshserver_create_pkey(const char* args)
 	return (kcount > 0 ? 0 : 1);
 }
 
+
 int sshserver_delete_pkey(const char* args)
 {
 	int res;
 
-	printf("delete pkey: %s\n", args);
 
 	for (int i = 0; pkey_algorithms[i].name; i++) {
 		const ssh_pkey_alg_t *alg = &pkey_algorithms[i];
@@ -322,82 +331,4 @@ int sshserver_delete_pkey(const char* args)
 }
 
 
-int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk)
-{
-	char *t, *str, *saveptr;
-	void *buf = NULL;
-	int idx = 0;
-	int len, key_len;
-
-	if (!s || !pk)
-		return -1;
-	if (!(str = strdup(s)))
-		return -2;
-
-	pk->type[0] = 0;
-	pk->name[0] = 0;
-	pk->pubkey_size = 0;
-	memset(pk->pubkey, 0, sizeof(pk->pubkey));
-
-	t = strtok_r(str, " ", &saveptr);
-	while (t && idx < 3) {
-		if ((len = strlen(t)) > 0) {
-			//printf("%d: '%s'\n", idx, t);
-			if (idx == 0) {
-				/* key type */
-				strncopy(pk->type, t, sizeof(pk->type));
-			}
-			else if (idx == 1) {
-				/* key (base64 encoded) */
-				key_len = base64decode_raw(t, len, &buf);
-				if (key_len > 0 && key_len <= sizeof(pk->pubkey) &&
-					memmem(buf, key_len, pk->type, strlen(pk->type))) {
-					memcpy(pk->pubkey, buf, key_len);
-					pk->pubkey_size = key_len;
-				} else {
-					printf("Invalid key!\n");
-					break;
-				}
-			}
-			else if (idx == 2) {
-				/* key name */
-				strncopy(pk->name, t, sizeof(pk->name));
-			}
-			idx++;
-		}
-		t = strtok_r(NULL, " ", &saveptr);
-	}
-
-	free(str);
-	if (buf)
-		free(buf);
-
-	return (idx >= 2 ? 0 : 1);
-}
-
-
-const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len)
-{
-	char *e;
-
-	if (!pk || !s || s_len < 1)
-		return NULL;
-
-	if (!(e = base64encode_raw(pk->pubkey, pk->pubkey_size)))
-		return NULL;
-
-	snprintf(s, s_len, "%s %s %s", pk->type, e, pk->name);
-	s[s_len - 1] = 0;
-	free(e);
-
-	return s;
-}
-
-
-time_t ssh_server_myTime(time_t *t)
-{
-	rtc_get_time(t);
-	return *t;
-}
-
-
+/* eof :-) */

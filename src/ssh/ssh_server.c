@@ -22,10 +22,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <assert.h>
 #include "pico/stdlib.h"
 #include "pico/stdio/driver.h"
 #include "pico/cyw43_arch.h"
+#include "pico/aon_timer.h"
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 #include "wolfssl/wolfcrypt/settings.h"
@@ -33,233 +33,14 @@
 #include <wolfssl/wolfcrypt/coding.h>
 #include <wolfssl/ssl.h>
 #include <wolfssh/ssh.h>
-#include <pico_telnetd/sha512crypt.h>
 
-#include "ssh_server.h"
+#include "ssh/ssh_server.h"
 
 
 #define SSH_DEFAULT_PORT 22
 #define SSH_SERVER_MAX_CONN 1
 #define SSH_CLIENT_POLL_TIME 1
 
-
-static const char *ssh_default_banner = "\r\npico-sshd\r\n\r\n";
-static const char* connected_text = "Connected.\r\n";
-
-static ssh_server_t *stdio_sshserv = NULL;
-static void (*chars_available_callback)(void*) = NULL;
-static void *chars_available_param = NULL;
-
-
-// --ringbuffer--
-
-int ssh_ringbuffer_init(ssh_ringbuffer_t *rb, void *buf, size_t size)
-{
-	if (!rb)
-		return -1;
-
-	if (!buf) {
-		if (!(rb->buf = calloc(1, size)))
-			return -2;
-		rb->free_buf = true;
-	} else {
-		rb->buf = buf;
-		rb->free_buf = false;
-	}
-
-	rb->size = size;
-	rb->free = size;
-	rb->head = 0;
-	rb->tail = 0;
-
-	return 0;
-}
-
-
-int ssh_ringbuffer_destroy(ssh_ringbuffer_t *rb)
-{
-	if (!rb)
-		return -1;
-
-	if (rb->free_buf && rb->buf)
-		free(rb->buf);
-
-	rb->buf = NULL;
-	rb->size = 0;
-	rb->free = 0;
-	rb->head = 0;
-	rb->tail = 0;
-
-	return 0;
-}
-
-
-int ssh_ringbuffer_flush(ssh_ringbuffer_t *rb)
-{
-	if (!rb)
-		return -1;
-
-	rb->head = 0;
-	rb->tail = 0;
-	rb->free = rb->size;
-
-	return 0;
-}
-
-inline size_t ssh_ringbuffer_used(ssh_ringbuffer_t *rb)
-{
-	return (rb ? rb->size - rb->free : 0);
-}
-
-inline size_t ssh_ringbuffer_free(ssh_ringbuffer_t *rb)
-{
-	return (rb ? rb->free : 0);
-}
-
-
-inline size_t ssh_ringbuffer_offset(ssh_ringbuffer_t *rb, size_t offset, size_t delta, int direction)
-{
-	size_t o = offset % rb->size;
-	size_t d = delta % rb->size;
-
-	if (!rb)
-		return 0;
-	if (d == 0)
-		return o;
-
-	if (direction >= 0) {
-		o = (o + d) % rb->size;
-	} else {
-		if (o < d) {
-			o = rb->size - (d - o);
-		} else {
-			o -= d;
-		}
-	}
-
-	return o;
-}
-
-
-int ssh_ringbuffer_add(ssh_ringbuffer_t *rb, const void *data, size_t len, bool overwrite)
-{
-	if (!rb || !data)
-		return -1;
-
-	if (len == 0)
-		return 0;
-
-	if (len > rb->size)
-		return -2;
-
-	if (overwrite && rb->free < len) {
-		size_t needed = len - rb->free;
-		rb->head = ssh_ringbuffer_offset(rb, rb->head, needed, 1);
-		rb->free += needed;
-	}
-	if (rb->free < len)
-		return -3;
-
-	size_t new_tail = ssh_ringbuffer_offset(rb, rb->tail, len, 1);
-
-	if (new_tail > rb->tail) {
-		memcpy(rb->buf + rb->tail, data, len);
-	} else {
-		size_t part1 = rb->size - rb->tail;
-		size_t part2 = len - part1;
-		memcpy(rb->buf + rb->tail, data, part1);
-		memcpy(rb->buf, data + part1, part2);
-	}
-
-	rb->tail = new_tail;
-	rb->free -= len;
-
-	return 0;
-}
-
-
-int ssh_ringbuffer_read(ssh_ringbuffer_t *rb, uint8_t *ptr, size_t size)
-{
-	if (!rb || size < 1)
-		return -1;
-
-	size_t used = rb->size - rb->free;
-	if (used < size)
-		return -2;
-
-	size_t new_head = ssh_ringbuffer_offset(rb, rb->head, size, 1);
-
-	if (ptr) {
-		if (new_head > rb->head) {
-			memcpy(ptr, rb->buf + rb->head, size);
-		} else {
-			size_t part1 = rb->size - rb->head;
-			size_t part2 = size - part1;
-			memcpy(ptr, rb->buf + rb->head, part1);
-			memcpy(ptr + part1, rb->buf, part2);
-		}
-	}
-
-	rb->head = new_head;
-	rb->free += size;
-
-	return 0;
-}
-
-inline int ssh_ringbuffer_read_char(ssh_ringbuffer_t *rb)
-{
-	if (!rb)
-		return -1;
-	if (rb->head == rb->tail)
-		return -2;
-
-	int val = rb->buf[rb->head];
-	rb->head = ssh_ringbuffer_offset(rb, rb->head, 1, 1);
-	rb->free++;
-
-	return val;
-}
-
-inline int ssh_ringbuffer_add_char(ssh_ringbuffer_t *rb, uint8_t ch, bool overwrite)
-{
-	if (!rb)
-		return -1;
-
-	if (overwrite && rb->free < 1) {
-		rb->head = ssh_ringbuffer_offset(rb, rb->head, 1, 1);
-		rb->free += 1;
-	}
-	if (rb->free < 1)
-		return -2;
-
-	rb->buf[rb->tail] = ch;
-	rb->tail = ssh_ringbuffer_offset(rb, rb->tail, 1, 1);
-	rb->free--;
-
-	return 0;
-}
-
-
-size_t ssh_ringbuffer_peek(ssh_ringbuffer_t *rb, void **ptr, size_t size)
-{
-	if (!rb || !ptr || size < 1)
-		return 0;
-
-	*ptr = NULL;
-	size_t used = rb->size - rb->free;
-	size_t toread = (size < used ? size : used);
-	size_t len = rb->size - rb->head;
-
-	if (used < 1)
-		return 0;
-
-	*ptr = rb->buf + rb->head;
-
-	return (len < toread ? len : toread);
-}
-
-
-// ---log---
 
 #define LOG_MAX_MSG_LEN 256
 
@@ -274,14 +55,20 @@ size_t ssh_ringbuffer_peek(ssh_ringbuffer_t *rb, void **ptr, size_t size)
 
 static int global_log_level = LOG_ERR;
 
+static ssh_server_t *stdio_sshserv = NULL;
+static void (*chars_available_callback)(void*) = NULL;
+static void *chars_available_param = NULL;
 
-void ssh_server_log_level(int priority)
-{
-	global_log_level = priority;
-}
+static const char *ssh_default_banner = "\r\npico-sshd\r\n\r\n";
+static const char* connected_text = "Connected.\r\n";
+
+#ifndef LOG_MSG
+#define LOG_MSG(...) { if (st) if (st->log_cb) st->log_cb(__VA_ARGS__); }
+#endif
 
 
-static void sshd_log_msg(int priority, const char *format, ...)
+
+static void ssh_server_log_msg(int priority, const char *format, ...)
 {
 	va_list ap;
 	char *buf;
@@ -315,13 +102,6 @@ static void sshd_log_msg(int priority, const char *format, ...)
 }
 
 
-
-#ifndef LOG_MSG
-#define LOG_MSG(...) { if (st) if (st->log_cb) st->log_cb(__VA_ARGS__); }
-#endif
-
-
-
 static int ssh_server_default_auth_cb(void *ctx, const byte *login, word32 login_len,
 				const byte *auth, word32 auth_len, int auth_type)
 {
@@ -330,12 +110,11 @@ static int ssh_server_default_auth_cb(void *ctx, const byte *login, word32 login
 	int i = 0;
 	int res = 2;
 
-	//printf("ssh_server_default_auth_cb(%p,'%s',%u,%p,%u,%d)\n",ctx,login,login_len,auth,auth_len,auth_type);
 
 	if (!ctx || !login || !auth)
 		return res;
 
-
+	/* Go through list of authentication entries */
 	while (users[i].username) {
 		ssh_user_auth_entry_t *u = &users[i++];
 
@@ -352,7 +131,7 @@ static int ssh_server_default_auth_cb(void *ctx, const byte *login, word32 login
 				if ((pw = malloc(auth_len + 1))) {
 					memcpy(pw, auth, auth_len);
 					pw[auth_len] = 0;
-					hash = sha512_crypt(pw, (const char*)u->auth);
+					hash = ssh_server_sha512_crypt(pw, (const char*)u->auth);
 					memset(pw, 0, auth_len);
 					free(pw);
 				}
@@ -378,29 +157,23 @@ static int ssh_server_default_auth_cb(void *ctx, const byte *login, word32 login
 		}
 	}
 
-	//printf("ssh_server_default_auth_cb(): %d\n", res);
 	return res;
 }
 
 
-ssh_server_t* ssh_server_init(size_t rxbuf_size, size_t txbuf_size)
+ssh_server_t* ssh_server_new(size_t rxbuf_size, size_t txbuf_size)
 {
 	ssh_server_t *st = calloc(1, sizeof(ssh_server_t));
 
 	if (!st)
 		return NULL;
 
-	st->ssh_ctx = NULL;
-	st->ssh = NULL;
 	st->cstate = CS_NONE;
-	st->log_cb = sshd_log_msg;
-	st->auth_none = false;
+	st->log_cb = ssh_server_log_msg;
+	st->auth_enabled = true;
 	st->auth_cb = ssh_server_default_auth_cb;
-	st->auth_cb_ctx = NULL;
 	st->port = SSH_DEFAULT_PORT;
 	st->banner = ssh_default_banner;
-
-	st->login[0] = 0;
 
 	ssh_ringbuffer_init(&st->rb_tcp_in, NULL, rxbuf_size);
 	ssh_ringbuffer_init(&st->rb_in, NULL, rxbuf_size);
@@ -562,9 +335,6 @@ static int ssh_server_flush_buffer(ssh_server_t *st)
 
 	if (!st)
 		return -1;
-
-//	printf("ssh_server_flush_buffer(%p): start (%d)\n", st, st->cstate);
-
 	if (st->cstate != CS_CONNECT) {
 		ssh_ringbuffer_flush(&st->rb_out);
 		return 0;
@@ -658,7 +428,9 @@ static err_t ssh_server_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 	st->ssh = ssh;
 	st->client = pcb;
 	tcp_arg(pcb, st);
-//	tcp_sent(pcb, ssh_server_sent);
+#if 0
+	tcp_sent(pcb, ssh_server_sent);
+#endif
 	tcp_recv(pcb, ssh_server_recv);
 	tcp_poll(pcb, ssh_server_poll, SSH_CLIENT_POLL_TIME);
 	tcp_err(pcb, ssh_server_err);
@@ -677,7 +449,6 @@ static int user_auth_result_cb(byte res, WS_UserAuthData* auth_data, void* ctx)
 	ssh_server_t *st = ctx;
 	char tmpbuf[64];
 
-//	printf("user_auth_result_cb(%u,%p,%p): type=%d\n",r es, auth_data, ctx, auth_data->type);
 
 	if (st) {
 		if (auth_data->type == WOLFSSH_USERAUTH_PUBLICKEY) {
@@ -750,15 +521,13 @@ static int user_auth_types_cb(WOLFSSH *ssh, void *ctx)
 	if (!ssh || !st)
 		return WS_BAD_ARGUMENT;
 
-	if (st->auth_none)
+	if (!st->auth_enabled)
 		return WOLFSSH_USERAUTH_NONE;
 	if (st->auth_cb)
 		ret |= WOLFSSH_USERAUTH_PASSWORD | WOLFSSH_USERAUTH_PUBLICKEY;
 
 	return ret;
 }
-
-
 
 
 static int user_auth_cb(byte auth_type, WS_UserAuthData* auth_data, void *ctx)
@@ -769,7 +538,6 @@ static int user_auth_cb(byte auth_type, WS_UserAuthData* auth_data, void *ctx)
 
 	if (!auth_data || !st)
 		return ret;
-
 
 	if (auth_type == WOLFSSH_USERAUTH_PASSWORD) {
 		if (st->auth_cb) {
@@ -803,7 +571,7 @@ static int user_auth_cb(byte auth_type, WS_UserAuthData* auth_data, void *ctx)
 			}
 		}
 	}
-	else if (auth_type == WOLFSSH_USERAUTH_NONE && st->auth_none) {
+	else if (auth_type == WOLFSSH_USERAUTH_NONE && !st->auth_enabled) {
 		ret = WOLFSSH_USERAUTH_SUCCESS;
 		LOG_MSG(LOG_NOTICE, "Unauthenticated connection accepted: %s",
 			auth_data->username);
@@ -812,7 +580,6 @@ static int user_auth_cb(byte auth_type, WS_UserAuthData* auth_data, void *ctx)
 		ret = WOLFSSH_USERAUTH_INVALID_AUTHTYPE;
 	}
 
-//	printf("user_auth_cb(%u,%p,%p): %d\n", auth_type, auth_data, ctx, ret);
 	return ret;
 }
 
@@ -919,7 +686,6 @@ static err_t ssh_server_close(void *arg) {
 }
 
 
-
 static void stdio_ssh_out_chars(const char *buf, int length)
 {
 	size_t len;
@@ -962,10 +728,6 @@ static int stdio_ssh_in_chars(char *buf, int length)
 
 	return len;
 }
-
-
-
-
 
 
 static void stdio_ssh_set_chars_available_callback(void (*fn)(void*), void *param)
@@ -1028,6 +790,24 @@ void ssh_server_destroy(ssh_server_t *st)
 	ssh_ringbuffer_free(&st->rb_tcp_in);
 	ssh_ringbuffer_free(&st->rb_in);
 	ssh_ringbuffer_free(&st->rb_out);
+}
+
+
+int ssh_server_add_priv_key(ssh_server_t *st, int type, const uint8_t *key, uint32_t key_len)
+{
+	if (!st || !key || key_len < 1)
+		return -1;
+
+	for (int i = 0; i <= MAX_SERVER_PKEYS; i++) {
+		if (st->pkeys[i].key == NULL) {
+			st->pkeys[i].key = key;
+			st->pkeys[i].key_len = key_len;
+			st->pkeys[i].key_type = type;
+			return 0;
+		}
+	}
+
+	return 1;
 }
 
 
@@ -1109,5 +889,27 @@ const char *ssh_server_get_pubkey_hash(const void *pkey, uint32_t pkey_len, char
 }
 
 
+void ssh_server_log_level(int priority)
+{
+	global_log_level = priority;
+}
 
+#if 0
+time_t ssh_server_mytime(time_t *t)
+{
+	time_t tnow = 0;
+	struct timespec ts;
 
+	if (aon_timer_is_running()) {
+		if (aon_timer_get_time(&ts)) {
+			tnow = ts.tv_sec;
+		}
+	}
+	if (t)
+		*t = tnow;
+
+	return tnow;
+}
+#endif
+
+/* eof :-) */

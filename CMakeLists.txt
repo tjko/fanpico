@@ -9,8 +9,6 @@ if (DEFINED ENV{PICO_SDK_PATH})
 else ()
    include(cmake/pico_sdk_import.cmake)
 endif ()
-
-
 message("Pico SDK version: ${PICO_SDK_VERSION_STRING}")
 
 if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
@@ -41,7 +39,6 @@ string(RANDOM LENGTH ${EXTRA_ENTROPY_LEN} EXTRA_ENTROPY)
 
 #set(CMAKE_BUILD_TYPE Debug)
 
-set(WOLFSSL_SUPPORT 1)
 
 pico_sdk_init()
 
@@ -100,12 +97,15 @@ add_subdirectory(libs/pico-1wire-lib)
 # pico-sensor-lib
 add_subdirectory(libs/pico-sensor-lib)
 
-# wolfSSL/wolfSSH
+# wolfSSL / wolfCrypt
 set(WOLFSSL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssl)
 include(cmake/wolfssl_pico.cmake)
 include_directories(src/wolfssl)
+
+# wolfSSH
 set(WOLFSSH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssh)
 include(cmake/wolfssh_pico.cmake)
+
 
 
 # FanPico Firmware
@@ -198,6 +198,11 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
     src/mqtt.c
     src/telnetd.c
     src/snmp.c
+    src/ssh/ssh_server.c
+    src/ssh/ringbuffer.c
+    src/ssh/sha512crypt.c
+    src/sshd.c
+#    ${WOLFSSL_ROOT}/wolfcrypt/test/test.c
     )
   target_link_libraries(fanpico PRIVATE
     pico_cyw43_arch_lwip_threadsafe_background
@@ -206,6 +211,8 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
     pico_lwip_mqtt
     pico_lwip_snmp
     pico-telnetd-lib
+    wolfssl
+    wolfssh
     )
   if (TLS_SUPPORT)
     target_link_libraries(fanpico PRIVATE
@@ -217,17 +224,6 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
       ${PICO_LWIP_PATH}/src/apps/altcp_tls/altcp_tls_mbedtls.c
       PROPERTIES
       COMPILE_OPTIONS "-Wno-unused-result"
-      )
-  endif()
-  if (WOLFSSL_SUPPORT)
-    target_sources(fanpico PRIVATE
-      src/ssh_server.c
-      src/sshd.c
-      ${WOLFSSL_ROOT}/wolfcrypt/test/test.c
-      )
-    target_link_libraries(fanpico PRIVATE
-      wolfssl
-      wolfssh
       )
   endif()
 endif()

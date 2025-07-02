@@ -46,8 +46,10 @@ extern "C"
 #define DEFAULT_WINDOW_SZ 4096
 #define DEFAULT_MAX_PACKET_SZ 1024
 
-extern time_t ssh_server_myTime(time_t *);
-#define XTIME(t) ssh_server_myTime(t)
+#if 0
+extern time_t ssh_server_my_time(time_t *);
+#define XTIME(t) ssh_server_my_time(t)
+#endif
 
 /* ------------------------------------------------------------------------- */
 /* Platform */

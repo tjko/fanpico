@@ -51,3 +51,11 @@ https://github.com/tjko/pico-1wire-lib
 pico-sensor-lib
 Copryight (c) 2024 Timo Kokkonen (tjko@iki.fi)
 https://github.com/tjko/pico-sensor-lib
+
+wolfssl
+Copyright (C) 2006-2025 wolfSSL Inc.
+https://github.com/wolfSSL/wolfssl
+
+wolfssh
+Copyright (C) 2014-2024 wolfSSL Inc.
+https://github.com/wolfSSL/wolfssh
