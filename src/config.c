@@ -234,7 +234,7 @@ int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id)
 }
 
 
-void json2pwm_map(cJSON *item, struct pwm_map *map)
+static void json2pwm_map(cJSON *item, struct pwm_map *map)
 {
 	cJSON *row;
 	int c = 0;
@@ -251,7 +251,7 @@ void json2pwm_map(cJSON *item, struct pwm_map *map)
 }
 
 
-cJSON* pwm_map2json(const struct pwm_map *map)
+static cJSON* pwm_map2json(const struct pwm_map *map)
 {
 	int i;
 	cJSON *o, *row;
@@ -270,7 +270,7 @@ cJSON* pwm_map2json(const struct pwm_map *map)
 }
 
 
-void json2filter(cJSON *item, enum signal_filter_types *filter, void **filter_ctx)
+static void json2filter(cJSON *item, enum signal_filter_types *filter, void **filter_ctx)
 {
 	cJSON *args;
 
@@ -283,7 +283,7 @@ void json2filter(cJSON *item, enum signal_filter_types *filter, void **filter_ct
 }
 
 
-cJSON* filter2json(enum signal_filter_types filter, void *filter_ctx)
+static cJSON* filter2json(enum signal_filter_types filter, void *filter_ctx)
 {
 	cJSON *o;
 	char *s;
@@ -301,7 +301,7 @@ cJSON* filter2json(enum signal_filter_types filter, void *filter_ctx)
 }
 
 
-void json2tacho_map(cJSON *item, struct tacho_map *map)
+static void json2tacho_map(cJSON *item, struct tacho_map *map)
 {
 	cJSON *row;
 	int c = 0;
@@ -317,7 +317,7 @@ void json2tacho_map(cJSON *item, struct tacho_map *map)
 	map->points = c;
 }
 
-cJSON* tacho_map2json(const struct tacho_map *map)
+static cJSON* tacho_map2json(const struct tacho_map *map)
 {
 	int i;
 	cJSON *o, *row;
@@ -335,7 +335,7 @@ cJSON* tacho_map2json(const struct tacho_map *map)
 	return o;
 }
 
-void json2tacho_sources(cJSON *item, uint8_t *sources)
+static void json2tacho_sources(cJSON *item, uint8_t *sources)
 {
 	int i;
 	cJSON *o;
@@ -350,7 +350,7 @@ void json2tacho_sources(cJSON *item, uint8_t *sources)
 	}
 }
 
-cJSON* tacho_sources2json(const uint8_t *sources)
+static cJSON* tacho_sources2json(const uint8_t *sources)
 {
 	int i;
 	cJSON *o;
@@ -366,7 +366,7 @@ cJSON* tacho_sources2json(const uint8_t *sources)
 	return o;
 }
 
-void json2temp_map(cJSON *item, struct temp_map *map)
+static void json2temp_map(cJSON *item, struct temp_map *map)
 {
 	cJSON *row;
 	int c = 0;
@@ -383,7 +383,7 @@ void json2temp_map(cJSON *item, struct temp_map *map)
 }
 
 
-cJSON* temp_map2json(const struct temp_map *map)
+static cJSON* temp_map2json(const struct temp_map *map)
 {
 	int i;
 	cJSON *o, *row;
@@ -402,7 +402,7 @@ cJSON* temp_map2json(const struct temp_map *map)
 }
 
 
-void json2vsensors(cJSON *item, uint8_t *s)
+static void json2vsensors(cJSON *item, uint8_t *s)
 {
 	cJSON *o;
 	int i,val;
@@ -420,7 +420,7 @@ void json2vsensors(cJSON *item, uint8_t *s)
 }
 
 
-cJSON* vsensors2json(const uint8_t *s)
+static cJSON* vsensors2json(const uint8_t *s)
 {
 	int i;
 	cJSON *o;
@@ -437,7 +437,7 @@ cJSON* vsensors2json(const uint8_t *s)
 }
 
 #ifdef WIFI_SUPPORT
-void json2iplist(cJSON *item, ip_addr_t *list, uint32_t len)
+static void json2iplist(cJSON *item, ip_addr_t *list, uint32_t len)
 {
 	cJSON *o;
 	char *val;
@@ -457,7 +457,7 @@ void json2iplist(cJSON *item, ip_addr_t *list, uint32_t len)
 	}
 }
 
-cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
+static cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
 {
 	cJSON *o;
 
@@ -466,6 +466,145 @@ cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
 
 	for (int i = 0; i < len; i++) {
 		cJSON_AddItemToArray(o, cJSON_CreateString(ipaddr_ntoa(&list[i])));
+	}
+
+	return o;
+}
+
+
+int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk)
+{
+	char *t, *str, *saveptr;
+	void *buf = NULL;
+	int idx = 0;
+	int len, key_len;
+
+	if (!s || !pk)
+		return -1;
+	if (!(str = strdup(s)))
+		return -2;
+
+	pk->type[0] = 0;
+	pk->name[0] = 0;
+	pk->pubkey_size = 0;
+	memset(pk->pubkey, 0, sizeof(pk->pubkey));
+
+	t = strtok_r(str, " ", &saveptr);
+	while (t && idx < 3) {
+		if ((len = strlen(t)) > 0) {
+			//printf("%d: '%s'\n", idx, t);
+			if (idx == 0) {
+				/* key type */
+				strncopy(pk->type, t, sizeof(pk->type));
+			}
+			else if (idx == 1) {
+				/* key (base64 encoded) */
+				key_len = base64decode_raw(t, len, &buf);
+				if (key_len > 0 && key_len <= sizeof(pk->pubkey) &&
+					memmem(buf, key_len, pk->type, strlen(pk->type))) {
+					memcpy(pk->pubkey, buf, key_len);
+					pk->pubkey_size = key_len;
+				} else {
+					printf("Invalid key!\n");
+					break;
+				}
+			}
+			else if (idx == 2) {
+				/* key name */
+				strncopy(pk->name, t, sizeof(pk->name));
+			}
+			idx++;
+		}
+		t = strtok_r(NULL, " ", &saveptr);
+	}
+
+	free(str);
+	if (buf)
+		free(buf);
+
+	return (idx >= 2 ? 0 : 1);
+}
+
+
+const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len)
+{
+	char *e;
+
+	if (!pk || !s || s_len < 1)
+		return NULL;
+
+	if (!(e = base64encode_raw(pk->pubkey, pk->pubkey_size)))
+		return NULL;
+
+	snprintf(s, s_len, "%s %s %s", pk->type, e, pk->name);
+	s[s_len - 1] = 0;
+	free(e);
+
+	return s;
+}
+
+
+static void json2sshpubkeys(cJSON *list, struct ssh_public_key *keys)
+{
+	cJSON *r, *user, *pkey;
+	struct ssh_public_key *k;
+	int idx = 0;
+
+	for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+		keys[i].username[0] = 0;
+		keys[i].type[0] = 0;
+		keys[i].name[0] = 0;
+		keys[i].pubkey_size = 0;
+	}
+
+	cJSON_ArrayForEach(r, list) {
+		k = &keys[idx];
+		user = cJSON_GetObjectItem(r, "user");
+		pkey = cJSON_GetObjectItem(r, "pubkey");
+		if (user && pkey) {
+			if (str_to_ssh_pubkey(cJSON_GetStringValue(pkey), k) == 0) {
+				strncopy(k->username, cJSON_GetStringValue(user),
+					sizeof(k->username));
+				idx++;
+			}
+		}
+		if (idx >= SSH_MAX_PUB_KEYS)
+			break;
+	}
+}
+
+static cJSON* sshpubkeys2json(const struct ssh_public_key *keys)
+{
+	const size_t buf_len = 256;
+	char *buf;
+	int count = 0;
+	cJSON *o, *r;
+
+	if (!(buf = calloc(1, buf_len)))
+		return NULL;
+
+	if ((o = cJSON_CreateArray())) {
+		for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+			const struct ssh_public_key *k = &keys[i];
+			if (k->pubkey_size > 0 && strlen(k->username) > 0) {
+				if (ssh_pubkey_to_str(k, buf, buf_len)) {
+					if ((r = cJSON_CreateObject())) {
+						cJSON_AddItemToObject(r, "pubkey",
+								cJSON_CreateString(buf));
+						cJSON_AddItemToObject(r, "user",
+								cJSON_CreateString(k->username));
+						cJSON_AddItemToArray(o, r);
+						count++;
+					}
+				}
+			}
+		}
+	}
+
+	free(buf);
+	if (count < 1) {
+		cJSON_Delete(o);
+		o = NULL;
 	}
 
 	return o;
@@ -637,6 +776,17 @@ void clear_config(struct fanpico_config *cfg)
 	cfg->snmp_community_trap[0] = 0;
 	cfg->snmp_auth_traps = false;
 	ip_addr_set_any(0, &cfg->snmp_trap_dst);
+	cfg->ssh_active = false;
+	cfg->ssh_auth = true;
+	cfg->ssh_port = 0;
+	cfg->ssh_user[0] = 0;
+	cfg->ssh_pwhash[0] = 0;
+	for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+		cfg->ssh_pub_keys[i].username[0] = 0;
+		cfg->ssh_pub_keys[i].type[0] = 0;
+		cfg->ssh_pub_keys[i].name[0] = 0;
+		cfg->ssh_pub_keys[i].pubkey_size = 0;
+	}
 #endif
 
 }
@@ -844,6 +994,19 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "snmp_auth_traps", cJSON_CreateNumber(cfg->snmp_auth_traps));
 	if (!ip_addr_isany(&cfg->snmp_trap_dst))
 		cJSON_AddItemToObject(config, "snmp_trap_dst", cJSON_CreateString(ipaddr_ntoa(&cfg->snmp_trap_dst)));
+	if (cfg->ssh_active)
+		cJSON_AddItemToObject(config, "ssh_active", cJSON_CreateNumber(cfg->ssh_active));
+	if (cfg->ssh_auth != true)
+		cJSON_AddItemToObject(config, "ssh_auth", cJSON_CreateNumber(cfg->ssh_auth));
+	if (cfg->ssh_port > 0)
+		cJSON_AddItemToObject(config, "ssh_port", cJSON_CreateNumber(cfg->ssh_port));
+	if (strlen(cfg->ssh_user) > 0)
+		cJSON_AddItemToObject(config, "ssh_user", cJSON_CreateString(cfg->ssh_user));
+	if (strlen(cfg->ssh_pwhash) > 0)
+		cJSON_AddItemToObject(config, "ssh_pwhash", cJSON_CreateString(cfg->ssh_pwhash));
+	if ((o = sshpubkeys2json(cfg->ssh_pub_keys))) {
+		cJSON_AddItemToObject(config, "ssh_pubkeys", o);
+	}
 #endif
 
 	/* Fan outputs */
@@ -1259,6 +1422,26 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "snmp_trap_dst"))) {
 		if ((val = cJSON_GetStringValue(ref)))
 			ipaddr_aton(val, &cfg->snmp_trap_dst);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_active"))) {
+		cfg->ssh_active = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_auth"))) {
+		cfg->ssh_auth = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_port"))) {
+		cfg->ssh_port = cJSON_GetNumberValue(ref);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_user"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->ssh_user, val, sizeof(cfg->ssh_user));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_pwhash"))) {
+		if ((val = cJSON_GetStringValue(ref)))
+			strncopy(cfg->ssh_pwhash, val, sizeof(cfg->ssh_pwhash));
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_pubkeys"))) {
+		json2sshpubkeys(ref, cfg->ssh_pub_keys);
 	}
 #endif
 

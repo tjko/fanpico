@@ -70,6 +70,10 @@
 #define DEFAULT_MQTT_RPM_INTERVAL     60
 #define DEFAULT_MQTT_DUTY_INTERVAL    60
 
+#define SSH_MAX_PUB_KEYS  4
+#define MAX_USERNAME_LEN  16
+#define MAX_PWHASH_LEN    128
+
 #ifdef NDEBUG
 #define WATCHDOG_ENABLED      1
 #define WATCHDOG_REBOOT_DELAY 8000
@@ -131,6 +135,14 @@ enum rpm_modes {
 };
 #define RPMMODE_ENUM_MAX 1
 
+
+struct ssh_public_key {
+	char username[MAX_USERNAME_LEN + 1];
+	char type[32 + 1];
+	char name[32 + 1];
+	uint8_t pubkey[128];
+	uint16_t pubkey_size;
+};
 
 struct pwm_map {
 	uint8_t points;
@@ -283,8 +295,8 @@ struct fanpico_config {
 	bool telnet_auth;
 	bool telnet_raw_mode;
 	uint32_t telnet_port;
-	char telnet_user[16 + 1];
-	char telnet_pwhash[128 + 1];
+	char telnet_user[MAX_USERNAME_LEN + 1];
+	char telnet_pwhash[MAX_PWHASH_LEN + 1];
 	bool snmp_active;
 	char snmp_community[SNMP_MAX_COMMUNITY_STR_LEN + 1];
 	char snmp_community_write[SNMP_MAX_COMMUNITY_STR_LEN + 1];
@@ -293,6 +305,12 @@ struct fanpico_config {
 	char snmp_community_trap[SNMP_MAX_COMMUNITY_STR_LEN + 1];
 	bool snmp_auth_traps;
 	ip_addr_t snmp_trap_dst;
+	bool ssh_active;
+	bool ssh_auth;
+	uint32_t ssh_port;
+	char ssh_user[MAX_USERNAME_LEN + 1];
+	char ssh_pwhash[MAX_PWHASH_LEN + 1];
+	struct ssh_public_key ssh_pub_keys[SSH_MAX_PUB_KEYS];
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];
@@ -406,6 +424,10 @@ int valid_pwm_source_ref(enum pwm_source_types source, uint16_t s_id);
 int str2tacho_source(const char *s);
 const char* tacho_source2str(enum tacho_source_types source);
 int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id);
+#if WIFI_SUPPORT
+int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk);
+const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len);
+#endif
 void read_config();
 void save_config();
 void delete_config();
@@ -436,6 +458,7 @@ int flash_format(bool multicore);
 int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename);
 int flash_write_file(const char *buf, uint32_t size, const char *filename);
 int flash_delete_file(const char *filename);
+int flash_file_size(const char *filename);
 int flash_get_fs_info(size_t *size, size_t *free, size_t *files,
 		size_t *directories, size_t *filesizetotal);
 int flash_list_directory(const char *path, bool recursive);
@@ -478,6 +501,14 @@ void fanpico_mqtt_scpi_command();
 void telnetserver_init();
 void telnetserver_disconnect();
 void telnetserver_who();
+
+/* sshd.c */
+void sshserver_init();
+void sshserver_disconnect();
+void sshserver_who();
+void sshserver_list_pkeys();
+int sshserver_create_pkey(const char* args);
+int sshserver_delete_pkey(const char* args);
 
 /* snmp.c */
 void fanpico_snmp_init();
@@ -568,6 +599,8 @@ int valid_hostname(const char *name);
 int check_for_change(double oldval, double newval, double threshold);
 int64_t pow_i64(int64_t x, uint8_t y);
 double round_decimal(double val, unsigned int decimal);
+char* base64encode_raw(const void *input, size_t input_len);
+int base64decode_raw(const void *input, size_t input_len, void **output);
 char* base64encode(const char *input);
 char* base64decode(const char *input);
 char *strncopy(char *dst, const char *src, size_t size);

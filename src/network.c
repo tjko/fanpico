@@ -37,6 +37,7 @@
 
 #ifdef WIFI_SUPPORT
 
+
 #include "syslog.h"
 
 #define WIFI_REJOIN_DELAY 10000 // Delay before attempting to re-join to WiFi (ms)
@@ -383,6 +384,12 @@ static void wifi_init()
 	if (cfg->telnet_active) {
 		log_msg(LOG_NOTICE, "Telnet Server enabled");
 		telnetserver_init();
+	}
+
+	/* Enable SSH server */
+	if (cfg->ssh_active) {
+		log_msg(LOG_NOTICE, "SSH Server enabled");
+		sshserver_init();
 	}
 
 	/* Enable SNMP agent */

@@ -220,6 +220,24 @@ Fanpico supports following commands:
 * [SYStem:SNMP:TRAPs:DESTination?](#systemsnmptrapsdestination-1)
 * [SYStem:SPI](#systemspi)
 * [SYStem:SPI?](#systemspi-1)
+* [SYStem:SSH:SERVer](#systemsshserver)
+* [SYStem:SSH:SERVer?](#systemsshserver-1)
+* [SYStem:SSH:AUTH](#systemsshauth)
+* [SYStem:SSH:AUTH?](#systemsshauth-1)
+* [SYStem:SSH:PORT](#systemsshport)
+* [SYStem:SSH:PORT?](#systemsshport-1)
+* [SYStem:SSH:USER](#systemsshuser)
+* [SYStem:SSH:USER?](#systemsshuser-1)
+* [SYStem:SSH:PASSword](#systemsshpassword)
+* [SYStem:SSH:PASSword?](#systemsshpassword-1)
+* [SYStem:SSH:KEY?](#systemsshkey)
+* [SYStem:SSH:KEY:CREate](#systemsshkeycreate)
+* [SYStem:SSH:KEY:DELete](#systemsshkeydelete)
+* [SYStem:SSH:KEY:LIST?](#systemsshkeylist)
+* [SYStem:SSH:PUBKEY?](#systemsshpubkey)
+* [SYStem:SSH:PUBKEY:ADD](#systemsshpubkeyadd)
+* [SYStem:SSH:PUBKEY:DELete](#systemsshpubkeydelete)
+* [SYStem:SSH:PUBKEY:LIST?](#systemsshpubkeylist)
 * [SYStem:TELNET:SERVer](#systemtelnetserver)
 * [SYStem:TELNET:SERVer?](#systemtelnetserver-1)
 * [SYStem:TELNET:AUTH](#systemtelnetauth)
@@ -3196,6 +3214,222 @@ SYS:SPI?
 0
 ```
 
+
+### SSH Server Commands
+
+#### SYStem:SSH:SERVer
+Control whether SSH server is enabled or not.
+After making change configuration needs to be saved and unit reset.
+
+Default: OFF
+
+Example:
+```
+SYS:SSH:SERV ON
+```
+
+#### SYStem:SSH:SERVer?
+Display whether SSH server status.
+
+Example:
+```
+SYS:SSH:SERV?
+OFF
+```
+
+
+#### SYStem:SSH:AUTH
+Toggle SSH server authentication mode. When enabled then SSH server will
+require user to authenticate (password or publickey authentication).
+When off, no authentication is needed.
+
+Default: ON
+
+Example:
+```
+SYS:SSH:AUTH OFF
+```
+
+#### SYStem:SSH:AUTH?
+Display whether SSH server authentication is enabled or not.
+
+Example:
+```
+SYS:SSH:AUTH?
+ON
+```
+
+
+#### SYStem:SSH:PORT
+Set TCP port where SSH server will listen on.
+If this setting is not set then default port will be used.
+
+Default: 22 (default SSH port)
+
+Example:
+```
+SYS:SSH:PORT 8022
+```
+
+#### SYStem:SSH:PORT?
+Display currently configured port for SSH server.
+
+(if port is set to 0, then default Telnet port will be used)
+
+Example:
+```
+SYS:SSH:PORT?
+8022
+```
+
+
+#### SYStem:SSH:USER
+Configure username that is allowed to login to this server using SSH.
+
+Default: <none>
+
+Example:
+```
+SYS:SSH:USER admin
+```
+
+#### SYStem:SSH:USER?
+Display currently configured SSH user (login) name.
+
+When no username is set, password authentication is disabled.
+
+Example:
+```
+SYS:SSH:USER?
+admin
+```
+
+
+#### SYStem:SSH:PASSword
+Configure password for the SSH user. Password is hashed using SHA-512 Crypt algorithm.
+
+Default: <none>
+
+Example:
+```
+SYS:SSH:PASS mypassword
+```
+
+#### SYStem:SSH:PASSword?
+Display currently configured SSH user password hash.
+
+When no password is set, password authentication is disabled.
+
+Example:
+```
+SYS:SSH:PASS?
+$6$QvD5AkWSuydeH/EB$UsYA0cymsCRSse78fN4bMb5q0hM5B7YUNSFd3zJfMDbTG7DOH8iuMufVjsvqBOxR9YCJYSHno4CFeOhLtTGLx.
+```
+
+
+
+#### SYStem:SSH:KEY?
+Display list of server private keys. Currently there is no support to
+extract/export private keys. This command only displays SHA256 checksums for
+each key.
+
+Example:
+```
+SYS:SSH:KEY?
+ecdsa                     121 SHA256:bDd9a2FrWRCyGxwgNZzzejEh+0ivXkww6nbM+4cIfSg
+ed25519                    82 SHA256:/si832zNTkrxn0MHh8dhwfa6KlDAPcTRHsoqZbeVaSM
+```
+
+
+#### SYStem:SSH:KEY:CREate
+Create SSH Server Private Key. Generated key is saved on the filesystem (littlefs) and
+is used by the SSH server as its server private key.
+
+Command takes key type as parameter.
+
+Currently supported key types:
+
+ - ECDSA
+ - ED25519
+ - ALL (create all supported keys)
+
+
+Example:
+```
+SYS:SSH:KEY:CREATE ED25519
+Generating ed25519 private key...
+OK
+```
+
+
+#### SYStem:SSH:KEY:DELete
+Delete SSH Server Private key. Key is deleted from the internal filesystem (littlefs).
+When rotating server keys, old key must be first removed, before new one can be created.
+
+Command takes key type as parameter.
+
+Example:
+```
+SYS:SSH:KEY:DEL ECDSA
+Deleting ecdsa private key...
+Private key deleted.
+```
+
+
+#### SYStem:SSH:KEY:LIST?
+Display list of server private keys.
+This is same as command SYS:SSH:KEY?
+
+
+
+
+#### SYStem:SSH:PUBKEY?
+Display list of user name and public key pairs that can be used to login
+using publicky authentication.
+
+Example:
+```
+SYS:SSH:PUBKEY?
+1: admin ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOOWu9+yEevReQUXEDgEMAIrs1DERTwZeSRRhIqioC6x admin@ws1
+2: testuser ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBH+E8WDRmrU2fKizKDyQXdLj3YGh7w5Wl7F2clpzHvGWIoBAJ/nsyUpMCqujzG7eD0EOKukBcb6vqyf2IQ96GLU= testuser@localhost
+```
+
+
+#### SYStem:SSH:PUBKEY:ADD
+Add SSH public key for user to authenticate with.
+Command takes two parameters "username", and "public key" (in OpenSSH format).
+Currently up to 4 pubic keys can be added.
+
+Parameters: <username> <ssh publickey>
+
+Example:
+```
+SYS:SSH:PUBKEY ADD amdin ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOOWu9+yEevReQUXEDgEMAIrs1DERTwZeSRRhIqioC6x admin@ws1
+SSH Public key added: slot 1: ssh-ed25519 (admin)
+```
+
+#### SYStem:SSH:PUBKEY:DELete
+Delete SSH Public key.
+
+Parameters: <key number>
+
+(Command SYS:SSH:PUBKEY? can be used to find out key numbers.)
+
+Example:
+```
+SYS:SSH:PUBKEY:DEL 1
+SSH Public key deleted: slot 1: admin:ssh-ed25519 (admin@ws1)
+```
+
+
+#### SYStem:SSH:PUBKEY:LIST?
+Display list of user name and public key pairs that can be used to login
+This is same as SYS:SSH:PUBKEY?
+
+
+
+
+### Telnet Server Commands
 
 #### SYStem:TELNET:SERVer
 Control whether Telnet server is enabled or not.

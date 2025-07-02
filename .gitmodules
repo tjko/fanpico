@@ -22,3 +22,9 @@
 [submodule "libs/pico-sensor-lib"]
 	path = libs/pico-sensor-lib
 	url = https://github.com/tjko/pico-sensor-lib.git
+[submodule "libs/wolfssl"]
+	path = libs/wolfssl
+	url = https://github.com/wolfSSL/wolfssl.git
+[submodule "libs/wolfssh"]
+	path = libs/wolfssh
+	url = https://github.com/wolfSSL/wolfssh.git

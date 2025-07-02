@@ -374,6 +374,7 @@ int cmd_exit(const char *cmd, const char *args, int query, struct prev_cmd_t *pr
 
 #if WIFI_SUPPORT
 	telnetserver_disconnect();
+	sshserver_disconnect();
 #endif
 	return 0;
 }
@@ -385,6 +386,7 @@ int cmd_who(const char *cmd, const char *args, int query, struct prev_cmd_t *pre
 
 #if WIFI_SUPPORT
 	telnetserver_who();
+	sshserver_who();
 #endif
 	return 0;
 }
@@ -2714,6 +2716,171 @@ int cmd_tls_cert(const char *cmd, const char *args, int query, struct prev_cmd_t
 }
 #endif /* TLS_SUPPORT */
 
+int cmd_ssh_auth(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->ssh_auth, "SSH Server Authentication");
+}
+
+int cmd_ssh_server(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->ssh_active, "SSH Server");
+}
+
+int cmd_ssh_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return uint32_setting(cmd, args, query, prev_cmd,
+			&conf->ssh_port, 0, 65535, "SSH Port");
+}
+
+int cmd_ssh_user(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return string_setting(cmd, args, query, prev_cmd,
+			conf->ssh_user, sizeof(conf->ssh_user),
+			"SSH Username", NULL);
+}
+
+int cmd_ssh_pass(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (query) {
+		printf("%s\n", cfg->ssh_pwhash);
+		return 0;
+	}
+
+	if (strlen(args) > 0) {
+		strncopy(conf->ssh_pwhash, generate_sha512crypt_pwhash(args),
+			sizeof(conf->ssh_pwhash));
+	} else {
+		conf->telnet_pwhash[0] = 0;
+		log_msg(LOG_NOTICE, "SSH password removed.");
+	}
+	return 0;
+}
+
+int cmd_ssh_pkey(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+	sshserver_list_pkeys();
+	return 0;
+}
+
+int cmd_ssh_pkey_create(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (query)
+		return 1;
+
+	return sshserver_create_pkey(args);
+}
+
+int cmd_ssh_pkey_del(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (query)
+		return 1;
+
+	return sshserver_delete_pkey(args);
+}
+
+int cmd_ssh_pubkey(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int count = 0;
+	char tmp[255];
+
+	if (!query)
+		return 1;
+
+	for (int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+		struct ssh_public_key *k = &conf->ssh_pub_keys[i];
+
+		if (k->pubkey_size == 0 || strlen(k->username) < 1)
+			continue;
+		printf("%d: %s, %s\n", ++count, k->username,
+			ssh_pubkey_to_str(k, tmp, sizeof(tmp)));
+	}
+	if (count < 1) {
+		printf("No SSH (authentication) public keys found.\n");
+	}
+
+	return 0;
+}
+
+int cmd_ssh_pubkey_add(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	struct ssh_public_key pubkey;
+	char *s, *username, *pkey, *saveptr;
+	int res = 0;
+
+	if (query)
+		return 1;
+
+	if (!(s = strdup(args)))
+		return 2;
+
+	if ((username = strtok_r(s, " ", &saveptr))) {
+		username = trim_str(username);
+		if (strlen(username) < 1)
+			username = NULL;
+	}
+
+	if ((pkey = strtok_r(NULL, ",", &saveptr))) {
+		pkey = trim_str(pkey);
+		if (str_to_ssh_pubkey(pkey, &pubkey))
+			pkey = NULL;
+	}
+
+	if (username && pkey) {
+		int idx = -1;
+
+		/* Check for first available slot */
+		for(int i = 0; i < SSH_MAX_PUB_KEYS; i++) {
+			if (conf->ssh_pub_keys[i].pubkey_size == 0) {
+				idx = i;
+				break;
+			}
+		}
+
+		if (idx < 0) {
+			printf("Maximum number of public keys already added.\n");
+			res = 2;
+		} else {
+			strncopy(pubkey.username, username, sizeof(pubkey.username));
+			conf->ssh_pub_keys[idx] = pubkey;
+			log_msg(LOG_INFO, "SSH Public key added: slot %d: %s (%s)\n", idx + 1,
+				pubkey.type, pubkey.username);
+		}
+	}
+
+	free(s);
+
+	return res;
+}
+
+int cmd_ssh_pubkey_del(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	int idx;
+
+	if (query)
+		return 1;
+
+	if (!str_to_int(args, &idx, 10))
+		return 2;
+	if (idx < 1 || idx > SSH_MAX_PUB_KEYS)
+		return 2;
+
+	idx--;
+	if (conf->ssh_pub_keys[idx].pubkey_size > 0) {
+		log_msg(LOG_INFO, "SSH Public key deleted: slot %d: %s:%s (%s)\n", idx + 1,
+			conf->ssh_pub_keys[idx].username,
+			conf->ssh_pub_keys[idx].type,
+			conf->ssh_pub_keys[idx].name);
+		memset(&conf->ssh_pub_keys[idx], 0, sizeof(struct ssh_public_key));
+	}
+
+	return 0;
+}
+
 int cmd_telnet_auth(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
@@ -3189,6 +3356,42 @@ const struct cmd_t snmp_commands[] = {
 	{ "WRITecommunity", 4, NULL,         cmd_snmp_community_write },
 	{ 0, 0, 0, 0 }
 };
+
+
+const struct cmd_t ssh_pkey_commands[] = {
+	{ "CREate",    3, NULL,              cmd_ssh_pkey_create },
+	{ "DELete",    3, NULL,              cmd_ssh_pkey_del },
+	{ "LIST",      4, NULL,              cmd_ssh_pkey },
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t ssh_pubkey_commands[] = {
+	{ "ADD",       3, NULL,              cmd_ssh_pubkey_add },
+	{ "DELete",    3, NULL,              cmd_ssh_pubkey_del },
+	{ "LIST",      4, NULL,              cmd_ssh_pubkey },
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t ssh_commands[] = {
+	{ "AUTH",      4, NULL,              cmd_ssh_auth },
+	{ "PORT",      4, NULL,              cmd_ssh_port },
+	{ "SERVer",    4, NULL,              cmd_ssh_server },
+	{ "PASSword",  4, NULL,              cmd_ssh_pass },
+	{ "USER",      4, NULL,              cmd_ssh_user },
+	{ "KEY",       3, ssh_pkey_commands, cmd_ssh_pkey },
+	{ "PUBKEY",    6, ssh_pubkey_commands, cmd_ssh_pubkey },
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t telnet_commands[] = {
+	{ "AUTH",      4, NULL,              cmd_telnet_auth },
+	{ "PORT",      4, NULL,              cmd_telnet_port },
+	{ "RAWmode",   3, NULL,              cmd_telnet_rawmode },
+	{ "SERVer",    4, NULL,              cmd_telnet_server },
+	{ "PASSword",  4, NULL,              cmd_telnet_pass },
+	{ "USER",      4, NULL,              cmd_telnet_user },
+	{ 0, 0, 0, 0 }
+};
 #endif
 
 const struct cmd_t tls_commands[] = {
@@ -3201,17 +3404,6 @@ const struct cmd_t tls_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-const struct cmd_t telnet_commands[] = {
-#ifdef WIFI_SUPPORT
-	{ "AUTH",      4, NULL,              cmd_telnet_auth },
-	{ "PORT",      4, NULL,              cmd_telnet_port },
-	{ "RAWmode",   3, NULL,              cmd_telnet_rawmode },
-	{ "SERVer",    4, NULL,              cmd_telnet_server },
-	{ "PASSword",  4, NULL,              cmd_telnet_pass },
-	{ "USER",      4, NULL,              cmd_telnet_user },
-#endif
-	{ 0, 0, 0, 0 }
-};
 
 const struct cmd_t i2c_commands[] = {
 	{ "SCAN",      4, NULL,              cmd_i2c_scan },
@@ -3248,10 +3440,11 @@ const struct cmd_t system_commands[] = {
 	{ "SERIAL",    6, NULL,              cmd_serial },
 #if WIFI_SUPPORT
 	{ "SNMP",      4, snmp_commands,     NULL },
+	{ "TELNET",    6, telnet_commands,   NULL },
+	{ "SSH",       3, ssh_commands,      NULL },
 #endif
 	{ "SPI",       3, NULL,              cmd_spi },
 	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
-	{ "TELNET",    6, telnet_commands,   NULL },
 	{ "TIMEZONE",  8, NULL,              cmd_timezone },
 	{ "TIME",      4, NULL,              cmd_time },
 	{ "TLS",       3, tls_commands,      NULL },
