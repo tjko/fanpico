@@ -191,6 +191,8 @@ void sshserver_init()
 	ssh_srv->auth_cb_ctx = (void*)ssh_users;
 	ssh_srv->banner = ssh_banner;
 	ssh_srv->log_cb = log_msg;
+	if (cfg->ssh_port > 0)
+		ssh_srv->port = cfg->ssh_port;
 
 	if (!ssh_server_start(ssh_srv, true)) {
 		log_msg(LOG_ERR, "Failed to start SSH server.");
