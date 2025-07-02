@@ -97,14 +97,18 @@ add_subdirectory(libs/pico-1wire-lib)
 # pico-sensor-lib
 add_subdirectory(libs/pico-sensor-lib)
 
+# pico-sshd
+add_subdirectory(libs/pico-sshd)
+
 # wolfSSL / wolfCrypt
 set(WOLFSSL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssl)
-include(cmake/wolfssl_pico.cmake)
-include_directories(src/wolfssl)
+include(libs/pico-sshd/cmake/wolfssl_pico.cmake)
 
 # wolfSSH
 set(WOLFSSH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssh)
-include(cmake/wolfssh_pico.cmake)
+include(libs/pico-sshd/cmake/wolfssh_pico.cmake)
+
+include_directories(src/wolfssl)
 
 
 
@@ -198,9 +202,6 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
     src/mqtt.c
     src/telnetd.c
     src/snmp.c
-    src/ssh/ssh_server.c
-    src/ssh/ringbuffer.c
-    src/ssh/sha512crypt.c
     src/sshd.c
 #    ${WOLFSSL_ROOT}/wolfcrypt/test/test.c
     )
@@ -211,6 +212,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
     pico_lwip_mqtt
     pico_lwip_snmp
     pico-telnetd-lib
+    pico-sshd-lib
     wolfssl
     wolfssh
     )
