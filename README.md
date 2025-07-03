@@ -207,6 +207,7 @@ Raspberry Pi Pico C/C++ SDK is required for compiling the firmware:
 * [pico-sensor-lib](https://github.com/tjko/pico-sensor-lib)
 * [wolfSSL](https://github.com/wolfSSL/wolfssl)
 * [wolfSSH](https://github.com/wolfSSL/wolfssh)
+* [pico-sshd](https://github.com/tjko/pico-sshd)
 
 ##### Install Pico SDK
 Pico SDK must be installed working before you can compile fanpico.

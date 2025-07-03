@@ -1,6 +1,6 @@
 FanPico: Smart PWM (PC) Fan Controller
 Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
-https://github.com/tjko/fanpico
+https://kokkonen.net/fanpico
 
 This program comes with ABSOLUTELY NO WARRANTY.
 
@@ -20,7 +20,7 @@ Copyright (c) 2009-2017 Dave Gamble and cJSON contributors
 https://github.com/DaveGamble/cJSON
 
 pico-lfs
-Copyright (c) 2024 Timo Kokkonen (tjko@iki.fi)
+Copyright (c) 2024 Timo Kokkonen
 https://github.com/tjko/pico-lfs
 
 The little filesystem
@@ -29,11 +29,11 @@ https://github.com/littlefs-project/littlefs
 
 ss_oled (Small, Simple OLED library)
 Copyright (c) 2017-2019 BitBank Software, Inc.
-Written by Larry Bank (bitbank@pobox.com)
+Written by Larry Bank
 https://github.com/tjko/ss_oled-lib
 
 bb_spi_lcd (SPI LCD library)
-Copyright (c) 2017-2019 Larry Bank (bitbank@pobox.com)
+Copyright (c) 2017-2019 Larry Bank
 https://github.com/tjko/bb_spi_lcd-lib
 
 libb64
@@ -41,16 +41,20 @@ Created by Chris Venter
 https://github.com/libb64/libb64
 
 pico-telnetd
-Copryight (c) 2024 Timo Kokkonen (tjko@iki.fi)
+Copryight (c) 2024 Timo Kokkonen
 https://github.com/tjko/pico-telnetd
 
 pico-1wire-lib
-Copryight (c) 2024 Timo Kokkonen (tjko@iki.fi)
+Copryight (c) 2024 Timo Kokkonen
 https://github.com/tjko/pico-1wire-lib
 
 pico-sensor-lib
-Copryight (c) 2024 Timo Kokkonen (tjko@iki.fi)
+Copryight (c) 2024 Timo Kokkonen
 https://github.com/tjko/pico-sensor-lib
+
+pico-sshd
+Copryight (c) 2025 Timo Kokkonen
+https://github.com/tjko/pico-sshd
 
 wolfssl
 Copyright (C) 2006-2025 wolfSSL Inc.

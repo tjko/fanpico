@@ -36,8 +36,8 @@
 #ifdef WOLFCRYPT_TEST
 #include <wolfcrypt/test/test.h>
 #endif
+#include <pico-sshd.h>
 
-#include "ssh/ssh_server.h"
 #include "fanpico.h"
 
 

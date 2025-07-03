@@ -28,3 +28,6 @@
 [submodule "libs/wolfssh"]
 	path = libs/wolfssh
 	url = https://github.com/wolfSSL/wolfssh.git
+[submodule "libs/pico-sshd"]
+	path = libs/pico-sshd
+	url = https://github.com/tjko/pico-sshd.git
