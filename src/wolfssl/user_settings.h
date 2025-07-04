@@ -37,6 +37,8 @@ extern "C"
 #define TARGET_EMBEDDED
 
 //#define WOLFCRYPT_ONLY
+//#define WOLFSSL_SP_NO_DYNSTACK
+
 #define WOLFSSL_WOLFSSH
 #define WOLFSSL_RPIPICO
 #define WOLFSSH_SMALL_STACK
@@ -78,8 +80,9 @@ extern time_t ssh_server_my_time(time_t *);
 /* ------------------------------------------------------------------------- */
 /* Wolf Single Precision Math */
 #if 1
-#define WOLFSSL_HAVE_SP_RSA
-#define WOLFSSL_HAVE_SP_DH
+#define SP_INT_BITS 256
+//#define WOLFSSL_HAVE_SP_RSA
+//#define WOLFSSL_HAVE_SP_DH
 #define WOLFSSL_HAVE_SP_ECC
 // #define WOLFSSL_SP_4096 /* Enable RSA/RH 4096-bit support */
 // #define WOLFSSL_SP_384 /* Enable ECC 384-bit SECP384R1 support */
