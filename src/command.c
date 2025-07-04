@@ -2763,7 +2763,7 @@ int cmd_ssh_pkey(const char *cmd, const char *args, int query, struct prev_cmd_t
 	if (!query)
 		return 1;
 
-	sshserver_list_pkeys();
+	ssh_list_pkeys();
 	return 0;
 }
 
@@ -2772,7 +2772,7 @@ int cmd_ssh_pkey_create(const char *cmd, const char *args, int query, struct pre
 	if (query)
 		return 1;
 
-	return sshserver_create_pkey(args);
+	return ssh_create_pkey(args);
 }
 
 int cmd_ssh_pkey_del(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -2780,7 +2780,7 @@ int cmd_ssh_pkey_del(const char *cmd, const char *args, int query, struct prev_c
 	if (query)
 		return 1;
 
-	return sshserver_delete_pkey(args);
+	return ssh_delete_pkey(args);
 }
 
 int cmd_ssh_pubkey(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)

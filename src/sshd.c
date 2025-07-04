@@ -21,18 +21,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
-#include <assert.h>
-#include "pico/stdlib.h"
-#include "pico/stdio/driver.h"
-#include "pico/cyw43_arch.h"
-#include "lwip/pbuf.h"
-#include "lwip/tcp.h"
 #include "wolfssl/wolfcrypt/settings.h"
-#include <wolfssl/wolfcrypt/ed25519.h>
 #include <wolfssl/ssl.h>
 #include <wolfssh/ssh.h>
-#include <wolfssh/keygen.h>
 #ifdef WOLFCRYPT_TEST
 #include <wolfcrypt/test/test.h>
 #endif
@@ -54,79 +45,14 @@ static ssh_user_auth_entry_t *ssh_users = NULL;
 static ssh_server_t *ssh_srv = NULL;
 
 
-typedef struct ssh_pkey_alg_t {
-	char *name;
-	char *filename;
-	int (*create_key)(void *buf, size_t buf_size);
-} ssh_pkey_alg_t;
-
-
-#ifndef NO_RSA
-static int create_rsa_key(void *buf, size_t buf_size)
-{
-	return wolfSSH_MakeRsaKey(buf, buf_size, WOLFSSH_RSAKEY_DEFAULT_SZ,
-		WOLFSSH_RSAKEY_DEFAULT_E);
-}
-#endif
-
-static int create_ecdsa_key(void *buf, size_t buf_size)
-{
-	return wolfSSH_MakeEcdsaKey(buf, buf_size, WOLFSSH_ECDSAKEY_PRIME256);
-}
-
-static int create_ed25519_key(void *buf, size_t buf_size)
-{
-    WC_RNG rng;
-    ed25519_key key;
-    int ret = WS_SUCCESS;
-    int key_size;
-
-    if (wc_InitRng(&rng))
-	return WS_CRYPTO_FAILED;
-
-    if (wc_ed25519_init(&key))
-            ret = WS_CRYPTO_FAILED;
-
-    if (ret == WS_SUCCESS) {
-            ret = wc_ed25519_make_key(&rng, 256/8, &key);
-            if (ret)
-		    ret = WS_CRYPTO_FAILED;
-            else
-		    ret = WS_SUCCESS;
-    }
-
-    if (ret == WS_SUCCESS) {
-            if ((key_size = wc_Ed25519KeyToDer(&key, buf, buf_size)) < 0)
-                    ret = WS_CRYPTO_FAILED;
-            else
-		    ret = key_size;
-        }
-
-    wc_ed25519_free(&key);
-
-    if (wc_FreeRng(&rng))
-            ret = WS_CRYPTO_FAILED;
-
-    return ret;
-}
-
-
-static const ssh_pkey_alg_t pkey_algorithms[] = {
-	{ "ecdsa", "ssh-ecdsa.key", create_ecdsa_key },
-	{ "ed25519", "ssh-ed25519.key", create_ed25519_key },
-#ifndef NO_RSA
-	{ "rsa", "ssh-rsa.key", create_rsa_key },
-#endif
-	{ NULL, NULL, NULL }
-};
-
-
 
 void sshserver_init()
 {
 	char *buf = NULL;
 	uint32_t buf_size = 0;
+	const char *alg_name;
 	int pkey_count = 0;
+	int i, res;
 
 	wolfSSL_Init();
 //	wolfSSL_Debugging_ON();
@@ -147,15 +73,15 @@ void sshserver_init()
 	}
 
 	/* Load SSH server private keys */
-	for (int i = 0; pkey_algorithms[i].name; i++) {
-		const ssh_pkey_alg_t *alg = &pkey_algorithms[i];
-
-		if (flash_read_file(&buf, &buf_size, alg->filename) == 0) {
-			log_msg(LOG_DEBUG, "Found SSH private key: %s (%lu)",
-				alg->filename, buf_size);
-			if (ssh_server_add_priv_key(ssh_srv, WOLFSSH_FORMAT_ASN1,
-							(uint8_t*)buf, buf_size)) {
-				log_msg(LOG_NOTICE, "Failed to add private key.\n");
+	i = 0;
+	while ((res = ssh_get_pkey(i++, &buf, &buf_size, &alg_name)) >= 0) {
+		if (res) {
+			if (ssh_server_add_priv_key(ssh_srv,
+							WOLFSSH_FORMAT_ASN1,
+							(uint8_t*)buf,
+							buf_size)) {
+				log_msg(LOG_NOTICE, "Failed to add private key: %s",
+					alg_name);
 			} else {
 				pkey_count++;
 			}
@@ -187,6 +113,7 @@ void sshserver_init()
 		ssh_users[i].auth_len = k->pubkey_size;
 	}
 
+	/* Configure other SSH server settings */
 	ssh_srv->auth_enabled = cfg->ssh_auth;
 	ssh_srv->auth_cb_ctx = (void*)ssh_users;
 	ssh_srv->banner = ssh_banner;
@@ -194,6 +121,7 @@ void sshserver_init()
 	if (cfg->ssh_port > 0)
 		ssh_srv->port = cfg->ssh_port;
 
+	/* Start SSH server */
 	if (!ssh_server_start(ssh_srv, true)) {
 		log_msg(LOG_ERR, "Failed to start SSH server.");
 	}
@@ -230,106 +158,6 @@ void sshserver_who()
 	} else {
 		printf("No active SSH connection(s)\n");
 	}
-}
-
-
-void sshserver_list_pkeys()
-{
-	char *buf = NULL;
-	char tmp[64];
-	uint32_t buf_size = 0;
-	int i = 0;
-
-	while(pkey_algorithms[i].name) {
-		const ssh_pkey_alg_t *alg = &pkey_algorithms[i++];
-		int res = flash_read_file(&buf, &buf_size, alg->filename);
-
-		printf("%-20s ", alg->name);
-		if (res == 0) {
-			printf("%8lu SHA256:%s\n", buf_size,
-				ssh_server_get_pubkey_hash(buf, buf_size, tmp, sizeof(tmp)));
-			free(buf);
-		} else {
-			printf("<No Key>\n");
-		}
-	}
-}
-
-
-int sshserver_create_pkey(const char* args)
-{
-	const size_t buf_size = 4096;
-	int kcount = 0;
-	bool create_all = false;
-	byte *buf;
-	int res;
-
-
-	if (!strncasecmp(args, "all", 4))
-		create_all = true;
-
-	for (int i = 0; pkey_algorithms[i].name; i++) {
-		const ssh_pkey_alg_t *alg = &pkey_algorithms[i];
-
-		if (!create_all && strncasecmp(args, alg->name, strlen(alg->name) + 1))
-			continue;
-
-		if (flash_file_size(alg->filename) > 0) {
-			printf("%s key already exists!\n", alg->name);
-			continue;
-		}
-
-		printf("Generating %s private key...", alg->name);
-		if (!(buf = calloc(1, buf_size))) {
-			printf("Out or memory!\n");
-				return 2;
-		}
-		res = alg->create_key(buf, buf_size);
-		if (res > 0) {
-			res = flash_write_file((const char*)buf, res, alg->filename);
-			if (res) {
-				printf("Failed to save private key! (%d)\n", res);
-			} else {
-				printf("OK\n");
-				kcount++;
-			}
-		} else {
-			printf("Failed to generate key! (%d)\n", res);
-		}
-		free(buf);
-	}
-
-	return (kcount > 0 ? 0 : 1);
-}
-
-
-int sshserver_delete_pkey(const char* args)
-{
-	int res;
-
-
-	for (int i = 0; pkey_algorithms[i].name; i++) {
-		const ssh_pkey_alg_t *alg = &pkey_algorithms[i];
-
-		if (!strncasecmp(args, alg->name, strlen(alg->name) + 1)) {
-			printf("Deleting %s private key...\n", alg->name);
-			res = flash_delete_file(alg->filename);
-			if (res == -2) {
-				printf("No private key present.\n");
-				res = 0;
-			}
-			else if (res) {
-				printf("Failed to delete private key: %d\n", res);
-				res = 2;
-			} else {
-				printf("Private key deleted.\n");
-			}
-
-			return res;
-		}
-	}
-
-	return 1;
 }
 
 
