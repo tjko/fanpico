@@ -506,9 +506,12 @@ void telnetserver_who();
 void sshserver_init();
 void sshserver_disconnect();
 void sshserver_who();
-void sshserver_list_pkeys();
-int sshserver_create_pkey(const char* args);
-int sshserver_delete_pkey(const char* args);
+
+/* ssh_util.c */
+void ssh_list_pkeys();
+int ssh_create_pkey(const char* args);
+int ssh_delete_pkey(const char* args);
+int ssh_get_pkey(int index, char** buf_ptr, uint32_t* buf_size_ptr, const char** name_ptr);
 
 /* snmp.c */
 void fanpico_snmp_init();

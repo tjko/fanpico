@@ -203,6 +203,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
     src/telnetd.c
     src/snmp.c
     src/sshd.c
+    src/ssh_util.c
 #    ${WOLFSSL_ROOT}/wolfcrypt/test/test.c
     )
   target_link_libraries(fanpico PRIVATE
