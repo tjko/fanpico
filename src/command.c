@@ -2752,7 +2752,7 @@ int cmd_ssh_pass(const char *cmd, const char *args, int query, struct prev_cmd_t
 		strncopy(conf->ssh_pwhash, generate_sha512crypt_pwhash(args),
 			sizeof(conf->ssh_pwhash));
 	} else {
-		conf->telnet_pwhash[0] = 0;
+		conf->ssh_pwhash[0] = 0;
 		log_msg(LOG_NOTICE, "SSH password removed.");
 	}
 	return 0;

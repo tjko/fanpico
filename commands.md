@@ -3286,11 +3286,18 @@ SYS:SSH:PORT?
 #### SYStem:SSH:USER
 Configure username that is allowed to login to this server using SSH.
 
+When no username is set, password authentication is disabled.
+
 Default: <none>
 
-Example:
+Example (set username):
 ```
 SYS:SSH:USER admin
+```
+
+Example (remove username):
+```
+SYS:SSH:USER
 ```
 
 #### SYStem:SSH:USER?
@@ -3310,10 +3317,16 @@ Configure password for the SSH user. Password is hashed using SHA-512 Crypt algo
 
 Default: <none>
 
-Example:
+Example (set passwod):
 ```
 SYS:SSH:PASS mypassword
 ```
+
+Example (remove password):
+```
+SYS:SSH:PASS
+```
+
 
 #### SYStem:SSH:PASSword?
 Display currently configured SSH user password hash.
