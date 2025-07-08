@@ -36,7 +36,7 @@ extern "C"
 #include <time.h>
 #define TARGET_EMBEDDED
 
-//#define WOLFCRYPT_ONLY
+#define WOLFCRYPT_ONLY
 //#define WOLFSSL_SP_NO_DYNSTACK
 
 #define WOLFSSL_WOLFSSH

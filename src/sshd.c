@@ -21,8 +21,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "wolfssl/wolfcrypt/settings.h"
-#include <wolfssl/ssl.h>
 #include <wolfssh/ssh.h>
 #ifdef WOLFCRYPT_TEST
 #include <wolfcrypt/test/test.h>
@@ -54,8 +52,11 @@ void sshserver_init()
 	int pkey_count = 0;
 	int i, res;
 
-	wolfSSL_Init();
-//	wolfSSL_Debugging_ON();
+
+	if (wolfCrypt_Init()) {
+		log_msg(LOG_ERR, "Failed to initialize wolfCrypt library.");
+		return;
+	}
 #ifdef WOLFCRYPT_TEST
 	printf("wolfcrypt_test(): %d\n", wolfcrypt_test(NULL));
 #endif
