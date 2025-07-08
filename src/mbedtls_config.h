@@ -1,6 +1,7 @@
 /* Workaround for some mbedtls source files using INT_MAX without including limits.h */
 #include <limits.h>
 
+
 #define MBEDTLS_NO_PLATFORM_ENTROPY
 #define MBEDTLS_ENTROPY_HARDWARE_ALT
 
@@ -24,10 +25,12 @@
 #define MBEDTLS_ECP_DP_BP384R1_ENABLED
 #define MBEDTLS_ECP_DP_BP512R1_ENABLED
 #define MBEDTLS_ECP_DP_CURVE25519_ENABLED
+#define MBEDTLS_ECP_NIST_OPTIM
 #define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 #define MBEDTLS_PKCS1_V15
 #define MBEDTLS_SHA256_SMALLER
 #define MBEDTLS_SHA512_SMALLER
+//#define MBEDTLS_SHA512_NO_SHA384
 #define MBEDTLS_SSL_SERVER_NAME_INDICATION
 #define MBEDTLS_AES_C
 #define MBEDTLS_ASN1_PARSE_C
@@ -68,3 +71,5 @@
 #ifndef NDEBUG
 #define MBEDTLS_DEBUG_C
 #endif
+
+#include "mbedtls/check_config.h"

@@ -99,6 +99,9 @@ struct altcp_tls_config* tls_server_config()
 			c = altcp_tls_create_config_server_privkey_cert((const u8_t*)key, key_size,
 									NULL, 0,
 									(const u8_t*)cert, cert_size);
+
+			if (!c)
+				log_msg(LOG_NOTICE,"Failed to load TLS certificate");
 		}
 	}
 

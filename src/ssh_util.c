@@ -21,9 +21,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "wolfssl/wolfcrypt/settings.h"
-#include <wolfssl/wolfcrypt/ed25519.h>
-#include <wolfssl/ssl.h>
+#include <wolfssl/wolfcrypt/wc_port.h>
+#include <wolfssl/wolfcrypt/asn.h>
 #include <wolfssh/keygen.h>
 #include <pico-sshd.h>
 
@@ -91,10 +90,10 @@ static int create_ed25519_key(void *buf, size_t buf_size)
 
 
 static const ssh_pkey_alg_t pkey_algorithms[] = {
-	{ "ecdsa", "ssh-ecdsa.key", create_ecdsa_key },
-	{ "ed25519", "ssh-ed25519.key", create_ed25519_key },
+	{ "ecdsa", "ssh-ecdsa.der", create_ecdsa_key },
+	{ "ed25519", "ssh-ed25519.der", create_ed25519_key },
 #ifndef NO_RSA
-	{ "rsa", "ssh-rsa.key", create_rsa_key },
+	{ "rsa", "ssh-rsa.der", create_rsa_key },
 #endif
 	{ NULL, NULL, NULL }
 };
