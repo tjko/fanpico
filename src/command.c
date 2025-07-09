@@ -319,7 +319,8 @@ static int ip_list_change(const char *cmd, const char *args, int query, struct p
 		}
 		printf("\n");
 	} else {
-		arg = strdup(args);
+		if (!(arg = strdup(args)))
+			return 2;
 		t = strtok_r(arg, ",", &saveptr);
 		while (t && idx < list_len) {
 			if (ipaddr_aton(t, &tmpip)) {
@@ -3088,6 +3089,20 @@ int cmd_lfs(const char *cmd, const char *args, int query, struct prev_cmd_t *pre
 	return 0;
 }
 
+int cmd_lfs_del(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (query)
+		return 1;
+
+	if (strlen(args) < 1)
+		return 2;
+
+	if (flash_delete_file(args))
+		return 2;
+
+	return 0;
+}
+
 int cmd_lfs_dir(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query)
@@ -3109,6 +3124,31 @@ int cmd_lfs_format(const char *cmd, const char *args, int query, struct prev_cmd
 	printf("Filesystem successfully formatted.\n");
 
 	return 0;
+}
+
+int cmd_lfs_ren(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	char *saveptr, *oldname, *newname, *arg;
+	int res = 2;
+
+	if (query)
+		return 1;
+
+	if (!(arg = strdup(args)))
+		return 2;
+
+	oldname = strtok_r(arg, " \t", &saveptr);
+	if (oldname && strlen(oldname) > 0) {
+		newname = strtok_r(NULL, " \t", &saveptr);
+		if (newname && strlen(newname) > 0) {
+			if (!flash_rename_file(oldname, newname)) {
+				res = 0;
+			}
+		}
+	}
+	free(arg);
+
+	return res;
 }
 
 int cmd_flash(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -3254,8 +3294,10 @@ const struct cmd_t display_commands[] = {
 };
 
 const struct cmd_t lfs_commands[] = {
+	{ "DELete",    3, NULL,              cmd_lfs_del },
 	{ "DIRectory", 3, NULL,              cmd_lfs_dir },
 	{ "FORMAT",    6, NULL,              cmd_lfs_format },
+	{ "REName",    3, NULL,              cmd_lfs_ren },
 	{ 0, 0, 0, 0 }
 };
 

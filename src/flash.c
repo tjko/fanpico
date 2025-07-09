@@ -187,11 +187,45 @@ int flash_delete_file(const char *filename)
 		log_msg(LOG_ERR, "File \"%s\" not found: %d", filename, res);
 		ret = -2;
 	} else {
-		/* Remove configuration file...*/
+		/* Remove the file...*/
 		log_msg(LOG_INFO, "Removing file \"%s\" (%lu bytes)",
 			filename, stat.size);
 		if ((res = lfs_remove(&lfs, filename)) != LFS_ERR_OK) {
 			log_msg(LOG_ERR, "Failed to remove file \"%s\": %d", filename, res);
+			ret = -3;
+		}
+	}
+	lfs_unmount(&lfs);
+
+	return ret;
+}
+
+
+int flash_rename_file(const char *oldname, const char *newname)
+{
+	int ret = 0;
+	int res;
+	struct lfs_info stat;
+
+	if (!oldname || !newname)
+		return -42;
+
+	/* Mount flash filesystem... */
+	if ((res = lfs_mount(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "lfs_mount() failed: %d", res);
+		return -1;
+	}
+
+	/* Check if file exists... */
+	if ((res = lfs_stat(&lfs, oldname, &stat)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "File \"%s\" not found: %d", oldname, res);
+		ret = -2;
+	} else {
+		/* Rename file...*/
+		log_msg(LOG_INFO, "Renaming file \"%s\" --> \"%s\"",
+			oldname, newname);
+		if ((res = lfs_rename(&lfs, oldname, newname)) != LFS_ERR_OK) {
+			log_msg(LOG_ERR, "Failed to rename file \"%s\": %d", oldname, res);
 			ret = -3;
 		}
 	}
