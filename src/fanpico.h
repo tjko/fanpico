@@ -458,6 +458,8 @@ int flash_format(bool multicore);
 int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename);
 int flash_write_file(const char *buf, uint32_t size, const char *filename);
 int flash_delete_file(const char *filename);
+int flash_rename_file(const char *oldname, const char *newname);
+int flash_copy_file(const char *srcname, const char *dstname, bool overwrite);
 int flash_file_size(const char *filename);
 int flash_get_fs_info(size_t *size, size_t *free, size_t *files,
 		size_t *directories, size_t *filesizetotal);
