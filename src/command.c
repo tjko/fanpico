@@ -3151,6 +3151,33 @@ int cmd_lfs_ren(const char *cmd, const char *args, int query, struct prev_cmd_t 
 	return res;
 }
 
+int cmd_lfs_copy(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	char *saveptr, *srcname, *dstname, *arg;
+	int res = 2;
+
+	if (query)
+		return 1;
+
+	if (!(arg = strdup(args)))
+		return 2;
+
+	srcname = strtok_r(arg, " \t", &saveptr);
+	if (srcname && strlen(srcname) > 0) {
+		dstname = strtok_r(NULL, " \t", &saveptr);
+		if (dstname && strlen(dstname) > 0) {
+			if (strcmp(srcname, dstname)) {
+				if (!flash_copy_file(srcname, dstname, false)) {
+					res = 0;
+				}
+			}
+		}
+	}
+	free(arg);
+
+	return res;
+}
+
 int cmd_flash(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	if (!query)
@@ -3294,6 +3321,7 @@ const struct cmd_t display_commands[] = {
 };
 
 const struct cmd_t lfs_commands[] = {
+	{ "COPY",      4, NULL,              cmd_lfs_copy },
 	{ "DELete",    3, NULL,              cmd_lfs_del },
 	{ "DIRectory", 3, NULL,              cmd_lfs_dir },
 	{ "FORMAT",    6, NULL,              cmd_lfs_format },

@@ -33,9 +33,9 @@ extern char __flash_binary_end;
 
 #define FS_SIZE  (256*1024)
 
-static struct lfs_config *lfs_cfg;
+static struct lfs_config *lfs_cfg = NULL;
 static lfs_t lfs;
-static lfs_file_t lfs_file;
+
 
 void lfs_setup(bool multicore)
 {
@@ -78,6 +78,7 @@ int flash_format(bool multicore)
 
 int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename)
 {
+	lfs_file_t lfs_file;
 	int res;
 
 	if (!bufptr || !sizeptr || !filename)
@@ -130,6 +131,7 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename)
 
 int flash_write_file(const char *buf, uint32_t size, const char *filename)
 {
+	lfs_file_t lfs_file;
 	int res;
 
 	if (!buf || !filename)
@@ -229,6 +231,97 @@ int flash_rename_file(const char *oldname, const char *newname)
 			ret = -3;
 		}
 	}
+	lfs_unmount(&lfs);
+
+	return ret;
+}
+
+
+int flash_copy_file(const char *srcname, const char *dstname, bool overwrite)
+{
+	const size_t buf_size = 4096;
+	char *buf = NULL;
+	lfs_file_t f_in;
+	lfs_file_t f_out;
+	int ret = 0;
+	int res;
+	uint32_t file_size;
+	uint32_t bytes_written = 0;
+
+
+	if (!srcname || !dstname)
+		return -42;
+
+	/* Mount flash filesystem... */
+	if ((res = lfs_mount(&lfs, lfs_cfg)) != LFS_ERR_OK) {
+		log_msg(LOG_ERR, "lfs_mount() failed: %d", res);
+		return -1;
+	}
+
+	if (!(buf = malloc(buf_size))) {
+		log_msg(LOG_ERR, "Not enough memory.");
+		ret = -2;
+	}
+
+	/* Open source file... */
+	if (ret == 0) {
+		if ((res = lfs_file_open(&lfs, &f_in, srcname, LFS_O_RDONLY)) == LFS_ERR_OK) {
+			file_size = lfs_file_size(&lfs, &f_in);
+		} else {
+			log_msg(LOG_ERR, "Cannot open source file \"%s\": %d", srcname, res);
+			ret = -2;
+		}
+	}
+
+	/* Create destination file... */
+	if (ret == 0) {
+		int flags = LFS_O_WRONLY | LFS_O_CREAT;
+
+		if (!overwrite)
+			flags |= LFS_O_EXCL;
+
+		if ((res = lfs_file_open(&lfs, &f_out, dstname, flags)) != LFS_ERR_OK) {
+			log_msg(LOG_ERR, "Cannot create destination file \"%s\": %d", srcname, res);
+			lfs_file_close(&lfs, &f_out);
+			ret = -3;
+		}
+	}
+
+	/* Copy file...*/
+	if (ret == 0) {
+		int32_t bytes_read, wrote;
+
+		do {
+			if ((bytes_read = lfs_file_read(&lfs, &f_in, buf, buf_size)) < 0) {
+				log_msg(LOG_ERR, "Failed to read input file: %d", bytes_read);
+				ret = -4;
+				break;
+			}
+			if (bytes_read > 0) {
+				wrote = lfs_file_write(&lfs, &f_out, buf, bytes_read);
+				if (wrote < bytes_read) {
+					log_msg(LOG_ERR, "Failed to write to target file: %d", wrote);
+					ret = -5;
+					break;
+				}
+				bytes_written += wrote;
+			}
+		} while (bytes_read > 0);
+
+		lfs_file_close(&lfs, &f_in);
+		lfs_file_close(&lfs, &f_out);
+
+		if (ret == 0 && bytes_written < file_size) {
+			log_msg(LOG_ERR, "Failed to copy entire file.");
+			ret = -6;
+		} else {
+			log_msg(LOG_INFO, "Copied \"%s\" --> \"%s\" (%lu bytes)",
+				srcname, dstname, bytes_written);
+		}
+	}
+
+	if (buf)
+		free(buf);
 	lfs_unmount(&lfs);
 
 	return ret;
