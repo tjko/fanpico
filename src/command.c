@@ -876,7 +876,8 @@ int cmd_fan_pwm_map(const char *cmd, const char *args, int query, struct prev_cm
 		}
 		printf("\n");
 	} else {
-		arg = strdup(args);
+		if (!(arg = strdup(args)))
+			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
 		while (t) {
@@ -922,7 +923,8 @@ int cmd_fan_filter(const char *cmd, const char *args, int query, struct prev_cmd
 			printf(",\n");
 		}
 	} else {
-		param = strdup(args);
+		if (!(param = strdup(args)))
+			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
 			tok += strlen(tok) + 1;
@@ -985,7 +987,8 @@ int cmd_fan_rpm_mode(const char *cmd, const char *args, int query, struct prev_c
 			printf(",%d,%d", f->lra_low, f->lra_high);
 		printf("\n");
 	} else {
-		param = strdup(args);
+		if (!(param = strdup(args)))
+			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			val = str2rpm_mode(tok);
 			if (val != f->rpm_mode) {
@@ -1032,7 +1035,8 @@ int cmd_fan_source(const char *cmd, const char *args, int query, struct prev_cmd
 			pwm_source2str(conf->fans[fan].s_type),
 			val);
 	} else {
-		param = strdup(args);
+		if (!(param = strdup(args)))
+			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			type = str2pwm_source(tok);
 			d_n = (type != PWM_FIXED ? 1 : 0);
@@ -1337,7 +1341,8 @@ int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, struct prev_
 		}
 		printf("\n");
 	} else {
-		arg = strdup(args);
+		if (!(arg = strdup(args)))
+			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
 		while (t) {
@@ -1378,7 +1383,8 @@ int cmd_mbfan_rpm_mode(const char *cmd, const char *args, int query, struct prev
 			printf(",%d,%s", m->lra_treshold, (m->lra_invert ? "HIGH" : "LOW"));
 		printf("\n");
 	} else {
-		param = strdup(args);
+		if (!(param = strdup(args)))
+			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			val = str2rpm_mode(tok);
 			if (val != m->rpm_mode) {
@@ -1453,7 +1459,8 @@ int cmd_mbfan_source(const char *cmd, const char *args, int query, struct prev_c
 		}
 		printf("\n");
 	} else {
-		param = strdup(args);
+		if (!(param = strdup(args)))
+			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			type = str2tacho_source(tok);
 			d_n = (type != TACHO_FIXED ? 1 : 0);
@@ -1610,7 +1617,8 @@ int cmd_mbfan_filter(const char *cmd, const char *args, int query, struct prev_c
 			printf(",\n");
 		}
 	} else {
-		param = strdup(args);
+		if (!(param = strdup(args)))
+			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
 			tok += strlen(tok) + 1;
@@ -1815,7 +1823,8 @@ int cmd_sensor_temp_map(const char *cmd, const char *args, int query, struct pre
 		}
 		printf("\n");
 	} else {
-		arg = strdup(args);
+		if (!(arg = strdup(args)))
+			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
 		while (t) {
@@ -1885,7 +1894,8 @@ int cmd_sensor_filter(const char *cmd, const char *args, int query, struct prev_
 			printf(",\n");
 		}
 	} else {
-		param = strdup(args);
+		if (!(param = strdup(args)))
+			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
 			tok += strlen(tok) + 1;
@@ -2067,7 +2077,8 @@ int cmd_vsensor_temp_map(const char *cmd, const char *args, int query, struct pr
 		}
 		printf("\n");
 	} else {
-		arg = strdup(args);
+		if (!(arg = strdup(args)))
+			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
 		while (t) {
@@ -2175,7 +2186,8 @@ int cmd_vsensor_filter(const char *cmd, const char *args, int query, struct prev
 			printf(",\n");
 		}
 	} else {
-		param = strdup(args);
+		if (!(param = strdup(args)))
+			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
 			tok += strlen(tok) + 1;
