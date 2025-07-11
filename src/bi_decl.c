@@ -1,5 +1,5 @@
 /* bi_decl.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -24,12 +24,33 @@
 
 #include "fanpico.h"
 
+#define BI_TAG           0xf720
+#define BOOT_SETTINGS    0x0001
 
-void set_binary_info()
+
+void set_binary_info(struct fanpico_fw_settings *settings)
 {
 	bi_decl(bi_program_description("FanPico-" FANPICO_MODEL " - Smart PWM Fan Controller"));
-	bi_decl(bi_program_version_string(FANPICO_VERSION " ("__DATE__")"));
-	bi_decl(bi_program_url("https://github.com/tjko/fanpico/"));
+	bi_decl(bi_program_version_string(FANPICO_VERSION FANPICO_BUILD_TAG));
+	bi_decl(bi_program_build_date_string("__DATE__"));
+	bi_decl(bi_program_url("https://kokkonen.net/fanpico/"));
+
+	bi_decl(bi_program_feature_group(BI_TAG, BOOT_SETTINGS, "boot settings"));
+	bi_decl(bi_ptr_int32(BI_TAG, BOOT_SETTINGS, safemode, 0));
+	bi_decl(bi_ptr_int32(BI_TAG, BOOT_SETTINGS, bootdelay, 0));
+	settings->safemode = safemode;
+	settings->bootdelay = bootdelay;
+
+        bi_decl(bi_block_device(
+			BI_TAG,
+			"littlefs",
+			XIP_BASE + FANPICO_FS_OFFSET,
+			FANPICO_FS_SIZE,
+			NULL,
+			BINARY_INFO_BLOCK_DEV_FLAG_READ
+			| BINARY_INFO_BLOCK_DEV_FLAG_WRITE
+			| BINARY_INFO_BLOCK_DEV_FLAG_PT_NONE));
+
 
 #if LED_PIN >= 0
 	bi_decl(bi_1pin_with_name(LED_PIN, "On-board LED (output)"));

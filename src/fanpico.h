@@ -86,6 +86,9 @@
 #define SPI_DEFAULT_SPEED  30000000L /* Default SPI bus frequency 30MHz */
 #endif
 
+#define FANPICO_FS_SIZE  (256*1024)
+#define FANPICO_FS_OFFSET  (PICO_FLASH_SIZE_BYTES - FANPICO_FS_SIZE)
+
 
 enum pwm_source_types {
 	PWM_FIXED   = 0,     /* Fixed speed set by s_id */
@@ -320,6 +323,11 @@ struct fanpico_config {
 	void *i2c_context[VSENSOR_MAX_COUNT];
 };
 
+/* Firmware settings that can be modified with picotool */
+struct fanpico_fw_settings {
+	bool safemode;         /* Safe mode disables loading saved configuration during boot. */
+	int  bootdelay;        /* Delay (seconds) after initializing USB console during boot. */
+};
 
 #if WIFI_SUPPORT
 struct fanpico_network_state {
@@ -404,7 +412,7 @@ void update_persistent_memory();
 void update_persistent_memory_tz(const char *tz);
 
 /* bi_decl.c */
-void set_binary_info();
+void set_binary_info(struct fanpico_fw_settings *settings);
 
 /* command.c */
 void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command);
@@ -428,7 +436,7 @@ int valid_tacho_source_ref(enum tacho_source_types source, uint16_t s_id);
 int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk);
 const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len);
 #endif
-void read_config();
+void read_config(bool use_default_config);
 void save_config();
 void delete_config();
 void print_config();

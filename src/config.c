@@ -1588,7 +1588,7 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 }
 
 
-void read_config()
+void read_config(bool use_default_config)
 {
 	const char *default_config = fanpico_default_config;
 	uint32_t default_config_size = strlen(default_config);
@@ -1598,18 +1598,20 @@ void read_config()
 	char  *buf = NULL;
 
 
-	log_msg(LOG_INFO, "Reading configuration...");
+	if (!use_default_config) {
+		log_msg(LOG_INFO, "Reading configuration...");
 
-	res = flash_read_file(&buf, &file_size, "fanpico.cfg");
-	if (res == 0 && buf != NULL) {
-		/* parse saved config... */
-		config = cJSON_Parse(buf);
-		if (!config) {
-			const char *error_str = cJSON_GetErrorPtr();
-			log_msg(LOG_ERR, "Failed to parse saved config: %s",
-				(error_str ? error_str : "") );
+		res = flash_read_file(&buf, &file_size, "fanpico.cfg");
+		if (res == 0 && buf != NULL) {
+			/* parse saved config... */
+			config = cJSON_Parse(buf);
+			if (!config) {
+				const char *error_str = cJSON_GetErrorPtr();
+				log_msg(LOG_ERR, "Failed to parse saved config: %s",
+					(error_str ? error_str : "") );
+			}
+			free(buf);
 		}
-		free(buf);
 	}
 
 	if (!config) {
@@ -1630,6 +1632,11 @@ void read_config()
 	clear_config(&fanpico_config);
 	if (json_to_config(config, &fanpico_config) < 0) {
 		log_msg(LOG_ERR, "Error parsing JSON configuration");
+	}
+	if (use_default_config) {
+		/* Enable more verbose logging if in "safe-mode" ... */
+		set_log_level(LOG_INFO);
+		fanpico_config.local_echo = true;
 	}
 	mutex_exit(config_mutex);
 
