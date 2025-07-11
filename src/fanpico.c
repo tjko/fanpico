@@ -47,6 +47,8 @@ static struct fanpico_config core1_config;
 static struct fanpico_state transfer_state;
 static struct fanpico_state system_state;
 const struct fanpico_state *fanpico_state = &system_state;
+static struct fanpico_fw_settings system_settings;
+const struct fanpico_fw_settings *firmware_settings = &system_settings;
 
 #ifdef WIFI_SUPPORT
 static struct fanpico_network_state network_state;
@@ -166,8 +168,11 @@ static void setup()
 		sleep_ms(50);
 	}
 
+	if (firmware_settings->bootdelay > 0)
+		sleep_ms(firmware_settings->bootdelay * 1000);
+
 	lfs_setup(false);
-	read_config();
+	read_config(firmware_settings->safemode);
 
 #if TTL_SERIAL
 	/* Initialize serial console if configured... */
@@ -181,7 +186,7 @@ static void setup()
 	boot_reason();
 #endif
 	if (watchdog_enable_caused_reboot()) {
-		printf("[Rebooted by watchdog]\n");
+		printf("\n[Rebooted by watchdog]\n");
 		rebooted_by_watchdog = true;
 	}
 	printf("\n");
@@ -197,6 +202,8 @@ static void setup()
 
 	init_persistent_memory();
 	printf("\n");
+	if (firmware_settings->safemode)
+		printf("*** Booting into Safe Mode ***\n\n");
 
 	log_msg(LOG_NOTICE, "System starting...");
 	if (m->prev_uptime) {
@@ -493,11 +500,9 @@ int main()
 	int i_ptr = 0;
 	int i2c_temp_delay =  1000;
 
-
-	set_binary_info();
+	set_binary_info(&system_settings);
 	clear_state(&system_state);
 	clear_state(&transfer_state);
-
 #ifdef WIFI_SUPPORT
 	memset(&network_state, 0, sizeof(network_state));
 #endif
