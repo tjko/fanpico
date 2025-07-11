@@ -1,5 +1,5 @@
 
-# Fanpico: Smart PWM (PC) Fan Controller
+# Fanpico: Programmable PWM (PC) Fan Controller
 
 [![CI](https://github.com/tjko/fanpico/actions/workflows/cmake.yml/badge.svg)](https://github.com/tjko/fanpico/actions/workflows/cmake.yml)
 [![CodeQL](https://github.com/tjko/fanpico/actions/workflows/codeql.yml/badge.svg)](https://github.com/tjko/fanpico/actions/workflows/codeql.yml)
@@ -36,6 +36,7 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * SCPI "like" programming interface (see [Command Reference](commands.md))
 * Monitor each fan and motherboard output signals as well as temperatures.
 * [WiFi support](https://github.com/tjko/fanpico/wiki/FanPico-Web-Interface) if opting to mount Pico W on the board. This turns fanpico into small "IoT" device with basic web interface.
+* [HTTP server](https://github.com/tjko/fanpico/wiki/Fanpico-HTTP-Server) with TLS (HTTPS) support.
 * [MQTT client](https://github.com/tjko/fanpico/wiki/FanPico-MQTT-Tutorial) with TLS support for logging data and to receive commands.
 * [Home Assistant](https://github.com/tjko/fanpico/wiki/FanPico-Home-Assistant-(MQTT-Discovery)-Support) support using MQTT Discovery feature.
 * Telnet server for configuration and monitoring.
@@ -256,48 +257,55 @@ fanpico.uf2
 If you have picotool installed you can check the firmware image information:
 ```
 $ picotool info -a fanpico.uf2
-File fanpico.uf2:
+File fanpico.uf2 family ID 'rp2040':
 
 Program Information
- name:          fanpico
- version:       1.4.0 (Mar 24 2023)
- web site:      https://github.com/tjko/fanpico/
- description:   FanPico-0804D - Smart PWM Fan Controller
- features:      USB stdin / stdout
- binary start:  0x10000000
- binary end:    0x10093648
+ name:              fanpico
+ version:           1.7.6
+ web site:          https://kokkonen.net/fanpico/
+ description:       FanPico-0804D - Smart PWM Fan Controller
+ features:          USB stdin / stdout
+ boot settings:     bootdelay = 0
+                    safemode = 0
+ binary start:      0x10000000
+ binary end:        0x1012edc0
+ embedded drive:    0x101c0000-0x10200000 (256K): littlefs
 
 Fixed Pin Information
- 0:   TX (Serial) / MISO (SPI)
- 1:   RX (Serial) / CS (SPI)
- 2:   SDA (I2C) / SCK (SPI)
- 3:   SCL (I2C) / MOSI (SPI)
- 4:   Fan1 PWM signal (output)
- 5:   Fan2 PWM signal (output)
- 6:   Fan3 PWM signal (output)
- 7:   Fan4 PWM signal (output)
- 8:   Fan5 PWM signal (output)
- 9:   Fan6 PWM signal (output)
- 10:  Fan7 PWM signal (output)
- 11:  Fan8 PWM signal (output)
- 12:  MB Fan1 tacho signal (output)
- 13:  MB Fan1 PWM signal (input)
- 14:  MB Fan2 tacho signal (output)
- 15:  MB Fan2 PWM signal (input)
- 16:  MB Fan3 tacho signal (output)
- 17:  MB Fan3 PWM signal (input)
- 18:  MB Fan4 tacho signal (output)
- 19:  MB Fan4 PWM signal (input)
- 20:  Multiplexer S2 (output)
- 21:  Multiplexer S1 (output)
- 22:  Multiplexer S0 (output)
- 26:  Multiplexer A [tacho signal] (input)
- 27:  Temperature Sensor1 (input)
- 28:  Temperature Sensor2 (input)
+ 0:                 TX (Serial) / MISO (SPI)
+ 1:                 RX (Serial) / CS (SPI)
+ 2:                 SDA (I2C) / SCK (SPI)
+ 3:                 SCL (I2C) / MOSI (SPI)
+ 4:                 Fan1 PWM signal (output)
+ 5:                 Fan2 PWM signal (output)
+ 6:                 Fan3 PWM signal (output)
+ 7:                 Fan4 PWM signal (output)
+ 8:                 Fan5 PWM signal (output)
+ 9:                 Fan6 PWM signal (output)
+ 10:                Fan7 PWM signal (output)
+ 11:                Fan8 PWM signal (output)
+ 12:                MB Fan1 tacho signal (output)
+ 13:                MB Fan1 PWM signal (input)
+ 14:                MB Fan2 tacho signal (output)
+ 15:                MB Fan2 PWM signal (input)
+ 16:                MB Fan3 tacho signal (output)
+ 17:                MB Fan3 PWM signal (input)
+ 18:                MB Fan4 tacho signal (output)
+ 19:                MB Fan4 PWM signal (input)
+ 20:                Multiplexer S2 (output)
+ 21:                Multiplexer S1 (output)
+ 22:                Multiplexer S0 (output)
+ 26:                Multiplexer A [tacho signal] (input)
+ 27:                Temperature Sensor1 (input)
+ 28:                Temperature Sensor2 (input)
 
 Build Information
- sdk version:       1.5.0
+ sdk version:       2.1.1
  pico_board:        pico_w
- build date:        Mar 24 2023
+ boot2_name:        boot2_w25q080
+ build date:        Jul 10 2025
  build attributes:  Release
+
+Metadata Blocks
+ none
 ```
