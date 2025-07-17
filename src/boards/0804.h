@@ -63,7 +63,7 @@
 
 #define SENSOR1_READ_ADC  1  /* ADC1 / GPIO27 */
 #define SENSOR2_READ_ADC  2  /* ADC2 / GPIO28 */
-#define SENSOR3_READ_ADC  4  /* ADC4 / Internal Temperature sensor */
+#define SENSOR3_READ_ADC  ADC_TEMPERATURE_CHANNEL_NUM  /* Internal Temperature sensor */
 
 
 /* Interface Pins */
