@@ -416,6 +416,7 @@ void set_binary_info(struct fanpico_fw_settings *settings);
 
 /* command.c */
 void process_command(const struct fanpico_state *state, struct fanpico_config *config, char *command);
+int cmd_board(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
 int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
 int last_command_status();
 
@@ -626,12 +627,13 @@ int str_to_bitmask(const char *str, uint16_t len, uint32_t *mask, uint8_t base);
 /* util_rp2040.c */
 uint32_t get_stack_pointer();
 uint32_t get_stack_free();
-void print_rp2040_meminfo();
+void print_rp2_meminfo();
+uint32_t rp2_mem_size();
 void print_irqinfo();
 #if PICO_SDK_VERSION_MAJOR < 2
 void watchdog_disable();
 #endif
-const char *rp2040_model_str();
+const char *rp2_model_str();
 const char *pico_serial_str();
 int time_passed(absolute_time_t *t, uint32_t ms);
 int time_elapsed(absolute_time_t t, uint32_t ms);

@@ -61,7 +61,7 @@ inline uint32_t get_stack_free()
 	return (sp > end ? sp - end : 0);
 }
 
-void print_rp2040_meminfo()
+void print_rp2_meminfo()
 {
 	printf("Core0 stack size:                      %d\n",
 		&__StackTop - &__StackBottom);
@@ -71,6 +71,11 @@ void print_rp2040_meminfo()
 		&__StackLimit - &__end__);
 	printf("Core%d stack free:                      %lu\n",
 		get_core_num(), get_stack_free());
+}
+
+uint32_t rp2_mem_size()
+{
+	return (uint32_t) &__StackTop - 0x20000000;
 }
 
 #if PICO_SDK_VERSION_MAJOR < 2
@@ -93,7 +98,7 @@ void print_irqinfo()
 }
 
 
-const char *rp2040_model_str()
+const char *rp2_model_str()
 {
 	static char buf[32];
 	uint8_t version = 0;
@@ -103,7 +108,11 @@ const char *rp2040_model_str()
 	char r;
 
 #if PICO_RP2350
-	model = "2350";
+#if PICO_RP2350A
+	model = "2350A";
+#else
+	model = "2350B";
+#endif
 	r = 'A';
 	chip_version = rp2350_chip_version();
 	if (chip_version <= 2)

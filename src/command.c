@@ -32,6 +32,7 @@
 #include "pico/util/datetime.h"
 #include "pico/aon_timer.h"
 #include "pico/rand.h"
+#include "hardware/clocks.h"
 #include "hardware/watchdog.h"
 #include "cJSON.h"
 #include "pico_sensor_lib.h"
@@ -414,6 +415,23 @@ int cmd_usb_boot(const char *cmd, const char *args, int query, struct prev_cmd_t
 
 	reset_usb_boot(0, 0);
 	return 0; /* should never get this far... */
+}
+
+int cmd_board(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (cmd && !query)
+		return 1;
+
+	printf("Hardware Model: FANPICO-%s\n", FANPICO_MODEL);
+	printf("         Board: %s\n", PICO_BOARD);
+	printf("           MCU: %s @ %0.0fMHz\n",
+		rp2_model_str(),
+		clock_get_hz(clk_sys) / 1000000.0);
+	printf("           RAM: %lu KB\n", rp2_mem_size() >> 10);
+	printf("         Flash: %lu KB\n", (uint32_t)PICO_FLASH_SIZE_BYTES >> 10);
+	printf(" Serial Number: %s\n", pico_serial_str());
+
+	return 0;
 }
 
 int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -3207,7 +3225,7 @@ int cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *
 	int blocksize;
 
 	if (query) {
-		print_rp2040_meminfo();
+		print_rp2_meminfo();
 		printf("mallinfo:\n");
 		print_mallinfo();
 		return 0;
@@ -3499,6 +3517,7 @@ const struct cmd_t onewire_commands[] = {
 };
 
 const struct cmd_t system_commands[] = {
+	{ "BOARD",     5, NULL,              cmd_board },
 	{ "DEBUG",     5, NULL,              cmd_debug }, /* Obsolete ? */
 	{ "DISPlay",   4, display_commands,  cmd_display_type },
 	{ "ECHO",      4, NULL,              cmd_echo },
