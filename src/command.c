@@ -427,7 +427,7 @@ int cmd_board(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 	printf("           MCU: %s @ %0.0fMHz\n",
 		rp2_model_str(),
 		clock_get_hz(clk_sys) / 1000000.0);
-	printf("           RAM: %lu KB\n", rp2_mem_size() >> 10);
+	printf("           RAM: %lu KB\n", ((uint32_t)SRAM_END - SRAM_BASE) >> 10);
 	printf("         Flash: %lu KB\n", (uint32_t)PICO_FLASH_SIZE_BYTES >> 10);
 	printf(" Serial Number: %s\n", pico_serial_str());
 

@@ -73,11 +73,6 @@ void print_rp2_meminfo()
 		get_core_num(), get_stack_free());
 }
 
-uint32_t rp2_mem_size()
-{
-	return (uint32_t) &__StackTop - 0x20000000;
-}
-
 #if PICO_SDK_VERSION_MAJOR < 2
 void watchdog_disable()
 {

@@ -624,11 +624,10 @@ void* memmem(const void *haystack, size_t haystacklen, const void *needle, size_
 char *bitmask_to_str(uint32_t mask, uint16_t len, uint8_t base, bool range);
 int str_to_bitmask(const char *str, uint16_t len, uint32_t *mask, uint8_t base);
 
-/* util_rp2040.c */
+/* util_rp2.c */
 uint32_t get_stack_pointer();
 uint32_t get_stack_free();
 void print_rp2_meminfo();
-uint32_t rp2_mem_size();
 void print_irqinfo();
 #if PICO_SDK_VERSION_MAJOR < 2
 void watchdog_disable();
