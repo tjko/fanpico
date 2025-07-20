@@ -137,7 +137,6 @@ void wifi_rejoin()
 	int res;
 	uint32_t wifi_auth_mode;
 
-	log_msg(LOG_NOTICE, "wifi_rejoin()");
 
 	if (!wifi_initialized)
 		return;
