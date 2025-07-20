@@ -179,7 +179,7 @@ static bool wifi_check_status()
 		net_state->wifi_status_change = get_absolute_time();
 	} else {
 		/* Check if should try rejoining to the network... */
-		if (net_state->wifi_status < 0 && net_state->wifi_status != FANPICO_WIFI_INACTIVE) {
+		if (net_state->wifi_status <= 0 && net_state->wifi_status != FANPICO_WIFI_INACTIVE) {
 			if (time_elapsed(net_state->wifi_status_change, WIFI_REJOIN_DELAY)) {
 				return true;
 			}
