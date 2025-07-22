@@ -173,12 +173,12 @@ static bool wifi_check_status()
 	int status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
 
 	if (status != net_state->wifi_status) {
-		log_msg(LOG_INFO, "WiFi Status: %s ", wifi_link_status_text(status));
+		log_msg(LOG_NOTICE, "WiFi Status: %s ", wifi_link_status_text(status));
 		net_state->wifi_status = status;
 		net_state->wifi_status_change = get_absolute_time();
 	} else {
 		/* Check if should try rejoining to the network... */
-		if (net_state->wifi_status < 0 && net_state->wifi_status != FANPICO_WIFI_INACTIVE) {
+		if (net_state->wifi_status <= 0 && net_state->wifi_status != FANPICO_WIFI_INACTIVE) {
 			if (time_elapsed(net_state->wifi_status_change, WIFI_REJOIN_DELAY)) {
 				return true;
 			}
@@ -301,7 +301,7 @@ static void wifi_init()
 			const ip_addr_t *ip = &cfg->dns_servers[i];
 
 			if (!ip_addr_isany(ip)) {
-				log_msg(LOG_INFO, "Set DNS server (%d): %s", i + 1,
+				log_msg(LOG_NOTICE, "Set DNS server (%d): %s", i + 1,
 					ipaddr_ntoa(ip));
 				dns_setserver(i, ip);
 			}
@@ -318,7 +318,7 @@ static void wifi_init()
 	}
 	log_msg(LOG_NOTICE, "WiFi MAC: %s", mac_address_str(net_state->mac));
 	wifi_get_auth_type(cfg->wifi_auth_mode, &wifi_auth_mode);
-	log_msg(LOG_INFO, "WiFi Authentication mode: %s",
+	log_msg(LOG_NOTICE, "WiFi Authentication mode: %s",
 		wifi_auth_type_name(wifi_auth_mode));
 
 	/* Attempt to connect to a WiFi network... */
@@ -342,7 +342,7 @@ static void wifi_init()
 				res = cyw43_arch_wifi_connect_timeout_ms(cfg->wifi_ssid,
 									cfg->wifi_passwd,
 									wifi_auth_mode,	10000);
-				log_msg(LOG_INFO, "cyw43_arch_wifi_connect_timeout_ms(): %d", res);
+				log_msg(LOG_NOTICE, "cyw43_arch_wifi_connect_timeout_ms(): %d", res);
 			} while (res != 0 && --retries > 0);
 		}
 		if (res != 0) {

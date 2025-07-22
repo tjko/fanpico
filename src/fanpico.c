@@ -40,6 +40,7 @@
 #include "hardware/vreg.h"
 
 #include "fanpico.h"
+#include "command_util.h"
 
 
 static struct fanpico_state core1_state;
@@ -191,14 +192,11 @@ static void setup()
 	}
 	printf("\n");
 
-	/* Run "SYStem:VERsion" command... */
+	/* Run "SYStem:VERsion?" command... */
 	cmd_version(NULL, NULL, 0, NULL);
-	printf("Hardware Model: FANPICO-%s\n", FANPICO_MODEL);
-	printf("         Board: %s\n", PICO_BOARD);
-	printf("           MCU: %s @ %0.0fMHz\n",
-		rp2040_model_str(),
-		clock_get_hz(clk_sys) / 1000000.0);
-	printf(" Serial Number: %s\n\n", pico_serial_str());
+	/* Run "SYStem:BOARD?" command... */
+	cmd_board(NULL, NULL, 0, NULL);
+	printf("\n");
 
 	init_persistent_memory();
 	printf("\n");

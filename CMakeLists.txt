@@ -118,6 +118,7 @@ add_executable(fanpico
   src/fanpico.c
   src/bi_decl.c
   src/command.c
+  src/command_util.c
   src/flash.c
   src/config.c
   src/display.c
@@ -136,7 +137,7 @@ add_executable(fanpico
   src/square_wave_gen.c
   src/pulse_len.c
   src/util.c
-  src/util_rp2040.c
+  src/util_rp2.c
   src/log.c
   src/crc32.c
   src/default_config.S
