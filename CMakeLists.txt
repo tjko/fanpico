@@ -118,6 +118,7 @@ add_executable(fanpico
   src/fanpico.c
   src/bi_decl.c
   src/command.c
+  src/command_util.c
   src/flash.c
   src/config.c
   src/display.c

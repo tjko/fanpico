@@ -40,6 +40,7 @@
 #include "hardware/vreg.h"
 
 #include "fanpico.h"
+#include "command_util.h"
 
 
 static struct fanpico_state core1_state;

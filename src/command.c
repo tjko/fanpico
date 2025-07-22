@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <time.h>
 #include <string.h>
 #include <ctype.h>
@@ -35,16 +36,15 @@
 #include "hardware/clocks.h"
 #include "hardware/watchdog.h"
 #include "cJSON.h"
-#include "pico_sensor_lib.h"
 #include "fanpico.h"
+#include "command_util.h"
+#include "pico_sensor_lib.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
 #include "lwip/stats.h"
 #include "pico_telnetd/util.h"
 #endif
 
-
-typedef int (*validate_str_func_t)(const char *args);
 
 struct error_t {
 	const char    *error;
@@ -68,286 +68,6 @@ struct fanpico_config *conf = NULL;
 /* credits.s */
 extern const char fanpico_credits_text[];
 
-
-
-/**
- * Extract (unsigned) number from end of command string.
- *
- * If string is "MBFAN3" return value is 3.
- *
- * @param cmd command string
- *
- * @return number extracted from string (negative values indicates error)
- */
-static int get_cmd_index(const char *cmd)
-{
-	const char *s;
-	uint len;
-	int idx;
-
-	if (!cmd)
-		return -1;
-
-	s = cmd;
-	len = strnlen(cmd, 256);
-	if (len < 1 || len >= 256)
-		return -2;
-
-	/* Skip any spaces and letters at the beginning of the string... */
-	while (len > 1) {
-		if (isalpha((int)*s) || isblank((int)*s)) {
-			s++;
-			len--;
-		} else {
-			break;
-		}
-	}
-
-	if (!str_to_int(s, &idx, 10))
-		return -3;
-
-	return idx;
-}
-
-
-/**
- * Return earlier (sub)command string
- *
- * If full command was "CONF:FAN2:HYST:PWM". Depth 0 returns "HYST"
- * and depth 1 returns "FAN2".
- *
- * @param prev_cmd Structure storing previous sub commands
- * @param depth Which command to return (0=last, 1=2nd to last, ...)
- *
- * @return (sub)command string
- */
-static const char* get_prev_cmd(const struct prev_cmd_t *prev_cmd, uint depth)
-{
-	char *cmd;
-
-	if (!prev_cmd)
-		cmd = NULL;
-	else if (depth >= prev_cmd->depth)
-		cmd = NULL;
-	else
-		cmd = prev_cmd->cmds[prev_cmd->depth - depth - 1];
-
-	return (cmd ? cmd : "");
-}
-
-
-/**
- * Return number from end of an earlier (sub)command
- *
- * If full command was "CONF:FAN3:NAME?", then depth 0 returns "FAN3"
- * and depth 1 returns "CONF".
- *
- * @param prev_cmd Structure storing previous sub commands
- * @param depth Which command to return (0=last, 1=2nd to last, ...)
- *
- * @return number extracted from specified subcommand (negative value indicates error)
- */
-static int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
-{
-	int idx;
-
-	if (!prev_cmd)
-		return -1;
-	if (depth >= prev_cmd->depth)
-		return -2;
-
-	idx = get_cmd_index(prev_cmd->cmds[prev_cmd->depth - depth - 1]);
-
-	return idx;
-}
-
-
-/* Helper functions for commands */
-
-static int string_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
-		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
-{
-	if (query) {
-		printf("%s\n", var);
-	} else {
-		if (validate_func) {
-			if (!validate_func(args)) {
-				log_msg(LOG_WARNING, "%s invalid argument: '%s'", name, args);
-				return 2;
-			}
-		}
-		if (strcmp(var, args)) {
-			log_msg(LOG_NOTICE, "%s change '%s' --> '%s'", name, var, args);
-			strncopy(var, args, var_len);
-		}
-	}
-	return 0;
-}
-
-static int bitmask16_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
-		uint16_t *mask, uint16_t len, uint8_t base, const char *name)
-{
-	uint32_t old = *mask;
-	uint32_t new;
-
-	if (query) {
-		printf("%s\n", bitmask_to_str(old, len, base, true));
-		return 0;
-	}
-
-	if (!str_to_bitmask(args, len, &new, base)) {
-		if (old != new) {
-			log_msg(LOG_NOTICE, "%s change 0x%lx --> 0x%lx", name, old, new);
-			*mask = new;
-		}
-		return 0;
-	}
-	return 1;
-}
-
-static int uint32_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
-		uint32_t *var, uint32_t min_val, uint32_t max_val, const char *name)
-{
-	uint32_t val;
-	int v;
-
-	if (query) {
-		printf("%lu\n", *var);
-		return 0;
-	}
-
-	if (str_to_int(args, &v, 10)) {
-		val = v;
-		if (val >= min_val && val <= max_val) {
-			if (*var != val) {
-				log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
-				*var = val;
-			}
-		} else {
-			log_msg(LOG_WARNING, "Invalid %s value: %s", name, args);
-			return 2;
-		}
-		return 0;
-	}
-	return 1;
-}
-
-static int uint8_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
-		uint8_t *var, uint8_t min_val, uint8_t max_val, const char *name)
-{
-	uint8_t val;
-	int v;
-
-	if (query) {
-		printf("%u\n", *var);
-		return 0;
-	}
-
-	if (str_to_int(args, &v, 10)) {
-		val = v;
-		if (val >= min_val && val <= max_val) {
-			if (*var != val) {
-				log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
-				*var = val;
-			}
-		} else {
-			log_msg(LOG_WARNING, "Invalid %s value: %s", name, args);
-			return 2;
-		}
-		return 0;
-	}
-	return 1;
-}
-
-static int bool_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
-		bool *var, const char *name)
-{
-	bool val;
-
-	if (query) {
-		printf("%s\n", (*var ? "ON" : "OFF"));
-		return 0;
-	}
-
-	if ((args[0] == '1' && args[1] == 0) || !strncasecmp(args, "true", 5)
-		|| !strncasecmp(args, "on", 3)) {
-		val = true;
-	}
-	else if ((args[0] == '0' && args[1] == 0) || !strncasecmp(args, "false", 6)
-		|| !strncasecmp(args, "off", 4)) {
-		val =  false;
-	} else {
-		log_msg(LOG_WARNING, "Invalid %s value: %s", name, args);
-		return 2;
-	}
-
-	if (*var != val) {
-		log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
-		*var = val;
-	}
-	return 0;
-}
-
-#ifdef WIFI_SUPPORT
-static int ip_change(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd, const char *name, ip_addr_t *ip)
-{
-	ip_addr_t tmpip;
-
-	if (query) {
-		printf("%s\n", ipaddr_ntoa(ip));
-	} else {
-		if (!ipaddr_aton(args, &tmpip))
-			return 2;
-		log_msg(LOG_NOTICE, "%s change '%s' --> %s'", name, ipaddr_ntoa(ip), args);
-		ip_addr_copy(*ip, tmpip);
-	}
-	return 0;
-}
-
-static int ip_list_change(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd, const char *name, ip_addr_t *ip, uint32_t list_len)
-{
-	ip_addr_t tmpip;
-	char buf[255], tmp[20];
-	char *t, *arg, *saveptr;
-	int idx = 0;
-
-
-	if (query) {
-		for (int i = 0; i < list_len; i++) {
-			if (i > 0)
-				printf(", ");
-			printf("%s", ipaddr_ntoa(&ip[i]));
-		}
-		printf("\n");
-	} else {
-		if (!(arg = strdup(args)))
-			return 2;
-		t = strtok_r(arg, ",", &saveptr);
-		while (t && idx < list_len) {
-			if (ipaddr_aton(t, &tmpip)) {
-				ip_addr_copy(ip[idx], tmpip);
-				idx++;
-			}
-
-			t = strtok_r(NULL, ",", &saveptr);
-		}
-		free(arg);
-		if (idx == 0)
-			return 1;
-
-		buf[0] = 0;
-		for (int i = 0; i < list_len; i++) {
-			if (i >= idx)
-				ip_addr_set_zero(&ip[i]);
-			snprintf(tmp, sizeof(tmp), "%s%s",
-				(i > 0 ? ", " : ""), ipaddr_ntoa(&ip[i]));
-			strncatenate(buf, tmp, sizeof(buf));
-		}
-		log_msg(LOG_NOTICE, "%s changed to '%s'", name, buf);
-	}
-	return 0;
-}
-#endif
 
 
 /* Command functions */
@@ -782,93 +502,31 @@ int cmd_vsensors_read(const char *cmd, const char *args, int query, struct prev_
 
 int cmd_fan_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan;
-
-	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (fan >= 0 && fan < FAN_COUNT) {
-		if (query) {
-			printf("%s\n", conf->fans[fan].name);
-		} else {
-			log_msg(LOG_NOTICE, "fan%d: change name '%s' --> '%s'", fan + 1,
-				conf->fans[fan].name, args);
-			strncopy(conf->fans[fan].name, args, sizeof(conf->fans[fan].name));
-		}
-		return 0;
-	}
-	return 1;
+	return array_string_setting(cmd, args, query, prev_cmd,	0, conf->fans, FAN_COUNT,
+				sizeof(conf->fans[0]),
+				offsetof(struct fan_output, name), sizeof(conf->fans[0].name),
+				"fan%d: Name", NULL);
 }
 
 int cmd_fan_min_pwm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan, val;
-
-	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (fan >= 0 && fan < FAN_COUNT) {
-		if (query) {
-			printf("%d\n", conf->fans[fan].min_pwm);
-		} else if (str_to_int(args, &val, 10)) {
-			if (val >= 0 && val <= 100) {
-				log_msg(LOG_NOTICE, "fan%d: change min PWM %d%% --> %d%%", fan + 1,
-					conf->fans[fan].min_pwm, val);
-				conf->fans[fan].min_pwm = val;
-			} else {
-				log_msg(LOG_WARNING, "fan%d: invalid new value for min PWM: %d", fan + 1,
-					val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_uint8_setting(cmd, args, query, prev_cmd, 0, conf->fans, FAN_COUNT,
+				sizeof(conf->fans[0]), offsetof(struct fan_output, min_pwm),
+				"fan%d: Min PWM", 0, 100);
 }
 
 int cmd_fan_max_pwm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan, val;
-
-	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (fan >= 0 && fan < FAN_COUNT) {
-		if (query) {
-			printf("%d\n", conf->fans[fan].max_pwm);
-		} else if (str_to_int(args, &val, 10)) {
-			if (val >= 0 && val <= 100) {
-				log_msg(LOG_NOTICE, "fan%d: change max PWM %d%% --> %d%%", fan + 1,
-					conf->fans[fan].max_pwm, val);
-				conf->fans[fan].max_pwm = val;
-			} else {
-				log_msg(LOG_WARNING, "fan%d: invalid new value for max PWM: %d", fan + 1,
-					val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_uint8_setting(cmd, args, query, prev_cmd, 0, conf->fans, FAN_COUNT,
+				sizeof(conf->fans[0]), offsetof(struct fan_output, max_pwm),
+				"fan%d: Max PWM", 0, 100);
 }
 
 int cmd_fan_pwm_coef(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan;
-	float val;
-
-	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (fan >= 0 && fan < FAN_COUNT) {
-		if (query) {
-			printf("%f\n", conf->fans[fan].pwm_coefficient);
-		} else if (str_to_float(args, &val)) {
-			if (val >= 0.0) {
-				log_msg(LOG_NOTICE, "fan%d: change PWM coefficient %f --> %f",
-					fan + 1, conf->fans[fan].pwm_coefficient, val);
-				conf->fans[fan].pwm_coefficient = val;
-			} else {
-				log_msg(LOG_WARNING, "fan%d: invalid new value for PWM coefficient: %f",
-					fan + 1, val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_float_setting(cmd, args, query, prev_cmd, 0, conf->fans, FAN_COUNT,
+				sizeof(conf->fans[0]), offsetof(struct fan_output, pwm_coefficient),
+				"fan%d: PWM Coefficient", 0.0, 1000.0);
 }
 
 int cmd_fan_pwm_map(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -964,27 +622,9 @@ int cmd_fan_filter(const char *cmd, const char *args, int query, struct prev_cmd
 
 int cmd_fan_rpm_factor(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan;
-	int val;
-
-	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (fan >= 0 && fan < FAN_COUNT) {
-		if (query) {
-			printf("%u\n", conf->fans[fan].rpm_factor);
-		} else if (str_to_int(args, &val, 10)) {
-			if (val >= 1 || val <= 8) {
-				log_msg(LOG_NOTICE, "fan%d: change RPM factor %u --> %d",
-					fan + 1, conf->fans[fan].rpm_factor, val);
-				conf->fans[fan].rpm_factor = val;
-			} else {
-				log_msg(LOG_WARNING, "fan%d: invalid new value for RPM factor: %d",
-					fan + 1, val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_uint8_setting(cmd, args, query, prev_cmd, 0, conf->fans, FAN_COUNT,
+				sizeof(conf->fans[0]), offsetof(struct fan_output, rpm_factor),
+				"fan%d: RPM factor", 1, 8);
 }
 
 int cmd_fan_rpm_mode(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -1086,52 +726,16 @@ int cmd_fan_source(const char *cmd, const char *args, int query, struct prev_cmd
 
 int cmd_fan_tacho_hys(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan;
-	float val;
-
-	fan = get_prev_cmd_index(prev_cmd, 1) - 1;
-	if (fan >= 0 && fan < FAN_COUNT) {
-		if (query) {
-			printf("%f\n", conf->fans[fan].tacho_hyst);
-		} else if (str_to_float(args, &val)) {
-			if (val >= 0.0) {
-				log_msg(LOG_NOTICE, "fan%d: change tachometer hysteresis %f --> %f",
-					fan + 1, conf->fans[fan].tacho_hyst, val);
-				conf->fans[fan].tacho_hyst = val;
-			} else {
-				log_msg(LOG_WARNING, "fan%d: invalid new value for hysteresis: %f",
-					fan + 1, val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_float_setting(cmd, args, query, prev_cmd, 1, conf->fans, FAN_COUNT,
+				sizeof(conf->fans[0]), offsetof(struct fan_output, tacho_hyst),
+				"fan%d: Tachometer Hysteresis", 0.0, 10000.0);
 }
 
 int cmd_fan_pwm_hys(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan;
-	float val;
-
-	fan = get_prev_cmd_index(prev_cmd, 1) - 1;
-	if (fan >= 0 && fan < FAN_COUNT) {
-		if (query) {
-			printf("%f\n", conf->fans[fan].pwm_hyst);
-		} else if (str_to_float(args, &val)) {
-			if (val >= 0.0) {
-				log_msg(LOG_NOTICE, "fan%d: change PWM hysteresis %f --> %f",
-					fan + 1, conf->fans[fan].pwm_hyst, val);
-				conf->fans[fan].pwm_hyst = val;
-			} else {
-				log_msg(LOG_WARNING, "fan%d: invalid new value for hysteresis: %f",
-					fan + 1, val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_float_setting(cmd, args, query, prev_cmd, 1, conf->fans, FAN_COUNT,
+				sizeof(conf->fans[0]), offsetof(struct fan_output, pwm_hyst),
+				"fan%d: PWM Hysteresis", 0.0, 10000.0);
 }
 
 int cmd_fan_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -1222,118 +826,38 @@ int cmd_fan_read(const char *cmd, const char *args, int query, struct prev_cmd_t
 
 int cmd_mbfan_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int mbfan;
-
-	mbfan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (mbfan >= 0 && mbfan < MBFAN_COUNT) {
-		if (query) {
-			printf("%s\n", conf->mbfans[mbfan].name);
-		} else {
-			log_msg(LOG_NOTICE, "mbfan%d: change name '%s' --> '%s'", mbfan + 1,
-				conf->mbfans[mbfan].name, args);
-			strncopy(conf->mbfans[mbfan].name, args, sizeof(conf->mbfans[mbfan].name));
-		}
-		return 0;
-	}
-	return 1;
+	return array_string_setting(cmd, args, query, prev_cmd, 0, conf->mbfans, MBFAN_COUNT,
+				sizeof(conf->mbfans[0]),
+				offsetof(struct mb_input, name), sizeof(conf->mbfans[0].name),
+				"mbfan%d: Name", NULL);
 }
 
 int cmd_mbfan_min_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int mbfan, val;
-
-	mbfan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (mbfan >= 0 && mbfan < MBFAN_COUNT) {
-		if (query) {
-			printf("%d\n", conf->mbfans[mbfan].min_rpm);
-		} else if (str_to_int(args, &val, 10)) {
-			if (val >= 0 && val <= 50000) {
-				log_msg(LOG_NOTICE, "mbfan%d: change min RPM %d --> %d", mbfan + 1,
-					conf->mbfans[mbfan].min_rpm, val);
-				conf->mbfans[mbfan].min_rpm = val;
-			} else {
-				log_msg(LOG_WARNING, "mbfan%d: invalid new value for min RPM: %d", mbfan + 1,
-					val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_uint16_setting(cmd, args, query, prev_cmd, 0, conf->mbfans, MBFAN_COUNT,
+				sizeof(conf->mbfans[0]), offsetof(struct mb_input, min_rpm),
+				"mbfan%d: Min RPM", 0, 50000);
 }
 
 int cmd_mbfan_max_rpm(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan, val;
-
-	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (fan >= 0 && fan < MBFAN_COUNT) {
-		if (query) {
-			printf("%d\n", conf->mbfans[fan].max_rpm);
-		} else if (str_to_int(args, &val, 10)) {
-			if (val >= 0 && val <= 50000) {
-				log_msg(LOG_NOTICE, "mbfan%d: change max RPM %d --> %d", fan + 1,
-					conf->mbfans[fan].max_rpm, val);
-				conf->mbfans[fan].max_rpm = val;
-			} else {
-				log_msg(LOG_WARNING, "fan%d: invalid new value for max RPM: %d", fan + 1,
-					val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_uint16_setting(cmd, args, query, prev_cmd, 0, conf->mbfans, MBFAN_COUNT,
+				sizeof(conf->mbfans[0]), offsetof(struct mb_input, max_rpm),
+				"mbfan%d: Max RPM", 0, 50000);
 }
 
 int cmd_mbfan_rpm_coef(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan;
-	float val;
-
-	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (fan >= 0 && fan < MBFAN_COUNT) {
-		if (query) {
-			printf("%f\n", conf->mbfans[fan].rpm_coefficient);
-		} else if (str_to_float(args, &val)) {
-			if (val > 0.0) {
-				log_msg(LOG_NOTICE, "mbfan%d: change RPM coefficient %f --> %f",
-					fan + 1, conf->mbfans[fan].rpm_coefficient, val);
-				conf->mbfans[fan].rpm_coefficient = val;
-			} else {
-				log_msg(LOG_WARNING, "mbfan%d: invalid new value for RPM coefficient: %f",
-					fan + 1, val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_float_setting(cmd, args, query, prev_cmd, 0, conf->mbfans, MBFAN_COUNT,
+				sizeof(conf->mbfans[0]), offsetof(struct mb_input, rpm_coefficient),
+				"mbfan%d: RPM Coefficient", 0.0, 1000.0);
 }
 
 int cmd_mbfan_rpm_factor(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int fan;
-	int val;
-
-	fan = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (fan >= 0 && fan < MBFAN_COUNT) {
-		if (query) {
-			printf("%u\n", conf->mbfans[fan].rpm_factor);
-		} else if (str_to_int(args, &val, 10)) {
-			if (val >= 1 || val <= 8) {
-				log_msg(LOG_NOTICE, "mbfan%d: change RPM factor %u --> %d",
-					fan + 1, conf->mbfans[fan].rpm_factor, val);
-				conf->mbfans[fan].rpm_factor = val;
-			} else {
-				log_msg(LOG_WARNING, "mbfan%d: invalid new value for RPM factor: %d",
-					fan + 1, val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_uint8_setting(cmd, args, query, prev_cmd, 0, conf->mbfans, MBFAN_COUNT,
+				sizeof(conf->mbfans[0]), offsetof(struct mb_input, rpm_factor),
+				"mbfan%d: RPM factor", 1, 8);
 }
 
 int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -1658,164 +1182,51 @@ int cmd_mbfan_filter(const char *cmd, const char *args, int query, struct prev_c
 
 int cmd_sensor_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int sensor;
-
-	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (sensor >= 0 && sensor < SENSOR_COUNT) {
-		if (query) {
-			printf("%s\n", conf->sensors[sensor].name);
-		} else {
-			log_msg(LOG_NOTICE, "sensor%d: change name '%s' --> '%s'", sensor + 1,
-				conf->sensors[sensor].name, args);
-			strncopy(conf->sensors[sensor].name, args,
-				sizeof(conf->sensors[sensor].name));
-		}
-		return 0;
-	}
-	return 1;
+	return array_string_setting(cmd, args, query, prev_cmd, 0, conf->sensors, SENSOR_COUNT,
+				sizeof(conf->sensors[0]),
+				offsetof(struct sensor_input, name), sizeof(conf->sensors[0].name),
+				"sensor%d: Name", NULL);
 }
 
 int cmd_sensor_temp_offset(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int sensor;
-	float val;
-
-	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (sensor >= 0 && sensor < SENSOR_COUNT) {
-		if (query) {
-			printf("%f\n", conf->sensors[sensor].temp_offset);
-		} else if (str_to_float(args, &val)) {
-			log_msg(LOG_NOTICE, "sensor%d: change temp offset %f --> %f", sensor + 1,
-				conf->sensors[sensor].temp_offset, val);
-			conf->sensors[sensor].temp_offset = val;
-		}
-		return 0;
-	}
-	return 1;
+	return array_float_setting(cmd, args, query, prev_cmd, 0, conf->sensors, SENSOR_COUNT,
+				sizeof(conf->sensors[0]), offsetof(struct sensor_input, temp_offset),
+				"sensor%d: Temperature Offset", -10000.0, 10000.0);
 }
 
 int cmd_sensor_temp_coef(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int sensor;
-	float val;
-
-	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (sensor >= 0 && sensor < SENSOR_COUNT) {
-		if (query) {
-			printf("%f\n", conf->sensors[sensor].temp_coefficient);
-		} else if (str_to_float(args, &val)) {
-			if (val > 0.0) {
-				log_msg(LOG_NOTICE, "sensor%d: change temp coefficient %f --> %f",
-					sensor + 1, conf->sensors[sensor].temp_coefficient,
-					val);
-				conf->sensors[sensor].temp_coefficient = val;
-			} else {
-				log_msg(LOG_WARNING, "sensor%d: invalid temp coefficient: %f",
-					sensor + 1, val);
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_float_setting(cmd, args, query, prev_cmd, 0, conf->sensors, SENSOR_COUNT,
+				sizeof(conf->sensors[0]), offsetof(struct sensor_input, temp_coefficient),
+				"sensor%d: Temperature Coefficient", 0.0, 1000.0);
 }
 
 int cmd_sensor_temp_nominal(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int sensor;
-	float val;
-
-	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (sensor >= 0 && sensor < SENSOR_COUNT) {
-		if (query) {
-			printf("%.1f\n", conf->sensors[sensor].temp_nominal);
-		} else if (str_to_float(args, &val)) {
-			if (val >= -50.0 && val <= 100.0) {
-				log_msg(LOG_NOTICE, "sensor%d: change temp nominal %.1fC --> %.1fC",
-					sensor + 1, conf->sensors[sensor].temp_nominal,
-					val);
-				conf->sensors[sensor].temp_nominal = val;
-			} else {
-				log_msg(LOG_WARNING, "sensor%d: invalid temp nominal: %f",
-					sensor + 1, val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_float_setting(cmd, args, query, prev_cmd, 0, conf->sensors, SENSOR_COUNT,
+				sizeof(conf->sensors[0]), offsetof(struct sensor_input, temp_nominal),
+				"sensor%d: Temperature Nominal", -50.0, 100.0);
 }
 
 int cmd_sensor_ther_nominal(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int sensor;
-	float val;
-
-	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (sensor >= 0 && sensor < SENSOR_COUNT) {
-		if (query) {
-			printf("%.0f\n", conf->sensors[sensor].thermistor_nominal);
-		} else if (str_to_float(args, &val)) {
-			if (val > 0.0) {
-				log_msg(LOG_NOTICE, "sensor%d: change thermistor nominal %.0f ohm --> %.0f ohm",
-					sensor + 1, conf->sensors[sensor].thermistor_nominal,
-					val);
-				conf->sensors[sensor].thermistor_nominal = val;
-			} else {
-				log_msg(LOG_WARNING, "sensor%d: invalid thermistor nominal: %f",
-					sensor + 1, val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_float_setting(cmd, args, query, prev_cmd, 0, conf->sensors, SENSOR_COUNT,
+				sizeof(conf->sensors[0]), offsetof(struct sensor_input, thermistor_nominal),
+				"sensor%d: Thermistor Nominal", 0.0, 100000.0);
 }
 
-int  cmd_sensor_adc_vref(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+int  cmd_adc_vref(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	float val;
-
-	if (query) {
-		printf("%.4f\n", conf->adc_vref);
-		return 0;
-	} else if (str_to_float(args, &val)) {
-		if (val > 0.0) {
-			log_msg(LOG_NOTICE, "Change ADC voltage reference from %.4f volts --> %.4f volts",
-				conf->adc_vref,	val);
-			conf->adc_vref = val;
-			return 0;
-		} else {
-		    log_msg(LOG_WARNING, "Invalid ADC voltage reference: %f", val);
-			return 2;
-		}
-	}
-	return 1;
+	return float_setting(cmd, args, query, prev_cmd,
+			&conf->adc_vref, 0.0, 100.0, "ADC Reference Voltage");
 }
 
 int cmd_sensor_beta_coef(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int sensor;
-	float val;
-
-	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (sensor >= 0 && sensor < SENSOR_COUNT) {
-		if (query) {
-			printf("%.0f\n", conf->sensors[sensor].beta_coefficient);
-		} else if (str_to_float(args, &val)) {
-			if (val > 0.0) {
-				log_msg(LOG_NOTICE, "sensor%d: change thermistor beta coefficient %.0f --> %.0f",
-					sensor + 1, conf->sensors[sensor].beta_coefficient,
-					val);
-				conf->sensors[sensor].beta_coefficient = val;
-			} else {
-				log_msg(LOG_WARNING, "sensor%d: invalid thermistor beta coefficient: %f",
-					sensor + 1, val);
-				return 2;
-			}
-		}
-		return 0;
-	}
-	return 1;
+	return array_float_setting(cmd, args, query, prev_cmd, 0, conf->sensors, SENSOR_COUNT,
+				sizeof(conf->sensors[0]), offsetof(struct sensor_input, beta_coefficient),
+				"sensor%d: Beta Coefficient", 0.0, 100000.0);
 }
 
 int cmd_sensor_temp_map(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -1935,21 +1346,9 @@ int cmd_sensor_filter(const char *cmd, const char *args, int query, struct prev_
 
 int cmd_vsensor_name(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	int sensor;
-
-	sensor = get_prev_cmd_index(prev_cmd, 0) - 1;
-	if (sensor >= 0 && sensor < VSENSOR_COUNT) {
-		if (query) {
-			printf("%s\n", conf->vsensors[sensor].name);
-		} else {
-			log_msg(LOG_NOTICE, "vsensor%d: change name '%s' --> '%s'", sensor + 1,
-				conf->vsensors[sensor].name, args);
-			strncopy(conf->vsensors[sensor].name, args,
-				sizeof(conf->vsensors[sensor].name));
-		}
-		return 0;
-	}
-	return 1;
+	return array_string_setting(cmd, args, query, prev_cmd, 0, conf->vsensors, VSENSOR_COUNT,
+				sizeof(conf->vsensors[0]), offsetof(struct vsensor_input, name),
+				sizeof(conf->vsensors[0].name),	"vensor%d: Name", NULL);
 }
 
 int cmd_vsensor_source(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -3217,11 +2616,9 @@ int cmd_flash(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 	return 0;
 }
 
-
-#define TEST_MEM_SIZE (1024*1024)
-
 int cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
+	const int TEST_MEM_SIZE = 1024 * 1024;
 	int blocksize;
 
 	if (query) {
@@ -3343,6 +2740,7 @@ int cmd_spi(const char *cmd, const char *args, int query, struct prev_cmd_t *pre
 }
 
 
+
 const struct cmd_t display_commands[] = {
 	{ "LAYOUTR",   7, NULL,              cmd_display_layout_r },
 	{ "LOGO",      4, NULL,              cmd_display_logo },
@@ -3457,7 +2855,6 @@ const struct cmd_t snmp_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
-
 const struct cmd_t ssh_pkey_commands[] = {
 	{ "CREate",    3, NULL,              cmd_ssh_pkey_create },
 	{ "DELete",    3, NULL,              cmd_ssh_pkey_del },
@@ -3492,17 +2889,16 @@ const struct cmd_t telnet_commands[] = {
 	{ "USER",      4, NULL,              cmd_telnet_user },
 	{ 0, 0, 0, 0 }
 };
-#endif
 
 const struct cmd_t tls_commands[] = {
-#ifdef WIFI_SUPPORT
 #if TLS_SUPPORT
 	{ "CERT",      4, NULL,              cmd_tls_cert },
 	{ "PKEY",      4, NULL,              cmd_tls_pkey },
 #endif
-#endif
 	{ 0, 0, 0, 0 }
 };
+#endif
+
 
 
 const struct cmd_t i2c_commands[] = {
@@ -3511,10 +2907,12 @@ const struct cmd_t i2c_commands[] = {
 	{ 0, 0, 0, 0 }
 };
 
+#if ONEWIRE_SUPPORT
 const struct cmd_t onewire_commands[] = {
 	{ "SENsors",   3, NULL,              cmd_onewire_sensors },
 	{ 0, 0, 0, 0 }
 };
+#endif
 
 const struct cmd_t system_commands[] = {
 	{ "BOARD",     5, NULL,              cmd_board },
@@ -3530,31 +2928,29 @@ const struct cmd_t system_commands[] = {
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
 	{ "MEMory",    3, NULL,              cmd_memory },
-#ifdef WIFI_SUPPORT
-	{ "MQTT",      4, mqtt_commands,     NULL },
-#endif
 	{ "NAME",      4, NULL,              cmd_name },
 #if ONEWIRE_SUPPORT
 	{ "ONEWIRE",   7, onewire_commands,  cmd_onewire },
 #endif
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "SERIAL",    6, NULL,              cmd_serial },
-#if WIFI_SUPPORT
-	{ "SNMP",      4, snmp_commands,     NULL },
-	{ "TELNET",    6, telnet_commands,   NULL },
-	{ "SSH",       3, ssh_commands,      NULL },
-#endif
 	{ "SPI",       3, NULL,              cmd_spi },
 	{ "SYSLOG",    6, NULL,              cmd_syslog_level },
 	{ "TIMEZONE",  8, NULL,              cmd_timezone },
 	{ "TIME",      4, NULL,              cmd_time },
-	{ "TLS",       3, tls_commands,      NULL },
 	{ "UPGRADE",   7, NULL,              cmd_usb_boot },
 	{ "UPTIme",    4, NULL,              cmd_uptime },
 	{ "VERsion",   3, NULL,              cmd_version },
-	{ "VREFadc",   4, NULL,              cmd_sensor_adc_vref },
+	{ "VREFadc",   4, NULL,              cmd_adc_vref },
 	{ "VSENSORS",  8, NULL,              cmd_vsensors },
 	{ "WIFI",      4, wifi_commands,     cmd_wifi },
+#if WIFI_SUPPORT
+	{ "MQTT",      4, mqtt_commands,     NULL },
+	{ "SNMP",      4, snmp_commands,     NULL },
+	{ "TELNET",    6, telnet_commands,   NULL },
+	{ "SSH",       3, ssh_commands,      NULL },
+	{ "TLS",       3, tls_commands,      NULL },
+#endif
 	{ 0, 0, 0, 0 }
 };
 
@@ -3696,86 +3092,6 @@ const struct cmd_t commands[] = {
 };
 
 
-/**
- * Process (SCPI) command and execute associated command function.
- *
- * This process splits command into subcommands using ':' character.
- * And tries to find the command in the command structure, finally
- * calling the command function if command is found.
- *
- * @param cmd Command string.
- * @param cmd_level pointer to command structure tree to start search.
- * @param cmd_stack data structure to store subcommands found when parsing the command.
- *
- * @return command result (SCPI error code)
- */
-static const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *cmd_level, struct prev_cmd_t *cmd_stack)
-{
-	int i, query, cmd_len, total_len;
-	char *saveptr1, *saveptr2, *t, *sub, *s, *arg;
-	int res = -1;
-
-	total_len = strlen(cmd);
-	t = strtok_r(cmd, " \t", &saveptr1);
-	if (t && strlen(t) > 0) {
-		cmd_len = strlen(t);
-		if (*t == ':' || *t == '*') {
-			/* reset command level to 'root' */
-			cmd_level = commands;
-			cmd_stack->depth = 0;
-		}
-		/* Split command to subcommands and search from command tree ... */
-		sub = strtok_r(t, ":", &saveptr2);
-		while (sub && strlen(sub) > 0) {
-			s = sub;
-			sub = NULL;
-			i = 0;
-			while (cmd_level[i].cmd) {
-				if (!strncasecmp(s, cmd_level[i].cmd, cmd_level[i].min_match)) {
-					sub = strtok_r(NULL, ":", &saveptr2);
-					if (cmd_level[i].subcmds && sub && strlen(sub) > 0) {
-						/* Match for subcommand...*/
-						if (cmd_stack->depth < MAX_CMD_DEPTH)
-							cmd_stack->cmds[cmd_stack->depth++] = s;
-						cmd_level = cmd_level[i].subcmds;
-					} else if (cmd_level[i].func) {
-						/* Match for command */
-						query = (s[strlen(s)-1] == '?' ? 1 : 0);
-						arg = t + cmd_len + 1;
-						if (!query)
-							mutex_enter_blocking(config_mutex);
-						res = cmd_level[i].func(s,
-								(total_len > cmd_len+1 ? arg : ""),
-								query,
-								cmd_stack);
-						if (!query)
-							mutex_exit(config_mutex);
-					}
-					break;
-				}
-				i++;
-			}
-		}
-	}
-
-	if (res < 0) {
-		log_msg(LOG_INFO, "Unknown command.");
-		last_error_num = -113;
-	}
-	else if (res == 0) {
-		last_error_num = 0;
-	}
-	else if (res == 1) {
-		last_error_num = -100;
-	}
-	else if (res == 2) {
-		last_error_num = -102;
-	} else {
-		last_error_num = -1;
-	}
-
-	return cmd_level;
-}
 
 /**
  * Process command string received from user.
@@ -3807,7 +3123,8 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 		if (cmd && strlen(cmd) > 0) {
 			cmd_stack.depth = 0;
 			cmd_stack.cmds[0] = NULL;
-			cmd_level = run_cmd(cmd, cmd_level, &cmd_stack);
+			cmd_level = run_cmd(cmd, commands, cmd_level, &cmd_stack,
+					&last_error_num);
 		}
 		cmd = strtok_r(NULL, ";", &saveptr);
 	}
