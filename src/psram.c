@@ -21,7 +21,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#if !PICO_RP2040
 #include "hardware/structs/qmi.h"
+#endif
 #include "hardware/structs/ioqspi.h"
 #include "hardware/structs/xip_ctrl.h"
 #include "hardware/gpio.h"
@@ -56,7 +58,6 @@
 /* KGD (Known Good Die) Test */
 #define KGD_FAIL             0x55
 #define KGD_PASS             0x5d
-
 
 
 #ifdef FANPICO_PSRAM_PIN
