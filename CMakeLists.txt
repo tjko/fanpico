@@ -135,6 +135,7 @@ add_executable(fanpico
   src/filter_lossypeak.c
   src/filter_sma.c
   src/square_wave_gen.c
+  src/psram.c
   src/pulse_len.c
   src/util.c
   src/util_rp2.c

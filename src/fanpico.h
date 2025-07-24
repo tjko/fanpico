@@ -624,5 +624,4 @@ int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
 /* crc32.c */
 unsigned int xcrc32 (const unsigned char *buf, int len, unsigned int init);
 
-
 #endif /* FANPICO_H */

@@ -41,7 +41,17 @@
 
 #include "fanpico.h"
 #include "command_util.h"
+#include "psram.h"
 
+
+#ifdef FANPICO_PSRAM_PIN
+ #if TX_PIN == 0
+  /* Check for non-standard boards that may have PSRAM on pin 0 (Serial TX) */
+  #if FANPICO_PSRAM_PIN == TX_PIN
+   #undef TTL_SERIAL
+  #endif
+ #endif
+#endif
 
 static struct fanpico_state core1_state;
 static struct fanpico_config core1_config;
@@ -175,6 +185,7 @@ static void setup()
 	lfs_setup(false);
 	read_config(firmware_settings->safemode);
 
+
 #if TTL_SERIAL
 	/* Initialize serial console if configured... */
 	if(cfg->serial_active && (!cfg->spi_active || !SPI_SHARED)) {
@@ -220,6 +231,7 @@ static void setup()
 		tzset();
 	}
 
+
 	if (aon_timer_is_running()) {
 		struct timespec ts;
 		aon_timer_get_time(&ts);
@@ -227,6 +239,7 @@ static void setup()
 			time_t_to_str(buf, sizeof(buf), timespec_to_time_t(&ts)));
 	}
 
+	setup_psram();
 	setup_i2c_bus((struct fanpico_config *)cfg);
 	display_init();
 	network_init();
