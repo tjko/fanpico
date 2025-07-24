@@ -28,11 +28,11 @@ void* walking_mem_test(void *heap, size_t size)
 {
 	uint32_t len = size / sizeof(uint32_t);
 	uint32_t *t = (uint32_t*)heap;
-	absolute_time_t t_start, t_end;
+	uint64_t t_start, t_end, speed;
 
 	printf("Walking 1's test: ");
-	t_start = get_absolute_time();
 
+	t_start = time_us_64();
 	for (uint32_t bit = 0; bit < 32; bit++) {
 		uint32_t val = 1 << bit;
 
@@ -58,10 +58,9 @@ void* walking_mem_test(void *heap, size_t size)
 		}
 		printf(".");
 	}
+	t_end = time_us_64();
 
-	t_end = get_absolute_time();
-	int64_t d = absolute_time_diff_us(t_start, t_end);
-	int64_t speed = ((int64_t)size * 1000000) / d;
+	speed = ((uint64_t)size * 1000000) / (t_end - t_start);
 	printf(" OK (%lld KB/s)\n", speed / 1024);
 
 	return NULL;
@@ -96,6 +95,12 @@ int simple_speed_mem_test(void *heap, size_t size)
 	speed = ((uint64_t)size * 1000000) / (end - start);
 	printf(" %llu KB/s\n", speed / 1024);
 
+	printf("memset() speed,...............");
+	start = time_us_64();
+	memset(heap, 0, size);
+	end = time_us_64();
+	speed = ((uint64_t)size * 1000000) / (end - start);
+	printf(" %llu KB/s\n", speed / 1024);
 
 	return 0;
 }
