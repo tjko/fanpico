@@ -136,6 +136,7 @@ add_executable(fanpico
   src/filter_sma.c
   src/square_wave_gen.c
   src/psram.c
+  src/memtest.c
   src/pulse_len.c
   src/util.c
   src/util_rp2.c

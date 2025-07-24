@@ -39,6 +39,8 @@
 #include "fanpico.h"
 #include "command_util.h"
 #include "pico_sensor_lib.h"
+#include "psram.h"
+#include "memtest.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
 #include "lwip/stats.h"
@@ -2677,6 +2679,32 @@ int cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *
 	return 0;
 }
 
+int cmd_memtest(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	void *heap;
+	uint32_t size;
+
+	if (query)
+		return 1;
+
+#if WATCHDOG_ENABLED
+	watchdog_disable();
+#endif
+	/* PSRAM Tests */
+	if ((size = psram_size()) > 0) {
+		printf("Testing PSRAM: %lu bytes\n", size);
+		heap = (void*)PSRAM_NOCACHE_BASE;
+		walking_mem_test(heap, size);
+		simple_speed_mem_test(heap, size);
+	}
+
+#if WATCHDOG_ENABLED
+	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
+#endif
+
+	return 0;
+}
+
 int cmd_onewire(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
@@ -2927,6 +2955,7 @@ const struct cmd_t system_commands[] = {
 	{ "LFS",       3, lfs_commands,      cmd_lfs },
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
+	{ "MEMTEST",   7, NULL,              cmd_memtest },
 	{ "MEMory",    3, NULL,              cmd_memory },
 	{ "NAME",      4, NULL,              cmd_name },
 #if ONEWIRE_SUPPORT

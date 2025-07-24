@@ -349,7 +349,7 @@ void setup_psram()
 
 size_t psram_size()
 {
-#if FANPICO_PSRAM_PIN
+#ifdef FANPICO_PSRAM_PIN
 	return psram_sz;
 #else
 	return 0;
@@ -358,7 +358,7 @@ size_t psram_size()
 
 const char* psram_manufacturer()
 {
-#if FANPICO_PSRAM_PIN
+#ifdef FANPICO_PSRAM_PIN
 	return psram_mf ? psram_mf : "N/A";
 #else
 	return "N/A";
@@ -367,7 +367,7 @@ const char* psram_manufacturer()
 
 const char* psram_id_str()
 {
-#if FANPICO_PSRAM_PIN
+#ifdef FANPICO_PSRAM_PIN
 	return psram_id_str_buf;
 #else
 	return "N/A";
