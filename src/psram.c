@@ -68,7 +68,7 @@ static char psram_id_str_buf[16 + 1] = { 0 };
 
 /* Generic PSRAM chip timings */
 static uint32_t psram_max_clk =          109000000;
-static uint32_t psram_max_csr_clk =       10000000;
+static uint32_t psram_max_csr_clk =        5000000;
 static uint32_t psram_max_select_fs64 =  125000000;
 static uint32_t psram_min_deselect_fs =   50000000;
 
@@ -158,7 +158,7 @@ static void __no_inline_not_in_flash_func(psram_qmi_setup)(uint32_t sys_clk,
 
 	uint8_t max_select = psram_max_select_fs64 / clock_period_fs;
 	uint8_t min_deselect = (psram_min_deselect_fs + clock_period_fs - 1) / clock_period_fs;
-	uint8_t rxdelay = (sys_clk > 266000000 ? 3 : 1);
+	uint8_t rxdelay = 1 + (sys_clk > 150000000 ? clkdiv : 1);
 
 	uint32_t saved_ints = save_and_disable_interrupts();
 
@@ -286,15 +286,19 @@ static int32_t psram_init(int pin)
 	}
 
 	psram_sz *= 1024 * 1024;
-	log_msg(LOG_NOTICE, "PSRAM: %d KB (%s)", psram_sz >> 10, psram_mf);
 
 	/* Calculate clock divider for PSRAM */
 	clkdiv = (clk + psram_max_clk - 1) / psram_max_clk;
+
+	log_msg(LOG_NOTICE, "PSRAM: %dKB @ %luMHz (%s)",
+		psram_sz >> 10, (clk / clkdiv ) / 1000000, psram_mf);
+
 
 
 	/* Enable PSRAM */
 
 	psram_qmi_setup(clk, clkdiv, csr_clkdiv);
+	log_msg(LOG_INFO, "FLASH: timing: %08x", qmi_hw->m[0].timing);
 	log_msg(LOG_INFO, "PSRAM: timing: %08x", qmi_hw->m[1].timing);
 	log_msg(LOG_DEBUG, "PSRAM: rfmt: %08x, rcmd: %08x", qmi_hw->m[1].rfmt, qmi_hw->m[1].rcmd);
 	log_msg(LOG_DEBUG, "PSRAM: wfmt: %08x, wcmd: %08x", qmi_hw->m[1].wfmt, qmi_hw->m[1].wcmd);
@@ -312,6 +316,7 @@ static int32_t psram_init(int pin)
 	if (readback_1 != 0xdeadc0de || readback_2 != 0) {
 		log_msg(LOG_ERR, "PSRAM: Cannot write to PSRAM!");
 		psram_sz = 0;
+		return -3;
 	}
 
 	/* Validate PSRAM size */
@@ -326,6 +331,7 @@ static int32_t psram_init(int pin)
 		log_msg(LOG_ERR, "PSRAM: memory size mismatch! (%08x,%08x)",
 			readback_1, readback_2);
 		psram_sz = 0;
+		return -4;
 	}
 
 #if 0

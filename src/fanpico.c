@@ -170,6 +170,10 @@ static void setup()
 	char buf[32];
 	int i = 0;
 
+	if (firmware_settings->sysclock > 0) {
+		set_sys_clock_khz(firmware_settings->sysclock * 1000, true);
+		sleep_ms(100);
+	}
 
 	stdio_usb_init();
 	/* Wait a while for USB Serial to connect... */

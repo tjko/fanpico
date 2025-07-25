@@ -250,6 +250,8 @@ target_compile_definitions(fanpico PRIVATE PICO_CORE1_STACK_SIZE=0x1000)
 target_compile_definitions(fanpico PRIVATE PICO_USE_STACK_GUARDS=1)
 target_compile_definitions(fanpico PRIVATE PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
 target_compile_definitions(fanpico PRIVATE PICO_USE_FASTEST_SUPPORTED_CLOCK=1)
+#target_compile_definitions(fanpico PRIVATE PICO_EMBED_XIP_SETUP=1)
+#target_compile_definitions(fanpico PRIVATE PICO_FLASH_SPI_CLKDIV=2)
 
 target_compile_definitions(fanpico PRIVATE
   LFS_THREADSAFE=1
