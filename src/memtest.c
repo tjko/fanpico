@@ -67,21 +67,23 @@ void* walking_mem_test(void *heap, size_t size)
 }
 
 
-int simple_speed_mem_test(void *heap, size_t size)
+int simple_speed_mem_test(void *heap, size_t size, bool readonly)
 {
 	uint32_t *psram = (uint32_t*)heap;
 	uint32_t len = size / sizeof(uint32_t);
 	uint64_t start, end, speed;
 	volatile uint64_t read;
 
-	printf("Testing write speed (32bit)...");
-	start = time_us_64();
-	for (int i = 0; i < len; i ++) {
-		psram[i] = 0xdeadbeef;
+	if (!readonly) {
+		printf("Testing write speed (32bit)...");
+		start = time_us_64();
+		for (int i = 0; i < len; i ++) {
+			psram[i] = 0xdeadbeef;
+		}
+		end = time_us_64();
+		speed = ((uint64_t)size * 1000000) / (end - start);
+		printf(" %llu KB/s\n", speed / 1024);
 	}
-	end = time_us_64();
-	speed = ((uint64_t)size * 1000000) / (end - start);
-	printf(" %llu KB/s\n", speed / 1024);
 
 	printf("Testing read speed (32bit)....");
 	start = time_us_64();
@@ -89,18 +91,20 @@ int simple_speed_mem_test(void *heap, size_t size)
 		read = psram[i];
 	}
 	end = time_us_64();
-	if (read != 0xdeadbeef) {
+	if (!readonly && read != 0xdeadbeef) {
 		printf(" (error)");
 	}
 	speed = ((uint64_t)size * 1000000) / (end - start);
 	printf(" %llu KB/s\n", speed / 1024);
 
-	printf("memset() speed,...............");
-	start = time_us_64();
-	memset(heap, 0, size);
-	end = time_us_64();
-	speed = ((uint64_t)size * 1000000) / (end - start);
-	printf(" %llu KB/s\n", speed / 1024);
+	if (!readonly) {
+		printf("memset() speed,...............");
+		start = time_us_64();
+		memset(heap, 0, size);
+		end = time_us_64();
+		speed = ((uint64_t)size * 1000000) / (end - start);
+		printf(" %llu KB/s\n", speed / 1024);
+	}
 
 	return 0;
 }

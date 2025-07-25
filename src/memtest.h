@@ -24,7 +24,7 @@
 
 
 int walking_mem_test(void *heap, size_t size);
-int simple_speed_mem_test(void *heap, size_t size);
+int simple_speed_mem_test(void *heap, size_t size, bool readonly);
 
 
 #endif /* FANPICO_MEMTEST_H */

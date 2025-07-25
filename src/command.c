@@ -2717,8 +2717,13 @@ int cmd_memtest(const char *cmd, const char *args, int query, struct prev_cmd_t 
 		printf("Testing PSRAM: %lu bytes\n", size);
 		heap = (void*)PSRAM_NOCACHE_BASE;
 		walking_mem_test(heap, size);
-		simple_speed_mem_test(heap, size);
+		simple_speed_mem_test(heap, size, false);
 	}
+
+	heap = (void*)XIP_NOCACHE_NOALLOC_BASE;
+	size = PICO_FLASH_SIZE_BYTES;
+	printf("Testing FLASH: %lu bytes\n", size);
+	simple_speed_mem_test(heap, size, true);
 
 #if WATCHDOG_ENABLED
 	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
