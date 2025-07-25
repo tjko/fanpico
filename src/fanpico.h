@@ -325,8 +325,9 @@ struct fanpico_config {
 
 /* Firmware settings that can be modified with picotool */
 struct fanpico_fw_settings {
-	bool safemode;         /* Safe mode disables loading saved configuration during boot. */
-	int  bootdelay;        /* Delay (seconds) after initializing USB console during boot. */
+	bool safemode;      /* Safe mode disables loading saved configuration during boot. */
+	int bootdelay;      /* Delay (seconds) after initializing USB console during boot. */
+	int sysclock;       /* Set system clock in MHz (overclocking) */
 };
 
 #if WIFI_SUPPORT
@@ -623,6 +624,5 @@ int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
 
 /* crc32.c */
 unsigned int xcrc32 (const unsigned char *buf, int len, unsigned int init);
-
 
 #endif /* FANPICO_H */

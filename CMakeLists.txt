@@ -101,11 +101,21 @@ add_subdirectory(libs/pico-sensor-lib)
 add_subdirectory(libs/pico-sshd)
 
 # wolfSSL / wolfCrypt
-set(WOLFSSL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssl)
+if (DEFINED ENV{WOLFSSL_ROOT})
+  set(WOLFSSL_ROOT $ENV{WOLFSSL_ROOT})
+else ()
+  set(WOLFSSL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssl)
+endif ()
+message("wolfSSL available at ${WOLFSSL_ROOT}")
 include(libs/pico-sshd/cmake/wolfssl_pico.cmake)
 
 # wolfSSH
-set(WOLFSSH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssh)
+if (DEFINED ENV{WOLFSSH_ROOT})
+  set(WOLFSSH_ROOT $ENV{WOLFSSH_ROOT})
+else ()
+  set(WOLFSSH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssh)
+endif ()
+message("wolfSSH available at ${WOLFSSH_ROOT}")
 include(libs/pico-sshd/cmake/wolfssh_pico.cmake)
 
 include_directories(src/wolfssl)
@@ -135,6 +145,8 @@ add_executable(fanpico
   src/filter_lossypeak.c
   src/filter_sma.c
   src/square_wave_gen.c
+  src/psram.c
+  src/memtest.c
   src/pulse_len.c
   src/util.c
   src/util_rp2.c
@@ -248,6 +260,8 @@ target_compile_definitions(fanpico PRIVATE PICO_CORE1_STACK_SIZE=0x1000)
 target_compile_definitions(fanpico PRIVATE PICO_USE_STACK_GUARDS=1)
 target_compile_definitions(fanpico PRIVATE PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
 target_compile_definitions(fanpico PRIVATE PICO_USE_FASTEST_SUPPORTED_CLOCK=1)
+#target_compile_definitions(fanpico PRIVATE PICO_EMBED_XIP_SETUP=1)
+#target_compile_definitions(fanpico PRIVATE PICO_FLASH_SPI_CLKDIV=2)
 
 target_compile_definitions(fanpico PRIVATE
   LFS_THREADSAFE=1

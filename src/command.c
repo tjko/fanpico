@@ -35,10 +35,17 @@
 #include "pico/rand.h"
 #include "hardware/clocks.h"
 #include "hardware/watchdog.h"
+#if PICO_RP2040
+#include "hardware/structs/ssi.h"
+#else
+#include "hardware/structs/qmi.h"
+#endif
 #include "cJSON.h"
 #include "fanpico.h"
 #include "command_util.h"
 #include "pico_sensor_lib.h"
+#include "psram.h"
+#include "memtest.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
 #include "lwip/stats.h"
@@ -139,16 +146,33 @@ int cmd_usb_boot(const char *cmd, const char *args, int query, struct prev_cmd_t
 
 int cmd_board(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
+	uint32_t sys_clk = clock_get_hz(clk_sys);
+#if PICO_RP2040
+	uint8_t flash_clkdiv = (ssi_hw->baudr & SSI_BAUDR_SCKDV_BITS) >> SSI_BAUDR_SCKDV_LSB;
+#if 0
+	printf("SSI:BAUDR: %08lx (PICO_FLASH_SPI_CLKDIV=%d)\n",
+		ssi_hw->baudr, PICO_FLASH_SPI_CLKDIV);
+#endif
+#else
+	uint8_t flash_clkdiv = (qmi_hw->m[0].timing & QMI_M0_TIMING_CLKDIV_BITS)
+		>> QMI_M0_TIMING_CLKDIV_LSB;
+#if 0
+	printf("QMI:M0_TIMING: %08lx (PICO_FLASH_SPI_CLKDIV=%d)\n",
+		qmi_hw->m[0].timing, PICO_FLASH_SPI_CLKDIV);
+#endif
+#endif
+	uint32_t flash_clk = sys_clk / flash_clkdiv;
+
+
 	if (cmd && !query)
 		return 1;
 
 	printf("Hardware Model: FANPICO-%s\n", FANPICO_MODEL);
 	printf("         Board: %s\n", PICO_BOARD);
-	printf("           MCU: %s @ %0.0fMHz\n",
-		rp2_model_str(),
-		clock_get_hz(clk_sys) / 1000000.0);
-	printf("           RAM: %lu KB\n", ((uint32_t)SRAM_END - SRAM_BASE) >> 10);
-	printf("         Flash: %lu KB\n", (uint32_t)PICO_FLASH_SIZE_BYTES >> 10);
+	printf("           MCU: %s @ %luMHz\n",	rp2_model_str(), sys_clk / 1000000);
+	printf("           RAM: %luKB\n", ((uint32_t)SRAM_END - SRAM_BASE) >> 10);
+	printf("         Flash: %luKB @ %luMHz\n",
+		(uint32_t)PICO_FLASH_SIZE_BYTES >> 10, flash_clk / 1000000);
 	printf(" Serial Number: %s\n", pico_serial_str());
 
 	return 0;
@@ -2677,6 +2701,37 @@ int cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *
 	return 0;
 }
 
+int cmd_memtest(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	void *heap;
+	uint32_t size;
+
+	if (query)
+		return 1;
+
+#if WATCHDOG_ENABLED
+	watchdog_disable();
+#endif
+	/* PSRAM Tests */
+	if ((size = psram_size()) > 0) {
+		printf("Testing PSRAM: %lu bytes\n", size);
+		heap = (void*)PSRAM_NOCACHE_BASE;
+		walking_mem_test(heap, size);
+		simple_speed_mem_test(heap, size, false);
+	}
+
+	heap = (void*)XIP_NOCACHE_NOALLOC_BASE;
+	size = PICO_FLASH_SIZE_BYTES;
+	printf("Testing FLASH: %lu bytes\n", size);
+	simple_speed_mem_test(heap, size, true);
+
+#if WATCHDOG_ENABLED
+	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
+#endif
+
+	return 0;
+}
+
 int cmd_onewire(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
@@ -2927,6 +2982,7 @@ const struct cmd_t system_commands[] = {
 	{ "LFS",       3, lfs_commands,      cmd_lfs },
 	{ "LOG",       3, NULL,              cmd_log_level },
 	{ "MBFANS",    6, NULL,              cmd_mbfans },
+	{ "MEMTEST",   7, NULL,              cmd_memtest },
 	{ "MEMory",    3, NULL,              cmd_memory },
 	{ "NAME",      4, NULL,              cmd_name },
 #if ONEWIRE_SUPPORT

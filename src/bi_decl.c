@@ -36,8 +36,10 @@ void set_binary_info(struct fanpico_fw_settings *settings)
 	bi_decl(bi_program_url("https://kokkonen.net/fanpico/"));
 
 	bi_decl(bi_program_feature_group(BI_TAG, BOOT_SETTINGS, "boot settings"));
+	bi_decl(bi_ptr_int32(BI_TAG, BOOT_SETTINGS, sysclock, 0));
 	bi_decl(bi_ptr_int32(BI_TAG, BOOT_SETTINGS, safemode, 0));
 	bi_decl(bi_ptr_int32(BI_TAG, BOOT_SETTINGS, bootdelay, 0));
+	settings->sysclock = sysclock;
 	settings->safemode = safemode;
 	settings->bootdelay = bootdelay;
 
