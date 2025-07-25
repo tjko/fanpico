@@ -205,7 +205,7 @@ static void __no_inline_not_in_flash_func(psram_qmi_setup)(uint32_t sys_clk,
 
 	/* Set M1_WFMT / M1_WCMD registers */
 	qmi_hw->m[1].wfmt = (
-		0 << QMI_M1_WFMT_DTR_LSB |
+		0                                  << QMI_M1_WFMT_DTR_LSB |
 		QMI_M1_WFMT_DUMMY_LEN_VALUE_NONE   << QMI_M1_WFMT_DUMMY_LEN_LSB |
 		QMI_M1_WFMT_SUFFIX_LEN_VALUE_NONE  << QMI_M1_WFMT_SUFFIX_LEN_LSB |
 		QMI_M1_WFMT_PREFIX_LEN_VALUE_8     << QMI_M1_WFMT_PREFIX_LEN_LSB |
@@ -298,7 +298,6 @@ static int32_t psram_init(int pin)
 	/* Enable PSRAM */
 
 	psram_qmi_setup(clk, clkdiv, csr_clkdiv);
-	log_msg(LOG_INFO, "FLASH: timing: %08x", qmi_hw->m[0].timing);
 	log_msg(LOG_INFO, "PSRAM: timing: %08x", qmi_hw->m[1].timing);
 	log_msg(LOG_DEBUG, "PSRAM: rfmt: %08x, rcmd: %08x", qmi_hw->m[1].rfmt, qmi_hw->m[1].rcmd);
 	log_msg(LOG_DEBUG, "PSRAM: wfmt: %08x, wcmd: %08x", qmi_hw->m[1].wfmt, qmi_hw->m[1].wcmd);
