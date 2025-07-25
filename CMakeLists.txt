@@ -101,11 +101,21 @@ add_subdirectory(libs/pico-sensor-lib)
 add_subdirectory(libs/pico-sshd)
 
 # wolfSSL / wolfCrypt
-set(WOLFSSL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssl)
+if (DEFINED ENV{WOLFSSL_ROOT})
+  set(WOLFSSL_ROOT $ENV{WOLFSSL_ROOT})
+else ()
+  set(WOLFSSL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssl)
+endif ()
+message("wolfSSL available at ${WOLFSSL_ROOT}")
 include(libs/pico-sshd/cmake/wolfssl_pico.cmake)
 
 # wolfSSH
-set(WOLFSSH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssh)
+if (DEFINED ENV{WOLFSSH_ROOT})
+  set(WOLFSSH_ROOT $ENV{WOLFSSH_ROOT})
+else ()
+  set(WOLFSSH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/wolfssh)
+endif ()
+message("wolfSSH available at ${WOLFSSH_ROOT}")
 include(libs/pico-sshd/cmake/wolfssh_pico.cmake)
 
 include_directories(src/wolfssl)
