@@ -149,17 +149,12 @@ int cmd_board(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 	uint32_t sys_clk = clock_get_hz(clk_sys);
 #if PICO_RP2040
 	uint8_t flash_clkdiv = (ssi_hw->baudr & SSI_BAUDR_SCKDV_BITS) >> SSI_BAUDR_SCKDV_LSB;
-#if 0
-	printf("SSI:BAUDR: %08lx (PICO_FLASH_SPI_CLKDIV=%d)\n",
-		ssi_hw->baudr, PICO_FLASH_SPI_CLKDIV);
-#endif
 #else
 	uint8_t flash_clkdiv = (qmi_hw->m[0].timing & QMI_M0_TIMING_CLKDIV_BITS)
 		>> QMI_M0_TIMING_CLKDIV_LSB;
-#if 0
-	printf("QMI:M0_TIMING: %08lx (PICO_FLASH_SPI_CLKDIV=%d)\n",
-		qmi_hw->m[0].timing, PICO_FLASH_SPI_CLKDIV);
-#endif
+	uint8_t psram_clkdiv = (qmi_hw->m[1].timing & QMI_M1_TIMING_CLKDIV_BITS)
+		>> QMI_M1_TIMING_CLKDIV_LSB;
+	uint32_t psram_clk = sys_clk / psram_clkdiv;
 #endif
 	uint32_t flash_clk = sys_clk / flash_clkdiv;
 
@@ -171,6 +166,11 @@ int cmd_board(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 	printf("         Board: %s\n", PICO_BOARD);
 	printf("           MCU: %s @ %luMHz\n",	rp2_model_str(), sys_clk / 1000000);
 	printf("           RAM: %luKB\n", ((uint32_t)SRAM_END - SRAM_BASE) >> 10);
+#if !PICO_RP2040
+	if (psram_size() > 0)
+		printf("         PSRAM: %uKB @ %luMHz\n", psram_size() >> 10,
+			psram_clk / 1000000);
+#endif
 	printf("         Flash: %luKB @ %luMHz\n",
 		(uint32_t)PICO_FLASH_SIZE_BYTES >> 10, flash_clk / 1000000);
 	printf(" Serial Number: %s\n", pico_serial_str());
@@ -2640,6 +2640,29 @@ int cmd_flash(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 	return 0;
 }
 
+int cmd_psram(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	if (!query)
+		return 1;
+
+#if PICO_RP2040
+	printf("No PSRAM support.\n");
+#else
+	uint8_t psram_clkdiv = (qmi_hw->m[1].timing & QMI_M1_TIMING_CLKDIV_BITS)
+		>> QMI_M1_TIMING_CLKDIV_LSB;
+	uint32_t psram_clk = clock_get_hz(clk_sys) / psram_clkdiv;
+
+	printf("Manufacturer: %s\n",
+		(psram_manufacturer() ? psram_manufacturer() : "N/A"));
+	printf("     Chip ID: %s\n", psram_id_str() ? psram_id_str() : "N/A");
+	printf("        Size: %u KB\n", psram_size() >> 10);
+	printf("       Clock: %lu MHz\n", psram_clk / 1000000);
+	printf("   M1_TIMING: %08lx\n", qmi_hw->m[1].timing);
+#endif
+
+	return 0;
+}
+
 int cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	const int TEST_MEM_SIZE = 1024 * 1024;
@@ -2712,18 +2735,45 @@ int cmd_memtest(const char *cmd, const char *args, int query, struct prev_cmd_t 
 #if WATCHDOG_ENABLED
 	watchdog_disable();
 #endif
+
+#if !PICO_RP2040
 	/* PSRAM Tests */
 	if ((size = psram_size()) > 0) {
 		printf("Testing PSRAM: %lu bytes\n", size);
+		if (get_log_level() >= LOG_INFO) {
+			printf("M1_TIMING: %08lx\n", qmi_hw->m[1].timing);
+			printf("NOCACHE:\n");
+		}
 		heap = (void*)PSRAM_NOCACHE_BASE;
 		walking_mem_test(heap, size);
 		simple_speed_mem_test(heap, size, false);
+		if (get_log_level() >= LOG_INFO) {
+			printf("CACHE:\n");
+			heap = (void*)PSRAM_BASE;
+			walking_mem_test(heap, size);
+			simple_speed_mem_test(heap, size, false);
+		}
 	}
+#endif
 
-	heap = (void*)XIP_NOCACHE_NOALLOC_BASE;
+	/* Flash Tests */
 	size = PICO_FLASH_SIZE_BYTES;
 	printf("Testing FLASH: %lu bytes\n", size);
+	if (get_log_level() >= LOG_INFO) {
+#if PICO_RP2040
+		printf("BAUDR: %08lx\n", ssi_hw->baudr);
+#else
+		printf("M0_TIMING: %08lx\n", qmi_hw->m[0].timing);
+#endif
+		printf("NOCACHE:\n");
+	}
+	heap = (void*)XIP_NOCACHE_NOALLOC_BASE;
 	simple_speed_mem_test(heap, size, true);
+	if (get_log_level() >= LOG_INFO) {
+		printf("CACHE:\n");
+		heap = (void*)XIP_BASE;
+		simple_speed_mem_test(heap, size, true);
+	}
 
 #if WATCHDOG_ENABLED
 	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
@@ -2988,6 +3038,7 @@ const struct cmd_t system_commands[] = {
 #if ONEWIRE_SUPPORT
 	{ "ONEWIRE",   7, onewire_commands,  cmd_onewire },
 #endif
+	{ "PSRAM",     5, NULL,              cmd_psram },
 	{ "SENSORS",   7, NULL,              cmd_sensors },
 	{ "SERIAL",    6, NULL,              cmd_serial },
 	{ "SPI",       3, NULL,              cmd_spi },

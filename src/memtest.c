@@ -24,38 +24,27 @@
 #include <stdint.h>
 #include "pico/stdlib.h"
 
+
 void* walking_mem_test(void *heap, size_t size)
 {
+	volatile uint32_t *t = (uint32_t*)heap;
 	uint32_t len = size / sizeof(uint32_t);
-	uint32_t *t = (uint32_t*)heap;
 	uint64_t t_start, t_end, speed;
 
 	printf("Walking 1's test: ");
 
 	t_start = time_us_64();
 	for (uint32_t bit = 0; bit < 32; bit++) {
-		uint32_t val = 1 << bit;
-
 		/* Write bits */
-		for (uint32_t i = 0; i < len; i++) {
-			t[i] = val;
-			val <<= 1;
-			if (val == 0)
-				val = 1;
-		}
-
-		val = 1 << bit;
+		for (uint32_t i = 0; i < len; i++)
+			t[i] = 1 << ((bit + i) % 32);
 
 		/* Read bits */
-		for (uint32_t i = 0; i < len; i++) {
-			if (t[i] != val) {
-				printf(" ERROR: %p\n", &t[i]);
-				return &t[i];
+		for (uint32_t i = 0; i < len; i++)
+			if (t[i] != 1 << ((bit + i) % 32)) {
+				printf(" ERROR: %p (%lu)\n", &t[i], i);
+				return (void*)&t[i];
 			}
-			val <<= 1;
-			if (val == 0)
-				val = 1;
-		}
 		printf(".");
 	}
 	t_end = time_us_64();
@@ -66,10 +55,9 @@ void* walking_mem_test(void *heap, size_t size)
 	return NULL;
 }
 
-
 int simple_speed_mem_test(void *heap, size_t size, bool readonly)
 {
-	uint32_t *psram = (uint32_t*)heap;
+	volatile uint32_t *t = (uint32_t*)heap;
 	uint32_t len = size / sizeof(uint32_t);
 	uint64_t start, end, speed;
 	volatile uint64_t read;
@@ -78,7 +66,7 @@ int simple_speed_mem_test(void *heap, size_t size, bool readonly)
 		printf("Testing write speed (32bit)...");
 		start = time_us_64();
 		for (int i = 0; i < len; i ++) {
-			psram[i] = 0xdeadbeef;
+			t[i] = 0xdeadbeef;
 		}
 		end = time_us_64();
 		speed = ((uint64_t)size * 1000000) / (end - start);
@@ -88,7 +76,7 @@ int simple_speed_mem_test(void *heap, size_t size, bool readonly)
 	printf("Testing read speed (32bit)....");
 	start = time_us_64();
 	for (int i = 0; i < len; i ++) {
-		read = psram[i];
+		read = t[i];
 	}
 	end = time_us_64();
 	if (!readonly && read != 0xdeadbeef) {

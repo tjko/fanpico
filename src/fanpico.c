@@ -206,6 +206,7 @@ static void setup()
 		rebooted_by_watchdog = true;
 	}
 	printf("\n");
+	setup_psram();
 
 	/* Run "SYStem:VERsion?" command... */
 	cmd_version(NULL, NULL, 0, NULL);
@@ -243,7 +244,6 @@ static void setup()
 			time_t_to_str(buf, sizeof(buf), timespec_to_time_t(&ts)));
 	}
 
-	setup_psram();
 	setup_i2c_bus((struct fanpico_config *)cfg);
 	display_init();
 	network_init();
