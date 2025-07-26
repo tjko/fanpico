@@ -28,7 +28,8 @@
 #include "hardware/structs/xip_ctrl.h"
 #include "hardware/gpio.h"
 #include "hardware/clocks.h"
-#include "fanpico.h"
+#include "hardware/sync.h"
+
 #include "psram.h"
 
 
@@ -60,7 +61,7 @@
 #define KGD_PASS             0x5d
 
 
-#ifdef FANPICO_PSRAM_PIN
+#ifdef PSRAM_CS_PIN
 
 static size_t psram_sz = 0;
 static char *psram_mf = NULL;
@@ -102,7 +103,7 @@ static inline void csr_disable_direct_mode()
 	hw_clear_bits(&qmi_hw->direct_csr, QMI_DIRECT_CSR_EN_BITS | QMI_DIRECT_CSR_ASSERT_CS1N_BITS);
 }
 
-static void __no_inline_not_in_flash_func(csr_send_command)(uint32_t cmd, uint8_t *rx)
+static void __no_inline_not_in_flash_func(csr_send_command)(uint32_t cmd, uint16_t *rx)
 {
 	uint8_t res;
 
@@ -236,7 +237,6 @@ static int32_t psram_init(int pin)
 	uint8_t psram_id[8] = { 0 };
 
 
-	log_msg(LOG_DEBUG, "PSRAM: Init (CS pin = %u) clk=%u", pin, clk);
 	psram_sz = 0;
 	if (pin < 0)
 		return -1;
@@ -247,14 +247,13 @@ static int32_t psram_init(int pin)
 	/* Check if PSRAM chip is present */
 	psram_read_id(csr_clkdiv, psram_id);
 	if (psram_id[KGD_OFFSET] != KGD_PASS) {
-		log_msg(LOG_NOTICE, "PSRAM: Not found.");
+		/* No PSRAM chip found */
 		return -2;
 	}
 	snprintf(psram_id_str_buf, sizeof(psram_id_str_buf),
 		"%02x%02x%02x%02x%02x%02x%02x%02x",
 		psram_id[0], psram_id[1], psram_id[2], psram_id[3],
 		psram_id[4], psram_id[5], psram_id[6], psram_id[7]);
-	log_msg(LOG_INFO, "PSRAM: Chip ID: %s", psram_id_str_buf);
 
 	/* Density EID[47:45] (encoding of this is manufacturer specific)  */
 	uint8_t density = (psram_id[EID_OFFSET] >> 5);
@@ -284,23 +283,13 @@ static int32_t psram_init(int pin)
 		psram_mf = "Unknown";
 		psram_sz = 1;
 	}
-
 	psram_sz *= 1024 * 1024;
-
-	/* Calculate clock divider for PSRAM */
-	clkdiv = (clk + psram_max_clk - 1) / psram_max_clk;
-
-	log_msg(LOG_NOTICE, "PSRAM: %dKB @ %luMHz (%s)",
-		psram_sz >> 10, (clk / clkdiv ) / 1000000, psram_mf);
-
 
 
 	/* Enable PSRAM */
 
+	clkdiv = (clk + psram_max_clk - 1) / psram_max_clk;
 	psram_qmi_setup(clk, clkdiv, csr_clkdiv);
-	log_msg(LOG_INFO, "PSRAM: timing: %08x", qmi_hw->m[1].timing);
-	log_msg(LOG_DEBUG, "PSRAM: rfmt: %08x, rcmd: %08x", qmi_hw->m[1].rfmt, qmi_hw->m[1].rcmd);
-	log_msg(LOG_DEBUG, "PSRAM: wfmt: %08x, wcmd: %08x", qmi_hw->m[1].wfmt, qmi_hw->m[1].wcmd);
 
 
 	/* Test that we can write to PSRAM */
@@ -313,7 +302,7 @@ static int32_t psram_init(int pin)
 	psram[0] = 0;
 	volatile uint32_t readback_2 = psram[0];
 	if (readback_1 != 0xdeadc0de || readback_2 != 0) {
-		log_msg(LOG_ERR, "PSRAM: Cannot write to PSRAM!");
+		/* Cannot write to PSRAM! */
 		psram_sz = 0;
 		return -3;
 	}
@@ -327,8 +316,7 @@ static int32_t psram_init(int pin)
 	psram[0] = 0;
 	psram[psram_len - 1] = 0;
 	if (readback_1 != 0x004443 || readback_2 != 0x42410000) {
-		log_msg(LOG_ERR, "PSRAM: memory size mismatch! (%08x,%08x)",
-			readback_1, readback_2);
+		/* Size mismatch! */
 		psram_sz = 0;
 		return -4;
 	}
@@ -346,15 +334,21 @@ static int32_t psram_init(int pin)
 
 void setup_psram()
 {
-#ifdef FANPICO_PSRAM_PIN
-	psram_init(FANPICO_PSRAM_PIN);
+#ifdef PSRAM_CS_PIN
+	int res = psram_init(PSRAM_CS_PIN);
+	if (res == -3) {
+		printf("Cannot write to PSRAM!\n");
+	}
+	else if (res == -4) {
+		printf("PRSAM: memory size mismatch!\n");
+	}
 #endif
 }
 
 
 size_t psram_size()
 {
-#ifdef FANPICO_PSRAM_PIN
+#ifdef PSRAM_CS_PIN
 	return psram_sz;
 #else
 	return 0;
@@ -363,19 +357,19 @@ size_t psram_size()
 
 const char* psram_manufacturer()
 {
-#ifdef FANPICO_PSRAM_PIN
-	return psram_mf ? psram_mf : "N/A";
+#ifdef PSRAM_CS_PIN
+	return psram_mf;
 #else
-	return "N/A";
+	return NULL;
 #endif
 }
 
 const char* psram_id_str()
 {
-#ifdef FANPICO_PSRAM_PIN
+#ifdef PSRAM_CS_PIN
 	return psram_id_str_buf;
 #else
-	return "N/A";
+	return NULL;
 #endif
 }
 
