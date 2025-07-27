@@ -206,7 +206,7 @@ static void setup()
 		rebooted_by_watchdog = true;
 	}
 	printf("\n");
-	setup_psram();
+	psram_setup();
 
 	/* Run "SYStem:VERsion?" command... */
 	cmd_version(NULL, NULL, 0, NULL);
