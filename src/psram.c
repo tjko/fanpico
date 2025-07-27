@@ -105,7 +105,7 @@ static inline void csr_disable_direct_mode()
 
 static void __no_inline_not_in_flash_func(csr_send_command)(uint32_t cmd, uint16_t *rx)
 {
-	uint8_t res;
+	uint16_t res;
 
 	hw_set_bits(&qmi_hw->direct_csr, QMI_DIRECT_CSR_ASSERT_CS1N_BITS);
 	qmi_hw->direct_tx = cmd;
@@ -228,13 +228,44 @@ static void __no_inline_not_in_flash_func(psram_qmi_setup)(uint32_t sys_clk,
 	hw_set_bits(&xip_ctrl_hw->ctrl, XIP_CTRL_WRITABLE_M1_BITS);
 }
 
-
-static int32_t psram_init(int pin)
+static bool psram_check_size(void *base_addr, uint32_t size)
 {
+	volatile uint32_t *psram = (volatile uint32_t*)base_addr;
+	uint32_t psram_len = size / sizeof(uint32_t);
+	volatile uint32_t readback_1, readback_2;
+
+
+	if (size > PSRAM_WINDOW_SIZE)
+		return false;
+	if (size == PSRAM_WINDOW_SIZE)
+		return true;
+
+	/* Clear out beginning and end of the PSRAM */
+	psram[0] = 0;
+	psram[psram_len - 1] = 0;
+
+	/* Write 4 bytes so that 2 bytes goes past the 'end' of PSRAM */
+	memcpy(base_addr + size - 2, "ABCD", 4);
+
+	/* Check if we see the 2 bytes written past end of the PSRAM at the beginning */
+	readback_1 = psram[0];
+	readback_2 = psram[psram_len - 1];
+	if (readback_1 != 0x00004443 || readback_2 != 0x42410000)
+		return false;
+
+	return true;
+}
+
+static int psram_init(int pin, bool clear_memory)
+{
+	volatile uint32_t *psram = (volatile uint32_t*)PSRAM_NOCACHE_BASE;
 	uint32_t clk = clock_get_hz(clk_sys);
-	uint8_t clkdiv = 2;
 	uint8_t csr_clkdiv = (clk + psram_max_csr_clk - 1) / psram_max_csr_clk;
 	uint8_t psram_id[8] = { 0 };
+	uint8_t clkdiv;
+	uint8_t density;
+	volatile uint32_t readback_1, readback_2;
+	int ret = 0;
 
 
 	psram_sz = 0;
@@ -256,7 +287,7 @@ static int32_t psram_init(int pin)
 		psram_id[4], psram_id[5], psram_id[6], psram_id[7]);
 
 	/* Density EID[47:45] (encoding of this is manufacturer specific)  */
-	uint8_t density = (psram_id[EID_OFFSET] >> 5);
+	density = (psram_id[EID_OFFSET] >> 5);
 
 
 	/* Try to determine PSRAM size and characteristics */
@@ -287,60 +318,57 @@ static int32_t psram_init(int pin)
 
 
 	/* Enable PSRAM */
-
 	clkdiv = (clk + psram_max_clk - 1) / psram_max_clk;
-	psram_qmi_setup(clk, clkdiv, csr_clkdiv);
+	psram_qmi_setup(clk, clkdiv , csr_clkdiv);
 
 
 	/* Test that we can write to PSRAM */
-
-	volatile uint32_t *psram = (volatile uint32_t*)PSRAM_NOCACHE_BASE;
-	uint32_t psram_len = psram_sz / sizeof(uint32_t);
-
 	psram[0] = 0xdeadc0de;
-	volatile uint32_t readback_1 = psram[0];
+	readback_1 = psram[0];
 	psram[0] = 0;
-	volatile uint32_t readback_2 = psram[0];
+	readback_2 = psram[0];
 	if (readback_1 != 0xdeadc0de || readback_2 != 0) {
 		/* Cannot write to PSRAM! */
 		psram_sz = 0;
 		return -3;
 	}
 
-	/* Validate PSRAM size */
 
-	psram[psram_len - 1] = 0;
-	memcpy((void*)(PSRAM_NOCACHE_BASE) + psram_sz - 2, "ABCD", 4);
-	readback_1 = psram[0];
-	readback_2 = psram[psram_len - 1];
-	psram[0] = 0;
-	psram[psram_len - 1] = 0;
-	if (readback_1 != 0x004443 || readback_2 != 0x42410000) {
-		/* Size mismatch! */
-		psram_sz = 0;
-		return -4;
+	/* Validate PSRAM size determined from the ID */
+	if (!psram_check_size((void*)PSRAM_NOCACHE_BASE, psram_sz))  {
+		/* Size mismatch, try to determine actual size... */
+		uint32_t actual_size = PSRAM_WINDOW_SIZE;
+		for (int i = 1; i < 16;  i <<= 1) {
+			uint32_t len = i << 20;
+			if (psram_check_size((void*)PSRAM_NOCACHE_BASE, len)) {
+				actual_size = len;
+				break;
+			}
+		}
+		psram_sz = actual_size;
+		ret = -4;
 	}
 
-#if 0
-	/* Clear PSRAM */
-	memset((void*)PSRAM_NOCACHE_BASE, 0, psram_sz);
-#endif
+	if (clear_memory) {
+		/* Clear PSRAM */
+		memset((void*)PSRAM_NOCACHE_BASE, 0, psram_sz);
+	}
 
-	return psram_sz;
+	return ret;
 }
 
 #endif
 
 
-void setup_psram()
+void psram_setup()
 {
 #ifdef PSRAM_CS_PIN
-	int res = psram_init(PSRAM_CS_PIN);
+	int res = psram_init(PSRAM_CS_PIN, true);
 	if (res == -3) {
-		printf("Cannot write to PSRAM!\n");
+		printf("PSRAM: Cannot write to PSRAM!\n");
 	}
 	else if (res == -4) {
-		printf("PRSAM: memory size mismatch!\n");
+		printf("PSRAM: Memory size mismatch!\n");
 	}
 #endif
 }

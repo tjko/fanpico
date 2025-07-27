@@ -28,6 +28,7 @@
 #define PSRAM_BASE         _u(0x11000000)
 #define PSRAM_NOCACHE_BASE _u(0x15000000)
 
+#define PSRAM_WINDOW_SIZE  (16 * 1024 * 1024)
 
 
 #ifndef PSRAM_CS_PIN
@@ -42,7 +43,7 @@
  #endif
 #endif
 
-void setup_psram();
+void psram_setup();
 size_t psram_size();
 const char* psram_manufacturer();
 const char* psram_id_str();
