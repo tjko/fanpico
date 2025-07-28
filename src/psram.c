@@ -51,15 +51,11 @@
 #define CMD_READ_ID           0x9f
 #define CMD_DPD_MODE_ENTRY    0xb9
 
-/* Offsets to Read ID command response (8 bytes) */
-#define MFID_OFFSET           0
-#define KGD_OFFSET            1
-#define EID_OFFSET            2  /* 6 bytes */
-
 /* KGD (Known Good Die) Test */
 #define KGD_FAIL              0x55
 #define KGD_PASS              0x5d
 
+/* This just needs to be "slow enough" to reliably send "direct" mode commands */
 #define PSRAM_MAX_CSR_CLK                  5000000 /* 5MHz max clock for "direct" mode */
 
 /* PSRAM Default Timings */
@@ -82,8 +78,7 @@
 
 static size_t psram_sz = 0;
 static char *psram_mf = NULL;
-static char psram_id_str_buf[16 + 1] = { 0 };
-
+static psram_id_t psram_id = { 0 };
 
 
 static inline void csr_busy_wait()
@@ -129,7 +124,7 @@ static void __no_inline_not_in_flash_func(csr_send_command)(uint32_t cmd, uint16
 }
 
 
-static void __no_inline_not_in_flash_func(psram_read_id)(uint8_t csr_clkdiv, uint8_t *psram_id)
+static void __no_inline_not_in_flash_func(psram_read_id)(uint8_t csr_clkdiv, uint8_t *buffer)
 {
 	uint32_t saved_ints = save_and_disable_interrupts();
 	uint8_t rx;
@@ -150,7 +145,7 @@ static void __no_inline_not_in_flash_func(psram_read_id)(uint8_t csr_clkdiv, uin
 		csr_busy_wait();
 		rx = qmi_hw->direct_rx;
 		if (i >= 4)
-			psram_id[i - 4] = rx;
+			buffer[i - 4] = rx;
 	}
 
 	csr_disable_direct_mode();
@@ -235,6 +230,7 @@ static bool psram_check_size(void *base_addr, uint32_t size)
 {
 	volatile uint32_t *psram = (volatile uint32_t*)base_addr;
 	uint32_t psram_len = size / sizeof(uint32_t);
+	bool ret = true;
 
 
 	if (size > PSRAM_WINDOW_SIZE)
@@ -250,10 +246,13 @@ static bool psram_check_size(void *base_addr, uint32_t size)
 	memcpy(base_addr + size - 2, "ABCD", 4);
 
 	/* Check if we see the 2 bytes written past end of the PSRAM at the beginning */
-	if (psram[0] != 0x00004443 || psram[psram_len -1] != 0x42410000)
-		return false;
+	if (psram[0] != 0x00004443 || psram[psram_len - 1] != 0x42410000)
+		ret = false;
 
-	return true;
+	psram[0] = 0;
+	psram[psram_len - 1 ] = 0;
+
+	return ret;
 }
 
 
@@ -261,7 +260,6 @@ static int psram_init(int pin, bool clear_memory)
 {
 	uint32_t sys_clk = clock_get_hz(clk_sys);
 	uint32_t clock_period_fs = 1000000000000000ll / sys_clk;
-	uint8_t psram_id[8] = { 0 };
 	int ret = 0;
 
 	/* Default PSRAM Timings */
@@ -280,25 +278,21 @@ static int psram_init(int pin, bool clear_memory)
 	gpio_set_function(pin, GPIO_FUNC_XIP_CS1);
 
 	/* Check if PSRAM chip is present */
-	psram_read_id(csr_clkdiv, psram_id);
-	if (psram_id[KGD_OFFSET] != KGD_PASS) {
+	psram_read_id(csr_clkdiv, (uint8_t*)&psram_id);
+	if (psram_id.kgd != KGD_PASS) {
 		/* No PSRAM chip found */
 		return -2;
 	}
-	snprintf(psram_id_str_buf, sizeof(psram_id_str_buf),
-		"%02x%02x%02x%02x%02x%02x%02x%02x",
-		psram_id[0], psram_id[1], psram_id[2], psram_id[3],
-		psram_id[4], psram_id[5], psram_id[6], psram_id[7]);
 
 	/* Density EID[47:45] (encoding of this is manufacturer specific)  */
-	uint8_t density = (psram_id[EID_OFFSET] >> 5);
+	uint8_t density = (psram_id.eid[0] >> 5);
 
 	/* Try to determine PSRAM size and characteristics */
-	switch (psram_id[MFID_OFFSET]) {
+	switch (psram_id.mfid) {
 	case MFID_APMEMORY:
 		psram_mf = "AP Memory";
-		psram_sz = 2;
 		psram_min_deselect_fs = PSRAM_APMEMORY_MIN_DESELECT_FS;
+		psram_sz = 2;
 		if (density == 1)
 			psram_sz = 4;
 		else if (density == 2)
@@ -309,7 +303,7 @@ static int psram_init(int pin, bool clear_memory)
 		psram_max_clk = PSRAM_ISSI_MAX_CLK;
 		psram_max_select_fs = PSRAM_ISSI_MAX_SELECT_FS;
 		psram_min_deselect_cs = PSRAM_ISSI_MIN_DESELECT_CS;
-	psram_sz = 1;
+		psram_sz = 1;
 		if (density == 1)
 			psram_sz = 2;
 		else if (density == 2)
@@ -408,10 +402,10 @@ const char* psram_manufacturer()
 }
 
 
-const char* psram_id_str()
+const psram_id_t* psram_get_id()
 {
 #ifdef PSRAM_CS_PIN
-	return psram_id_str_buf;
+	return (const psram_id_t*)&psram_id;
 #else
 	return NULL;
 #endif

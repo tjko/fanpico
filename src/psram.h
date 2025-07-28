@@ -28,7 +28,7 @@
 #define PSRAM_BASE         _u(0x11000000)
 #define PSRAM_NOCACHE_BASE _u(0x15000000)
 
-#define PSRAM_WINDOW_SIZE  (16 * 1024 * 1024)
+#define PSRAM_WINDOW_SIZE  (16 << 20)
 
 
 #ifndef PSRAM_CS_PIN
@@ -43,10 +43,17 @@
  #endif
 #endif
 
+typedef struct psram_id_t {
+	uint8_t mfid;   /* Manufacturer ID) */
+	uint8_t kgd;    /* Known Good Die */
+	uint8_t eid[6]; /* EID */
+} psram_id_t;
+
+
 void psram_setup();
 size_t psram_size();
 const char* psram_manufacturer();
-const char* psram_id_str();
+const psram_id_t* psram_get_id();
 
 
 #endif /* FANPICO_PSRAM_H */
