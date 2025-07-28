@@ -68,10 +68,10 @@ static char *psram_mf = NULL;
 static char psram_id_str_buf[16 + 1] = { 0 };
 
 /* Default PSRAM chip timings */
-static uint32_t psram_max_clk =          109000000; /* 109MHz max clock speed */
-static uint32_t psram_max_csr_clk =        5000000; /* 5MHz max clock speed for "direct" mode */
-static uint32_t psram_max_select_fs64 =  125000000;
-static uint32_t psram_min_deselect_fs =   50000000;
+static uint32_t psram_max_clk =          109000000; /* 109MHz max clock rate */
+static uint32_t psram_max_csr_clk =        5000000; /* 5MHz max clock for for "direct" mode */
+static uint32_t psram_max_select_fs64 =  125000000; /* 125e6 (fs/64) = 8000e6 fs = 8us */
+static uint32_t psram_min_deselect_fs =   50000000; /* 50e6 (fs) = 50ns */
 
 
 static inline void csr_busy_wait()
