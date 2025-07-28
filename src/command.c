@@ -2645,7 +2645,7 @@ int cmd_psram(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 	if (!query)
 		return 1;
 
-#if PICO_RP2040
+#if PICO_RP2040 || PSRAM_CS_PIN < 0
 	printf("No PSRAM support.\n");
 #else
 	uint8_t psram_clkdiv = (qmi_hw->m[1].timing & QMI_M1_TIMING_CLKDIV_BITS)
@@ -2655,8 +2655,9 @@ int cmd_psram(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 
 	printf("Manufacturer: %s\n",
 		(psram_manufacturer() ? psram_manufacturer() : "N/A"));
-	printf("     Chip ID: %02x%02x%02x%02x%02x%02x%02x%02x\n", p->mfid, p->kgd,
-		p->eid[0], p->eid[1], p->eid[2], p->eid[3], p->eid[4], p->eid[5]);
+	if (p)
+		printf("     Chip ID: %02x%02x%02x%02x%02x%02x%02x%02x\n", p->mfid, p->kgd,
+			p->eid[0], p->eid[1], p->eid[2], p->eid[3], p->eid[4], p->eid[5]);
 	printf("        Size: %u KB\n", psram_size() >> 10);
 	printf("       Clock: %lu MHz\n", psram_clk / 1000000);
 	printf("   M1_TIMING: %08lx\n", qmi_hw->m[1].timing);
