@@ -40,11 +40,13 @@
  #define PSRAM_CS_PIN PIMORONI_PICO_PLUS2_W_PSRAM_CS_PIN
  #elifdef WEACT_STUDIO_RP2350B_PSRAM_CS_PIN
  #define PSRAM_CS_PIN WEACT_STUDIO_RP2350B_PSRAM_CS_PIN
+ #elifdef ADAFRUIT_FEATHER_RP2350
+ #define PSRAM_CS_PIN 8
  #endif
 #endif
 
 typedef struct psram_id_t {
-	uint8_t mfid;   /* Manufacturer ID) */
+	uint8_t mfid;   /* Manufacturer ID */
 	uint8_t kgd;    /* Known Good Die */
 	uint8_t eid[6]; /* EID */
 } psram_id_t;
@@ -52,8 +54,8 @@ typedef struct psram_id_t {
 
 void psram_setup();
 size_t psram_size();
-const char* psram_manufacturer();
 const psram_id_t* psram_get_id();
+const char* psram_get_manufacturer(uint8_t mfid);
 
 
 #endif /* FANPICO_PSRAM_H */

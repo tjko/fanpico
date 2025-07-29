@@ -33,6 +33,11 @@
 #include "psram.h"
 
 
+/* NOTE! This code tries to minimize RAM usage.
+   Currently only 324 bytes of RAM is used for static variables
+   and in-memory functions. */
+
+
 /* PSRAM Manufacturer IDs */
 #define MFID_APMEMORY         0x0d
 #define MFID_ISSI             0x9d
@@ -55,29 +60,35 @@
 #define KGD_FAIL              0x55
 #define KGD_PASS              0x5d
 
-/* This just needs to be "slow enough" to reliably send "direct" mode commands */
+
+/* Speed of SPI mode access is not important. It just needs to be "slow enough"
+   to reliably send "direct" mode commands during setup. */
 #define PSRAM_MAX_CSR_CLK                  5000000 /* 5MHz max clock for "direct" mode */
 
-/* PSRAM Default Timings */
-#define PSRAM_DEFAULT_MAX_CLK            109000000 /* 109MHz max clock rate */
-#define PSRAM_DEFAULT_MAX_SELECT_FS     8000000000 /* 8us = 8e9 fs (tCEM) */
-#define PSRAM_DEFAULT_MIN_DESELECT_FS     50000000 /* 50ns = 50e6 fs  (tCPH) */
 
-/* Vedor Specific Timings */
+struct psram_type_t {
+	uint8_t mfid;
+	const char* mfname;
+	uint32_t max_clk;
+	uint64_t max_select_fs;
+	uint32_t min_deselect_fs;
+	int min_deselect_cs;
+};
 
-/* AP Memory */
-#define PSRAM_APMEMORY_MIN_DESELECT_FS    18000000 /* 18ns = 18e6 fs (tCPH) */
 
-/* ISSI */
-#define PSRAM_ISSI_MAX_CLK               104000000 /* 104MHz max clock rate */
-#define PSRAM_ISSI_MAX_SELECT_FS        4000000000 /* 4us = 4e9 fs (tCEM) */
-#define PSRAM_ISSI_MIN_DESELECT_CS               1 /* 1 clock cycle */
+/* PSRAM timings by chip manufacturer */
+
+static const struct psram_type_t psram_chip_types[] = {
+	/* ID             Name        Max Clk (Mhz)   tCEM (fs)    tCPM (fs)   tCPM (cs) */
+	{ MFID_APMEMORY, "AP Memory",     109000000,  8000000000,   18000000,         -1 },
+	{ MFID_ISSI,     "ISSI",          104000000,  4000000000,          0,          1 },
+	{ 0,             "Unknown",       109000000,  8000000000,   50000000,         -1 }
+};
 
 
 #ifdef PSRAM_CS_PIN
 
 static size_t psram_sz = 0;
-static char *psram_mf = NULL;
 static psram_id_t psram_id = { 0 };
 
 
@@ -85,6 +96,7 @@ static inline void csr_busy_wait()
 {
 	/* Wait for BUSY flag to clear */
 	while((qmi_hw->direct_csr & QMI_DIRECT_CSR_BUSY_BITS)) {
+		tight_loop_contents();
 	};
 }
 
@@ -92,6 +104,7 @@ static inline void csr_txempty_wait()
 {
 	/* Wait for TXEMPTY flag to get set */
 	while((qmi_hw->direct_csr & QMI_DIRECT_CSR_TXEMPTY_BITS) == 0) {
+		tight_loop_contents();
 	};
 }
 
@@ -131,13 +144,13 @@ static void __no_inline_not_in_flash_func(psram_read_id)(uint8_t csr_clkdiv, uin
 
 	csr_enable_direct_mode(csr_clkdiv);
 
-	/* Send 'Exit QPI mode' command */
+	/* Send 'Exit QPI mode' command to make sure chip is in SPI mode */
 	csr_send_command(
 		QMI_DIRECT_TX_OE_BITS |
 		QMI_DIRECT_TX_IWIDTH_VALUE_Q << QMI_DIRECT_TX_IWIDTH_LSB |
 		CMD_EXIT_QPI_MODE, NULL);
 
-	/* Send 'Read ID' command */
+	/* Send 'Read ID' command (this only works in SPI mode) */
 	hw_set_bits(&qmi_hw->direct_csr, QMI_DIRECT_CSR_ASSERT_CS1N_BITS);
 	for (int i = 0; i < (4 + 8); i++) {
 		qmi_hw->direct_tx = (i == 0 ? CMD_READ_ID : 0x00);
@@ -226,11 +239,25 @@ static void __no_inline_not_in_flash_func(psram_qmi_setup)(uint8_t clkdiv, uint8
 }
 
 
+static bool psram_is_writable(void *base_addr)
+{
+	volatile uint32_t *psram = (volatile uint32_t*)base_addr;
+	volatile uint32_t rb_1, rb_2;
+
+	/* Test if we can write to PSRAM... */
+	psram[0] = 0xdeadc0de;
+	rb_1 = psram[0];
+	psram[0] = 0;
+	rb_2 = psram[0];
+
+	return (rb_1 == 0xdeadc0de && rb_2 == 0) ? true : false;
+}
+
+
 static bool psram_check_size(void *base_addr, uint32_t size)
 {
 	volatile uint32_t *psram = (volatile uint32_t*)base_addr;
 	uint32_t psram_len = size / sizeof(uint32_t);
-	bool ret = true;
 
 
 	if (size > PSRAM_WINDOW_SIZE)
@@ -238,36 +265,30 @@ static bool psram_check_size(void *base_addr, uint32_t size)
 	if (size == PSRAM_WINDOW_SIZE)
 		return true;
 
-	/* Clear out beginning and end of the PSRAM */
+	/* Clear out beginning of the PSRAM */
 	psram[0] = 0;
-	psram[psram_len - 1] = 0;
 
-	/* Write 4 bytes so that 2 bytes goes past the 'end' of PSRAM */
-	memcpy(base_addr + size - 2, "ABCD", 4);
+	/* Write past the 'end' of PSRAM */
+	psram[psram_len] = 0xc0ffee42;
 
-	/* Check if we see the 2 bytes written past end of the PSRAM at the beginning */
-	if (psram[0] != 0x00004443 || psram[psram_len - 1] != 0x42410000)
-		ret = false;
+	/* Check if we see the earlier write at the beginning of the PSRAM. */
+	if (psram[0] == 0xc0ffee42) {
+		psram[0] = 0;
+		return true;
+	}
 
-	psram[0] = 0;
-	psram[psram_len - 1 ] = 0;
-
-	return ret;
+	psram[psram_len] = 0;
+	return false;
 }
 
 
 static int psram_init(int pin, bool clear_memory)
 {
+	const struct psram_type_t *chip = psram_chip_types;
 	uint32_t sys_clk = clock_get_hz(clk_sys);
 	uint32_t clock_period_fs = 1000000000000000ll / sys_clk;
-	int ret = 0;
-
-	/* Default PSRAM Timings */
-	uint32_t psram_max_clk = PSRAM_DEFAULT_MAX_CLK;
-	uint64_t psram_max_select_fs = PSRAM_DEFAULT_MAX_SELECT_FS;
-	uint32_t psram_min_deselect_fs = PSRAM_DEFAULT_MIN_DESELECT_FS;
-	int psram_min_deselect_cs = -1;
 	uint8_t csr_clkdiv = (sys_clk + PSRAM_MAX_CSR_CLK - 1) / PSRAM_MAX_CSR_CLK;
+	int ret = 0;
 
 
 	psram_sz = 0;
@@ -284,14 +305,16 @@ static int psram_init(int pin, bool clear_memory)
 		return -2;
 	}
 
+	/* Lookup PSRAM Timings */
+	while (chip->mfid && chip->mfid != psram_id.mfid)
+		chip++;
+
 	/* Density EID[47:45] (encoding of this is manufacturer specific)  */
 	uint8_t density = (psram_id.eid[0] >> 5);
 
-	/* Try to determine PSRAM size and characteristics */
+	/* Try to determine PSRAM size */
 	switch (psram_id.mfid) {
 	case MFID_APMEMORY:
-		psram_mf = "AP Memory";
-		psram_min_deselect_fs = PSRAM_APMEMORY_MIN_DESELECT_FS;
 		psram_sz = 2;
 		if (density == 1)
 			psram_sz = 4;
@@ -299,10 +322,6 @@ static int psram_init(int pin, bool clear_memory)
 			psram_sz = 8;
 		break;
 	case MFID_ISSI:
-		psram_mf = "ISSI";
-		psram_max_clk = PSRAM_ISSI_MAX_CLK;
-		psram_max_select_fs = PSRAM_ISSI_MAX_SELECT_FS;
-		psram_min_deselect_cs = PSRAM_ISSI_MIN_DESELECT_CS;
 		psram_sz = 1;
 		if (density == 1)
 			psram_sz = 2;
@@ -310,7 +329,6 @@ static int psram_init(int pin, bool clear_memory)
 			psram_sz = 4;
 		break;
 	default:
-		psram_mf = "Unknown";
 		psram_sz = 1;
 	}
 
@@ -319,13 +337,13 @@ static int psram_init(int pin, bool clear_memory)
 
 
 	/* Calculate clock divider to get as close as possible to the max supported clock speed */
-	uint8_t clkdiv = (sys_clk + psram_max_clk - 1) / psram_max_clk;
+	uint8_t clkdiv = (sys_clk + chip->max_clk - 1) / chip->max_clk;
 
 	/* Calculate PSRAM timings */
-	uint8_t max_select = (psram_max_select_fs >> 6) / clock_period_fs;
-	uint8_t min_deselect = (psram_min_deselect_fs + clock_period_fs - 1) / clock_period_fs;
-	if (psram_min_deselect_cs >= 0)
-		min_deselect = psram_min_deselect_cs;
+	uint8_t max_select = (chip->max_select_fs >> 6) / clock_period_fs;
+	uint8_t min_deselect = (chip->min_deselect_fs + clock_period_fs - 1) / clock_period_fs;
+	if (chip->min_deselect_cs >= 0)
+		min_deselect = chip->min_deselect_cs;
 	uint8_t rxdelay = 1 + (sys_clk > 150000000 ? clkdiv : 1);
 
 
@@ -334,27 +352,22 @@ static int psram_init(int pin, bool clear_memory)
 
 
 	/* Test that we can write to PSRAM */
-	volatile uint32_t *psram = (volatile uint32_t*)PSRAM_NOCACHE_BASE;
-	psram[0] = 0xdeadc0de;
-	volatile uint32_t readback_1 = psram[0];
-	psram[0] = 0;
-	volatile uint32_t readback_2 = psram[0];
-	if (readback_1 != 0xdeadc0de || readback_2 != 0) {
+	if (!psram_is_writable((void*)PSRAM_NOCACHE_BASE)) {
 		/* Cannot write to PSRAM! */
 		psram_sz = 0;
 		return -3;
 	}
 
 	/* Validate PSRAM size determined from the Read ID command */
-	if (!psram_check_size((void*)PSRAM_NOCACHE_BASE, psram_sz))  {
-		/* Size mismatch, try to determine actual size... */
-		uint32_t actual_size = PSRAM_WINDOW_SIZE;
-		for (int i = 1; i < 16;  i <<= 1) {
-			if (psram_check_size((void*)PSRAM_NOCACHE_BASE, i << 20)) {
-				actual_size = i << 20;
-				break;
-			}
+	uint32_t actual_size = PSRAM_WINDOW_SIZE;
+	for (uint32_t i = 1 << 20; i < PSRAM_WINDOW_SIZE;  i <<= 1) {
+		if (psram_check_size((void*)PSRAM_NOCACHE_BASE, i)) {
+			actual_size = i;
+			break;
 		}
+	}
+	if (actual_size != psram_sz) {
+		/* PSRAM size mismatch. Use detected memory size. */
 		psram_sz = actual_size;
 		ret = -4;
 	}
@@ -392,16 +405,6 @@ size_t psram_size()
 }
 
 
-const char* psram_manufacturer()
-{
-#ifdef PSRAM_CS_PIN
-	return psram_mf;
-#else
-	return NULL;
-#endif
-}
-
-
 const psram_id_t* psram_get_id()
 {
 #ifdef PSRAM_CS_PIN
@@ -411,3 +414,13 @@ const psram_id_t* psram_get_id()
 #endif
 }
 
+
+const char* psram_get_manufacturer(uint8_t mfid)
+{
+	const struct psram_type_t *chip = psram_chip_types;
+
+	while (chip->mfid && chip->mfid != mfid)
+		chip++;
+
+	return chip->mfname;
+}
