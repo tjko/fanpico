@@ -32,7 +32,6 @@
 
 #include "psram.h"
 
-#ifdef PSRAM_CS_PIN
 
 /* NOTE! This code tries to minimize RAM usage.
    Currently only 324 bytes of RAM is used for static variables
@@ -85,6 +84,9 @@ static const struct psram_type_t psram_chip_types[] = {
 	{ MFID_ISSI,     "ISSI",          104000000,  4000000000,          0,          1 },
 	{ 0,             "Unknown",       109000000,  8000000000,   50000000,         -1 }
 };
+
+
+#ifdef PSRAM_CS_PIN
 
 static size_t psram_sz = 0;
 static psram_id_t psram_id = { 0 };
