@@ -50,6 +50,7 @@
 #include "lwip/ip_addr.h"
 #include "lwip/stats.h"
 #include "pico_telnetd/util.h"
+#include "util_net.h"
 #endif
 
 
@@ -2335,6 +2336,12 @@ int cmd_ssh_pubkey_del(const char *cmd, const char *args, int query, struct prev
 	return 0;
 }
 
+int cmd_ssh_acls(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return acl_list_change(cmd, args, query, prev_cmd, "SSH Server ACLs", conf->ssh_acls,
+		SSH_MAX_ACL_ENTRIES);
+}
+
 int cmd_telnet_auth(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return bool_setting(cmd, args, query, prev_cmd,
@@ -2381,6 +2388,12 @@ int cmd_telnet_pass(const char *cmd, const char *args, int query, struct prev_cm
 		log_msg(LOG_NOTICE, "Telnet password removed.");
 	}
 	return 0;
+}
+
+int cmd_telnet_acls(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return acl_list_change(cmd, args, query, prev_cmd, "Telnet Server ACLs",
+			conf->telnet_acls, TELNET_MAX_ACL_ENTRIES);
 }
 
 int cmd_snmp_agent(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -2978,6 +2991,7 @@ const struct cmd_t ssh_pubkey_commands[] = {
 };
 
 const struct cmd_t ssh_commands[] = {
+	{ "ACLs",      3, NULL,              cmd_ssh_acls },
 	{ "AUTH",      4, NULL,              cmd_ssh_auth },
 	{ "PORT",      4, NULL,              cmd_ssh_port },
 	{ "SERVer",    4, NULL,              cmd_ssh_server },
@@ -2989,6 +3003,7 @@ const struct cmd_t ssh_commands[] = {
 };
 
 const struct cmd_t telnet_commands[] = {
+	{ "ACLs",      3, NULL,              cmd_telnet_acls },
 	{ "AUTH",      4, NULL,              cmd_telnet_auth },
 	{ "PORT",      4, NULL,              cmd_telnet_port },
 	{ "RAWmode",   3, NULL,              cmd_telnet_rawmode },

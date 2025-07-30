@@ -471,6 +471,64 @@ static cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
 	return o;
 }
 
+static void json2acllist(cJSON *item, acl_entry_t *list, uint32_t len)
+{
+	cJSON *o;
+	char *val;
+	ip_addr_t tmpip;
+	int count = 0;
+	char *s, *tok, *saveptr;
+	int prefix;
+
+	for (int i = 0; i < len; i++) {
+		ip_addr_set_any(0, &list[i].ip);
+		list[i].prefix = 0;
+	}
+
+	cJSON_ArrayForEach(o, item) {
+		val = cJSON_GetStringValue(o);
+		if (val && count < len && (s = strdup(val))) {
+			tok = strtok_r(s, "/", &saveptr);
+			if (tok && ipaddr_aton(tok, &tmpip)) {
+				tok = strtok_r(NULL, "/", &saveptr);
+				if (tok && str_to_int(tok, &prefix, 10)) {
+					ip_addr_copy(list[count].ip, tmpip);
+					list[count].prefix = clamp_int(prefix, 0,
+								IP_IS_V6(tmpip) ? 128 : 32);
+					count++;
+				}
+			}
+			free(s);
+		}
+	}
+
+}
+
+static cJSON* acllist2json(const acl_entry_t *list, uint32_t len)
+{
+	cJSON *o;
+	char tmp[128];
+	int count = 0;
+
+	if ((o = cJSON_CreateArray()) == NULL)
+		return NULL;
+
+	for (int i = 0; i < len; i++) {
+		if (list[i].prefix > 0) {
+			snprintf(tmp, sizeof(tmp), "%s/%u", ipaddr_ntoa(&list[i].ip),
+				list[i].prefix);
+			cJSON_AddItemToArray(o, cJSON_CreateString(tmp));
+			count++;
+		}
+	}
+
+	if (count < 1) {
+		cJSON_Delete(o);
+		o = NULL;
+	}
+
+	return o;
+}
 
 int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk)
 {
@@ -978,6 +1036,9 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "telnet_user", cJSON_CreateString(cfg->telnet_user));
 	if (strlen(cfg->telnet_pwhash) > 0)
 		cJSON_AddItemToObject(config, "telnet_pwhash", cJSON_CreateString(cfg->telnet_pwhash));
+	if ((o = acllist2json(cfg->telnet_acls, TELNET_MAX_ACL_ENTRIES))) {
+		cJSON_AddItemToObject(config, "telnet_acls", o);
+	}
 	if (cfg->snmp_active)
 		cJSON_AddItemToObject(config, "snmp_active", cJSON_CreateNumber(cfg->snmp_active));
 	if (strlen(cfg->snmp_community) > 0)
@@ -1006,6 +1067,9 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "ssh_pwhash", cJSON_CreateString(cfg->ssh_pwhash));
 	if ((o = sshpubkeys2json(cfg->ssh_pub_keys))) {
 		cJSON_AddItemToObject(config, "ssh_pubkeys", o);
+	}
+	if ((o = acllist2json(cfg->ssh_acls, SSH_MAX_ACL_ENTRIES))) {
+		cJSON_AddItemToObject(config, "ssh_acls", o);
 	}
 #endif
 
@@ -1393,6 +1457,9 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if ((val = cJSON_GetStringValue(ref)))
 			strncopy(cfg->telnet_pwhash, val, sizeof(cfg->telnet_pwhash));
 	}
+	if ((ref = cJSON_GetObjectItem(config, "telnet_acls"))) {
+		json2acllist(ref, cfg->telnet_acls, TELNET_MAX_ACL_ENTRIES);
+	}
 	if ((ref = cJSON_GetObjectItem(config, "snmp_active"))) {
 		cfg->snmp_active = cJSON_GetNumberValue(ref);
 	}
@@ -1442,6 +1509,9 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	}
 	if ((ref = cJSON_GetObjectItem(config, "ssh_pubkeys"))) {
 		json2sshpubkeys(ref, cfg->ssh_pub_keys);
+	}
+	if ((ref = cJSON_GetObjectItem(config, "ssh_acls"))) {
+		json2acllist(ref, cfg->ssh_acls, SSH_MAX_ACL_ENTRIES);
 	}
 #endif
 
