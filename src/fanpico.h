@@ -70,6 +70,8 @@
 #define DEFAULT_MQTT_RPM_INTERVAL     60
 #define DEFAULT_MQTT_DUTY_INTERVAL    60
 
+#define TELNET_MAX_ACL_ENTRIES 4
+#define SSH_MAX_ACL_ENTRIES 4
 #define SSH_MAX_PUB_KEYS  4
 #define MAX_USERNAME_LEN  16
 #define MAX_PWHASH_LEN    128
@@ -100,9 +102,9 @@ enum pwm_source_types {
 #define PWM_SOURCE_ENUM_MAX 4
 
 enum signal_filter_types {
-	FILTER_NONE = 0,      /* No filtering */
+	FILTER_NONE      = 0, /* No filtering */
 	FILTER_LOSSYPEAK = 1, /* "Lossy Peak Detector" with time decay */
-	FILTER_SMA = 2,       /* Simple moving average */
+	FILTER_SMA       = 2, /* Simple moving average */
 };
 #define FILTER_ENUM_MAX 2
 
@@ -122,22 +124,28 @@ enum temp_sensor_types {
 #define TEMP_ENUM_MAX 1
 
 enum vsensor_modes {
-	VSMODE_MANUAL = 0,
-	VSMODE_MAX = 1,
-	VSMODE_MIN = 2,
-	VSMODE_AVG = 3,
-	VSMODE_DELTA = 4,
+	VSMODE_MANUAL  = 0,
+	VSMODE_MAX     = 1,
+	VSMODE_MIN     = 2,
+	VSMODE_AVG     = 3,
+	VSMODE_DELTA   = 4,
 	VSMODE_ONEWIRE = 5,
-	VSMODE_I2C = 6,
+	VSMODE_I2C     = 6,
 };
 #define VSMODE_ENUM_MAX 6
 
 enum rpm_modes {
 	RMODE_TACHO = 0,  /* Normal Tachometer signal */
-	RMODE_LRA = 1,    /* Locked Rotor Alarm signal */
+	RMODE_LRA   = 1,  /* Locked Rotor Alarm signal */
 };
 #define RPMMODE_ENUM_MAX 1
 
+#ifdef WIFI_SUPPORT
+typedef struct acl_entry_t {
+	ip_addr_t ip;
+	uint8_t prefix;
+} acl_entry_t;
+#endif
 
 struct ssh_public_key {
 	char username[MAX_USERNAME_LEN + 1];
@@ -300,6 +308,7 @@ struct fanpico_config {
 	uint32_t telnet_port;
 	char telnet_user[MAX_USERNAME_LEN + 1];
 	char telnet_pwhash[MAX_PWHASH_LEN + 1];
+	acl_entry_t telnet_acls[TELNET_MAX_ACL_ENTRIES];
 	bool snmp_active;
 	char snmp_community[SNMP_MAX_COMMUNITY_STR_LEN + 1];
 	char snmp_community_write[SNMP_MAX_COMMUNITY_STR_LEN + 1];
@@ -314,6 +323,7 @@ struct fanpico_config {
 	char ssh_user[MAX_USERNAME_LEN + 1];
 	char ssh_pwhash[MAX_PWHASH_LEN + 1];
 	struct ssh_public_key ssh_pub_keys[SSH_MAX_PUB_KEYS];
+	acl_entry_t ssh_acls[SSH_MAX_ACL_ENTRIES];
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];

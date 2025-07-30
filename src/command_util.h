@@ -68,6 +68,8 @@ int ip_change(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 		const char *name, ip_addr_t *ip);
 int ip_list_change(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		const char *name, ip_addr_t *ip, uint32_t list_len);
+int acl_list_change(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
+		const char *name, acl_entry_t *ip, uint32_t list_len);
 #endif
 int array_string_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 			int cmd_offset, void *array, size_t array_size,
