@@ -50,6 +50,7 @@
 #include "lwip/ip_addr.h"
 #include "lwip/stats.h"
 #include "pico_telnetd/util.h"
+#include "util_net.h"
 #endif
 
 

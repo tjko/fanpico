@@ -30,6 +30,7 @@
 #include "lwip/dns.h"
 #include "lwip/apps/sntp.h"
 #include "lwip/apps/httpd.h"
+#include "util_net.h"
 #endif
 
 #include "fanpico.h"
