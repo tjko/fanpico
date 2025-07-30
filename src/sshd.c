@@ -47,14 +47,16 @@ static int ssh_allow_connection_cb(ip_addr_t *src_ip)
 {
 	int ret = 0;
 	int aclcount = 0;
-	ip_addr_t netmask;
 
 	if (!src_ip)
 		return -1;
 
 	for (int i = 0; i < SSH_MAX_ACL_ENTRIES; i++) {
 		const acl_entry_t *acl = &cfg->ssh_acls[i];
+
 		if (acl->prefix > 0) {
+			ip_addr_t netmask;
+
 			aclcount++;
 			make_netmask(&netmask, acl->prefix);
 			if (ip_addr_netcmp(&acl->ip, src_ip, &netmask)) {

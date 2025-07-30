@@ -30,16 +30,17 @@
 #include "lwip/tcp.h"
 #include "pico_telnetd.h"
 #include "pico_telnetd/util.h"
+#include "util_net.h"
 #include "fanpico.h"
 
 
 static const char *telnet_banner = "\r\n"
-	"  _____           ____  _           \r\n"
-	" |  ___|_ _ _ __ |  _ \\(_) ___ ___  \r\n"
-	" | |_ / _` | '_ \\| |_) | |/ __/ _ \\ \r\n"
+	"  _____           ____  _\r\n"
+	" |  ___|_ _ _ __ |  _ \\(_) ___ ___\r\n"
+	" | |_ / _` | '_ \\| |_) | |/ __/ _ \\\r\n"
 	" |  _| (_| | | | |  __/| | (_| (_) |\r\n"
-	" |_|  \\__,_|_| |_|_|   |_|\\___\\___/ \r\n"
-	"                                     \r\n";
+	" |_|  \\__,_|_| |_|_|   |_|\\___\\___/\r\n"
+	"\r\n";
 
 static user_pwhash_entry_t telnet_users[] = {
 	{ NULL, NULL },
@@ -47,6 +48,34 @@ static user_pwhash_entry_t telnet_users[] = {
 };
 
 static tcp_server_t *telnet_srv = NULL;
+
+
+static int telnet_allow_connection_cb(ip_addr_t *src_ip)
+{
+	int ret = 0;
+	int aclcount = 0;
+
+	if (!src_ip)
+		return -1;
+
+	for (int i = 0; i < TELNET_MAX_ACL_ENTRIES; i++) {
+		const acl_entry_t *acl = &cfg->telnet_acls[i];
+
+		if (acl->prefix > 0) {
+			ip_addr_t netmask;
+
+			aclcount++;
+			make_netmask(&netmask, acl->prefix);
+			if (ip_addr_netcmp(&acl->ip, src_ip, &netmask)) {
+				ret = 1;
+				break;
+			}
+		}
+	}
+
+	return (aclcount > 0 ? ret: 1);
+}
+
 
 void telnetserver_init()
 {
@@ -65,6 +94,7 @@ void telnetserver_init()
 	}
 	telnet_srv->log_cb = log_msg;
 	telnet_srv->banner = telnet_banner;
+	telnet_srv->allow_connect_cb = telnet_allow_connection_cb;
 
 	telnet_server_start(telnet_srv, true);
 }
