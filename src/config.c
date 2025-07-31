@@ -1056,10 +1056,44 @@ panic:
 
 
 
+#define JSON_TO_NUM(name, var) { \
+	if ((ref = cJSON_GetObjectItem(config, name))) {	\
+		var = cJSON_GetNumberValue(ref);		\
+	}							\
+}
+
+#define JSON_TO_IP(name, var) { \
+	if ((ref = cJSON_GetObjectItem(config, name))) {	\
+		if ((val = cJSON_GetStringValue(ref)))		\
+			ipaddr_aton(val, var);			\
+	}							\
+}
+
+#define JSON_TO_BITMASK(name, var, max_count) {			\
+	if ((ref = cJSON_GetObjectItem(config, name))) {	\
+		uint32_t m;					\
+		if (!str_to_bitmask(cJSON_GetStringValue(ref),	\
+					max_count, &m, 1))	\
+			var = m;				\
+	}							\
+}
+
 #define JSON_TO_STRING(name, var) { \
 	if ((ref = cJSON_GetObjectItem(config, name))) {	\
 		if ((val = cJSON_GetStringValue(ref)))		\
 			strncopy(var, val, sizeof(var));	\
+	}							\
+}
+
+#define JSON_TO_PASSWD(name, var) { \
+	if ((ref = cJSON_GetObjectItem(config, name))) {	\
+		if ((val = cJSON_GetStringValue(ref))) {	\
+			char *p = base64decode(val);		\
+			if (p) {				\
+				strncopy(var, p, sizeof(var));	\
+				free(p);			\
+			}					\
+		}						\
 	}							\
 }
 
@@ -1086,18 +1120,12 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		set_syslog_level(cJSON_GetNumberValue(ref));
 	if ((ref = cJSON_GetObjectItem(config, "local_echo")))
 		cfg->local_echo = (cJSON_IsTrue(ref) ? true : false);
-	if ((ref = cJSON_GetObjectItem(config, "led_mode")))
-		cfg->led_mode = cJSON_GetNumberValue(ref);
-	if ((ref = cJSON_GetObjectItem(config, "spi_active")))
-		cfg->spi_active = cJSON_GetNumberValue(ref);
-	if ((ref = cJSON_GetObjectItem(config, "serial_active")))
-		cfg->serial_active = cJSON_GetNumberValue(ref);
-	if ((ref = cJSON_GetObjectItem(config, "onewire_active")))
-		cfg->onewire_active = cJSON_GetNumberValue(ref);
-	if ((ref = cJSON_GetObjectItem(config, "i2c_speed")))
-		cfg->i2c_speed = cJSON_GetNumberValue(ref);
-	if ((ref = cJSON_GetObjectItem(config, "adc_vref")))
-	    cfg->adc_vref = cJSON_GetNumberValue(ref);
+	JSON_TO_NUM("led_mode", cfg->led_mode);
+	JSON_TO_NUM("spi_active", cfg->spi_active);
+	JSON_TO_NUM("serial_active", cfg->serial_active);
+	JSON_TO_NUM("onewire_active", cfg->onewire_active);
+	JSON_TO_NUM("i2c_speed", cfg->i2c_speed);
+	JSON_TO_NUM("adc_vref", cfg->adc_vref);
 	JSON_TO_STRING("display_type", cfg->display_type);
 	JSON_TO_STRING("display_theme", cfg->display_theme);
 	JSON_TO_STRING("display_logo", cfg->display_logo);
@@ -1106,117 +1134,43 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	JSON_TO_STRING("timezone", cfg->timezone);
 
 #ifdef WIFI_SUPPORT
-	uint32_t m;
-
 	JSON_TO_STRING("hostname", cfg->hostname);
 	JSON_TO_STRING("wifi_country", cfg->wifi_country);
 	JSON_TO_STRING("wifi_ssid", cfg->wifi_ssid);
-	if ((ref = cJSON_GetObjectItem(config, "wifi_passwd"))) {
-		if ((val = cJSON_GetStringValue(ref))) {
-			char *p = base64decode(val);
-			if (p) {
-				strncopy(cfg->wifi_passwd, p, sizeof(cfg->wifi_passwd));
-				free(p);
-			}
-		}
-	}
+	JSON_TO_PASSWD("wifi_passwd", cfg->wifi_passwd);
 	JSON_TO_STRING("wifi_auth_mode", cfg->wifi_auth_mode);
-	if ((ref = cJSON_GetObjectItem(config, "wifi_mode"))) {
-		cfg->wifi_mode = cJSON_GetNumberValue(ref);
-	}
+	JSON_TO_NUM("wifi_mode", cfg->wifi_mode);
 	if ((ref = cJSON_GetObjectItem(config, "dns_servers"))) {
 		json2iplist(ref, cfg->dns_servers, DNS_MAX_SERVERS);
 	}
-	if ((ref = cJSON_GetObjectItem(config, "syslog_server"))) {
-		if ((val = cJSON_GetStringValue(ref)))
-			ipaddr_aton(val, &cfg->syslog_server);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "ntp_server"))) {
-		if ((val = cJSON_GetStringValue(ref)))
-			ipaddr_aton(val, &cfg->ntp_server);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "ip"))) {
-		if ((val = cJSON_GetStringValue(ref)))
-			ipaddr_aton(val, &cfg->ip);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "netmask"))) {
-		if ((val = cJSON_GetStringValue(ref)))
-			ipaddr_aton(val, &cfg->netmask);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "gateway"))) {
-		if ((val = cJSON_GetStringValue(ref)))
-			ipaddr_aton(val, &cfg->gateway);
-	}
+	JSON_TO_IP("syslog_server", &cfg->syslog_server);
+	JSON_TO_IP("ntp_server", &cfg->ntp_server);
+	JSON_TO_IP("ip", &cfg->ip);
+	JSON_TO_IP("netmask", &cfg->netmask);
+	JSON_TO_IP("gateway", &cfg->gateway);
+
 	JSON_TO_STRING("mqtt_server", cfg->mqtt_server);
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_port"))) {
-		cfg->mqtt_port = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_tls"))) {
-		cfg->mqtt_tls = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_allow_scpi"))) {
-		cfg->mqtt_allow_scpi = cJSON_GetNumberValue(ref);
-	}
+	JSON_TO_NUM("mqtt_port", cfg->mqtt_port);
+	JSON_TO_NUM("mqtt_tls", cfg->mqtt_tls);
+	JSON_TO_NUM("mqtt_allow_scpi", cfg->mqtt_allow_scpi);
 	JSON_TO_STRING("mqtt_user", cfg->mqtt_user);
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_pass"))) {
-		if ((val = cJSON_GetStringValue(ref))) {
-			char *p = base64decode(val);
-			if (p) {
-				strncopy(cfg->mqtt_pass, p, sizeof(cfg->mqtt_pass));
-				free(p);
-			}
-		}
-	}
+	JSON_TO_PASSWD("mqtt_pass", cfg->mqtt_pass);
 	JSON_TO_STRING("mqtt_status_topic", cfg->mqtt_status_topic);
 	JSON_TO_STRING("mqtt_cmd_topic", cfg->mqtt_cmd_topic);
 	JSON_TO_STRING("mqtt_resp_topic", cfg->mqtt_resp_topic);
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_status_interval"))) {
-		cfg->mqtt_status_interval = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_temp_interval"))) {
-		cfg->mqtt_temp_interval = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_vsensor_interval"))) {
-		cfg->mqtt_vsensor_interval = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_rpm_interval"))) {
-		cfg->mqtt_rpm_interval = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_duty_interval"))) {
-		cfg->mqtt_duty_interval = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_temp_mask"))) {
-		if (!str_to_bitmask(cJSON_GetStringValue(ref), SENSOR_MAX_COUNT, &m, 1))
-			cfg->mqtt_temp_mask = m;
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_vtemp_mask"))) {
-		if (!str_to_bitmask(cJSON_GetStringValue(ref), VSENSOR_MAX_COUNT, &m, 1))
-			cfg->mqtt_vtemp_mask = m;
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_vhumidity_mask"))) {
-		if (!str_to_bitmask(cJSON_GetStringValue(ref), VSENSOR_MAX_COUNT, &m, 1))
-			cfg->mqtt_vhumidity_mask = m;
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_vpressure_mask"))) {
-		if (!str_to_bitmask(cJSON_GetStringValue(ref), VSENSOR_MAX_COUNT, &m, 1))
-			cfg->mqtt_vpressure_mask = m;
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_fan_rpm_mask"))) {
-		if (!str_to_bitmask(cJSON_GetStringValue(ref), FAN_MAX_COUNT, &m, 1))
-			cfg->mqtt_fan_rpm_mask = m;
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_fan_duty_mask"))) {
-		if (!str_to_bitmask(cJSON_GetStringValue(ref), FAN_MAX_COUNT, &m, 1))
-			cfg->mqtt_fan_duty_mask = m;
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_mbfan_rpm_mask"))) {
-		if (!str_to_bitmask(cJSON_GetStringValue(ref), MBFAN_MAX_COUNT, &m, 1))
-			cfg->mqtt_mbfan_rpm_mask = m;
-	}
-	if ((ref = cJSON_GetObjectItem(config, "mqtt_mbfan_duty_mask"))) {
-		if (!str_to_bitmask(cJSON_GetStringValue(ref), MBFAN_MAX_COUNT, &m, 1))
-			cfg->mqtt_mbfan_duty_mask = m;
-	}
+	JSON_TO_NUM("mqtt_status_interval", cfg->mqtt_status_interval);
+	JSON_TO_NUM("mqtt_temp_interval", cfg->mqtt_temp_interval);
+	JSON_TO_NUM("mqtt_vsensor_interval", cfg->mqtt_vsensor_interval);
+	JSON_TO_NUM("mqtt_rpm_interval", cfg->mqtt_rpm_interval);
+	JSON_TO_NUM("mqtt_duty_interval", cfg->mqtt_duty_interval);
+	JSON_TO_BITMASK("mqtt_temp_mask", cfg->mqtt_temp_mask, SENSOR_MAX_COUNT);
+	JSON_TO_BITMASK("mqtt_vtemp_mask", cfg->mqtt_vtemp_mask, VSENSOR_MAX_COUNT);
+	JSON_TO_BITMASK("mqtt_vhumidity_mask", cfg->mqtt_vhumidity_mask, VSENSOR_MAX_COUNT);
+	JSON_TO_BITMASK("mqtt_vpressure_mask", cfg->mqtt_vpressure_mask, VSENSOR_MAX_COUNT);
+	JSON_TO_BITMASK("mqtt_fan_rpm_mask", cfg->mqtt_fan_rpm_mask, FAN_MAX_COUNT);
+	JSON_TO_BITMASK("mqtt_fan_duty_mask", cfg->mqtt_fan_duty_mask, FAN_MAX_COUNT);
+	JSON_TO_BITMASK("mqtt_mbfan_rpm_mask", cfg->mqtt_mbfan_rpm_mask, MBFAN_MAX_COUNT);
+	JSON_TO_BITMASK("mqtt_mbfan_duty_mask", cfg->mqtt_mbfan_duty_mask, MBFAN_MAX_COUNT);
 	JSON_TO_STRING("mqtt_temp_topic", cfg->mqtt_temp_topic);
 	JSON_TO_STRING("mqtt_vtemp_topic", cfg->mqtt_vtemp_topic);
 	JSON_TO_STRING("mqtt_vhumidity_topic", cfg->mqtt_vhumidity_topic);
@@ -1226,46 +1180,28 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	JSON_TO_STRING("mqtt_mbfan_rpm_topic", cfg->mqtt_mbfan_rpm_topic);
 	JSON_TO_STRING("mqtt_mbfan_duty_topic", cfg->mqtt_mbfan_duty_topic);
 	JSON_TO_STRING("mqtt_ha_discovery_prefix", cfg->mqtt_ha_discovery_prefix);
-	if ((ref = cJSON_GetObjectItem(config, "telnet_active"))) {
-		cfg->telnet_active = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "telnet_auth"))) {
-		cfg->telnet_auth = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "telnet_raw_mode"))) {
-		cfg->telnet_raw_mode = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "telnet_port"))) {
-		cfg->telnet_port = cJSON_GetNumberValue(ref);
-	}
+
+	JSON_TO_NUM("telnet_active", cfg->telnet_active);
+	JSON_TO_NUM("telnet_auth", cfg->telnet_auth);
+	JSON_TO_NUM("telnet_raw_mode", cfg->telnet_raw_mode);
+	JSON_TO_NUM("telnet_port", cfg->telnet_port);
 	JSON_TO_STRING("telnet_user", cfg->telnet_user);
 	JSON_TO_STRING("telnet_pwhash", cfg->telnet_pwhash);
 	if ((ref = cJSON_GetObjectItem(config, "telnet_acls")))
 		json2acllist(ref, cfg->telnet_acls, TELNET_MAX_ACL_ENTRIES);
-	if ((ref = cJSON_GetObjectItem(config, "snmp_active"))) {
-		cfg->snmp_active = cJSON_GetNumberValue(ref);
-	}
+
+	JSON_TO_NUM("snmp_active", cfg->snmp_active);
 	JSON_TO_STRING("snmp_community", cfg->snmp_community);
 	JSON_TO_STRING("snmp_community_write", cfg->snmp_community_write);
 	JSON_TO_STRING("snmp_contact", cfg->snmp_contact);
 	JSON_TO_STRING("snmp_location", cfg->snmp_location);
 	JSON_TO_STRING("snmp_community_trap", cfg->snmp_community_trap);
-	if ((ref = cJSON_GetObjectItem(config, "snmp_auth_traps"))) {
-		cfg->snmp_auth_traps = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "snmp_trap_dst"))) {
-		if ((val = cJSON_GetStringValue(ref)))
-			ipaddr_aton(val, &cfg->snmp_trap_dst);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "ssh_active"))) {
-		cfg->ssh_active = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "ssh_auth"))) {
-		cfg->ssh_auth = cJSON_GetNumberValue(ref);
-	}
-	if ((ref = cJSON_GetObjectItem(config, "ssh_port"))) {
-		cfg->ssh_port = cJSON_GetNumberValue(ref);
-	}
+	JSON_TO_NUM("snmp_auth_traps", cfg->snmp_auth_traps);
+	JSON_TO_IP("snmp_trap_dst", &cfg->snmp_trap_dst);
+
+	JSON_TO_NUM("ssh_active", cfg->ssh_active);
+	JSON_TO_NUM("ssh_auth", cfg->ssh_auth);
+	JSON_TO_NUM("ssh_port", cfg->ssh_port);
 	JSON_TO_STRING("ssh_user", cfg->ssh_user);
 	JSON_TO_STRING("ssh_pwhash", cfg->ssh_pwhash);
 	if ((ref = cJSON_GetObjectItem(config, "ssh_pubkeys")))
