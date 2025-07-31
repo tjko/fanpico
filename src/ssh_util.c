@@ -51,9 +51,11 @@ static int create_ecdsa_key(void *buf, size_t buf_size)
 	return wolfSSH_MakeEcdsaKey(buf, buf_size, WOLFSSH_ECDSAKEY_PRIME256);
 }
 
-
 static int create_ed25519_key(void *buf, size_t buf_size)
 {
+#if 0
+	return wolfSSH_MakeEd25519Key(buf, buf_size, WOLFSSH_ED25519KEY);
+#else
     WC_RNG rng;
     ed25519_key key;
     int ret = WS_SUCCESS;
@@ -86,6 +88,7 @@ static int create_ed25519_key(void *buf, size_t buf_size)
             ret = WS_CRYPTO_FAILED;
 
     return ret;
+#endif
 }
 
 
