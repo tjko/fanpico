@@ -368,7 +368,8 @@ int bool_setting(const char *cmd, const char *args, int query, struct prev_cmd_t
 	}
 
 	if (*var != val) {
-		log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
+		log_msg(LOG_NOTICE, "%s change %s --> %s", name,
+			(*var ? "ON" : "OFF"), (val ? "ON" : "OFF"));;
 		*var = val;
 	}
 	return 0;
