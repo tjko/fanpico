@@ -778,35 +778,40 @@ void clear_config(struct fanpico_config *cfg)
 }
 
 
-#define NUM_TO_JSON(name, var) {				\
-	cJSON_AddItemToObject(config, name, cJSON_CreateNumber(var)); \
-}
+#define NUM_TO_JSON(name, var) {					\
+		cJSON_AddItemToObject(config, name,			\
+				cJSON_CreateNumber(var));		\
+	}
 
 
-#define STRING_TO_JSON(name, var) {				\
-	if (strlen(var) > 0)					\
-		cJSON_AddItemToObject(config, name, cJSON_CreateString(var)); \
-}
+#define STRING_TO_JSON(name, var) {					\
+		if (strlen(var) > 0)					\
+			cJSON_AddItemToObject(config, name,		\
+					cJSON_CreateString(var));	\
+	}
 
 #define PASSWD_TO_JSON(name, var) {					\
-	if (strlen(var) > 0) {						\
-		char *p = base64encode(var);				\
-		if (p)							\
-			cJSON_AddItemToObject(config, name, cJSON_CreateString(p)); \
-		free(p);						\
-	}								\
-}
+		if (strlen(var) > 0) {					\
+			char *p = base64encode(var);			\
+			if (p)						\
+				cJSON_AddItemToObject(config, name,	\
+						cJSON_CreateString(p));	\
+			free(p);					\
+		}							\
+	}
 
-#define IP_TO_JSON(name, var) {					\
-	if (!ip_addr_isany(var))				\
-		cJSON_AddItemToObject(config, name, cJSON_CreateString(ipaddr_ntoa(var))); \
-}
+#define IP_TO_JSON(name, var) {						\
+		if (!ip_addr_isany(var))				\
+			cJSON_AddItemToObject(config, name,		\
+					cJSON_CreateString(ipaddr_ntoa(var))); \
+	}
 
-#define BITMASK_TO_JSON(name, var, max_count) {			\
-	if (var)						\
-		cJSON_AddItemToObject(config, name, cJSON_CreateString( \
-					bitmask_to_str(var, max_count, 1, true))); \
-}
+#define BITMASK_TO_JSON(name, var, max_count) {				\
+		if (var)						\
+			cJSON_AddItemToObject(config, name,		\
+					cJSON_CreateString(		\
+						bitmask_to_str(var, max_count, 1, true))); \
+	}
 
 
 cJSON *config_to_json(const struct fanpico_config *cfg)
@@ -1056,52 +1061,57 @@ panic:
 
 
 
-#define JSON_TO_NUM(name, var) { \
-	if ((ref = cJSON_GetObjectItem(config, name))) {	\
-		var = cJSON_GetNumberValue(ref);		\
-	}							\
-}
+#define JSON_TO_NUM(name, var) {					\
+		cJSON *ref;						\
+		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+			var = cJSON_GetNumberValue(ref);		\
+		}							\
+	}
 
-#define JSON_TO_IP(name, var) { \
-	if ((ref = cJSON_GetObjectItem(config, name))) {	\
-		if ((val = cJSON_GetStringValue(ref)))		\
-			ipaddr_aton(val, var);			\
-	}							\
-}
+#define JSON_TO_IP(name, var) {						\
+		cJSON *ref;						\
+		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+			if ((val = cJSON_GetStringValue(ref)))		\
+				ipaddr_aton(val, var);			\
+		}							\
+	}
 
-#define JSON_TO_BITMASK(name, var, max_count) {			\
-	if ((ref = cJSON_GetObjectItem(config, name))) {	\
-		uint32_t m;					\
-		if (!str_to_bitmask(cJSON_GetStringValue(ref),	\
-					max_count, &m, 1))	\
-			var = m;				\
-	}							\
-}
+#define JSON_TO_BITMASK(name, var, max_count) {				\
+		cJSON *ref;						\
+		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+			uint32_t m;					\
+			if (!str_to_bitmask(cJSON_GetStringValue(ref),	\
+						max_count, &m, 1))	\
+				var = m;				\
+		}							\
+	}
 
-#define JSON_TO_STRING(name, var) { \
-	if ((ref = cJSON_GetObjectItem(config, name))) {	\
-		if ((val = cJSON_GetStringValue(ref)))		\
-			strncopy(var, val, sizeof(var));	\
-	}							\
-}
+#define JSON_TO_STRING(name, var) {					\
+		cJSON *ref;						\
+		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+			if ((val = cJSON_GetStringValue(ref)))		\
+				strncopy(var, val, sizeof(var));	\
+		}							\
+	}
 
-#define JSON_TO_PASSWD(name, var) { \
-	if ((ref = cJSON_GetObjectItem(config, name))) {	\
-		if ((val = cJSON_GetStringValue(ref))) {	\
-			char *p = base64decode(val);		\
-			if (p) {				\
-				strncopy(var, p, sizeof(var));	\
-				free(p);			\
-			}					\
-		}						\
-	}							\
-}
+#define JSON_TO_PASSWD(name, var) {					\
+		cJSON *ref;						\
+		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+			if ((val = cJSON_GetStringValue(ref))) {	\
+				char *p = base64decode(val);		\
+				if (p) {				\
+					strncopy(var, p, sizeof(var));	\
+					free(p);			\
+				}					\
+			}						\
+		}							\
+	}
 
 int json_to_config(cJSON *config, struct fanpico_config *cfg)
 {
 	cJSON *ref, *item, *r;
 	int id;
-	const char *name, *val;
+	const char *val;
 
 
 	if (!config || !cfg)
@@ -1217,34 +1227,24 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if (id >= 0 && id < FAN_COUNT) {
 			struct fan_output *f = &cfg->fans[id];
 
-			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
-			if (name) strncopy(f->name, name ,sizeof(f->name));
-
-			if ((r = cJSON_GetObjectItem(item, "min_pwm")))
-				f->min_pwm = cJSON_GetNumberValue(r);
-			if ((r = cJSON_GetObjectItem(item, "max_pwm")))
-				f->max_pwm = cJSON_GetNumberValue(r);
-			if ((r = cJSON_GetObjectItem(item, "pwm_coefficient")))
-				f->pwm_coefficient = cJSON_GetNumberValue(r);
-			f->s_type = str2pwm_source(cJSON_GetStringValue(
-							cJSON_GetObjectItem(item, "source_type")));
-			f->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));
+			JSON_TO_STRING("name", f->name);
+			JSON_TO_NUM("min_pwm", f->min_pwm);
+			JSON_TO_NUM("max_pwm", f->max_pwm);
+			JSON_TO_NUM("pwm_coefficient", f->pwm_coefficient);
+			JSON_TO_NUM("rpm_factor", f->rpm_factor);
+			JSON_TO_NUM("lra_low", f->lra_low);
+			JSON_TO_NUM("lra_high", f->lra_high);
+			JSON_TO_NUM("tach_hyst", f->tacho_hyst);
+			JSON_TO_NUM("pwm_hyst", f->pwm_hyst);
+			JSON_TO_NUM("source_id", f->s_id);
+			if ((r = cJSON_GetObjectItem(item, "source_type")))
+				f->s_type = str2pwm_source(cJSON_GetStringValue(r));
+			if ((r = cJSON_GetObjectItem(item, "rpm_mode")))
+				f->rpm_mode = str2rpm_mode(cJSON_GetStringValue(r));
 			if ((r = cJSON_GetObjectItem(item, "pwm_map")))
 				json2pwm_map(r, &f->map);
-			f->rpm_mode = str2rpm_mode(cJSON_GetStringValue(
-							cJSON_GetObjectItem(item, "rpm_mode")));;
-			if ((r = cJSON_GetObjectItem(item,"rpm_factor")))
-				f->rpm_factor = cJSON_GetNumberValue(r);
-			if ((r = cJSON_GetObjectItem(item,"lra_low")))
-				f->lra_low = cJSON_GetNumberValue(r);
-			if ((r = cJSON_GetObjectItem(item,"lra_high")))
-				f->lra_high = cJSON_GetNumberValue(r);
 			if ((r = cJSON_GetObjectItem(item, "filter")))
 				json2filter(r, &f->filter, &f->filter_ctx);
-			if ((r = cJSON_GetObjectItem(item, "tach_hyst")))
-				f->tacho_hyst = cJSON_GetNumberValue(r);
-			if ((r = cJSON_GetObjectItem(item, "pwm_hyst")))
-				f->pwm_hyst = cJSON_GetNumberValue(r);
 		}
 	}
 
@@ -1255,26 +1255,18 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if (id >= 0 && id < MBFAN_COUNT) {
 			struct mb_input *m = &cfg->mbfans[id];
 
-			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
-			if (name) strncopy(m->name, name ,sizeof(m->name));
-
-			if ((r = cJSON_GetObjectItem(item, "min_rpm")))
-				m->min_rpm = cJSON_GetNumberValue(r);
-			if ((r = cJSON_GetObjectItem(item, "max_rpm")))
-				m->max_rpm = cJSON_GetNumberValue(r);
-			m->rpm_mode = str2rpm_mode(cJSON_GetStringValue(
-							cJSON_GetObjectItem(item, "rpm_mode")));;
-			if ((r = cJSON_GetObjectItem(item, "rpm_coefficient")))
-				m->rpm_coefficient = cJSON_GetNumberValue(r);
-			if ((r = cJSON_GetObjectItem(item,"rpm_factor")))
-				m->rpm_factor = cJSON_GetNumberValue(r);
-			if ((r = cJSON_GetObjectItem(item,"lra_treshold")))
-				m->lra_treshold = cJSON_GetNumberValue(r);
-			if ((r = cJSON_GetObjectItem(item,"lra_invert")))
-				m->lra_invert = cJSON_GetNumberValue(r);
-			m->s_type = str2tacho_source(cJSON_GetStringValue(
-							cJSON_GetObjectItem(item, "source_type")));
-			m->s_id = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "source_id"));
+			JSON_TO_STRING("name", m->name);
+			JSON_TO_NUM("min_rpm", m->min_rpm);
+			JSON_TO_NUM("max_rpm", m->max_rpm);
+			JSON_TO_NUM("rpm_coefficient", m->rpm_coefficient);
+			JSON_TO_NUM("rpm_factor", m->rpm_factor);
+			JSON_TO_NUM("lra_treshold", m->lra_treshold);
+			JSON_TO_NUM("lra_invert", m->lra_invert);
+			JSON_TO_NUM("source_id", m->s_id);
+			if ((r = cJSON_GetObjectItem(item, "source_type")))
+				m->s_type = str2tacho_source(cJSON_GetStringValue(r));
+			if ((r = cJSON_GetObjectItem(item, "rpm_mode")))
+				m->rpm_mode = str2rpm_mode(cJSON_GetStringValue(r));
 			if ((r = cJSON_GetObjectItem(item, "sources")))
 				json2tacho_sources(r, m->sources);
 			if ((r = cJSON_GetObjectItem(item, "rpm_map")))
@@ -1291,22 +1283,15 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if (id >= 0 && id < SENSOR_COUNT) {
 			struct sensor_input *s = &cfg->sensors[id];
 
-			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
-			if (name) strncopy(s->name, name ,sizeof(s->name));
-
-			s->type = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "sensor_type"));
+			JSON_TO_STRING("name", s->name);
+			JSON_TO_NUM("sensor_type", s->type);
 			if (s->type == TEMP_EXTERNAL) {
-				s->temp_nominal = cJSON_GetNumberValue(
-					cJSON_GetObjectItem(item, "temperature_nominal"));
-				s->thermistor_nominal = cJSON_GetNumberValue(
-					cJSON_GetObjectItem(item, "thermistor_nominal"));
-				s->beta_coefficient = cJSON_GetNumberValue(
-					cJSON_GetObjectItem(item, "beta_coefficient"));
+				JSON_TO_NUM("temperature_nominal", s->temp_nominal);
+				JSON_TO_NUM("thermistor_nominal", s->thermistor_nominal);
+				JSON_TO_NUM("beta_coefficient", s->beta_coefficient);
 			}
-			s->temp_offset = cJSON_GetNumberValue(
-				cJSON_GetObjectItem(item, "temp_offset"));
-			s->temp_coefficient = cJSON_GetNumberValue(
-				cJSON_GetObjectItem(item, "temp_coefficient"));
+			JSON_TO_NUM("temp_offset", s->temp_offset);
+			JSON_TO_NUM("temp_coefficient", s->temp_coefficient);
 			if ((r = cJSON_GetObjectItem(item, "temp_map")))
 				json2temp_map(r, &s->map);
 			if ((r = cJSON_GetObjectItem(item, "filter")))
@@ -1321,23 +1306,19 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if (id >= 0 && id < VSENSOR_COUNT) {
 			struct vsensor_input *s = &cfg->vsensors[id];
 
-			name = cJSON_GetStringValue(cJSON_GetObjectItem(item, "name"));
-			if (name) strncopy(s->name, name ,sizeof(s->name));
-
-			s->mode = str2vsmode(cJSON_GetStringValue(cJSON_GetObjectItem(item, "mode")));
+			JSON_TO_STRING("name", s->name);
+			if (( r = cJSON_GetObjectItem(item, "mode")))
+				s->mode = str2vsmode(cJSON_GetStringValue(r));
 			if (s->mode == VSMODE_MANUAL) {
-				if ((r = cJSON_GetObjectItem(item, "default_temp")))
-					s->default_temp = cJSON_GetNumberValue(r);
-				if ((r = cJSON_GetObjectItem(item, "timeout")))
-					s->timeout = cJSON_GetNumberValue(r);
+				JSON_TO_NUM("default_temp", s->default_temp);
+				JSON_TO_NUM("timeout", s->timeout);
 			} else if (s->mode == VSMODE_ONEWIRE) {
 				if ((r = cJSON_GetObjectItem(item, "onewire_addr")))
 					s->onewire_addr = str2onewireaddr(cJSON_GetStringValue(r));
 			} else if (s->mode == VSMODE_I2C) {
 				if ((r = cJSON_GetObjectItem(item, "i2c_type")))
 					s->i2c_type = get_i2c_sensor_type(cJSON_GetStringValue(r));
-				if ((r = cJSON_GetObjectItem(item, "i2c_addr")))
-					s->i2c_addr = cJSON_GetNumberValue(r);
+				JSON_TO_NUM("i2c_addr", s->i2c_addr);
 			} else {
 				if ((r = cJSON_GetObjectItem(item, "sensors")))
 					json2vsensors(r, s->sensors);
