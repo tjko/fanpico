@@ -37,6 +37,7 @@ extern "C"
 #define TARGET_EMBEDDED
 
 #define WOLFCRYPT_ONLY
+#define WOLFSSL_NO_SOCK
 //#define WOLFSSL_SP_NO_DYNSTACK
 
 #define WOLFSSL_WOLFSSH
