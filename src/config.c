@@ -1061,24 +1061,24 @@ panic:
 
 
 
-#define JSON_TO_NUM(name, var) {					\
+#define JSON_TO_NUM(obj, name, var) {					\
 		cJSON *ref;						\
-		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+		if ((ref = cJSON_GetObjectItem(obj, name))) {		\
 			var = cJSON_GetNumberValue(ref);		\
 		}							\
 	}
 
-#define JSON_TO_IP(name, var) {						\
+#define JSON_TO_IP(obj, name, var) {					\
 		cJSON *ref;						\
-		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+		if ((ref = cJSON_GetObjectItem(obj, name))) {		\
 			if ((val = cJSON_GetStringValue(ref)))		\
 				ipaddr_aton(val, var);			\
 		}							\
 	}
 
-#define JSON_TO_BITMASK(name, var, max_count) {				\
+#define JSON_TO_BITMASK(obj, name, var, max_count) {			\
 		cJSON *ref;						\
-		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+		if ((ref = cJSON_GetObjectItem(obj, name))) {		\
 			uint32_t m;					\
 			if (!str_to_bitmask(cJSON_GetStringValue(ref),	\
 						max_count, &m, 1))	\
@@ -1086,17 +1086,17 @@ panic:
 		}							\
 	}
 
-#define JSON_TO_STRING(name, var) {					\
+#define JSON_TO_STRING(obj, name, var) {				\
 		cJSON *ref;						\
-		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+		if ((ref = cJSON_GetObjectItem(obj, name))) {		\
 			if ((val = cJSON_GetStringValue(ref)))		\
 				strncopy(var, val, sizeof(var));	\
 		}							\
 	}
 
-#define JSON_TO_PASSWD(name, var) {					\
+#define JSON_TO_PASSWD(obj, name, var) {				\
 		cJSON *ref;						\
-		if ((ref = cJSON_GetObjectItem(config, name))) {	\
+		if ((ref = cJSON_GetObjectItem(obj, name))) {		\
 			if ((val = cJSON_GetStringValue(ref))) {	\
 				char *p = base64decode(val);		\
 				if (p) {				\
@@ -1130,90 +1130,90 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		set_syslog_level(cJSON_GetNumberValue(ref));
 	if ((ref = cJSON_GetObjectItem(config, "local_echo")))
 		cfg->local_echo = (cJSON_IsTrue(ref) ? true : false);
-	JSON_TO_NUM("led_mode", cfg->led_mode);
-	JSON_TO_NUM("spi_active", cfg->spi_active);
-	JSON_TO_NUM("serial_active", cfg->serial_active);
-	JSON_TO_NUM("onewire_active", cfg->onewire_active);
-	JSON_TO_NUM("i2c_speed", cfg->i2c_speed);
-	JSON_TO_NUM("adc_vref", cfg->adc_vref);
-	JSON_TO_STRING("display_type", cfg->display_type);
-	JSON_TO_STRING("display_theme", cfg->display_theme);
-	JSON_TO_STRING("display_logo", cfg->display_logo);
-	JSON_TO_STRING("display_layout_r", cfg->display_layout_r);
-	JSON_TO_STRING("name", cfg->name);
-	JSON_TO_STRING("timezone", cfg->timezone);
+	JSON_TO_NUM(config, "led_mode", cfg->led_mode);
+	JSON_TO_NUM(config, "spi_active", cfg->spi_active);
+	JSON_TO_NUM(config, "serial_active", cfg->serial_active);
+	JSON_TO_NUM(config, "onewire_active", cfg->onewire_active);
+	JSON_TO_NUM(config, "i2c_speed", cfg->i2c_speed);
+	JSON_TO_NUM(config, "adc_vref", cfg->adc_vref);
+	JSON_TO_STRING(config, "display_type", cfg->display_type);
+	JSON_TO_STRING(config, "display_theme", cfg->display_theme);
+	JSON_TO_STRING(config, "display_logo", cfg->display_logo);
+	JSON_TO_STRING(config, "display_layout_r", cfg->display_layout_r);
+	JSON_TO_STRING(config, "name", cfg->name);
+	JSON_TO_STRING(config, "timezone", cfg->timezone);
 
 #ifdef WIFI_SUPPORT
-	JSON_TO_STRING("hostname", cfg->hostname);
-	JSON_TO_STRING("wifi_country", cfg->wifi_country);
-	JSON_TO_STRING("wifi_ssid", cfg->wifi_ssid);
-	JSON_TO_PASSWD("wifi_passwd", cfg->wifi_passwd);
-	JSON_TO_STRING("wifi_auth_mode", cfg->wifi_auth_mode);
-	JSON_TO_NUM("wifi_mode", cfg->wifi_mode);
+	JSON_TO_STRING(config, "hostname", cfg->hostname);
+	JSON_TO_STRING(config, "wifi_country", cfg->wifi_country);
+	JSON_TO_STRING(config, "wifi_ssid", cfg->wifi_ssid);
+	JSON_TO_PASSWD(config, "wifi_passwd", cfg->wifi_passwd);
+	JSON_TO_STRING(config, "wifi_auth_mode", cfg->wifi_auth_mode);
+	JSON_TO_NUM(config, "wifi_mode", cfg->wifi_mode);
 	if ((ref = cJSON_GetObjectItem(config, "dns_servers"))) {
 		json2iplist(ref, cfg->dns_servers, DNS_MAX_SERVERS);
 	}
-	JSON_TO_IP("syslog_server", &cfg->syslog_server);
-	JSON_TO_IP("ntp_server", &cfg->ntp_server);
-	JSON_TO_IP("ip", &cfg->ip);
-	JSON_TO_IP("netmask", &cfg->netmask);
-	JSON_TO_IP("gateway", &cfg->gateway);
+	JSON_TO_IP(config, "syslog_server", &cfg->syslog_server);
+	JSON_TO_IP(config, "ntp_server", &cfg->ntp_server);
+	JSON_TO_IP(config, "ip", &cfg->ip);
+	JSON_TO_IP(config, "netmask", &cfg->netmask);
+	JSON_TO_IP(config, "gateway", &cfg->gateway);
 
-	JSON_TO_STRING("mqtt_server", cfg->mqtt_server);
-	JSON_TO_NUM("mqtt_port", cfg->mqtt_port);
-	JSON_TO_NUM("mqtt_tls", cfg->mqtt_tls);
-	JSON_TO_NUM("mqtt_allow_scpi", cfg->mqtt_allow_scpi);
-	JSON_TO_STRING("mqtt_user", cfg->mqtt_user);
-	JSON_TO_PASSWD("mqtt_pass", cfg->mqtt_pass);
-	JSON_TO_STRING("mqtt_status_topic", cfg->mqtt_status_topic);
-	JSON_TO_STRING("mqtt_cmd_topic", cfg->mqtt_cmd_topic);
-	JSON_TO_STRING("mqtt_resp_topic", cfg->mqtt_resp_topic);
-	JSON_TO_NUM("mqtt_status_interval", cfg->mqtt_status_interval);
-	JSON_TO_NUM("mqtt_temp_interval", cfg->mqtt_temp_interval);
-	JSON_TO_NUM("mqtt_vsensor_interval", cfg->mqtt_vsensor_interval);
-	JSON_TO_NUM("mqtt_rpm_interval", cfg->mqtt_rpm_interval);
-	JSON_TO_NUM("mqtt_duty_interval", cfg->mqtt_duty_interval);
-	JSON_TO_BITMASK("mqtt_temp_mask", cfg->mqtt_temp_mask, SENSOR_MAX_COUNT);
-	JSON_TO_BITMASK("mqtt_vtemp_mask", cfg->mqtt_vtemp_mask, VSENSOR_MAX_COUNT);
-	JSON_TO_BITMASK("mqtt_vhumidity_mask", cfg->mqtt_vhumidity_mask, VSENSOR_MAX_COUNT);
-	JSON_TO_BITMASK("mqtt_vpressure_mask", cfg->mqtt_vpressure_mask, VSENSOR_MAX_COUNT);
-	JSON_TO_BITMASK("mqtt_fan_rpm_mask", cfg->mqtt_fan_rpm_mask, FAN_MAX_COUNT);
-	JSON_TO_BITMASK("mqtt_fan_duty_mask", cfg->mqtt_fan_duty_mask, FAN_MAX_COUNT);
-	JSON_TO_BITMASK("mqtt_mbfan_rpm_mask", cfg->mqtt_mbfan_rpm_mask, MBFAN_MAX_COUNT);
-	JSON_TO_BITMASK("mqtt_mbfan_duty_mask", cfg->mqtt_mbfan_duty_mask, MBFAN_MAX_COUNT);
-	JSON_TO_STRING("mqtt_temp_topic", cfg->mqtt_temp_topic);
-	JSON_TO_STRING("mqtt_vtemp_topic", cfg->mqtt_vtemp_topic);
-	JSON_TO_STRING("mqtt_vhumidity_topic", cfg->mqtt_vhumidity_topic);
-	JSON_TO_STRING("mqtt_vpressure_topic", cfg->mqtt_vpressure_topic);
-	JSON_TO_STRING("mqtt_fan_rpm_topic", cfg->mqtt_fan_rpm_topic);
-	JSON_TO_STRING("mqtt_fan_duty_topic", cfg->mqtt_fan_duty_topic);
-	JSON_TO_STRING("mqtt_mbfan_rpm_topic", cfg->mqtt_mbfan_rpm_topic);
-	JSON_TO_STRING("mqtt_mbfan_duty_topic", cfg->mqtt_mbfan_duty_topic);
-	JSON_TO_STRING("mqtt_ha_discovery_prefix", cfg->mqtt_ha_discovery_prefix);
+	JSON_TO_STRING(config, "mqtt_server", cfg->mqtt_server);
+	JSON_TO_NUM(config, "mqtt_port", cfg->mqtt_port);
+	JSON_TO_NUM(config, "mqtt_tls", cfg->mqtt_tls);
+	JSON_TO_NUM(config, "mqtt_allow_scpi", cfg->mqtt_allow_scpi);
+	JSON_TO_STRING(config, "mqtt_user", cfg->mqtt_user);
+	JSON_TO_PASSWD(config, "mqtt_pass", cfg->mqtt_pass);
+	JSON_TO_STRING(config, "mqtt_status_topic", cfg->mqtt_status_topic);
+	JSON_TO_STRING(config, "mqtt_cmd_topic", cfg->mqtt_cmd_topic);
+	JSON_TO_STRING(config, "mqtt_resp_topic", cfg->mqtt_resp_topic);
+	JSON_TO_NUM(config, "mqtt_status_interval", cfg->mqtt_status_interval);
+	JSON_TO_NUM(config, "mqtt_temp_interval", cfg->mqtt_temp_interval);
+	JSON_TO_NUM(config, "mqtt_vsensor_interval", cfg->mqtt_vsensor_interval);
+	JSON_TO_NUM(config, "mqtt_rpm_interval", cfg->mqtt_rpm_interval);
+	JSON_TO_NUM(config, "mqtt_duty_interval", cfg->mqtt_duty_interval);
+	JSON_TO_BITMASK(config, "mqtt_temp_mask", cfg->mqtt_temp_mask, SENSOR_MAX_COUNT);
+	JSON_TO_BITMASK(config, "mqtt_vtemp_mask", cfg->mqtt_vtemp_mask, VSENSOR_MAX_COUNT);
+	JSON_TO_BITMASK(config, "mqtt_vhumidity_mask", cfg->mqtt_vhumidity_mask, VSENSOR_MAX_COUNT);
+	JSON_TO_BITMASK(config, "mqtt_vpressure_mask", cfg->mqtt_vpressure_mask, VSENSOR_MAX_COUNT);
+	JSON_TO_BITMASK(config, "mqtt_fan_rpm_mask", cfg->mqtt_fan_rpm_mask, FAN_MAX_COUNT);
+	JSON_TO_BITMASK(config, "mqtt_fan_duty_mask", cfg->mqtt_fan_duty_mask, FAN_MAX_COUNT);
+	JSON_TO_BITMASK(config, "mqtt_mbfan_rpm_mask", cfg->mqtt_mbfan_rpm_mask, MBFAN_MAX_COUNT);
+	JSON_TO_BITMASK(config, "mqtt_mbfan_duty_mask", cfg->mqtt_mbfan_duty_mask, MBFAN_MAX_COUNT);
+	JSON_TO_STRING(config, "mqtt_temp_topic", cfg->mqtt_temp_topic);
+	JSON_TO_STRING(config, "mqtt_vtemp_topic", cfg->mqtt_vtemp_topic);
+	JSON_TO_STRING(config, "mqtt_vhumidity_topic", cfg->mqtt_vhumidity_topic);
+	JSON_TO_STRING(config, "mqtt_vpressure_topic", cfg->mqtt_vpressure_topic);
+	JSON_TO_STRING(config, "mqtt_fan_rpm_topic", cfg->mqtt_fan_rpm_topic);
+	JSON_TO_STRING(config, "mqtt_fan_duty_topic", cfg->mqtt_fan_duty_topic);
+	JSON_TO_STRING(config, "mqtt_mbfan_rpm_topic", cfg->mqtt_mbfan_rpm_topic);
+	JSON_TO_STRING(config, "mqtt_mbfan_duty_topic", cfg->mqtt_mbfan_duty_topic);
+	JSON_TO_STRING(config, "mqtt_ha_discovery_prefix", cfg->mqtt_ha_discovery_prefix);
 
-	JSON_TO_NUM("telnet_active", cfg->telnet_active);
-	JSON_TO_NUM("telnet_auth", cfg->telnet_auth);
-	JSON_TO_NUM("telnet_raw_mode", cfg->telnet_raw_mode);
-	JSON_TO_NUM("telnet_port", cfg->telnet_port);
-	JSON_TO_STRING("telnet_user", cfg->telnet_user);
-	JSON_TO_STRING("telnet_pwhash", cfg->telnet_pwhash);
+	JSON_TO_NUM(config, "telnet_active", cfg->telnet_active);
+	JSON_TO_NUM(config, "telnet_auth", cfg->telnet_auth);
+	JSON_TO_NUM(config, "telnet_raw_mode", cfg->telnet_raw_mode);
+	JSON_TO_NUM(config, "telnet_port", cfg->telnet_port);
+	JSON_TO_STRING(config, "telnet_user", cfg->telnet_user);
+	JSON_TO_STRING(config, "telnet_pwhash", cfg->telnet_pwhash);
 	if ((ref = cJSON_GetObjectItem(config, "telnet_acls")))
 		json2acllist(ref, cfg->telnet_acls, TELNET_MAX_ACL_ENTRIES);
 
-	JSON_TO_NUM("snmp_active", cfg->snmp_active);
-	JSON_TO_STRING("snmp_community", cfg->snmp_community);
-	JSON_TO_STRING("snmp_community_write", cfg->snmp_community_write);
-	JSON_TO_STRING("snmp_contact", cfg->snmp_contact);
-	JSON_TO_STRING("snmp_location", cfg->snmp_location);
-	JSON_TO_STRING("snmp_community_trap", cfg->snmp_community_trap);
-	JSON_TO_NUM("snmp_auth_traps", cfg->snmp_auth_traps);
-	JSON_TO_IP("snmp_trap_dst", &cfg->snmp_trap_dst);
+	JSON_TO_NUM(config, "snmp_active", cfg->snmp_active);
+	JSON_TO_STRING(config, "snmp_community", cfg->snmp_community);
+	JSON_TO_STRING(config, "snmp_community_write", cfg->snmp_community_write);
+	JSON_TO_STRING(config, "snmp_contact", cfg->snmp_contact);
+	JSON_TO_STRING(config, "snmp_location", cfg->snmp_location);
+	JSON_TO_STRING(config, "snmp_community_trap", cfg->snmp_community_trap);
+	JSON_TO_NUM(config, "snmp_auth_traps", cfg->snmp_auth_traps);
+	JSON_TO_IP(config, "snmp_trap_dst", &cfg->snmp_trap_dst);
 
-	JSON_TO_NUM("ssh_active", cfg->ssh_active);
-	JSON_TO_NUM("ssh_auth", cfg->ssh_auth);
-	JSON_TO_NUM("ssh_port", cfg->ssh_port);
-	JSON_TO_STRING("ssh_user", cfg->ssh_user);
-	JSON_TO_STRING("ssh_pwhash", cfg->ssh_pwhash);
+	JSON_TO_NUM(config, "ssh_active", cfg->ssh_active);
+	JSON_TO_NUM(config, "ssh_auth", cfg->ssh_auth);
+	JSON_TO_NUM(config, "ssh_port", cfg->ssh_port);
+	JSON_TO_STRING(config, "ssh_user", cfg->ssh_user);
+	JSON_TO_STRING(config, "ssh_pwhash", cfg->ssh_pwhash);
 	if ((ref = cJSON_GetObjectItem(config, "ssh_pubkeys")))
 		json2sshpubkeys(ref, cfg->ssh_pub_keys);
 	if ((ref = cJSON_GetObjectItem(config, "ssh_acls")))
@@ -1227,16 +1227,16 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if (id >= 0 && id < FAN_COUNT) {
 			struct fan_output *f = &cfg->fans[id];
 
-			JSON_TO_STRING("name", f->name);
-			JSON_TO_NUM("min_pwm", f->min_pwm);
-			JSON_TO_NUM("max_pwm", f->max_pwm);
-			JSON_TO_NUM("pwm_coefficient", f->pwm_coefficient);
-			JSON_TO_NUM("rpm_factor", f->rpm_factor);
-			JSON_TO_NUM("lra_low", f->lra_low);
-			JSON_TO_NUM("lra_high", f->lra_high);
-			JSON_TO_NUM("tach_hyst", f->tacho_hyst);
-			JSON_TO_NUM("pwm_hyst", f->pwm_hyst);
-			JSON_TO_NUM("source_id", f->s_id);
+			JSON_TO_STRING(item, "name", f->name);
+			JSON_TO_NUM(item, "min_pwm", f->min_pwm);
+			JSON_TO_NUM(item, "max_pwm", f->max_pwm);
+			JSON_TO_NUM(item, "pwm_coefficient", f->pwm_coefficient);
+			JSON_TO_NUM(item, "rpm_factor", f->rpm_factor);
+			JSON_TO_NUM(item, "lra_low", f->lra_low);
+			JSON_TO_NUM(item, "lra_high", f->lra_high);
+			JSON_TO_NUM(item, "tach_hyst", f->tacho_hyst);
+			JSON_TO_NUM(item, "pwm_hyst", f->pwm_hyst);
+			JSON_TO_NUM(item, "source_id", f->s_id);
 			if ((r = cJSON_GetObjectItem(item, "source_type")))
 				f->s_type = str2pwm_source(cJSON_GetStringValue(r));
 			if ((r = cJSON_GetObjectItem(item, "rpm_mode")))
@@ -1255,14 +1255,14 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if (id >= 0 && id < MBFAN_COUNT) {
 			struct mb_input *m = &cfg->mbfans[id];
 
-			JSON_TO_STRING("name", m->name);
-			JSON_TO_NUM("min_rpm", m->min_rpm);
-			JSON_TO_NUM("max_rpm", m->max_rpm);
-			JSON_TO_NUM("rpm_coefficient", m->rpm_coefficient);
-			JSON_TO_NUM("rpm_factor", m->rpm_factor);
-			JSON_TO_NUM("lra_treshold", m->lra_treshold);
-			JSON_TO_NUM("lra_invert", m->lra_invert);
-			JSON_TO_NUM("source_id", m->s_id);
+			JSON_TO_STRING(item, "name", m->name);
+			JSON_TO_NUM(item, "min_rpm", m->min_rpm);
+			JSON_TO_NUM(item, "max_rpm", m->max_rpm);
+			JSON_TO_NUM(item, "rpm_coefficient", m->rpm_coefficient);
+			JSON_TO_NUM(item, "rpm_factor", m->rpm_factor);
+			JSON_TO_NUM(item, "lra_treshold", m->lra_treshold);
+			JSON_TO_NUM(item, "lra_invert", m->lra_invert);
+			JSON_TO_NUM(item, "source_id", m->s_id);
 			if ((r = cJSON_GetObjectItem(item, "source_type")))
 				m->s_type = str2tacho_source(cJSON_GetStringValue(r));
 			if ((r = cJSON_GetObjectItem(item, "rpm_mode")))
@@ -1283,15 +1283,15 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if (id >= 0 && id < SENSOR_COUNT) {
 			struct sensor_input *s = &cfg->sensors[id];
 
-			JSON_TO_STRING("name", s->name);
-			JSON_TO_NUM("sensor_type", s->type);
+			JSON_TO_STRING(item, "name", s->name);
+			JSON_TO_NUM(item, "sensor_type", s->type);
 			if (s->type == TEMP_EXTERNAL) {
-				JSON_TO_NUM("temperature_nominal", s->temp_nominal);
-				JSON_TO_NUM("thermistor_nominal", s->thermistor_nominal);
-				JSON_TO_NUM("beta_coefficient", s->beta_coefficient);
+				JSON_TO_NUM(item, "temperature_nominal", s->temp_nominal);
+				JSON_TO_NUM(item, "thermistor_nominal", s->thermistor_nominal);
+				JSON_TO_NUM(item, "beta_coefficient", s->beta_coefficient);
 			}
-			JSON_TO_NUM("temp_offset", s->temp_offset);
-			JSON_TO_NUM("temp_coefficient", s->temp_coefficient);
+			JSON_TO_NUM(item, "temp_offset", s->temp_offset);
+			JSON_TO_NUM(item, "temp_coefficient", s->temp_coefficient);
 			if ((r = cJSON_GetObjectItem(item, "temp_map")))
 				json2temp_map(r, &s->map);
 			if ((r = cJSON_GetObjectItem(item, "filter")))
@@ -1306,19 +1306,19 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		if (id >= 0 && id < VSENSOR_COUNT) {
 			struct vsensor_input *s = &cfg->vsensors[id];
 
-			JSON_TO_STRING("name", s->name);
+			JSON_TO_STRING(item, "name", s->name);
 			if (( r = cJSON_GetObjectItem(item, "mode")))
 				s->mode = str2vsmode(cJSON_GetStringValue(r));
 			if (s->mode == VSMODE_MANUAL) {
-				JSON_TO_NUM("default_temp", s->default_temp);
-				JSON_TO_NUM("timeout", s->timeout);
+				JSON_TO_NUM(item, "default_temp", s->default_temp);
+				JSON_TO_NUM(item, "timeout", s->timeout);
 			} else if (s->mode == VSMODE_ONEWIRE) {
 				if ((r = cJSON_GetObjectItem(item, "onewire_addr")))
 					s->onewire_addr = str2onewireaddr(cJSON_GetStringValue(r));
 			} else if (s->mode == VSMODE_I2C) {
 				if ((r = cJSON_GetObjectItem(item, "i2c_type")))
 					s->i2c_type = get_i2c_sensor_type(cJSON_GetStringValue(r));
-				JSON_TO_NUM("i2c_addr", s->i2c_addr);
+				JSON_TO_NUM(item, "i2c_addr", s->i2c_addr);
 			} else {
 				if ((r = cJSON_GetObjectItem(item, "sensors")))
 					json2vsensors(r, s->sensors);
