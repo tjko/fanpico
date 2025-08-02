@@ -45,7 +45,6 @@ static int create_rsa_key(void *buf, size_t buf_size)
 }
 #endif
 
-
 static int create_ecdsa_key(void *buf, size_t buf_size)
 {
 	return wolfSSH_MakeEcdsaKey(buf, buf_size, WOLFSSH_ECDSAKEY_PRIME256);
@@ -53,42 +52,7 @@ static int create_ecdsa_key(void *buf, size_t buf_size)
 
 static int create_ed25519_key(void *buf, size_t buf_size)
 {
-#if 0
 	return wolfSSH_MakeEd25519Key(buf, buf_size, WOLFSSH_ED25519KEY);
-#else
-    WC_RNG rng;
-    ed25519_key key;
-    int ret = WS_SUCCESS;
-    int key_size;
-
-    if (wc_InitRng(&rng))
-	return WS_CRYPTO_FAILED;
-
-    if (wc_ed25519_init(&key))
-            ret = WS_CRYPTO_FAILED;
-
-    if (ret == WS_SUCCESS) {
-            ret = wc_ed25519_make_key(&rng, 256/8, &key);
-            if (ret)
-		    ret = WS_CRYPTO_FAILED;
-            else
-		    ret = WS_SUCCESS;
-    }
-
-    if (ret == WS_SUCCESS) {
-            if ((key_size = wc_Ed25519KeyToDer(&key, buf, buf_size)) < 0)
-                    ret = WS_CRYPTO_FAILED;
-            else
-		    ret = key_size;
-        }
-
-    wc_ed25519_free(&key);
-
-    if (wc_FreeRng(&rng))
-            ret = WS_CRYPTO_FAILED;
-
-    return ret;
-#endif
 }
 
 
@@ -100,7 +64,6 @@ static const ssh_pkey_alg_t pkey_algorithms[] = {
 #endif
 	{ NULL, NULL, NULL }
 };
-
 
 
 void ssh_list_pkeys()
