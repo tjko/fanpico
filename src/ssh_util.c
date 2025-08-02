@@ -45,47 +45,14 @@ static int create_rsa_key(void *buf, size_t buf_size)
 }
 #endif
 
-
 static int create_ecdsa_key(void *buf, size_t buf_size)
 {
 	return wolfSSH_MakeEcdsaKey(buf, buf_size, WOLFSSH_ECDSAKEY_PRIME256);
 }
 
-
 static int create_ed25519_key(void *buf, size_t buf_size)
 {
-    WC_RNG rng;
-    ed25519_key key;
-    int ret = WS_SUCCESS;
-    int key_size;
-
-    if (wc_InitRng(&rng))
-	return WS_CRYPTO_FAILED;
-
-    if (wc_ed25519_init(&key))
-            ret = WS_CRYPTO_FAILED;
-
-    if (ret == WS_SUCCESS) {
-            ret = wc_ed25519_make_key(&rng, 256/8, &key);
-            if (ret)
-		    ret = WS_CRYPTO_FAILED;
-            else
-		    ret = WS_SUCCESS;
-    }
-
-    if (ret == WS_SUCCESS) {
-            if ((key_size = wc_Ed25519KeyToDer(&key, buf, buf_size)) < 0)
-                    ret = WS_CRYPTO_FAILED;
-            else
-		    ret = key_size;
-        }
-
-    wc_ed25519_free(&key);
-
-    if (wc_FreeRng(&rng))
-            ret = WS_CRYPTO_FAILED;
-
-    return ret;
+	return wolfSSH_MakeEd25519Key(buf, buf_size, WOLFSSH_ED25519KEY);
 }
 
 
@@ -97,7 +64,6 @@ static const ssh_pkey_alg_t pkey_algorithms[] = {
 #endif
 	{ NULL, NULL, NULL }
 };
-
 
 
 void ssh_list_pkeys()
@@ -228,5 +194,78 @@ int ssh_get_pkey(int index, char** buf_ptr, uint32_t* buf_size_ptr, const char**
 
 	return -2;
 }
+
+
+int str_to_ssh_pubkey(const char *s, struct ssh_public_key *pk)
+{
+	char *t, *str, *saveptr;
+	void *buf = NULL;
+	int idx = 0;
+	int len, key_len;
+
+	if (!s || !pk)
+		return -1;
+	if (!(str = strdup(s)))
+		return -2;
+
+	pk->type[0] = 0;
+	pk->name[0] = 0;
+	pk->pubkey_size = 0;
+	memset(pk->pubkey, 0, sizeof(pk->pubkey));
+
+	t = strtok_r(str, " ", &saveptr);
+	while (t && idx < 3) {
+		if ((len = strlen(t)) > 0) {
+			//printf("%d: '%s'\n", idx, t);
+			if (idx == 0) {
+				/* key type */
+				strncopy(pk->type, t, sizeof(pk->type));
+			}
+			else if (idx == 1) {
+				/* key (base64 encoded) */
+				key_len = base64decode_raw(t, len, &buf);
+				if (key_len > 0 && key_len <= sizeof(pk->pubkey) &&
+					memmem(buf, key_len, pk->type, strlen(pk->type))) {
+					memcpy(pk->pubkey, buf, key_len);
+					pk->pubkey_size = key_len;
+				} else {
+					printf("Invalid key!\n");
+					break;
+				}
+			}
+			else if (idx == 2) {
+				/* key name */
+				strncopy(pk->name, t, sizeof(pk->name));
+			}
+			idx++;
+		}
+		t = strtok_r(NULL, " ", &saveptr);
+	}
+
+	free(str);
+	if (buf)
+		free(buf);
+
+	return (idx >= 2 ? 0 : 1);
+}
+
+
+const char* ssh_pubkey_to_str(const struct ssh_public_key *pk, char *s, size_t s_len)
+{
+	char *e;
+
+	if (!pk || !s || s_len < 1)
+		return NULL;
+
+	if (!(e = base64encode_raw(pk->pubkey, pk->pubkey_size)))
+		return NULL;
+
+	snprintf(s, s_len, "%s %s %s", pk->type, e, pk->name);
+	s[s_len - 1] = 0;
+	free(e);
+
+	return s;
+}
+
 
 /* eof :-) */

@@ -26,7 +26,7 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * Support for [1-Wire Temperature sensors](https://github.com/tjko/fanpico/wiki/1%E2%80%90Wire-Temperature-Sensors-with-FanPico) (up to 8 sensors)
 * Support for [I2C Temperature sensors](https://github.com/tjko/fanpico/wiki/I2C-Temperature-Sensors-with-FanPico) (up to 8 sensors)
 * [OLED](https://github.com/tjko/fanpico/wiki/OLED-(I2C)-Display-Support) and [LCD](https://github.com/tjko/fanpico/wiki/LCD-(SPI)-Panel-Connection) display support (boards where model name ends with "D").
-* Can be powered from motherboard fan outputs or using (AUX) 4-pin floppy connector.
+* Can be powered from motherboard fan outputs or using auxiliary power connector (4-Pin Floppy or DC Barrel jack connector).
 * Ability to define custom fan "curves" for each fan.
 * Ability to provide custom tachometer (fan RPM) output signal back to motherboard.
 * Support for Locked Rotor (Alarm) signal fans (allows using regular tachometer fans with system expecting Locked Rotor Alarm fans and vice versa).
@@ -36,12 +36,12 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * SCPI "like" programming interface (see [Command Reference](commands.md))
 * Monitor each fan and motherboard output signals as well as temperatures.
 * [WiFi support](https://github.com/tjko/fanpico/wiki/FanPico-Network-Interface) if opting to mount Pico W on the board.
-* [HTTP server](https://github.com/tjko/fanpico/wiki/Fanpico-HTTP-Server) with TLS (HTTPS) support.
-* [MQTT client](https://github.com/tjko/fanpico/wiki/FanPico-MQTT-Tutorial) with TLS support for logging data and to receive commands.
-* [Home Assistant](https://github.com/tjko/fanpico/wiki/FanPico-Home-Assistant-(MQTT-Discovery)-Support) support using MQTT Discovery feature.
-* Telnet server for configuration and monitoring.
-* SSH server for configuration and monitoring (experimental).
-* SNMP Agent for monitoring.
+  * [HTTP server](https://github.com/tjko/fanpico/wiki/Fanpico-HTTP-Server) with TLS (HTTPS) support.
+  * [MQTT client](https://github.com/tjko/fanpico/wiki/FanPico-MQTT-Tutorial) with TLS support for logging data and to receive commands.
+  * [Home Assistant](https://github.com/tjko/fanpico/wiki/FanPico-Home-Assistant-(MQTT-Discovery)-Support) support using MQTT Discovery feature.
+  * Telnet server for configuration and monitoring.
+  * [SSH server](https://github.com/tjko/fanpico/wiki/Fanpico-Using-SSH-Server) for configuration and monitoring (experimental).
+  * [SNMP Agent](https://github.com/tjko/fanpico/wiki/SNMP-Agent-Usage) for monitoring.
 
 
 ### Interfaces

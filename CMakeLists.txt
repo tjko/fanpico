@@ -99,6 +99,7 @@ add_subdirectory(libs/pico-sensor-lib)
 
 # pico-sshd
 add_subdirectory(libs/pico-sshd)
+target_compile_definitions(pico-sshd-lib INTERFACE PICOSSHD_EXTERNAL_SHA512CRYPT)
 
 # wolfSSL / wolfCrypt
 if (DEFINED ENV{WOLFSSL_ROOT})
