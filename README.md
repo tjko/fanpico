@@ -26,7 +26,7 @@ Fanpico is a smart PWM (PC) fan controller based around [Raspberry Pi Pico](http
 * Support for [1-Wire Temperature sensors](https://github.com/tjko/fanpico/wiki/1%E2%80%90Wire-Temperature-Sensors-with-FanPico) (up to 8 sensors)
 * Support for [I2C Temperature sensors](https://github.com/tjko/fanpico/wiki/I2C-Temperature-Sensors-with-FanPico) (up to 8 sensors)
 * [OLED](https://github.com/tjko/fanpico/wiki/OLED-(I2C)-Display-Support) and [LCD](https://github.com/tjko/fanpico/wiki/LCD-(SPI)-Panel-Connection) display support (boards where model name ends with "D").
-* Can be powered from motherboard fan outputs or using (AUX) power connector.
+* Can be powered from motherboard fan outputs or using auxiliary power connector (4-Pin Floppy or DC Barrel jack connector).
 * Ability to define custom fan "curves" for each fan.
 * Ability to provide custom tachometer (fan RPM) output signal back to motherboard.
 * Support for Locked Rotor (Alarm) signal fans (allows using regular tachometer fans with system expecting Locked Rotor Alarm fans and vice versa).
