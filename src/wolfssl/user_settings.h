@@ -46,6 +46,7 @@ extern "C"
 #define WOLFSSH_KEYGEN
 #define WOLFSSH_ALLOW_USERAUTH_NONE
 
+#define NO_FAILURE_ON_REJECTED
 #define DEFAULT_WINDOW_SZ 4096
 #define DEFAULT_MAX_PACKET_SZ 1024
 
@@ -369,9 +370,9 @@ extern time_t ssh_server_my_time(time_t *);
 
 #undef DEBUG_WOLFSSL
 #undef NO_ERROR_STRINGS
-#if 1
+#if 0
 #define DEBUG_WOLFSSL
-//#define DEBUG_WOLFSSH
+#define DEBUG_WOLFSSH
 #else
 #if 0
 #define NO_ERROR_STRINGS
