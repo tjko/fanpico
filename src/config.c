@@ -773,6 +773,9 @@ void clear_config(struct fanpico_config *cfg)
 		cfg->ssh_pub_keys[i].name[0] = 0;
 		cfg->ssh_pub_keys[i].pubkey_size = 0;
 	}
+	cfg->http_active = true;
+	cfg->http_port = 0;
+	cfg->https_port = 0;
 #endif
 
 }
@@ -929,6 +932,12 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 		cJSON_AddItemToObject(config, "ssh_pubkeys", o);
 	if ((o = acllist2json(cfg->ssh_acls, SSH_MAX_ACL_ENTRIES)))
 		cJSON_AddItemToObject(config, "ssh_acls", o);
+	if (!cfg->http_active)
+		NUM_TO_JSON("http_active", cfg->http_active);
+	if (cfg->http_port > 0)
+		NUM_TO_JSON("http_port", cfg->http_port);
+	if (cfg->https_port > 0)
+		NUM_TO_JSON("https_port", cfg->https_port);
 #endif
 
 	/* Fan outputs */
@@ -1218,6 +1227,9 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 		json2sshpubkeys(ref, cfg->ssh_pub_keys);
 	if ((ref = cJSON_GetObjectItem(config, "ssh_acls")))
 		json2acllist(ref, cfg->ssh_acls, SSH_MAX_ACL_ENTRIES);
+	JSON_TO_NUM(config, "http_active", cfg->http_active);
+	JSON_TO_NUM(config, "http_port", cfg->http_port);
+	JSON_TO_NUM(config, "https_port", cfg->https_port);
 #endif
 
 	/* Fan output configurations */

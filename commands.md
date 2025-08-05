@@ -121,6 +121,12 @@ Fanpico supports following commands:
 * [SYStem:ECHO?](#systemecho)
 * [SYStem:FANS?](#systemfans)
 * [SYStem:FLASH?](#systemflash)
+* [SYStem:HTTP:SERVer](#systemhttpserver)
+* [SYStem:HTTP:SERVer?](#systemhttpserver-1)
+* [SYStem:HTTP:PORT](#systemhttpport)
+* [SYStem:HTTP:PORT?](#systemhttpport-1)
+* [SYStem:HTTP:TLSPORT](#systemhttptlsport)
+* [SYStem:HTTP:TLSPORT?](#systemhttptlsport-1)
 * [SYStem:I2C?](#systemi2c)
 * [SYStem:I2C:SCAN?](#systemi2cscan)
 * [SYStem:I2C:SPEED](#systemi2cspeed)
@@ -2007,6 +2013,76 @@ Binary size:                           683520
 LittleFS size:                         262144
 Unused flash memory:                   1151488
 ```
+
+
+
+#### SYStem:HTTP:SERVer
+Enable or disable built-in HTTP server that displays status information
+about the unit.
+
+Default: ON
+
+Example (disable HTTP server):
+```
+SYS:HTTP:SERVER OFF
+```
+
+
+#### SYStem:HTTP:SERVer?
+Query currently status of HTTP server.
+
+Example:
+```
+SYS:HTTP:SERVER?
+ON
+```
+
+
+#### SYStem:HTTP:PORT
+Set web server HTTP port.
+
+Default: 0  (use default HTTP port tcp/80)
+
+Example:
+```
+SYS:HTTP:PORT 8080
+```
+
+
+#### SYStem:HTTP:PORT?
+Query currently set web server (HTTP) port.
+
+If return value is zero (0), then default HTTP port is being used.
+
+Example:
+```
+SYS:HTTP:PORT?
+0
+```
+
+
+#### SYStem:HTTP:TLSPORT
+Set web server HTTPS port use for TLS/SSL connections.
+
+Default: 0  (use default HTTPS port tcp/443)
+
+Example:
+```
+SYS:HTTP:TLSPORT 8443
+```
+
+
+#### SYStem:HTTP:TLSPORT?
+Query currently set web server HTTPS port.
+
+If return value is zero (0), then default HTTPS port is being used.
+
+Example:
+```
+SYS:HTTP:TLSPORT?
+0
+```
+
 
 
 ### SYStem:I2C?

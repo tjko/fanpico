@@ -1828,7 +1828,7 @@ int cmd_mqtt_server(const char *cmd, const char *args, int query, struct prev_cm
 
 int cmd_mqtt_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return uint32_setting(cmd, args, query, prev_cmd,
+	return uint16_setting(cmd, args, query, prev_cmd,
 			&conf->mqtt_port, 0, 65535, "MQTT Port");
 }
 
@@ -2185,7 +2185,7 @@ int cmd_ssh_server(const char *cmd, const char *args, int query, struct prev_cmd
 
 int cmd_ssh_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return uint32_setting(cmd, args, query, prev_cmd,
+	return uint16_setting(cmd, args, query, prev_cmd,
 			&conf->ssh_port, 0, 65535, "SSH Port");
 }
 
@@ -2362,7 +2362,7 @@ int cmd_telnet_server(const char *cmd, const char *args, int query, struct prev_
 
 int cmd_telnet_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return uint32_setting(cmd, args, query, prev_cmd,
+	return uint16_setting(cmd, args, query, prev_cmd,
 			&conf->telnet_port, 0, 65535, "Telnet Port");
 }
 
@@ -2446,6 +2446,24 @@ int cmd_snmp_community_trap(const char *cmd, const char *args, int query, struct
 int cmd_snmp_trap_dst(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return ip_change(cmd, args, query, prev_cmd, "SNMP Trap Destination", &conf->snmp_trap_dst);
+}
+
+int cmd_http_server(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->http_active, "HTTP Server");
+}
+
+int cmd_http_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return uint16_setting(cmd, args, query, prev_cmd,
+			&conf->http_port, 0, 65535, "HTTP Server Port");
+}
+
+int cmd_http_tlsport(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return uint16_setting(cmd, args, query, prev_cmd,
+			&conf->https_port, 0, 65535, "HTTPS Server Port");
 }
 #endif /* WIFI_SUPPOERT */
 
@@ -2902,6 +2920,13 @@ const struct cmd_t wifi_commands[] = {
 };
 
 #ifdef WIFI_SUPPORT
+const struct cmd_t http_commands[] = {
+	{ "PORT",      4, NULL,              cmd_http_port },
+	{ "TLSPORT",   7, NULL,              cmd_http_tlsport },
+	{ "SERVer",    4, NULL,              cmd_http_server },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t mqtt_mask_commands[] = {
 	{ "TEMP",      4, NULL,              cmd_mqtt_mask_temp },
 	{ "VTEMP",     5, NULL,              cmd_mqtt_mask_vtemp },
@@ -3070,6 +3095,7 @@ const struct cmd_t system_commands[] = {
 	{ "VSENSORS",  8, NULL,              cmd_vsensors },
 	{ "WIFI",      4, wifi_commands,     cmd_wifi },
 #if WIFI_SUPPORT
+	{ "HTTP",      4, http_commands,     NULL },
 	{ "MQTT",      4, mqtt_commands,     NULL },
 	{ "SNMP",      4, snmp_commands,     NULL },
 	{ "TELNET",    6, telnet_commands,   NULL },

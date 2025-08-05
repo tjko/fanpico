@@ -70,6 +70,9 @@
 #define DEFAULT_MQTT_RPM_INTERVAL     60
 #define DEFAULT_MQTT_DUTY_INTERVAL    60
 
+#define HTTP_SERVER_DEFAULT_PORT      80
+#define HTTPS_SERVER_DEFAULT_PORT     443
+
 #define TELNET_MAX_ACL_ENTRIES 4
 #define SSH_MAX_ACL_ENTRIES 4
 #define SSH_MAX_PUB_KEYS  4
@@ -272,7 +275,7 @@ struct fanpico_config {
 	ip_addr_t netmask;
 	ip_addr_t gateway;
 	char mqtt_server[32];
-	uint32_t mqtt_port;
+	uint16_t mqtt_port;
 	bool mqtt_tls;
 	bool mqtt_allow_scpi;
 	char mqtt_user[MQTT_MAX_USERNAME_LEN + 1];
@@ -305,7 +308,7 @@ struct fanpico_config {
 	bool telnet_active;
 	bool telnet_auth;
 	bool telnet_raw_mode;
-	uint32_t telnet_port;
+	uint16_t telnet_port;
 	char telnet_user[MAX_USERNAME_LEN + 1];
 	char telnet_pwhash[MAX_PWHASH_LEN + 1];
 	acl_entry_t telnet_acls[TELNET_MAX_ACL_ENTRIES];
@@ -319,11 +322,14 @@ struct fanpico_config {
 	ip_addr_t snmp_trap_dst;
 	bool ssh_active;
 	bool ssh_auth;
-	uint32_t ssh_port;
+	uint16_t ssh_port;
 	char ssh_user[MAX_USERNAME_LEN + 1];
 	char ssh_pwhash[MAX_PWHASH_LEN + 1];
 	struct ssh_public_key ssh_pub_keys[SSH_MAX_PUB_KEYS];
 	acl_entry_t ssh_acls[SSH_MAX_ACL_ENTRIES];
+	bool http_active;
+	uint16_t http_port;
+	uint16_t https_port;
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];

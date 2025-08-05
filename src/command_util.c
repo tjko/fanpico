@@ -293,6 +293,33 @@ int uint32_setting(const char *cmd, const char *args, int query, struct prev_cmd
 	return 1;
 }
 
+int uint16_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
+		uint16_t *var, uint16_t min_val, uint16_t max_val, const char *name)
+{
+	uint16_t val;
+	int v;
+
+	if (query) {
+		printf("%u\n", *var);
+		return 0;
+	}
+
+	if (str_to_int(args, &v, 10)) {
+		val = v;
+		if (val >= min_val && val <= max_val) {
+			if (*var != val) {
+				log_msg(LOG_NOTICE, "%s change %u --> %u", name, *var, val);
+				*var = val;
+			}
+		} else {
+			log_msg(LOG_WARNING, "Invalid %s value: %s", name, args);
+			return 2;
+		}
+		return 0;
+	}
+	return 1;
+}
+
 int uint8_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		uint8_t *var, uint8_t min_val, uint8_t max_val, const char *name)
 {
