@@ -26,7 +26,17 @@
 #include "pico/mutex.h"
 #include "pico/unique_id.h"
 #include "pico/multicore.h"
+#include "hardware/clocks.h"
 #include "hardware/watchdog.h"
+#if PICO_RP2040
+#include "hardware/structs/vreg_and_chip_reset.h"
+#include "hardware/structs/ssi.h"
+#else
+#include "hardware/structs/powman.h"
+#include "hardware/structs/qmi.h"
+#include "psram.h"
+#endif
+#include "memtest.h"
 
 #include "pico_lfs.h"
 
@@ -207,5 +217,136 @@ int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout)
 }
 
 
+float get_rp2_dvdd()
+{
+	uint8_t vsel = 0;
+	float v = 0.0;
+
+#if PICO_RP2040
+	vsel = (vreg_and_chip_reset_hw->vreg & VREG_AND_CHIP_RESET_VREG_VSEL_BITS)
+		>> VREG_AND_CHIP_RESET_VREG_VSEL_LSB;
+	v = 0.80;
+	if (vsel > 5)
+		v += (vsel - 5) * 0.05;
+#else
+	vsel = (powman_hw->vreg & POWMAN_VREG_VSEL_BITS) >> POWMAN_VREG_VSEL_LSB;
+	if (vsel <= 17)
+		v = 0.55 + vsel * 0.05;
+	else if (vsel <= 19)
+		v = 1.50 + (vsel - 18) * 0.10;
+	else if (vsel == 20)
+		v = 1.65;
+	else if (vsel <= 24)
+		v = 1.70 + (vsel - 21) * 0.10;
+	else if (vsel <= 28)
+		v = 2.35 + (vsel - 25) * 0.15;
+	else
+		v = 3.00 + (vsel - 29) * 0.15;
+#endif
+
+	return v;
+}
+
+
+void print_rp2_board_info()
+{
+	uint32_t sys_clk = clock_get_hz(clk_sys);
+#if PICO_RP2040
+	uint8_t flash_clkdiv = (ssi_hw->baudr & SSI_BAUDR_SCKDV_BITS) >> SSI_BAUDR_SCKDV_LSB;
+#else
+	uint8_t flash_clkdiv = (qmi_hw->m[0].timing & QMI_M0_TIMING_CLKDIV_BITS)
+		>> QMI_M0_TIMING_CLKDIV_LSB;
+	uint8_t psram_clkdiv = (qmi_hw->m[1].timing & QMI_M1_TIMING_CLKDIV_BITS)
+		>> QMI_M1_TIMING_CLKDIV_LSB;
+	uint32_t psram_clk = sys_clk / psram_clkdiv;
+#endif
+	uint32_t flash_clk = sys_clk / flash_clkdiv;
+
+
+	printf("Hardware Model: FANPICO-%s\n", FANPICO_MODEL);
+	printf("         Board: %s\n", PICO_BOARD);
+	printf("           MCU: %s @ %luMHz\n",	rp2_model_str(), sys_clk / 1000000);
+	printf("           RAM: %luKB\n", ((uint32_t)SRAM_END - SRAM_BASE) >> 10);
+#if !PICO_RP2040
+	if (psram_size() > 0)
+		printf("         PSRAM: %uKB @ %luMHz\n", psram_size() >> 10,
+			psram_clk / 1000000);
+#endif
+	printf("         Flash: %luKB @ %luMHz\n",
+		(uint32_t)PICO_FLASH_SIZE_BYTES >> 10, flash_clk / 1000000);
+	printf(" Serial Number: %s\n", pico_serial_str());
+
+	if (get_log_level() >= LOG_INFO)
+		printf("          DVDD: %0.2fV\n", get_rp2_dvdd());
+}
+
+
+void print_psram_info()
+{
+#if PICO_RP2040 || PSRAM_CS_PIN < 0
+	printf("No PSRAM support.\n");
+#else
+	uint8_t psram_clkdiv = (qmi_hw->m[1].timing & QMI_M1_TIMING_CLKDIV_BITS)
+		>> QMI_M1_TIMING_CLKDIV_LSB;
+	uint32_t psram_clk = clock_get_hz(clk_sys) / psram_clkdiv;
+	const psram_id_t *p = psram_get_id();
+
+	if (p) {
+		printf("Manufacturer: %s\n", psram_get_manufacturer(p->mfid));
+		printf("     Chip ID: %02x%02x%02x%02x%02x%02x%02x%02x\n", p->mfid, p->kgd,
+			p->eid[0], p->eid[1], p->eid[2], p->eid[3], p->eid[4], p->eid[5]);
+	}
+	printf("        Size: %u KB\n", psram_size() >> 10);
+	printf("       Clock: %lu MHz\n", psram_clk / 1000000);
+	printf("   M1_TIMING: %08lx\n", qmi_hw->m[1].timing);
+#endif
+}
+
+
+void rp2_memtest()
+{
+	void *heap;
+	uint32_t size;
+
+#if !PICO_RP2040
+	/* PSRAM Tests */
+	if ((size = psram_size()) > 0) {
+		printf("Testing PSRAM: %lu bytes\n", size);
+		if (get_log_level() >= LOG_INFO) {
+			printf("M1_TIMING: %08lx\n", qmi_hw->m[1].timing);
+			printf("NOCACHE:\n");
+		}
+		heap = (void*)PSRAM_NOCACHE_BASE;
+		walking_mem_test(heap, size);
+		simple_speed_mem_test(heap, size, false);
+		if (get_log_level() >= LOG_INFO) {
+			printf("CACHE:\n");
+			heap = (void*)PSRAM_BASE;
+			walking_mem_test(heap, size);
+			simple_speed_mem_test(heap, size, false);
+		}
+	}
+#endif
+
+	/* Flash Tests */
+	size = PICO_FLASH_SIZE_BYTES;
+	printf("Testing FLASH: %lu bytes\n", size);
+	if (get_log_level() >= LOG_INFO) {
+#if PICO_RP2040
+		printf("BAUDR: %08lx\n", ssi_hw->baudr);
+#else
+		printf("M0_TIMING: %08lx\n", qmi_hw->m[0].timing);
+#endif
+		printf("NOCACHE:\n");
+	}
+	heap = (void*)XIP_NOCACHE_NOALLOC_BASE;
+	simple_speed_mem_test(heap, size, true);
+	if (get_log_level() >= LOG_INFO) {
+		printf("CACHE:\n");
+		heap = (void*)XIP_BASE;
+		simple_speed_mem_test(heap, size, true);
+	}
+
+}
 
 /* eof */

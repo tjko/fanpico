@@ -633,6 +633,10 @@ const char *pico_serial_str();
 int time_passed(absolute_time_t *t, uint32_t ms);
 int time_elapsed(absolute_time_t t, uint32_t ms);
 int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
+float get_rp2_dvdd();
+void print_rp2_board_info();
+void print_psram_info();
+void rp2_memtest();
 
 
 /* crc32.c */
