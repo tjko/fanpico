@@ -637,6 +637,7 @@ float get_rp2_dvdd();
 void print_rp2_board_info();
 void print_psram_info();
 void rp2_memtest();
+void rp2_set_sys_clock(uint32_t khz);
 
 
 /* crc32.c */

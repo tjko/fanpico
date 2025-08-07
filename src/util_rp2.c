@@ -349,4 +349,40 @@ void rp2_memtest()
 
 }
 
+
+#if PICO_RP2350
+static inline void powman_vreg_update_in_progress_wait()
+{
+	while (powman_hw->vreg & POWMAN_VREG_UPDATE_IN_PROGRESS_BITS) {
+		tight_loop_contents();
+	}
+}
+#endif
+
+void rp2_set_sys_clock(uint32_t khz)
+{
+#if PICO_RP2350
+	if (khz > 150000) {
+		/* Increase core voltage from 1.10V to 1.15V if overclocking */
+		uint8_t vsel = 0x0c; // 01100 = 1.15V
+		uint8_t hiz = (powman_hw->vreg & POWMAN_VREG_HIZ_BITS) >> POWMAN_VREG_HIZ_LSB;
+
+		/* Unlock (enable) VREG control */
+		hw_set_bits(&powman_hw->vreg_ctrl,
+			POWMAN_PASSWORD_BITS | POWMAN_VREG_CTRL_UNLOCK_BITS);
+
+		/* Update VSEL (select output voltage) */
+		powman_vreg_update_in_progress_wait();
+		powman_hw->vreg = (
+			POWMAN_PASSWORD_BITS |
+			((vsel << POWMAN_VREG_VSEL_LSB) & POWMAN_VREG_VSEL_BITS) |
+			((hiz << POWMAN_VREG_HIZ_LSB) & POWMAN_VREG_HIZ_LSB)
+			);
+		powman_vreg_update_in_progress_wait();
+	}
+#endif
+	set_sys_clock_khz(khz, true);
+	sleep_ms(50);
+}
+
 /* eof */
