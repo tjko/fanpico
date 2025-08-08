@@ -90,7 +90,9 @@ void sshserver_init()
 		log_msg(LOG_ERR, "Failed to initialize wolfSSH library.");
 		return;
 	}
-//	wolfSSH_Debugging_ON();
+#ifndef NDEBUG
+	wolfSSH_Debugging_ON();
+#endif
 
 	/* Create SSH server instance */
 	if (!(ssh_srv = ssh_server_new(2048, 8192))) {
@@ -147,6 +149,7 @@ void sshserver_init()
 	ssh_srv->allow_connect_cb = ssh_allow_connection_cb;
 	if (cfg->ssh_port > 0)
 		ssh_srv->port = cfg->ssh_port;
+	ssh_srv->max_auth_tries = 6;
 
 	/* Start SSH server */
 	if (!ssh_server_start(ssh_srv, true)) {

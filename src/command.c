@@ -33,19 +33,11 @@
 #include "pico/util/datetime.h"
 #include "pico/aon_timer.h"
 #include "pico/rand.h"
-#include "hardware/clocks.h"
 #include "hardware/watchdog.h"
-#if PICO_RP2040
-#include "hardware/structs/ssi.h"
-#else
-#include "hardware/structs/qmi.h"
-#endif
 #include "cJSON.h"
 #include "fanpico.h"
 #include "command_util.h"
 #include "pico_sensor_lib.h"
-#include "psram.h"
-#include "memtest.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
 #include "lwip/stats.h"
@@ -147,34 +139,10 @@ int cmd_usb_boot(const char *cmd, const char *args, int query, struct prev_cmd_t
 
 int cmd_board(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	uint32_t sys_clk = clock_get_hz(clk_sys);
-#if PICO_RP2040
-	uint8_t flash_clkdiv = (ssi_hw->baudr & SSI_BAUDR_SCKDV_BITS) >> SSI_BAUDR_SCKDV_LSB;
-#else
-	uint8_t flash_clkdiv = (qmi_hw->m[0].timing & QMI_M0_TIMING_CLKDIV_BITS)
-		>> QMI_M0_TIMING_CLKDIV_LSB;
-	uint8_t psram_clkdiv = (qmi_hw->m[1].timing & QMI_M1_TIMING_CLKDIV_BITS)
-		>> QMI_M1_TIMING_CLKDIV_LSB;
-	uint32_t psram_clk = sys_clk / psram_clkdiv;
-#endif
-	uint32_t flash_clk = sys_clk / flash_clkdiv;
-
-
 	if (cmd && !query)
 		return 1;
 
-	printf("Hardware Model: FANPICO-%s\n", FANPICO_MODEL);
-	printf("         Board: %s\n", PICO_BOARD);
-	printf("           MCU: %s @ %luMHz\n",	rp2_model_str(), sys_clk / 1000000);
-	printf("           RAM: %luKB\n", ((uint32_t)SRAM_END - SRAM_BASE) >> 10);
-#if !PICO_RP2040
-	if (psram_size() > 0)
-		printf("         PSRAM: %uKB @ %luMHz\n", psram_size() >> 10,
-			psram_clk / 1000000);
-#endif
-	printf("         Flash: %luKB @ %luMHz\n",
-		(uint32_t)PICO_FLASH_SIZE_BYTES >> 10, flash_clk / 1000000);
-	printf(" Serial Number: %s\n", pico_serial_str());
+	print_rp2_board_info();
 
 	return 0;
 }
@@ -1828,7 +1796,7 @@ int cmd_mqtt_server(const char *cmd, const char *args, int query, struct prev_cm
 
 int cmd_mqtt_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return uint32_setting(cmd, args, query, prev_cmd,
+	return uint16_setting(cmd, args, query, prev_cmd,
 			&conf->mqtt_port, 0, 65535, "MQTT Port");
 }
 
@@ -2185,7 +2153,7 @@ int cmd_ssh_server(const char *cmd, const char *args, int query, struct prev_cmd
 
 int cmd_ssh_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return uint32_setting(cmd, args, query, prev_cmd,
+	return uint16_setting(cmd, args, query, prev_cmd,
 			&conf->ssh_port, 0, 65535, "SSH Port");
 }
 
@@ -2362,7 +2330,7 @@ int cmd_telnet_server(const char *cmd, const char *args, int query, struct prev_
 
 int cmd_telnet_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return uint32_setting(cmd, args, query, prev_cmd,
+	return uint16_setting(cmd, args, query, prev_cmd,
 			&conf->telnet_port, 0, 65535, "Telnet Port");
 }
 
@@ -2447,6 +2415,53 @@ int cmd_snmp_trap_dst(const char *cmd, const char *args, int query, struct prev_
 {
 	return ip_change(cmd, args, query, prev_cmd, "SNMP Trap Destination", &conf->snmp_trap_dst);
 }
+
+int cmd_http_server(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,
+			&conf->http_active, "HTTP Server");
+}
+
+int cmd_http_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return uint16_setting(cmd, args, query, prev_cmd,
+			&conf->http_port, 0, 65535, "HTTP Server Port");
+}
+
+int cmd_http_tlsport(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return uint16_setting(cmd, args, query, prev_cmd,
+			&conf->https_port, 0, 65535, "HTTPS Server Port");
+}
+
+int cmd_http_mask_fan(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->http_fan_mask, FAN_MAX_COUNT,
+				1, "HTTP Fan Mask");
+}
+
+int cmd_http_mask_mbfan(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->http_mbfan_mask, MBFAN_MAX_COUNT,
+				1, "HTTP MBFan Mask");
+}
+
+int cmd_http_mask_sensor(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->http_sensor_mask, SENSOR_MAX_COUNT,
+				1, "HTTP Sensor Mask");
+}
+
+int cmd_http_mask_vsensor(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->http_vsensor_mask, VSENSOR_MAX_COUNT,
+				1, "HTTP Virtual Sensor Mask");
+}
+
 #endif /* WIFI_SUPPOERT */
 
 int cmd_time(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -2658,23 +2673,7 @@ int cmd_psram(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 	if (!query)
 		return 1;
 
-#if PICO_RP2040 || PSRAM_CS_PIN < 0
-	printf("No PSRAM support.\n");
-#else
-	uint8_t psram_clkdiv = (qmi_hw->m[1].timing & QMI_M1_TIMING_CLKDIV_BITS)
-		>> QMI_M1_TIMING_CLKDIV_LSB;
-	uint32_t psram_clk = clock_get_hz(clk_sys) / psram_clkdiv;
-	const psram_id_t *p = psram_get_id();
-
-	if (p) {
-		printf("Manufacturer: %s\n", psram_get_manufacturer(p->mfid));
-		printf("     Chip ID: %02x%02x%02x%02x%02x%02x%02x%02x\n", p->mfid, p->kgd,
-			p->eid[0], p->eid[1], p->eid[2], p->eid[3], p->eid[4], p->eid[5]);
-	}
-	printf("        Size: %u KB\n", psram_size() >> 10);
-	printf("       Clock: %lu MHz\n", psram_clk / 1000000);
-	printf("   M1_TIMING: %08lx\n", qmi_hw->m[1].timing);
-#endif
+	print_psram_info();
 
 	return 0;
 }
@@ -2742,55 +2741,13 @@ int cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *
 
 int cmd_memtest(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	void *heap;
-	uint32_t size;
-
 	if (query)
 		return 1;
 
 #if WATCHDOG_ENABLED
 	watchdog_disable();
 #endif
-
-#if !PICO_RP2040
-	/* PSRAM Tests */
-	if ((size = psram_size()) > 0) {
-		printf("Testing PSRAM: %lu bytes\n", size);
-		if (get_log_level() >= LOG_INFO) {
-			printf("M1_TIMING: %08lx\n", qmi_hw->m[1].timing);
-			printf("NOCACHE:\n");
-		}
-		heap = (void*)PSRAM_NOCACHE_BASE;
-		walking_mem_test(heap, size);
-		simple_speed_mem_test(heap, size, false);
-		if (get_log_level() >= LOG_INFO) {
-			printf("CACHE:\n");
-			heap = (void*)PSRAM_BASE;
-			walking_mem_test(heap, size);
-			simple_speed_mem_test(heap, size, false);
-		}
-	}
-#endif
-
-	/* Flash Tests */
-	size = PICO_FLASH_SIZE_BYTES;
-	printf("Testing FLASH: %lu bytes\n", size);
-	if (get_log_level() >= LOG_INFO) {
-#if PICO_RP2040
-		printf("BAUDR: %08lx\n", ssi_hw->baudr);
-#else
-		printf("M0_TIMING: %08lx\n", qmi_hw->m[0].timing);
-#endif
-		printf("NOCACHE:\n");
-	}
-	heap = (void*)XIP_NOCACHE_NOALLOC_BASE;
-	simple_speed_mem_test(heap, size, true);
-	if (get_log_level() >= LOG_INFO) {
-		printf("CACHE:\n");
-		heap = (void*)XIP_BASE;
-		simple_speed_mem_test(heap, size, true);
-	}
-
+	rp2_memtest();
 #if WATCHDOG_ENABLED
 	watchdog_enable(WATCHDOG_REBOOT_DELAY, 1);
 #endif
@@ -2902,6 +2859,22 @@ const struct cmd_t wifi_commands[] = {
 };
 
 #ifdef WIFI_SUPPORT
+const struct cmd_t http_mask_commands[] = {
+	{ "SENSOR",    6, NULL,              cmd_http_mask_sensor },
+	{ "VSENSOR",   7, NULL,              cmd_http_mask_vsensor },
+	{ "FAN",       3, NULL,              cmd_http_mask_fan },
+	{ "MBFAN",     5, NULL,              cmd_http_mask_mbfan },
+	{ 0, 0, 0, 0 }
+};
+
+const struct cmd_t http_commands[] = {
+	{ "MASK",      4, http_mask_commands, NULL },
+	{ "PORT",      4, NULL,              cmd_http_port },
+	{ "TLSPORT",   7, NULL,              cmd_http_tlsport },
+	{ "SERVer",    4, NULL,              cmd_http_server },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t mqtt_mask_commands[] = {
 	{ "TEMP",      4, NULL,              cmd_mqtt_mask_temp },
 	{ "VTEMP",     5, NULL,              cmd_mqtt_mask_vtemp },
@@ -3070,6 +3043,7 @@ const struct cmd_t system_commands[] = {
 	{ "VSENSORS",  8, NULL,              cmd_vsensors },
 	{ "WIFI",      4, wifi_commands,     cmd_wifi },
 #if WIFI_SUPPORT
+	{ "HTTP",      4, http_commands,     NULL },
 	{ "MQTT",      4, mqtt_commands,     NULL },
 	{ "SNMP",      4, snmp_commands,     NULL },
 	{ "TELNET",    6, telnet_commands,   NULL },

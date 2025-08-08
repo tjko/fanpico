@@ -59,6 +59,8 @@ int float_setting(const char *cmd, const char *args, int query, struct prev_cmd_
 		float *var, float min_val, float max_val, const char *name);
 int uint32_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		uint32_t *var, uint32_t min_val, uint32_t max_val, const char *name);
+int uint16_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
+		uint16_t *var, uint16_t min_val, uint16_t max_val, const char *name);
 int uint8_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		uint8_t *var, uint8_t min_val, uint8_t max_val, const char *name);
 int bool_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,

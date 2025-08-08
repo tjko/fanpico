@@ -1,6 +1,6 @@
---- src/apps/http/makefsdata/makefsdata.c.orig	2022-09-11 14:26:22.946235452 -0700
-+++ src/apps/http/makefsdata/makefsdata.c	2023-02-25 18:00:02.084295257 -0800
-@@ -882,7 +882,7 @@
+--- a/src/apps/http/makefsdata/makefsdata.c
++++ b/src/apps/http/makefsdata/makefsdata.c
+@@ -882,7 +882,7 @@ static int checkSsiByFilelist(const char* filename_listfile)
      ssi_file_lines = lines;
      ssi_file_num_lines = l;
    }
@@ -9,7 +9,19 @@
  }
  
  static int is_ssi_file(const char *filename)
-@@ -1254,6 +1254,15 @@
+@@ -1093,6 +1093,11 @@ int file_write_http_header(FILE *data_file, const char *filename, int file_size,
+ 
+   memset(hdr_buf, 0, sizeof(hdr_buf));
+ 
++
++  if (strstr(filename, "303.") == filename) {
++	  return written;
++  }
++
+   if (useHttp11) {
+     response_type = HTTP_HDR_OK_11;
+   }
+@@ -1254,6 +1259,15 @@ int file_write_http_header(FILE *data_file, const char *filename, int file_size,
    LWIP_UNUSED_ARG(is_compressed);
  #endif
  

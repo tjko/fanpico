@@ -44,6 +44,9 @@
 #define WIFI_REJOIN_DELAY 10000 // Delay before attempting to re-join to WiFi (ms)
 #define FANPICO_WIFI_INACTIVE -255
 
+uint16_t fanpico_http_server_port = HTTP_SERVER_DEFAULT_PORT;
+uint16_t fanpico_https_server_port = HTTPS_SERVER_DEFAULT_PORT;
+
 static absolute_time_t ABSOLUTE_TIME_INITIALIZED_VAR(t_network_initialized, 0);
 static bool wifi_initialized = false;
 static bool network_initialized = false;
@@ -371,15 +374,22 @@ static void wifi_init()
 	ip_addr_copy(net_state->ntp_servers[0], cfg->ntp_server);
 
 	/* Enable HTTP server */
-	httpd_init();
+	if (cfg->http_active) {
+		log_msg(LOG_NOTICE, "HTTP Server enabled");
+		if (cfg->http_port > 0)
+			fanpico_http_server_port = cfg->http_port;
+		if (cfg->https_port > 0)
+			fanpico_https_server_port = cfg->https_port;
+		httpd_init();
 #if TLS_SUPPORT
-	struct altcp_tls_config *tls_config = tls_server_config();
-	if (tls_config) {
-		log_msg(LOG_NOTICE, "HTTPS/TLS enabled");
-		httpd_inits(tls_config);
-	}
+		struct altcp_tls_config *tls_config = tls_server_config();
+		if (tls_config) {
+			log_msg(LOG_NOTICE, "HTTPS/TLS enabled");
+			httpd_inits(tls_config);
+		}
 #endif
-	http_set_ssi_handler(fanpico_ssi_handler, NULL, 0);
+		http_set_ssi_handler(fanpico_ssi_handler, NULL, 0);
+	}
 
 	/* Enable Telnet server */
 	if (cfg->telnet_active) {

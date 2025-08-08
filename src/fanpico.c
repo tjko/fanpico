@@ -59,7 +59,7 @@ static struct fanpico_state transfer_state;
 static struct fanpico_state system_state;
 const struct fanpico_state *fanpico_state = &system_state;
 static struct fanpico_fw_settings system_settings;
-const struct fanpico_fw_settings *firmware_settings = &system_settings;
+const struct fanpico_fw_settings *fw_settings = &system_settings;
 
 #ifdef WIFI_SUPPORT
 static struct fanpico_network_state network_state;
@@ -170,9 +170,9 @@ static void setup()
 	char buf[32];
 	int i = 0;
 
-	if (firmware_settings->sysclock > 0) {
-		set_sys_clock_khz(firmware_settings->sysclock * 1000, true);
-		sleep_ms(100);
+
+	if (fw_settings->sysclock > 0 && fw_settings->sysclock < 1000) {
+		rp2_set_sys_clock(fw_settings->sysclock * 1000);
 	}
 
 	stdio_usb_init();
@@ -183,11 +183,11 @@ static void setup()
 		sleep_ms(50);
 	}
 
-	if (firmware_settings->bootdelay > 0)
-		sleep_ms(firmware_settings->bootdelay * 1000);
+	if (fw_settings->bootdelay > 0)
+		sleep_ms(fw_settings->bootdelay * 1000);
 
 	lfs_setup(false);
-	read_config(firmware_settings->safemode);
+	read_config(fw_settings->safemode);
 
 
 #if TTL_SERIAL
@@ -216,7 +216,7 @@ static void setup()
 
 	init_persistent_memory();
 	printf("\n");
-	if (firmware_settings->safemode)
+	if (fw_settings->safemode)
 		printf("*** Booting into Safe Mode ***\n\n");
 
 	log_msg(LOG_NOTICE, "System starting...");
