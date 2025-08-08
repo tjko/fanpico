@@ -258,7 +258,14 @@ int bitmask16_setting(const char *cmd, const char *args, int query, struct prev_
 
 	if (!str_to_bitmask(args, len, &new, base)) {
 		if (old != new) {
-			log_msg(LOG_NOTICE, "%s change 0x%lx --> 0x%lx", name, old, new);
+			char *o = strdup(bitmask_to_str(old, len, base, true));
+			if (o) {
+				log_msg(LOG_NOTICE, "%s change '%s' --> '%s'", name, o,
+					bitmask_to_str(new, len, base, true));
+				free(o);
+			} else {
+				log_msg(LOG_NOTICE, "%s change 0x%08lx --> 0x%08lx", name, old, new);
+			}
 			*mask = new;
 		}
 		return 0;

@@ -34,14 +34,14 @@
 		  <tr><td id="l1">
 		      <table class="pretty" width="100%">
 			<tr style="font-size: 14px;"><th>#</th><th>Name</th><th>RPM&darr;</th><th>PWM&uarr;</th></tr>
-			<tr><!--#fanrow1--></tr>
-			<tr><!--#fanrow2--></tr>
-			<tr><!--#fanrow3--></tr>
-			<tr><!--#fanrow4--></tr>
-			<tr><!--#fanrow5--></tr>
-			<tr><!--#fanrow6--></tr>
-			<tr><!--#fanrow7--></tr>
-			<tr><!--#fanrow8--></tr>
+			<!--#fanrow1-->
+			<!--#fanrow2-->
+			<!--#fanrow3-->
+			<!--#fanrow4-->
+			<!--#fanrow5-->
+			<!--#fanrow6-->
+			<!--#fanrow7-->
+			<!--#fanrow8-->
 		      </table>
 		  </td></tr>
 		</table>
@@ -51,10 +51,10 @@
 		  <tr><td id="l1">
 		      <table class="pretty" width="100%">
 			<tr style="font-size: 14px;"><th>#</th><th>Name</th><th>RPM&uarr;</th><th>PWM&darr;</th></tr>
-			<tr><!--#mfanrow1--></tr>
-			<tr><!--#mfanrow2--></tr>
-			<tr><!--#mfanrow3--></tr>
-			<tr><!--#mfanrow4--></tr>
+			<!--#mfanrow1-->
+			<!--#mfanrow2-->
+			<!--#mfanrow3-->
+			<!--#mfanrow4-->
 		      </table>
 		  </td></tr>
 		</table>
@@ -67,9 +67,9 @@
 		  <tr><td id="l1">
 		      <table class="pretty" width="100%">
 			<tr style="font-size: 14px;"><th>#</th><th>Name</th><th>Temp &#x2600;</th></tr>
-			<tr><!--#sensrow1--></tr>
-			<tr><!--#sensrow2--></tr>
-			<tr><!--#sensrow3--></tr>
+			<!--#sensrow1-->
+			<!--#sensrow2-->
+			<!--#sensrow3-->
 		      </table>
 		  </td></tr>
 		</table>
@@ -79,14 +79,14 @@
 		  <tr><td id="l1">
 		      <table class="pretty" width="100%">
 			<tr style="font-size: 14px;"><th>#</th><th>Name</th><th>Temp &#x2600;</th><th>Other</th>
-			<tr><!--#vsenrow1--></tr>
-			<tr><!--#vsenrow2--></tr>
-			<tr><!--#vsenrow3--></tr>
-			<tr><!--#vsenrow4--></tr>
-			<tr><!--#vsenrow5--></tr>
-			<tr><!--#vsenrow6--></tr>
-			<tr><!--#vsenrow7--></tr>
-			<tr><!--#vsenrow8--></tr>
+			<!--#vsenrow1-->
+			<!--#vsenrow2-->
+			<!--#vsenrow3-->
+			<!--#vsenrow4-->
+			<!--#vsenrow5-->
+			<!--#vsenrow6-->
+			<!--#vsenrow7-->
+			<!--#vsenrow8-->
 		      </table>
 		  </td></tr>
 		</table>

@@ -2433,6 +2433,35 @@ int cmd_http_tlsport(const char *cmd, const char *args, int query, struct prev_c
 	return uint16_setting(cmd, args, query, prev_cmd,
 			&conf->https_port, 0, 65535, "HTTPS Server Port");
 }
+
+int cmd_http_mask_fan(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->http_fan_mask, FAN_MAX_COUNT,
+				1, "HTTP Fan Mask");
+}
+
+int cmd_http_mask_mbfan(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->http_mbfan_mask, MBFAN_MAX_COUNT,
+				1, "HTTP MBFan Mask");
+}
+
+int cmd_http_mask_sensor(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->http_sensor_mask, SENSOR_MAX_COUNT,
+				1, "HTTP Sensor Mask");
+}
+
+int cmd_http_mask_vsensor(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bitmask16_setting(cmd, args, query, prev_cmd,
+				&conf->http_vsensor_mask, VSENSOR_MAX_COUNT,
+				1, "HTTP Virtual Sensor Mask");
+}
+
 #endif /* WIFI_SUPPOERT */
 
 int cmd_time(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -2830,7 +2859,16 @@ const struct cmd_t wifi_commands[] = {
 };
 
 #ifdef WIFI_SUPPORT
+const struct cmd_t http_mask_commands[] = {
+	{ "SENSOR",    6, NULL,              cmd_http_mask_sensor },
+	{ "VSENSOR",   7, NULL,              cmd_http_mask_vsensor },
+	{ "FAN",       3, NULL,              cmd_http_mask_fan },
+	{ "MBFAN",     5, NULL,              cmd_http_mask_mbfan },
+	{ 0, 0, 0, 0 }
+};
+
 const struct cmd_t http_commands[] = {
+	{ "MASK",      4, http_mask_commands, NULL },
 	{ "PORT",      4, NULL,              cmd_http_port },
 	{ "TLSPORT",   7, NULL,              cmd_http_tlsport },
 	{ "SERVer",    4, NULL,              cmd_http_server },

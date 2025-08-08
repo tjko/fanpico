@@ -330,6 +330,10 @@ struct fanpico_config {
 	bool http_active;
 	uint16_t http_port;
 	uint16_t https_port;
+	uint16_t http_fan_mask;
+	uint16_t http_mbfan_mask;
+	uint16_t http_sensor_mask;
+	uint16_t http_vsensor_mask;
 #endif
 	/* Non-config items */
 	float vtemp[VSENSOR_MAX_COUNT];

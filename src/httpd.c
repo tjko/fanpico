@@ -285,9 +285,9 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	}
 	else if (!strncmp(tag, "fanrow", 6)) {
 		uint8_t i = tag[6] - '1';
-		if (i < FAN_COUNT) {
+		if (i < FAN_COUNT && cfg->http_fan_mask & (1 << i)) {
 			double rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
-			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td align=\"right\">%0.0f %%",
+			printed = snprintf(insert, insertlen, "<tr><td>%d<td>%s<td>%0.0f<td align=\"right\">%0.0f %%",
 					i + 1,
 					cfg->fans[i].name,
 					rpm,
@@ -296,9 +296,9 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	}
 	else if (!strncmp(tag, "mfanrow", 7)) {
 		uint8_t i = tag[7] - '1';
-		if (i < MBFAN_COUNT) {
+		if (i < MBFAN_COUNT && cfg->http_mbfan_mask & (1 << i)) {
 			double rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
-			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td>%0.0f<td align=\"right\">%0.0f %%",
+			printed = snprintf(insert, insertlen, "<tr><td>%d<td>%s<td>%0.0f<td align=\"right\">%0.0f %%",
 					i + 1,
 					cfg->mbfans[i].name,
 					rpm,
@@ -307,20 +307,16 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	}
 	else if (!strncmp(tag, "sensrow", 7)) {
 		uint8_t i = tag[7] - '1';
-		if (i < SENSOR_COUNT) {
-			printed = snprintf(insert, insertlen, "<td>%d<td>%s<td align=\"right\">%0.1f &#x2103;",
+		if (i < SENSOR_COUNT && cfg->http_sensor_mask & (1 << i)) {
+			printed = snprintf(insert, insertlen, "<tr><td>%d<td>%s<td align=\"right\">%0.1f &#x2103;",
 					i + 1,
 					cfg->sensors[i].name,
 					st->temp[i]);
 		}
 	}
-	else if (!strncmp(tag, "adcvref", 7)) {
-		printed = snprintf(insert, insertlen, "<td>Vref<td>ADC<td align=\"right\">%0.4f V",
-					cfg->adc_vref);
-	}
 	else if (!strncmp(tag, "vsenrow", 7)) {
 		uint8_t i = tag[7] - '1';
-		if (i < VSENSOR_COUNT) {
+		if (i < VSENSOR_COUNT && cfg->http_vsensor_mask & (1 << i)) {
 			char other[24], tmp[12];
 
 			other[0] = 0;
@@ -336,9 +332,13 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 			}
 
 			printed = snprintf(insert, insertlen,
-					"<td>%d<td>%s<td align=\"right\">%0.1f &#x2103;<td>%s",
+					"<tr><td>%d<td>%s<td align=\"right\">%0.1f &#x2103;<td>%s",
 					i + 1, cfg->vsensors[i].name, st->vtemp[i], other);
 		}
+	}
+	else if (!strncmp(tag, "adcvref", 7)) {
+		printed = snprintf(insert, insertlen, "<td>Vref<td>ADC<td align=\"right\">%0.4f V",
+					cfg->adc_vref);
 	}
 	else if (!strncmp(tag, "csvstat", 7)) {
 		printed = csv_stats(insert, insertlen, current_tag_part, next_tag_part);

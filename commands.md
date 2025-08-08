@@ -127,6 +127,14 @@ Fanpico supports following commands:
 * [SYStem:HTTP:PORT?](#systemhttpport-1)
 * [SYStem:HTTP:TLSPORT](#systemhttptlsport)
 * [SYStem:HTTP:TLSPORT?](#systemhttptlsport-1)
+* [SYStem:HTTP:MASK:FAN](#systemmqttmaskfan)
+* [SYStem:HTTP:MASK:FAN?](#systemmqttmaskfan-1)
+* [SYStem:HTTP:MASK:MBFAN](#systemmqttmaskmbfan)
+* [SYStem:HTTP:MASK:MBFAN?](#systemmqttmaskmbfan-1)
+* [SYStem:HTTP:MASK:SENSOR](#systemmqttmasksensor)
+* [SYStem:HTTP:MASK:SENSOR?](#systemmqttmasksensor-1)
+* [SYStem:HTTP:MASK:VSENSOR](#systemmqttmaskvsensor)
+* [SYStem:HTTP:MASK:VSENSOR?](#systemmqttmaskvsensor-1)
 * [SYStem:I2C?](#systemi2c)
 * [SYStem:I2C:SCAN?](#systemi2cscan)
 * [SYStem:I2C:SPEED](#systemi2cspeed)
@@ -2082,6 +2090,104 @@ Example:
 SYS:HTTP:TLSPORT?
 0
 ```
+
+
+#### SYStem:HTTP:MASK:FAN
+Configure which fan ports should be displayed on HTTP server.
+
+Fans can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: 1-8    (display all fans)
+
+Example:
+```
+SYS:HTTP:MASK:FAN 1-4,8
+```
+
+
+#### SYStem:HTTP:MASK:FAN?
+Query which fan ports are configured to be displayed on HTTP server.
+
+Example:
+```
+SYS:HTTP:MASK:FAN?
+1-8
+```
+
+
+#### SYStem:HTTP:MASK:MBFAN
+Configure which mbfan ports should be displayed on HTTP server.
+
+Fans can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: 1-4    (display all mbfans)
+
+Example:
+```
+SYS:HTTP:MASK:MBFAN 1,3,4
+```
+
+
+#### SYStem:HTTP:MASK:MBFAN?
+Query which mbfan ports are configured to be displayed on HTTP server.
+
+Example:
+```
+SYS:HTTP:MASK:MBFAN?
+1,3-4
+```
+
+
+#### SYStem:HTTP:MASK:SENSOR
+Configure which temperature sensors should be displayed on HTTP server.
+
+Sensors can be specified as comma separated list (2,3) or as range (1-3)
+or as combination of both.
+
+Default: 1-3    (display all sensors)
+
+Example:
+```
+SYS:HTTP:MASK:SENSOR 1,3
+```
+
+
+#### SYStem:HTTP:MASK:SENSOR?
+Query which sensors are configured to be displayed on HTTP server.
+
+Example:
+```
+SYS:HTTP:MASK:SENSOR?
+1,3
+```
+
+
+#### SYStem:HTTP:MASK:VSENSOR
+Configure which virtual sensors should be displayed on HTTP server.
+
+Sensors can be specified as comma separated list (1,3,7) or as range (1-3)
+or as combination of both.
+
+Default: 1-8    (display all virtual sensors)
+
+Example:
+```
+SYS:HTTP:MASK:VSENSOR 1-4
+```
+
+
+#### SYStem:HTTP:MASK:VSENSOR?
+Query which virtual sensors are configured to be displayed on HTTP server.
+
+Example:
+```
+SYS:HTTP:MASK:VSENSOR?
+1-4
+```
+
+
 
 
 
