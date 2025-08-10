@@ -1679,7 +1679,12 @@ int cmd_wifi_gateway(const char *cmd, const char *args, int query, struct prev_c
 int cmd_wifi_dns(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	return ip_list_change(cmd, args, query, prev_cmd, "DNS Servers", conf->dns_servers,
-		DNS_MAX_SERVERS);
+			DNS_MAX_SERVERS);
+}
+
+int cmd_wifi_syslog_client(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,	&conf->syslog_active, "Syslog Client");
 }
 
 int cmd_wifi_syslog(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -1687,9 +1692,15 @@ int cmd_wifi_syslog(const char *cmd, const char *args, int query, struct prev_cm
 	return ip_change(cmd, args, query, prev_cmd, "Syslog Server", &conf->syslog_server);
 }
 
+int cmd_wifi_ntp_client(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+{
+	return bool_setting(cmd, args, query, prev_cmd,	&conf->ntp_active, "NTP Client");
+}
+
 int cmd_wifi_ntp(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return ip_change(cmd, args, query, prev_cmd, "NTP Server", &conf->ntp_server);
+	return ip_list_change(cmd, args, query, prev_cmd, "NTP Servers", conf->ntp_servers,
+			SNTP_MAX_SERVERS);
 }
 
 int cmd_wifi_mac(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -2147,8 +2158,7 @@ int cmd_ssh_auth(const char *cmd, const char *args, int query, struct prev_cmd_t
 
 int cmd_ssh_server(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return bool_setting(cmd, args, query, prev_cmd,
-			&conf->ssh_active, "SSH Server");
+	return bool_setting(cmd, args, query, prev_cmd,	&conf->ssh_active, "SSH Server");
 }
 
 int cmd_ssh_port(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -2845,6 +2855,7 @@ const struct cmd_t wifi_commands[] = {
 	{ "MAC",       3, NULL,              cmd_wifi_mac },
 	{ "NETMask",   4, NULL,              cmd_wifi_netmask },
 	{ "DNS",       3, NULL,              cmd_wifi_dns },
+	{ "NTPClient", 4, NULL,              cmd_wifi_ntp_client },
 	{ "NTP",       3, NULL,              cmd_wifi_ntp },
 	{ "MODE",      4, NULL,              cmd_wifi_mode },
 	{ "PASSword",  4, NULL,              cmd_wifi_password },
@@ -2853,6 +2864,7 @@ const struct cmd_t wifi_commands[] = {
 	{ "STATS",     5, NULL,              cmd_wifi_stats },
 	{ "STATus",    4, NULL,              cmd_wifi_status },
 	{ "INFO",      4, NULL,              cmd_wifi_info },
+	{ "SYSLOGClient", 7, NULL,           cmd_wifi_syslog_client },
 	{ "SYSLOG",    6, NULL,              cmd_wifi_syslog },
 #endif
 	{ 0, 0, 0, 0 }

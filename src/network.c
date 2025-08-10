@@ -228,7 +228,11 @@ static void wifi_status_cb(struct netif *netif)
 
 	if (netif_is_up(netif) && !network_initialized) {
 		/* Network interface came up, first time... */
-		syslog_open(&net_state->syslog_server, 0, LOG_USER, net_state->hostname);
+		if (cfg->syslog_active && !ip_addr_isany(&net_state->syslog_server)) {
+			syslog_open(&net_state->syslog_server, 0, LOG_USER, net_state->hostname);
+			log_msg(LOG_NOTICE, "Syslog client enabled (server: %s)",
+				ipaddr_ntoa(&net_state->syslog_server));
+		}
 		network_initialized = true;
 		t_network_initialized = get_absolute_time();
 	}
@@ -296,7 +300,7 @@ static void wifi_init()
 		netif_set_addr(n, &cfg->ip, &cfg->netmask, &cfg->gateway);
 	} else {
 		/* Use DHCP (default) */
-		log_msg(LOG_NOTICE, "IP: DHCP");
+		log_msg(LOG_NOTICE,      "IP: DHCP");
 	}
 	netif_set_up(n);
 
@@ -305,7 +309,7 @@ static void wifi_init()
 			const ip_addr_t *ip = &cfg->dns_servers[i];
 
 			if (!ip_addr_isany(ip)) {
-				log_msg(LOG_NOTICE, "Set DNS server (%d): %s", i + 1,
+				log_msg(LOG_NOTICE, "DNS Server #%d: %s", i + 1,
 					ipaddr_ntoa(ip));
 				dns_setserver(i, ip);
 			}
@@ -363,15 +367,25 @@ static void wifi_init()
 	cyw43_arch_lwip_begin();
 
 	/* Enable SNTP client... */
-	sntp_init();
-	if (!ip_addr_isany(&cfg->ntp_server)) {
-		log_msg(LOG_NOTICE, "NTP Server: %s", ipaddr_ntoa(&cfg->ntp_server));
-		sntp_setserver(0, &cfg->ntp_server);
-	} else {
-		log_msg(LOG_NOTICE, "NTP Server: DHCP");
-		sntp_servermode_dhcp(1);
+	if (cfg->ntp_active) {
+		if (!ip_addr_isany(&cfg->ntp_servers[0])) {
+			sntp_servermode_dhcp(0);
+			for (int i = 0; i < SNTP_MAX_SERVERS; i++) {
+				const ip_addr_t *ip = &cfg->ntp_servers[i];
+
+				if (!ip_addr_isany(ip)) {
+					log_msg(LOG_NOTICE, "NTP Server #%d: %s", i + 1,
+						ipaddr_ntoa(ip));
+					sntp_setserver(i, ip);
+				}
+				ip_addr_copy(net_state->ntp_servers[i], *ip);
+			}
+		} else {
+			log_msg(LOG_NOTICE, "NTP Server: DHCP");
+			sntp_servermode_dhcp(1);
+		}
+		sntp_init();
 	}
-	ip_addr_copy(net_state->ntp_servers[0], cfg->ntp_server);
 
 	/* Enable HTTP server */
 	if (cfg->http_active) {
@@ -411,7 +425,8 @@ static void wifi_init()
 
 	cyw43_arch_lwip_end();
 
-	ip_addr_copy(net_state->syslog_server, cfg->syslog_server);
+	if (cfg->syslog_active)
+		ip_addr_copy(net_state->syslog_server, cfg->syslog_server);
 }
 
 

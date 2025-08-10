@@ -269,8 +269,10 @@ struct fanpico_config {
 	uint8_t wifi_mode;
 	char hostname[32];
 	ip_addr_t dns_servers[DNS_MAX_SERVERS];
+	bool syslog_active;
 	ip_addr_t syslog_server;
-	ip_addr_t ntp_server;
+	bool ntp_active;
+	ip_addr_t ntp_servers[SNTP_MAX_SERVERS];
 	ip_addr_t ip;
 	ip_addr_t netmask;
 	ip_addr_t gateway;
