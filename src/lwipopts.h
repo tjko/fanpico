@@ -66,7 +66,7 @@ extern uint16_t fanpico_https_server_port;
 #define SNTP_GET_SERVERS_FROM_DHCP      1
 #define SNTP_STARTUP_DELAY              1
 #define SNTP_STARTUP_DELAY_FUNC         (5000 + LWIP_RAND() % 4000)
-//#define SNTP_MAX_SERVERS              2
+#define SNTP_MAX_SERVERS                2
 void pico_set_system_time(long int sec);
 #define SNTP_SET_SYSTEM_TIME(sec)       pico_set_system_time(sec)
 

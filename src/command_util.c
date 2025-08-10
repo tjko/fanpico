@@ -435,8 +435,11 @@ int ip_list_change(const char *cmd, const char *args, int query, struct prev_cmd
 
 	if (query) {
 		for (int i = 0; i < list_len; i++) {
-			if (i > 0)
+			if (i > 0) {
+				if (ip_addr_isany(&ip[i]))
+					break;
 				printf(", ");
+			}
 			printf("%s", ipaddr_ntoa(&ip[i]));
 		}
 		printf("\n");
@@ -445,11 +448,13 @@ int ip_list_change(const char *cmd, const char *args, int query, struct prev_cmd
 			return 2;
 		t = strtok_r(arg, ",", &saveptr);
 		while (t && idx < list_len) {
+			t = trim_str(t);
 			if (ipaddr_aton(t, &tmpip)) {
 				ip_addr_copy(ip[idx], tmpip);
 				idx++;
+				if (ip_addr_isany(&tmpip))
+					break;
 			}
-
 			t = strtok_r(NULL, ",", &saveptr);
 		}
 		free(arg);
@@ -458,11 +463,13 @@ int ip_list_change(const char *cmd, const char *args, int query, struct prev_cmd
 
 		buf[0] = 0;
 		for (int i = 0; i < list_len; i++) {
-			if (i >= idx)
+			if (i >= idx) {
 				ip_addr_set_zero(&ip[i]);
-			snprintf(tmp, sizeof(tmp), "%s%s",
-				(i > 0 ? ", " : ""), ipaddr_ntoa(&ip[i]));
-			strncatenate(buf, tmp, sizeof(buf));
+			} else {
+				snprintf(tmp, sizeof(tmp), "%s%s",
+					(i > 0 ? ", " : ""), ipaddr_ntoa(&ip[i]));
+				strncatenate(buf, tmp, sizeof(buf));
+			}
 		}
 		log_msg(LOG_NOTICE, "%s changed to '%s'", name, buf);
 	}
@@ -477,56 +484,57 @@ int acl_list_change(const char *cmd, const char *args, int query, struct prev_cm
 	char *t, *t2, *arg, *saveptr, *saveptr2;
 	int prefix;
 	int idx = 0;
-	int count = 0;
 
 
 	if (query) {
 		for (int i = 0; i < list_len; i++) {
-			if (acl[i].prefix > 0) {
-				if (count > 0)
-					printf(", ");
-				printf("%s/%u", ipaddr_ntoa(&acl[i].ip), acl[i].prefix);
-				count++;
+			if (i > 0) {
+				if (acl[i].prefix == 0)
+					break;
+				printf(", ");
 			}
+			printf("%s/%u", ipaddr_ntoa(&acl[i].ip), acl[i].prefix);
 		}
 		printf("\n");
-	} else {
-		if (!(arg = strdup(args)))
-			return 2;
-		t = strtok_r(arg, ",", &saveptr);
-		while (t && idx < list_len) {
-			t2 = strtok_r(t, "/", &saveptr2);
-			if (t2 && ipaddr_aton(t2, &tmpip)) {
-				t2 = strtok_r(NULL, "/", &saveptr2);
-				if (t2 && str_to_int(t2, &prefix, 10)) {
-					ip_addr_copy(acl[idx].ip, tmpip);
-					acl[idx].prefix = clamp_int(prefix,
-								0, IP_IS_V6(tmpip) ? 128 : 32);
-					idx++;
-				}
-			}
-
-			t = strtok_r(NULL, ",", &saveptr);
-		}
-		free(arg);
-		if (idx == 0)
-			return 1;
-
-		buf[0] = 0;
-		for (int i = 0; i < list_len; i++) {
-			if (i >= idx) {
-				ip_addr_set_zero(&acl[i].ip);
-				acl[i].prefix = 0;
-			}
-			if (acl[i].prefix > 0) {
-				snprintf(tmp, sizeof(tmp), "%s%s/%u", (count > 0 ? ", " : ""),
-					ipaddr_ntoa(&acl[i].ip), acl[i].prefix);
-				strncatenate(buf, tmp, sizeof(buf));
-				count++;
-			}
-		}
-		log_msg(LOG_NOTICE, "%s changed to '%s'", name, buf);
+		return 0;
 	}
+
+	if (!(arg = strdup(args)))
+		return 2;
+	t = strtok_r(arg, ",", &saveptr);
+	while (t && idx < list_len) {
+		t = trim_str(t);
+		t2 = strtok_r(t, "/", &saveptr2);
+		if (t2 && ipaddr_aton(t2, &tmpip)) {
+			t2 = strtok_r(NULL, "/", &saveptr2);
+			if (t2 && str_to_int(t2, &prefix, 10)) {
+				ip_addr_copy(acl[idx].ip, tmpip);
+				acl[idx].prefix = clamp_int(prefix,
+							0, IP_IS_V6(tmpip) ? 128 : 32);
+				idx++;
+				if (acl[idx - 1].prefix == 0)
+					break;
+			}
+		}
+		t = strtok_r(NULL, ",", &saveptr);
+	}
+	free(arg);
+	if (idx == 0)
+		return 1;
+
+	buf[0] = 0;
+	for (int i = 0; i < list_len; i++) {
+		if (i >= idx) {
+			ip_addr_set_zero(&acl[i].ip);
+			acl[i].prefix = 0;
+		} else {
+			snprintf(tmp, sizeof(tmp), "%s%s/%u", (i > 0 ? ", " : ""),
+				ipaddr_ntoa(&acl[i].ip), acl[i].prefix);
+			strncatenate(buf, tmp, sizeof(buf));
+		}
+	}
+	log_msg(LOG_NOTICE, "%s changed to '%s'", name, buf);
+
 	return 0;
 }
 #endif

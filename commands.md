@@ -304,8 +304,12 @@ Fanpico supports following commands:
 * [SYStem:WIFI:GATEWAY?](#systemwifigateway-1)
 * [SYStem:WIFI:DNS](#systemwifidns)
 * [SYStem:WIFI:DNS?](#systemwifidns-1)
+* [SYStem:WIFI:NTPClient](#systemwifintpclient)
+* [SYStem:WIFI:NTPClient?](#systemwifintpclient-1)
 * [SYStem:WIFI:NTP](#systemwifintp)
 * [SYStem:WIFI:NTP?](#systemwifintp-1)
+* [SYStem:WIFI:SYSLOGClient](#systemwifisyslogclient)
+* [SYStem:WIFI:SYSLOGClient?](#systemwifisyslogclient-1)
 * [SYStem:WIFI:SYSLOG](#systemwifisyslog)
 * [SYStem:WIFI:SYSLOG?](#systemwifisyslog-1)
 * [SYStem:WIFI:MAC?](#systemwifimac)
@@ -3481,7 +3485,7 @@ to SSH server is allowed.
 If no ACLs have been setup then connections from any (source) IP is allowed.
 
 
-Default: <none>
+Default: 0.0.0.0/0  (none)
 
 Example (allow subnet 192.168.1.0/255.255.255.0 and single IP 172.30.1.42):
 ```
@@ -3737,7 +3741,7 @@ to Telnet server is allowed.
 If no ACLs have been setup then connections from any (source) IP is allowed.
 
 
-Default: <none>
+Default: 0.0.0.0/0 (none)
 
 Example (allow subnet 192.168.1.0/255.255.255.0 and single IP 172.30.1.42):
 ```
@@ -4284,7 +4288,28 @@ SYS:WIFI:DNS?
 ```
 
 
-#### SYStem:WIFI:NTP
+#### SYStem:NTPClient
+Enable or disable NTP client that sychronizes clock to network time server time.
+
+Default: ON
+
+Example (disable NTP client):
+```
+SYS:NTPC OFF
+```
+
+
+#### SYStem:NTPClient?
+Query currently status of NTP client.
+
+Example:
+```
+SYS:NTPC?
+ON
+```
+
+
+#### SYStem:WIFI:NTPservers
 Configure IP for NTP server to use.
 
 Set to "0.0.0.0" to use server provided by DHCP.
@@ -4292,10 +4317,10 @@ Set to "0.0.0.0" to use server provided by DHCP.
 Example:
 
 ```
-SYS:WIFI:NTP 192.168.1.10
+SYS:WIFI:NTP 192.168.1.10,192.168.1.11
 ```
 
-#### SYStem:WIFI:NTP?
+#### SYStem:WIFI:NTPservers?
 Display currently configure NTP server.
 
 Note, "0.0.0.0" means to use DHCP.
@@ -4308,7 +4333,28 @@ SYS:WIFI:NTP?
 ```
 
 
-#### SYStem:WIFI:SYSLOG
+#### SYStem:SYSLOGClient
+Enable or disable Syslog client that relays log messages to a remote (syslog) server.
+
+Default: ON
+
+Example (disable Syslog client):
+```
+SYS:SYSLOGC OFF
+```
+
+
+#### SYStem:SYSLOGClient?
+Query currently status of Syslog client.
+
+Example:
+```
+SYS:SYSLOGC?
+ON
+```
+
+
+#### SYStem:WIFI:SYSLOGserver
 Configure IP for Syslog server to use.
 
 Set to "0.0.0.0" to use server provided by DHCP.
@@ -4319,7 +4365,7 @@ Example:
 SYS:WIFI:SYSLOG 192.168.1.20
 ```
 
-#### SYStem:WIFI:SYSLOG?
+#### SYStem:WIFI:SYSLOGserver?
 Display currently configured Syslog server.
 
 Note, "0.0.0.0" means to use DHCP.

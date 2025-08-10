@@ -465,7 +465,8 @@ static cJSON* iplist2json(const ip_addr_t *list, uint32_t len)
 		return NULL;
 
 	for (int i = 0; i < len; i++) {
-		cJSON_AddItemToArray(o, cJSON_CreateString(ipaddr_ntoa(&list[i])));
+		if (!ip_addr_isany(&list[i]))
+			cJSON_AddItemToArray(o, cJSON_CreateString(ipaddr_ntoa(&list[i])));
 	}
 
 	return o;
@@ -712,8 +713,12 @@ void clear_config(struct fanpico_config *cfg)
 	for (int i = 0; i < DNS_MAX_SERVERS; i++) {
 		ip_addr_set_any(0, &cfg->dns_servers[i]);
 	}
+	cfg->syslog_active = true;
 	ip_addr_set_any(0, &cfg->syslog_server);
-	ip_addr_set_any(0, &cfg->ntp_server);
+	cfg->ntp_active = true;
+	for (int i = 0; i < SNTP_MAX_SERVERS; i++) {
+		ip_addr_set_any(0, &cfg->ntp_servers[i]);
+	}
 	ip_addr_set_any(0, &cfg->ip);
 	ip_addr_set_any(0, &cfg->netmask);
 	ip_addr_set_any(0, &cfg->gateway);
@@ -858,8 +863,14 @@ cJSON *config_to_json(const struct fanpico_config *cfg)
 	if (!ip_addr_isany(&cfg->dns_servers[0]))
 		cJSON_AddItemToObject(config, "dns_servers",
 				iplist2json(cfg->dns_servers, DNS_MAX_SERVERS));
+	if (cfg->syslog_active != true)
+		NUM_TO_JSON("ntp_active", cfg->syslog_active);
 	IP_TO_JSON("syslog_server", &cfg->syslog_server);
-	IP_TO_JSON("ntp_server", &cfg->ntp_server);
+	if (cfg->ntp_active != true)
+		NUM_TO_JSON("ntp_active", cfg->ntp_active);
+	if (!ip_addr_isany(&cfg->ntp_servers[0]))
+		cJSON_AddItemToObject(config, "ntp_servers",
+				iplist2json(cfg->ntp_servers, SNTP_MAX_SERVERS));
 	IP_TO_JSON("ip", &cfg->ip);
 	IP_TO_JSON("netmask", &cfg->netmask);
 	IP_TO_JSON("gateway", &cfg->gateway);
@@ -1174,8 +1185,14 @@ int json_to_config(cJSON *config, struct fanpico_config *cfg)
 	if ((ref = cJSON_GetObjectItem(config, "dns_servers"))) {
 		json2iplist(ref, cfg->dns_servers, DNS_MAX_SERVERS);
 	}
+	JSON_TO_NUM(config, "syslog_active", cfg->syslog_active);
 	JSON_TO_IP(config, "syslog_server", &cfg->syslog_server);
-	JSON_TO_IP(config, "ntp_server", &cfg->ntp_server);
+	JSON_TO_NUM(config, "ntp_active", cfg->ntp_active);
+	if ((ref = cJSON_GetObjectItem(config, "ntp_servers"))) {
+		json2iplist(ref, cfg->ntp_servers, SNTP_MAX_SERVERS);
+	} else {
+		JSON_TO_IP(config, "ntp_server", &cfg->ntp_servers[0]);
+	}
 	JSON_TO_IP(config, "ip", &cfg->ip);
 	JSON_TO_IP(config, "netmask", &cfg->netmask);
 	JSON_TO_IP(config, "gateway", &cfg->gateway);
