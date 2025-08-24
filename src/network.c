@@ -155,7 +155,7 @@ void wifi_rejoin()
 
 	/* Disconnect if currently joined to a network */
 	res = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
-	if (res == CYW43_LINK_JOIN) {
+	if (res == CYW43_LINK_JOIN || res == CYW43_LINK_NOIP || res == CYW43_LINK_UP) {
 		if ((res = cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA))) {
 			log_msg(LOG_ERR, "WiFi leave from network failed: %d", res);
 		}
@@ -182,10 +182,14 @@ static bool wifi_check_status()
 		net_state->wifi_status_change = get_absolute_time();
 	} else {
 		/* Check if should try rejoining to the network... */
-		if (net_state->wifi_status <= 0 && net_state->wifi_status != FANPICO_WIFI_INACTIVE) {
-			if (time_elapsed(net_state->wifi_status_change, WIFI_REJOIN_DELAY)) {
+		if (status != CYW43_LINK_UP) {
+			uint32_t delay = WIFI_REJOIN_DELAY;
+
+			if (status == CYW43_LINK_JOIN || status == CYW43_LINK_NOIP)
+				delay *= 3;
+
+			if (time_elapsed(net_state->wifi_status_change, delay))
 				return true;
-			}
 		}
 	}
 
@@ -508,7 +512,7 @@ static void wifi_poll()
 #endif
 
 	/* Periodically check for WiFi (link) status... */
-	if (time_passed(&wifi_status_check_t, 1000)) {
+	if (time_passed(&wifi_status_check_t, 1500)) {
 		if (wifi_check_status()) {
 			/* Attempt to rejoin if connection has been in failed state
 			   for a while... */
