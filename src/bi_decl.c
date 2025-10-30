@@ -101,8 +101,12 @@ void set_binary_info(struct fanpico_fw_settings *settings)
 
 	bi_decl(bi_1pin_with_name(FAN1_PWM_GEN_PIN, "Fan1 PWM signal (output)"));
 	bi_decl(bi_1pin_with_name(FAN2_PWM_GEN_PIN, "Fan2 PWM signal (output)"));
+#if FAN3_PWM_GEN_PIN >= 0
 	bi_decl(bi_1pin_with_name(FAN3_PWM_GEN_PIN, "Fan3 PWM signal (output)"));
+#endif
+#if FAN4_PWM_GEN_PIN >= 0
 	bi_decl(bi_1pin_with_name(FAN4_PWM_GEN_PIN, "Fan4 PWM signal (output)"));
+#endif
 #if FAN5_PWM_GEN_PIN >= 0
 	bi_decl(bi_1pin_with_name(FAN5_PWM_GEN_PIN, "Fan5 PWM signal (output)"));
 #endif
@@ -116,7 +120,9 @@ void set_binary_info(struct fanpico_fw_settings *settings)
 	bi_decl(bi_1pin_with_name(FAN8_PWM_GEN_PIN, "Fan8 PWM signal (output)"));
 #endif
 
+#if MBFAN1_TACHO_GEN_PIN >= 0
 	bi_decl(bi_1pin_with_name(MBFAN1_TACHO_GEN_PIN, "MB Fan1 tacho signal (output)"));
+#endif
 #if MBFAN2_TACHO_GEN_PIN >= 0
 	bi_decl(bi_1pin_with_name(MBFAN2_TACHO_GEN_PIN, "MB Fan2 tacho signal (output)"));
 #endif
@@ -127,7 +133,9 @@ void set_binary_info(struct fanpico_fw_settings *settings)
 	bi_decl(bi_1pin_with_name(MBFAN4_TACHO_GEN_PIN, "MB Fan4 tacho signal (output)"));
 #endif
 
+#if MBFAN1_PWM_READ_PIN >= 0
 	bi_decl(bi_1pin_with_name(MBFAN1_PWM_READ_PIN, "MB Fan1 PWM signal (input)"));
+#endif
 #if MBFAN2_PWM_READ_PIN >= 0
 	bi_decl(bi_1pin_with_name(MBFAN2_PWM_READ_PIN, "MB Fan2 PWM signal (input)"));
 #endif

@@ -129,6 +129,9 @@ void get_pwm_duty_cycles(const struct fanpico_config *config)
 	static uint slices[MBFAN_COUNT];
 	int i;
 
+	if (MBFAN_COUNT < 1)
+		return;
+
 	if (state == 0) {
 		/* Reset counters on all PWM slices. */
 		for (i = 0; i < MBFAN_COUNT; i++) {
@@ -206,7 +209,7 @@ void setup_pwm_outputs()
 
 	/* Configure PWM outputs */
 
-	for (i = 0; i < FAN_COUNT; i=i+2) {
+	for (i = 0; i < FAN_COUNT; i += 2) {
 		uint pin1 = fan_gpio_pwm_map[i];
 		uint pin2 = fan_gpio_pwm_map[i + 1];
 
@@ -228,6 +231,9 @@ void setup_pwm_inputs()
 	pwm_config config = pwm_get_default_config();
 	uint slice_num;
 	int i;
+
+	if (MBFAN_COUNT < 1)
+		return;
 
 	log_msg(LOG_NOTICE, "Initializing PWM Inputs...");
 
