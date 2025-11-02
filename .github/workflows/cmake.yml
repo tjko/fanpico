@@ -23,7 +23,7 @@ jobs:
 
     strategy:
       matrix:
-        fanpico_board: ["0804", "0804D", "0401D"]
+        fanpico_board: ["0804", "0804D", "0401D", "0200"]
         pico_board: ["pico", "pico_w", "pico2", "pico2_w"]
 
     steps:
