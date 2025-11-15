@@ -1,5 +1,5 @@
 /* display_oled.c
-   Copyright (C) 2022-2024 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2022-2025 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -264,13 +264,13 @@ void oled_display_status(const struct fanpico_state *state,
 		return;
 
 	int h_pos = 70;
-	int fan_row_offset = (oled_height > 64 ? 1 : 0);
+	int fan_row_offset = ((oled_height > 64 || FAN_COUNT < 4) ? 1 : 0);
 
 	if (!bg_drawn) {
 		/* Draw "background" only once... */
 		oled_clear_display();
 
-		if (oled_height > 64) {
+		if (fan_row_offset > 0) {
 			oledWriteString(&oled, 0,  0, 0, "Fans", FONT_6x8, 0, 1);
 		}
 

@@ -1,6 +1,7 @@
 {
     "id": "fanpico-config-v1",
     "debug": 0,
+    "display_type": "none",
     "local_echo": false,
     "led_mode": 0,
     "spi_active": 0,
