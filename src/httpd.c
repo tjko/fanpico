@@ -1,5 +1,5 @@
 /* httpd.c
-   Copyright (C) 2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2022-2025 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -296,7 +296,10 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 	}
 	else if (!strncmp(tag, "mfanrow", 7)) {
 		uint8_t i = tag[7] - '1';
-		if (i < MBFAN_COUNT && cfg->http_mbfan_mask & (1 << i)) {
+		if (MBFAN_COUNT == 0 && i == 0) {
+			printed = snprintf(insert, insertlen, "<tr><td colspan=4>Not Available");
+		}
+		else if (i < MBFAN_COUNT && cfg->http_mbfan_mask & (1 << i)) {
 			double rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
 			printed = snprintf(insert, insertlen, "<tr><td>%d<td>%s<td>%0.0f<td align=\"right\">%0.0f %%",
 					i + 1,
