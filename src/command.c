@@ -1,5 +1,5 @@
 /* command.c
-   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -35,12 +35,16 @@
 #include "pico/rand.h"
 #include "hardware/watchdog.h"
 #include "cJSON.h"
+#include "b64/ccommon.h"
 #include "fanpico.h"
 #include "command_util.h"
 #include "pico_sensor_lib.h"
+#include "lfs.h"
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
 #include "lwip/stats.h"
+#include "wolfssl/version.h"
+#include "wolfssh/version.h"
 #include "pico_telnetd/util.h"
 #include "util_net.h"
 #endif
@@ -166,8 +170,16 @@ int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t 
 	if (query) {
 		printf("%s\n", credits);
 #ifdef __GNUC__
-		printf("Compiled with: GCC v%s\n\n", __VERSION__);
+		printf("Compiled with: GCC v%s\n", __VERSION__);
 #endif
+		printf("littlefs: %d.%d\n", LFS_VERSION_MAJOR, LFS_VERSION_MINOR);
+		printf("cJSON: %d.%d.%d\n", CJSON_VERSION_MAJOR, CJSON_VERSION_MINOR, CJSON_VERSION_PATCH);
+		printf("libb64: %d.%d\n", BASE64_VER_MAJOR, BASE64_VER_MINOR);
+#ifdef WIFI_SUPPORT
+		printf("wolfSSH: %s\n", LIBWOLFSSH_VERSION_STRING);
+		printf("wolfSSL: %s\n", LIBWOLFSSL_VERSION_STRING);
+#endif
+		printf("\n");
 	}
 
 	return 0;
