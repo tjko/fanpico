@@ -172,13 +172,12 @@ int cmd_version(const char *cmd, const char *args, int query, struct prev_cmd_t 
 #ifdef __GNUC__
 		printf("Compiled with: GCC v%s\n", __VERSION__);
 #endif
-		printf("Library versions:\n");
-		printf(" littlefs: v%d.%d\n", LFS_VERSION_MAJOR, LFS_VERSION_MINOR);
-		printf("    cJSON: %d.%d.%d\n", CJSON_VERSION_MAJOR, CJSON_VERSION_MINOR, CJSON_VERSION_PATCH);
-		printf("   libb64: %d.%d\n", BASE64_VER_MAJOR, BASE64_VER_MINOR);
+		printf("littlefs: %d.%d\n", LFS_VERSION_MAJOR, LFS_VERSION_MINOR);
+		printf("cJSON: %d.%d.%d\n", CJSON_VERSION_MAJOR, CJSON_VERSION_MINOR, CJSON_VERSION_PATCH);
+		printf("libb64: %d.%d\n", BASE64_VER_MAJOR, BASE64_VER_MINOR);
 #ifdef WIFI_SUPPORT
-		printf("  wolfSSL: %s\n", LIBWOLFSSL_VERSION_STRING);
-		printf("  wolfSSL: %s\n", LIBWOLFSSH_VERSION_STRING);
+		printf("wolfSSH: %s\n", LIBWOLFSSH_VERSION_STRING);
+		printf("wolfSSL: %s\n", LIBWOLFSSL_VERSION_STRING);
 #endif
 		printf("\n");
 	}
