@@ -2700,7 +2700,8 @@ int cmd_psram(const char *cmd, const char *args, int query, struct prev_cmd_t *p
 	return 0;
 }
 
-int cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
+/* Disable optimizations since GCC 15.2 causes test for largest available memory block to fail... */
+int __attribute__((optimize("O0"))) cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
 	const int TEST_MEM_SIZE = 1024 * 1024;
 	int blocksize;
@@ -2725,16 +2726,13 @@ int cmd_memory(const char *cmd, const char *args, int query, struct prev_cmd_t *
 	void *buf = NULL;
 	size_t bufsize = blocksize;
 	do {
-		if (buf) {
-			free(buf);
-			bufsize += blocksize;
-		}
-		buf = malloc(bufsize);
-	} while (buf && bufsize < TEST_MEM_SIZE);
+		if (!(buf = malloc(bufsize)))
+			break;
+		free(buf);
+		bufsize += blocksize;
+	} while (bufsize <= TEST_MEM_SIZE);
 	printf("Largest available memory block:        %u bytes\n",
 		bufsize - blocksize);
-	if (buf)
-		free(buf);
 
 	/* Test how much memory available in 'blocksize' blocks... */
 	int i = 0;

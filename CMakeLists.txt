@@ -247,6 +247,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
 endif()
 
 target_compile_options(fanpico PRIVATE -Wall)
+#target_compile_options(fanpico PRIVATE -fno-strict-aliasing -fwrapv -fno-aggressive-loop-optimizations)
 #target_compile_options(fanpico PRIVATE -fstack-protector-all)
 target_compile_options(fanpico PRIVATE -fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=)
 
