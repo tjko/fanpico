@@ -50,6 +50,8 @@ extern "C"
 #define WOLFSSL_NO_MAKE_KEY
 #define WOLFSSL_SHAKE128
 #define WOLFSSL_SHAKE256
+#define WOLFSSH_NO_NISTP384_MLKEM1024_SHA384
+//#define WOLFSSH_NO_NISTP256_MLKEM768_SHA256
 
 #define NO_FAILURE_ON_REJECTED
 #define DEFAULT_WINDOW_SZ 4096
@@ -378,6 +380,7 @@ extern time_t ssh_server_my_time(time_t *);
 #if 0
 #define DEBUG_WOLFSSL
 #define DEBUG_WOLFSSH
+#define DEBUG_MLKEM
 #else
 #if 0
 #define NO_ERROR_STRINGS

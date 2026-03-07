@@ -1,5 +1,5 @@
 /* sshd.c
-   Copyright (C) 2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2025-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <wolfssl/ssl.h>
 #include <wolfssh/ssh.h>
 #ifdef WOLFCRYPT_TEST
 #include <wolfcrypt/test/test.h>
@@ -91,11 +92,16 @@ void sshserver_init()
 		return;
 	}
 #ifndef NDEBUG
+#ifdef DEBUG_WOLFSSL
+	wolfSSL_Debugging_ON();
+#endif
+#ifdef DEBUG_WOLFSSH
 	wolfSSH_Debugging_ON();
+#endif
 #endif
 
 	/* Create SSH server instance */
-	if (!(ssh_srv = ssh_server_new(2048, 8192))) {
+	if (!(ssh_srv = ssh_server_new(4096, 8192))) {
 		log_msg(LOG_ERR, "Failed to initialize SSH server.");
 		return;
 	}
