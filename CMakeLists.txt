@@ -17,7 +17,7 @@ endif()
 
 
 project(fanpico
-  VERSION 1.7.8
+  VERSION 1.7.9
   DESCRIPTION "FanPico - Programmable PWM (PC) Fan Controller"
   HOMEPAGE_URL https://kokkonen.net/fanpico/
   LANGUAGES C CXX ASM
@@ -247,6 +247,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
 endif()
 
 target_compile_options(fanpico PRIVATE -Wall)
+#target_compile_options(fanpico PRIVATE -fno-strict-aliasing -fwrapv -fno-aggressive-loop-optimizations)
 #target_compile_options(fanpico PRIVATE -fstack-protector-all)
 target_compile_options(fanpico PRIVATE -fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=)
 
@@ -273,14 +274,10 @@ target_compile_definitions(fanpico PRIVATE
   )
 
 
-if (${PICO_SDK_VERSION_MAJOR} LESS 2)
-  pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom.ld)
+if (${PICO_PLATFORM} MATCHES rp2350)
+  pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom_rp2350.ld)
 else()
-  if (${PICO_PLATFORM} MATCHES rp2350)
-    pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom_rp2350.ld)
-  else()
-    pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom_rp2040.ld)
-  endif()
+  pico_set_linker_script(fanpico ${CMAKE_SOURCE_DIR}/src/memmap_custom_rp2040.ld)
 endif()
 
 # eof :-)
