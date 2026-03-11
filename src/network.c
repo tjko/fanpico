@@ -1,5 +1,5 @@
 /* network.c
-   Copyright (C) 2022-2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2022-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -439,6 +439,7 @@ static void wifi_init()
 
 void wifi_status()
 {
+	struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
 	int res;
 
 	if (!wifi_initialized) {
@@ -446,16 +447,11 @@ void wifi_status()
 	} else {
 		res = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
 	}
-	printf("%s,", wifi_link_status_text(res));
 
-	if (res != FANPICO_WIFI_INACTIVE) {
-		struct netif *n = &cyw43_state.netif[CYW43_ITF_STA];
-		printf("%s,", ipaddr_ntoa(netif_ip_addr4(n)));
-		printf("%s,", ipaddr_ntoa(netif_ip_netmask4(n)));
-		printf("%s,%d\n", ipaddr_ntoa(netif_ip_gw4(n)), res);
-	} else {
-		printf(",,,%d\n", res);
-	}
+	printf("%s,", wifi_link_status_text(res));
+	printf("%s,", ipaddr_ntoa(netif_ip_addr4(n)));
+	printf("%s,", ipaddr_ntoa(netif_ip_netmask4(n)));
+	printf("%s,%d\n", ipaddr_ntoa(netif_ip_gw4(n)), res);
 }
 
 void wifi_info_display()
