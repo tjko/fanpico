@@ -257,6 +257,9 @@ static void wifi_init()
 	net_state->netif_up = false;
 	net_state->wifi_status = FANPICO_WIFI_INACTIVE;
 
+	if (!rp2_is_picow())
+		return;
+
 	log_msg(LOG_NOTICE, "Initializing WiFi...");
 
 	/* If WiFi country is defined in configuratio, use it... */

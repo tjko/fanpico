@@ -244,10 +244,6 @@ static void setup()
 			time_t_to_str(buf, sizeof(buf), timespec_to_time_t(&ts)));
 	}
 
-	setup_i2c_bus((struct fanpico_config *)cfg);
-	display_init();
-	network_init();
-
 	/* Enable ADC */
 	log_msg(LOG_NOTICE, "Initialize ADC...");
 	adc_init();
@@ -256,22 +252,32 @@ static void setup()
 		adc_gpio_init(SENSOR1_READ_PIN);
 	if (SENSOR2_READ_PIN > 0)
 		adc_gpio_init(SENSOR2_READ_PIN);
+	log_msg(LOG_NOTICE, "WiFi chip: %s", rp2_is_picow() ? "Found (Pico W)" : "Not Found (Pico)");
+
+	setup_i2c_bus((struct fanpico_config *)cfg);
+	display_init();
+	network_init();
 
 	/* Setup GPIO pins... */
 	log_msg(LOG_NOTICE, "Initialize GPIO...");
 
 	/* Initialize status LED... */
-	if (LED_PIN > 0) {
+	bool led_initialized = false;
+	/* On pico_w, LED is connected to the radio GPIO... */
+	if (rp2_is_picow()) {
+#ifdef LIB_PICO_CYW43_ARCH
+		cyw43_arch_lwip_begin();
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+		cyw43_arch_lwip_end();
+		led_initialized = true;
+#endif
+	}
+	if (!led_initialized && LED_PIN > 0) {
 		gpio_init(LED_PIN);
 		gpio_set_dir(LED_PIN, GPIO_OUT);
 		gpio_put(LED_PIN, 0);
+		led_initialized = true;
 	}
-#ifdef LIB_PICO_CYW43_ARCH
-	/* On pico_w, LED is connected to the radio GPIO... */
-	cyw43_arch_lwip_begin();
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-	cyw43_arch_lwip_end();
-#endif
 
 	/* Configure PWM pins... */
 	setup_pwm_outputs();
@@ -577,14 +583,16 @@ int main()
 			if (led_state != old_led_state) {
 				log_msg(LOG_DEBUG, "toggle LED start: %u", led_state);
 				t_led_start = get_absolute_time();
-#if LED_PIN > 0
-				gpio_put(LED_PIN, led_state);
-#endif
+				if (rp2_is_picow()) {
 #ifdef LIB_PICO_CYW43_ARCH
-				cyw43_arch_lwip_begin();
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
-				cyw43_arch_lwip_end();
+					cyw43_arch_lwip_begin();
+					cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
+					cyw43_arch_lwip_end();
 #endif
+				} else if (LED_PIN > 0) {
+					gpio_put(LED_PIN, led_state);
+				}
+
 				t_now = get_absolute_time();
 				log_msg(LOG_DEBUG, "toggle LED end");
 				delta = absolute_time_diff_us(t_led_start, t_now);

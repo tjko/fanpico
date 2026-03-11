@@ -1663,10 +1663,12 @@ int cmd_wifi(const char *cmd, const char *args, int query, struct prev_cmd_t *pr
 {
 	if (query) {
 #ifdef WIFI_SUPPORT
-		printf("1\n");
-#else
-		printf("0\n");
+		if (rp2_is_picow()) {
+			printf("1\n");
+			return 0;
+		}
 #endif
+		printf("0\n");
 		return 0;
 	}
 	return 1;

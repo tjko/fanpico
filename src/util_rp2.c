@@ -1,5 +1,5 @@
-/* util_rp2040.c
-   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
+/* util_rp2.c
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -26,6 +26,8 @@
 #include "pico/mutex.h"
 #include "pico/unique_id.h"
 #include "pico/multicore.h"
+#include "hardware/gpio.h"
+#include "hardware/adc.h"
 #include "hardware/clocks.h"
 #include "hardware/watchdog.h"
 #if PICO_RP2040
@@ -383,6 +385,35 @@ void rp2_set_sys_clock(uint32_t khz)
 #endif
 	set_sys_clock_khz(khz, true);
 	sleep_ms(50);
+}
+
+
+
+#define ADC_TRESHOLD ((1 << 12) / (3 * 2))   /* about 0.5V with 3.0V ADC reference */
+
+int rp2_is_picow(void)
+{
+	static int wifi = -1;
+	uint16_t res;
+
+	if (wifi < 0) {
+		gpio_init(25);
+		gpio_set_dir(25, GPIO_OUT);
+		gpio_put(25, 0);
+
+		adc_gpio_init(29);
+		adc_select_input(3);
+
+		sleep_ms(5);
+		res = adc_read();
+#if 0
+		printf("ADC3 value: %d 0x%03x, voltage: %f V\n", res, res, res * (3.0f / (1 << 12)));
+#endif
+
+		wifi = (res < ADC_TRESHOLD ? 1 : 0);
+	}
+
+	return wifi;
 }
 
 /* eof */
