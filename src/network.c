@@ -58,14 +58,12 @@ struct wifi_auth_type {
 
 static const struct wifi_auth_type auth_types[] = {
 	{ "default",    CYW43_AUTH_WPA2_AES_PSK },
-
 	{ "WPA3_WPA2",  CYW43_AUTH_WPA3_WPA2_AES_PSK },
 	{ "WPA3",       CYW43_AUTH_WPA3_SAE_AES_PSK },
 	{ "WPA2",       CYW43_AUTH_WPA2_AES_PSK },
 	{ "WPA2_WPA",   CYW43_AUTH_WPA2_MIXED_PSK },
 	{ "WPA",        CYW43_AUTH_WPA_TKIP_PSK },
 	{ "OPEN",       CYW43_AUTH_OPEN },
-
 	{ NULL, 0 }
 };
 

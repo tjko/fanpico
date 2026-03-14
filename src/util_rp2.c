@@ -391,29 +391,40 @@ void rp2_set_sys_clock(uint32_t khz)
 
 #define ADC_TRESHOLD ((1 << 12) / (3 * 2))   /* about 0.5V with 3.0V ADC reference */
 
+/**
+ * @brief Check whether running on a Pico or Pico W (or Pico 2 or Pico 2 W).
+ *
+ * This is done by reading ADC3 voltage when GPIO25 is set to LOW.
+ * This is meant to be called early in the boot process (as toggling
+ * GPIO25 can intefeere with WiFi chip).
+ * Test is performed only once (and result cached), so this is safe to call
+ * again later even if WiFi is active.
+ *
+ * @return non-zero when Pico W (or Pico 2 W) is detected, otherwise return zero
+ */
 int rp2_is_picow(void)
 {
-	static int wifi = -1;
-	uint16_t res;
+	static int pico_w = -1;
 
-	if (wifi < 0) {
+	if (pico_w < 0) {
 		gpio_init(25);
 		gpio_set_dir(25, GPIO_OUT);
 		gpio_put(25, 0);
-
 		adc_gpio_init(29);
 		adc_select_input(3);
 
 		sleep_ms(5);
-		res = adc_read();
-#if 0
-		printf("ADC3 value: %d 0x%03x, voltage: %f V\n", res, res, res * (3.0f / (1 << 12)));
+		uint16_t res = adc_read();
+		pico_w = (res < ADC_TRESHOLD ? 1 : 0);
+#if 1
+		printf("ADC3 value: %d (0x%04x), voltage: %f V\n",
+			res, res, res * (3.0f / (1 << 12)));
 #endif
 
-		wifi = (res < ADC_TRESHOLD ? 1 : 0);
+		gpio_deinit(25);
 	}
 
-	return wifi;
+	return pico_w;
 }
 
 /* eof */
