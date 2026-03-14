@@ -402,7 +402,7 @@ void rp2_set_sys_clock(uint32_t khz)
  *
  * This is done by reading ADC3 voltage when GPIO25 is set to LOW.
  * This is meant to be called early in the boot process (as toggling
- * GPIO25 can intefeere with WiFi chip).
+ * GPIO25 can interfere with the WiFi module).
  * Test is performed only once (and result cached), so this is safe to call
  * again later even if WiFi is active.
  *
