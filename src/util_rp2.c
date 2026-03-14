@@ -264,9 +264,15 @@ void print_rp2_board_info()
 #endif
 	uint32_t flash_clk = sys_clk / flash_clkdiv;
 
+	char *board;
+#if PICO_RP2350
+	board = rp2_is_picow() ? "Pico 2 W" : "Pico 2";
+#else
+	board = rp2_is_picow() ? "Pico W" : "Pico";
+#endif
 
 	printf("Hardware Model: FANPICO-%s\n", FANPICO_MODEL);
-	printf("         Board: %s\n", PICO_BOARD);
+	printf("         Board: %s\n", board);
 	printf("           MCU: %s @ %luMHz\n",	rp2_model_str(), sys_clk / 1000000);
 	printf("           RAM: %luKB\n", ((uint32_t)SRAM_END - SRAM_BASE) >> 10);
 #if !PICO_RP2040
@@ -410,18 +416,20 @@ int rp2_is_picow(void)
 		gpio_init(25);
 		gpio_set_dir(25, GPIO_OUT);
 		gpio_put(25, 0);
+		adc_init();
 		adc_gpio_init(29);
 		adc_select_input(3);
 
 		sleep_ms(5);
 		uint16_t res = adc_read();
 		pico_w = (res < ADC_TRESHOLD ? 1 : 0);
-#if 1
+#if 0
 		printf("ADC3 value: %d (0x%04x), voltage: %f V\n",
 			res, res, res * (3.0f / (1 << 12)));
 #endif
 
 		gpio_deinit(25);
+		reset_unreset_block_num_wait_blocking(RESET_ADC);
 	}
 
 	return pico_w;

@@ -244,6 +244,10 @@ static void setup()
 			time_t_to_str(buf, sizeof(buf), timespec_to_time_t(&ts)));
 	}
 
+	setup_i2c_bus((struct fanpico_config *)cfg);
+	display_init();
+	network_init();
+
 	/* Enable ADC */
 	log_msg(LOG_NOTICE, "Initialize ADC...");
 	adc_init();
@@ -252,11 +256,6 @@ static void setup()
 		adc_gpio_init(SENSOR1_READ_PIN);
 	if (SENSOR2_READ_PIN > 0)
 		adc_gpio_init(SENSOR2_READ_PIN);
-	log_msg(LOG_NOTICE, "WiFi chip: %s", rp2_is_picow() ? "Found (Pico W)" : "Not Found (Pico)");
-
-	setup_i2c_bus((struct fanpico_config *)cfg);
-	display_init();
-	network_init();
 
 	/* Setup GPIO pins... */
 	log_msg(LOG_NOTICE, "Initialize GPIO...");
