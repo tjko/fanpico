@@ -264,7 +264,7 @@ void print_rp2_board_info()
 #endif
 	uint32_t flash_clk = sys_clk / flash_clkdiv;
 
-	char *board;
+	const char *board;
 #if PICO_RP2350
 	board = rp2_is_picow() ? "Pico 2 W" : "Pico 2";
 #else
