@@ -398,11 +398,11 @@ void rp2_set_sys_clock(uint32_t khz)
 #define ADC_TRESHOLD ((1 << 12) / (3 * 2))   /* about 0.5V with 3.0V ADC reference */
 
 /**
- * @brief Check whether running on a Pico or Pico W (or Pico 2 or Pico 2 W).
+ * @brief Check whether running on a Pico W or Pico (or Pico 2 W or Pico 2).
  *
  * This is done by reading ADC3 voltage when GPIO25 is set to LOW.
- * This is meant to be called early in the boot process (as toggling
- * GPIO25 can interfere with the WiFi module).
+ * This is meant to be called early in the boot process before Wifi,
+ * ADC / GPIO is initialized.
  * Test is performed only once (and result cached), so this is safe to call
  * again later even if WiFi is active.
  *
@@ -410,7 +410,7 @@ void rp2_set_sys_clock(uint32_t khz)
  */
 int rp2_is_picow(void)
 {
-	static int pico_w = -1;
+	static int8_t pico_w = -1;
 
 	if (pico_w < 0) {
 		gpio_init(25);
