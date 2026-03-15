@@ -1,5 +1,5 @@
-/* util_rp2040.c
-   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
+/* util_rp2.c
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -26,6 +26,8 @@
 #include "pico/mutex.h"
 #include "pico/unique_id.h"
 #include "pico/multicore.h"
+#include "hardware/gpio.h"
+#include "hardware/adc.h"
 #include "hardware/clocks.h"
 #include "hardware/watchdog.h"
 #if PICO_RP2040
@@ -262,9 +264,15 @@ void print_rp2_board_info()
 #endif
 	uint32_t flash_clk = sys_clk / flash_clkdiv;
 
+	const char *board;
+#if PICO_RP2350
+	board = rp2_is_picow() ? "Pico 2 W" : "Pico 2";
+#else
+	board = rp2_is_picow() ? "Pico W" : "Pico";
+#endif
 
 	printf("Hardware Model: FANPICO-%s\n", FANPICO_MODEL);
-	printf("         Board: %s\n", PICO_BOARD);
+	printf("         Board: %s\n", board);
 	printf("           MCU: %s @ %luMHz\n",	rp2_model_str(), sys_clk / 1000000);
 	printf("           RAM: %luKB\n", ((uint32_t)SRAM_END - SRAM_BASE) >> 10);
 #if !PICO_RP2040
@@ -383,6 +391,48 @@ void rp2_set_sys_clock(uint32_t khz)
 #endif
 	set_sys_clock_khz(khz, true);
 	sleep_ms(50);
+}
+
+
+
+#define ADC_TRESHOLD ((1 << 12) / (3 * 2))   /* about 0.5V with 3.0V ADC reference */
+
+/**
+ * @brief Check whether running on a Pico W or Pico (or Pico 2 W or Pico 2).
+ *
+ * This is done by reading ADC3 voltage when GPIO25 is set to LOW.
+ * This is meant to be called early in the boot process before Wifi,
+ * ADC / GPIO is initialized.
+ * Test is performed only once (and result cached), so this is safe to call
+ * again later even if WiFi is active.
+ *
+ * @return non-zero when Pico W (or Pico 2 W) is detected, otherwise return zero
+ */
+int rp2_is_picow(void)
+{
+	static int8_t pico_w = -1;
+
+	if (pico_w < 0) {
+		gpio_init(25);
+		gpio_set_dir(25, GPIO_OUT);
+		gpio_put(25, 0);
+		adc_init();
+		adc_gpio_init(29);
+		adc_select_input(3);
+
+		sleep_ms(5);
+		uint16_t res = adc_read();
+		pico_w = (res < ADC_TRESHOLD ? 1 : 0);
+#if 0
+		printf("ADC3 value: %d (0x%04x), voltage: %f V\n",
+			res, res, res * (3.0f / (1 << 12)));
+#endif
+
+		gpio_deinit(25);
+		reset_unreset_block_num_wait_blocking(RESET_ADC);
+	}
+
+	return pico_w;
 }
 
 /* eof */

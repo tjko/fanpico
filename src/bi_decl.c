@@ -1,5 +1,5 @@
 /* bi_decl.c
-   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -54,8 +54,10 @@ void set_binary_info(struct fanpico_fw_settings *settings)
 			| BINARY_INFO_BLOCK_DEV_FLAG_PT_NONE));
 
 
+#ifndef LIB_PIC_CYW43_ARCH
 #if LED_PIN >= 0
 	bi_decl(bi_1pin_with_name(LED_PIN, "On-board LED (output)"));
+#endif
 #endif
 
 #if TX_PIN >= 0
@@ -97,7 +99,7 @@ void set_binary_info(struct fanpico_fw_settings *settings)
 #if FAN8_TACHO_READ_PIN >= 0
 	bi_decl(bi_1pin_with_name(FAN8_TACHO_READ_PIN, "Fan8 tacho signal (input)"));
 #endif
-#endif /* TACHO_READ_MULTIPLER > 0 */
+#endif /* TACHO_READ_MULTIPLEX > 0 */
 
 	bi_decl(bi_1pin_with_name(FAN1_PWM_GEN_PIN, "Fan1 PWM signal (output)"));
 	bi_decl(bi_1pin_with_name(FAN2_PWM_GEN_PIN, "Fan2 PWM signal (output)"));

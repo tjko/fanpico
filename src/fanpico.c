@@ -1,5 +1,5 @@
 /* fanpico.c
-   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -261,17 +261,20 @@ static void setup()
 	log_msg(LOG_NOTICE, "Initialize GPIO...");
 
 	/* Initialize status LED... */
-	if (LED_PIN > 0) {
+	if (rp2_is_picow()) {
+		/* On pico_w, LED is connected to the radio GPIO... */
+#ifdef LIB_PICO_CYW43_ARCH
+		cyw43_arch_lwip_begin();
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+		cyw43_arch_lwip_end();
+#endif
+	} else {
+#if LED_PIN > 0
 		gpio_init(LED_PIN);
 		gpio_set_dir(LED_PIN, GPIO_OUT);
 		gpio_put(LED_PIN, 0);
-	}
-#ifdef LIB_PICO_CYW43_ARCH
-	/* On pico_w, LED is connected to the radio GPIO... */
-	cyw43_arch_lwip_begin();
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-	cyw43_arch_lwip_end();
 #endif
+	}
 
 	/* Configure PWM pins... */
 	setup_pwm_outputs();
@@ -577,14 +580,18 @@ int main()
 			if (led_state != old_led_state) {
 				log_msg(LOG_DEBUG, "toggle LED start: %u", led_state);
 				t_led_start = get_absolute_time();
-#if LED_PIN > 0
-				gpio_put(LED_PIN, led_state);
-#endif
+				if (rp2_is_picow()) {
 #ifdef LIB_PICO_CYW43_ARCH
-				cyw43_arch_lwip_begin();
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
-				cyw43_arch_lwip_end();
+					cyw43_arch_lwip_begin();
+					cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
+					cyw43_arch_lwip_end();
 #endif
+				} else {
+#if LED_PIN > 0
+					gpio_put(LED_PIN, led_state);
+#endif
+				}
+
 				t_now = get_absolute_time();
 				log_msg(LOG_DEBUG, "toggle LED end");
 				delta = absolute_time_diff_us(t_led_start, t_now);
