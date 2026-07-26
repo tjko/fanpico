@@ -49,20 +49,20 @@ jobs:
       uses: carlosperate/arm-none-eabi-gcc-action@v1
 
     - name: Checkout repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
     - name: Cache Pico-SDK
       id: cache-pico-sdk
-      uses: actions/cache@v5
+      uses: actions/cache@v7
       with:
         path: pico-sdk
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
 
     - name: Checkout Pico-SDK
       if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
       with:
         repository: raspberrypi/pico-sdk
         ref: ${{env.PICO_SDK_REF}}
@@ -75,14 +75,14 @@ jobs:
 
     - name: Cache picotool
       id: cache-picotool
-      uses: actions/cache@v5
+      uses: actions/cache@v7
       with:
         path: picotool
         key: ${{runner.os}}-picotool-${{env.PICOTOOL_REF}}
 
     - name: Checkout picotool
       if: ${{steps.cache-picotool.outputs.cache-hit != 'true' }}
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
       with:
         repository: raspberrypi/picotool
         ref: ${{env.PICOTOOL_REF}}
