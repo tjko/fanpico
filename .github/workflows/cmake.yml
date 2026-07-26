@@ -10,8 +10,8 @@ env:
   BUILD_THREADS: 4
   BUILD_TYPE: Release
   # Pico-SDK version
-  PICO_SDK_REF: 2.2.0
-  PICOTOOL_REF: 2.2.0
+  PICO_SDK_REF: 2.3.0
+  PICOTOOL_REF: 2.3.0
 
 jobs:
   build:
@@ -39,14 +39,14 @@ jobs:
 
     - name: Cache Pico-SDK
       id: cache-pico-sdk
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: pico-sdk
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
 
     - name: Checkout Pico-SDK
       if: ${{steps.cache-pico-sdk.outputs.cache-hit != 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: raspberrypi/pico-sdk
         ref: ${{env.PICO_SDK_REF}}
@@ -59,14 +59,14 @@ jobs:
 
     - name: Cache picotool
       id: cache-picotool
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: picotool
         key: ${{runner.os}}-picotool-${{env.PICOTOOL_REF}}
 
     - name: Checkout picotool
       if: ${{steps.cache-picotool.outputs.cache-hit != 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: raspberrypi/picotool
         ref: ${{env.PICOTOOL_REF}}
@@ -81,7 +81,7 @@ jobs:
         make -j ${{env.BUILD_THREADS}} install
 
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         path: main
         submodules: recursive
@@ -119,7 +119,7 @@ jobs:
         cp -av fanpico.elf.map dist/fanpico-${{matrix.fanpico_board}}-${{matrix.pico_board}}.elf.map
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: firmware-${{matrix.fanpico_board}}-${{matrix.pico_board}}-build${{github.run_number}}-${{env.BUILD_DATE}}
         path: main/build/dist
@@ -140,7 +140,7 @@ jobs:
 
     - name: Upload License Artifact
       if: ${{ matrix.fanpico_board == '0804' && matrix.pico_board == 'pico' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: licenses
         path: main/licenses
@@ -156,7 +156,7 @@ jobs:
     steps:
 
     - name: Download All Artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         path: bundle
         pattern: firmware-*
@@ -175,13 +175,13 @@ jobs:
         echo '```' >> $GITHUB_STEP_SUMMARY
 
     - name: Upload checksum artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: firmware-checksums
         path: bundle/*.txt
 
     - name: Merge Artifacts
-      uses: actions/upload-artifact/merge@v4
+      uses: actions/upload-artifact/merge@v7
       with:
         name: fanpico-firmware-${{env.BUILD_DATE}}-${{env.FANPICO_VERSION}}-build${{github.run_number}}
         delete-merged: true
