@@ -39,7 +39,7 @@ jobs:
 
     - name: Cache Pico-SDK
       id: cache-pico-sdk
-      uses: actions/cache@v7
+      uses: actions/cache@v6
       with:
         path: pico-sdk
         key: ${{runner.os}}-pico-sdk-${{env.PICO_SDK_REF}}
@@ -59,7 +59,7 @@ jobs:
 
     - name: Cache picotool
       id: cache-picotool
-      uses: actions/cache@v7
+      uses: actions/cache@v6
       with:
         path: picotool
         key: ${{runner.os}}-picotool-${{env.PICOTOOL_REF}}
