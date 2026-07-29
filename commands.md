@@ -139,6 +139,7 @@ Fanpico supports following commands:
 * [SYStem:I2C:SCAN?](#systemi2cscan)
 * [SYStem:I2C:SPEED](#systemi2cspeed)
 * [SYStem:I2C:SPEED?](#systemi2cspeed?)
+* [SYStem:IFCONFIG?](#systemifconfig)
 * [SYStem:LED](#systemled)
 * [SYStem:LED?](#systemled-1)
 * [SYStem:LFS?](#systemlfs)
@@ -2250,6 +2251,11 @@ Example:
 SYS:I2C:SPEED?
 1000000
 ```
+
+
+#### SYStem:IFCONFIG?
+Same as [SYStem:WIFI:INFO?](#systemwifiinfo)
+
 
 
 #### SYStem:LED
@@ -4433,6 +4439,8 @@ SYS:WIFI:INFO?
  Network Link: Up
   WiFi Status: Link Up (2 days, 00:11:42 since last change)
   MAC Address: 28:cd:c1:xx:xx:xx
+         RSSI: -54 dBm
+        BSSID: fc:ec:da:xx:xx:xx
   DHCP Client: Enabled
 DHCP Hostname: FanPico-e6614c31xxxxxxxxx
 
