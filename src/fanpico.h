@@ -626,26 +626,6 @@ void* memmem(const void *haystack, size_t haystacklen, const void *needle, size_
 char *bitmask_to_str(uint32_t mask, uint16_t len, uint8_t base, bool range);
 int str_to_bitmask(const char *str, uint16_t len, uint32_t *mask, uint8_t base);
 
-/* util_rp2.c */
-uint32_t get_stack_pointer();
-uint32_t get_stack_free();
-void print_rp2_meminfo();
-void print_irqinfo();
-#if PICO_SDK_VERSION_MAJOR < 2
-void watchdog_disable();
-#endif
-const char *rp2_model_str();
-const char *pico_serial_str();
-int time_passed(absolute_time_t *t, uint32_t ms);
-int time_elapsed(absolute_time_t t, uint32_t ms);
-int getstring_timeout_ms(char *str, uint32_t maxlen, uint32_t timeout);
-float get_rp2_dvdd();
-void print_rp2_board_info();
-void print_psram_info();
-void rp2_memtest();
-void rp2_set_sys_clock(uint32_t khz);
-int rp2_is_picow();
-
 
 /* crc32.c */
 unsigned int xcrc32 (const unsigned char *buf, int len, unsigned int init);

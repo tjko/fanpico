@@ -1,5 +1,5 @@
 /* config.c
-   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -30,7 +30,7 @@
 #ifdef WIFI_SUPPORT
 #include "lwip/ip_addr.h"
 #endif
-
+#include "util_rp2.h"
 #include "fanpico.h"
 
 /* Default configuration embedded using  default_config.s */

@@ -41,6 +41,7 @@
 
 #include "fanpico.h"
 #include "command_util.h"
+#include "util_rp2.h"
 #include "psram.h"
 
 
