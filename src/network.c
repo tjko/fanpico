@@ -32,7 +32,7 @@
 #include "lwip/apps/httpd.h"
 #include "util_net.h"
 #endif
-
+#include "util_rp2.h"
 #include "fanpico.h"
 
 
@@ -456,6 +456,7 @@ void wifi_info_display()
 {
 	uint8_t bssid[6] = { 0, 0, 0, 0, 0, 0 };
 	int32_t rssi = 0;
+	uint32_t channel = 0;
 	char buf[32];
 	int res;
 
@@ -466,15 +467,19 @@ void wifi_info_display()
 		if ((res = cyw43_wifi_get_bssid(&cyw43_state, bssid))) {
 			log_msg(LOG_ERR, "cyw43_wifi_get_bssid() failed: %d", res);
 		}
+		if ((res = cyw43_wifi_get_channel(&cyw43_state,&channel))) {
+                        log_msg(LOG_ERR, "cyw43_wifi_get_channel() failed: %d", res);
+                }
 	}
 
 	printf(" Network Link: %s\n", (net_state->netif_up ? "Up" : "Down"));
 	uptime_to_str(buf, sizeof(buf),
 		absolute_time_diff_us(net_state->wifi_status_change, get_absolute_time()),
 		true);
+	printf("  MAC Address: %s\n", mac_address_str(net_state->mac));
 	printf("  WiFi Status: %s (%s since last change)\n",
 		wifi_link_status_text(net_state->wifi_status), buf);
-	printf("  MAC Address: %s\n", mac_address_str(net_state->mac));
+        printf("      Channel: %lu\n", channel);
 	printf("         RSSI: %li dBm\n", rssi);
 	printf("        BSSID: %s\n\n", mac_address_str(bssid));
 	printf("  DHCP Client: %s\n", (ip_addr_isany(&cfg->ip) ? "Enabled" : "Disabled"));

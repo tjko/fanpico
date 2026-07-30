@@ -1,5 +1,5 @@
 /* tls.c
-   Copyright (C) 2021-2022 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <malloc.h>
 #include "pico/stdlib.h"
+#include "util_rp2.h"
 #include "fanpico.h"
 
 #if WIFI_SUPPORT

@@ -1,5 +1,5 @@
 /* tacho.c
-   Copyright (C) 2021-2023 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -28,6 +28,7 @@
 #include "hardware/pio.h"
 #include "square_wave_gen.h"
 #include "pulse_len.h"
+#include "util_rp2.h"
 #include "fanpico.h"
 
 /*

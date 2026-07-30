@@ -1,5 +1,5 @@
 /* mqtt.c
-   Copyright (C) 2023-2024 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2023-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -33,7 +33,7 @@
 #include "lwip/altcp_tls.h"
 #endif
 #endif
-
+#include "util_rp2.h"
 #include "fanpico.h"
 
 #ifdef WIFI_SUPPORT
