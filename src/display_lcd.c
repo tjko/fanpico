@@ -506,10 +506,11 @@ void draw_fields(const struct fanpico_state *state, const struct fanpico_config 
 
 		case OTHER:
 			switch (f->type) {
-			case IP:
+			case IP: {
 				const char* net_ip = network_ip();
 				snprintf(buf, 16, "%15s", (net_ip ? net_ip : ""));
 				break;
+			}
 			case DATE_TIME:
 				if (rtc_get_tm(&t)) {
 					snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",

@@ -247,10 +247,11 @@ static snmp_err_t sensor_table_get(const u32_t* column, const u32_t* row,
 	case 3: // temperature
 		value->s32 = round_decimal(st->temp[i], 1) * 10;
 		break;
-	case 4: // duty_cycle
+	case 4: { // duty_cycle
 		double pwm = sensor_get_duty(&cfg->sensors[i].map, st->temp[i]);
 		value->u32 = round_decimal(pwm, 0);
 		break;
+	}
 	default:
 		return SNMP_ERR_NOSUCHINSTANCE;
 	}
@@ -320,10 +321,11 @@ static snmp_err_t vsensor_table_get(const u32_t* column, const u32_t* row,
 	case 5: // pressure
 		value->u32 = round_decimal(st->vpressure[i], 1) * 10;
 		break;
-	case 6: // duty_cycle
+	case 6: { // duty_cycle
 		double pwm = sensor_get_duty(&cfg->vsensors[i].map, st->vtemp[i]);
 		value->u32 = round_decimal(pwm, 0);
 		break;
+	}
 	default:
 		return SNMP_ERR_NOSUCHINSTANCE;
 	}
