@@ -562,13 +562,13 @@ int cmd_fan_pwm_map(const char *cmd, const char *args, int query, struct prev_cm
 			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
-		while (t) {
+		while (t && count < MAX_MAP_POINTS * 2) {
 			val = atoi(t);
 			new_map.pwm[count / 2][count % 2] = val;
 			count++;
 			t = strtok_r(NULL, ",", &saveptr);
 		}
-		if ((count >= 4) && (count % 2 == 0)) {
+		if (!t && (count >= 4) && (count % 2 == 0)) {
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
@@ -893,13 +893,13 @@ int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, struct prev_
 			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
-		while (t) {
+		while (t && count < MAX_MAP_POINTS * 2) {
 			val = atoi(t);
 			new_map.tacho[count / 2][count % 2] = val;
 			count++;
 			t = strtok_r(NULL, ",", &saveptr);
 		}
-		if ((count >= 4) && (count % 2 == 0)) {
+		if (!t && (count >= 4) && (count % 2 == 0)) {
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
@@ -1262,13 +1262,13 @@ int cmd_sensor_temp_map(const char *cmd, const char *args, int query, struct pre
 			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
-		while (t) {
+		while (t && count < MAX_MAP_POINTS * 2) {
 			val = atof(t);
 			new_map.temp[count / 2][count % 2] = val;
 			count++;
 			t = strtok_r(NULL, ",", &saveptr);
 		}
-		if ((count >= 4) && (count % 2 == 0)) {
+		if (!t && (count >= 4) && (count % 2 == 0)) {
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
@@ -1504,13 +1504,13 @@ int cmd_vsensor_temp_map(const char *cmd, const char *args, int query, struct pr
 			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
-		while (t) {
+		while (t && count < MAX_MAP_POINTS * 2) {
 			val = atof(t);
 			new_map.temp[count / 2][count % 2] = val;
 			count++;
 			t = strtok_r(NULL, ",", &saveptr);
 		}
-		if ((count >= 4) && (count % 2 == 0)) {
+		if (!t && (count >= 4) && (count % 2 == 0)) {
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
