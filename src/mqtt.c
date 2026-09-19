@@ -35,6 +35,7 @@
 #endif
 #include "util_rp2.h"
 #include "fanpico.h"
+#include "command_util.h"
 
 #ifdef WIFI_SUPPORT
 
@@ -111,11 +112,13 @@ static char* json_response_message(const char *cmd, int result, const char *msg)
 {
 	char *buf;
 	cJSON *json;
+	char masked_cmd[MQTT_CMD_MAX_LEN + 1];
+	const char *display_cmd = mask_password_command(cmd, masked_cmd, sizeof(masked_cmd));
 
 	if (!(json = cJSON_CreateObject()))
 		goto panic;
 
-	cJSON_AddItemToObject(json, "command", cJSON_CreateString(cmd));
+	cJSON_AddItemToObject(json, "command", cJSON_CreateString(display_cmd));
 	cJSON_AddItemToObject(json, "result", cJSON_CreateString(result == 0 ? "OK" : "ERROR"));
 	cJSON_AddItemToObject(json, "message", cJSON_CreateString(msg));
 
@@ -165,6 +168,7 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
 static void incoming_fanpico_cmd(const u8_t *data, u16_t len)
 {
 	char cmd[MQTT_CMD_MAX_LEN];
+	char masked_cmd[MQTT_CMD_MAX_LEN + 1];
 	const u8_t *end, *start;
 	int l;
 
@@ -193,16 +197,19 @@ static void incoming_fanpico_cmd(const u8_t *data, u16_t len)
 	/* Check if should be command allowed */
 	if (!cfg->mqtt_allow_scpi) {
 		if (strncasecmp(cmd, "WRITE:", 6)) {
-			log_msg(LOG_NOTICE, "MQTT SCPI commands not allowed: '%s'", cmd);
+			log_msg(LOG_NOTICE, "MQTT SCPI commands not allowed: '%s'",
+				mask_password_command(cmd, masked_cmd, sizeof(masked_cmd)));
 			return;
 		}
 	}
 
 	if (mqtt_scpi_cmd_queued) {
-		log_msg(LOG_NOTICE, "MQTT SCPI command queue full: '%s'", cmd);
+		log_msg(LOG_NOTICE, "MQTT SCPI command queue full: '%s'",
+			mask_password_command(cmd, masked_cmd, sizeof(masked_cmd)));
 		send_mqtt_command_response(cmd, 1, "SCPI command queue full");
 	} else {
-		log_msg(LOG_NOTICE, "MQTT SCPI command queued: '%s'", cmd);
+		log_msg(LOG_NOTICE, "MQTT SCPI command queued: '%s'",
+			mask_password_command(cmd, masked_cmd, sizeof(masked_cmd)));
 		strncopy(mqtt_scpi_cmd, cmd, sizeof(mqtt_scpi_cmd));
 		mqtt_scpi_cmd_queued = true;
 	}
@@ -923,19 +930,23 @@ void fanpico_mqtt_scpi_command()
 {
 	const struct fanpico_state *st = fanpico_state;
 	char cmd[MQTT_CMD_MAX_LEN];
+	char masked_cmd[MQTT_CMD_MAX_LEN + 1];
 	int res;
 
 	if (!mqtt_client || !mqtt_scpi_cmd_queued)
 		return;
 
-	log_msg(LOG_DEBUG, "MQTT process SCPI command: '%s'", mqtt_scpi_cmd);
+	log_msg(LOG_DEBUG, "MQTT process SCPI command: '%s'",
+		mask_password_command(mqtt_scpi_cmd, masked_cmd, sizeof(masked_cmd)));
 	strncopy(cmd, mqtt_scpi_cmd, sizeof(cmd));
 	process_command(st, (struct fanpico_config *)cfg, cmd);
 	if ((res = last_command_status()) == 0) {
-		log_msg(LOG_INFO, "MQTT SCPI command successful: '%s'", mqtt_scpi_cmd);
+		log_msg(LOG_INFO, "MQTT SCPI command successful: '%s'",
+			mask_password_command(mqtt_scpi_cmd, masked_cmd, sizeof(masked_cmd)));
 		send_mqtt_command_response(mqtt_scpi_cmd, res, "SCPI command successful");
 	} else {
-		log_msg(LOG_NOTICE, "MQTT SCPI command failed: '%s' (%d)", mqtt_scpi_cmd, res);
+		log_msg(LOG_NOTICE, "MQTT SCPI command failed: '%s' (%d)",
+			mask_password_command(mqtt_scpi_cmd, masked_cmd, sizeof(masked_cmd)), res);
 		if (res == -113)
 			send_mqtt_command_response(mqtt_scpi_cmd, res, "SCPI unknown command");
 		else

@@ -1,5 +1,5 @@
 /* command_util.c
-   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -222,6 +222,104 @@ int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
 
 
 /* Helper functions for commands */
+
+static int scpi_command_match(const char *scpi_cmd, const char *cmd)
+{
+	if (!cmd || !scpi_cmd)
+		return false;
+
+	size_t cmd_len = strlen(cmd);
+	size_t scpi_cmd_len = strlen(scpi_cmd);
+	int cmd_pos = 0;
+	int scpi_cmd_pos = 0;
+
+
+	while ((cmd_pos < cmd_len) && (scpi_cmd_pos < scpi_cmd_len)) {
+		unsigned char c = cmd[cmd_pos];
+		unsigned char sc = scpi_cmd[scpi_cmd_pos];
+
+		if (sc == ':') {
+			if (c != ':')
+				return -cmd_pos;
+		}
+		else if (isupper(sc)) {
+			if (sc != toupper(c))
+				return -cmd_pos;
+		}
+		else {
+			if (sc == tolower(c)) {
+				// match...
+			}
+			else if (c == ':') {
+				while (scpi_cmd_pos < scpi_cmd_len && scpi_cmd[scpi_cmd_pos] != ':') {
+					scpi_cmd_pos++;
+				}
+				if (scpi_cmd[scpi_cmd_pos] != ':')
+					return -cmd_pos;
+			}
+			else if (c == ' ') {
+				return cmd_pos;
+			}
+		}
+
+		scpi_cmd_pos++;
+		cmd_pos++;
+	}
+
+	return cmd_pos;
+}
+
+const char *mask_password_command(const char *cmd, char *buf, size_t buf_len)
+{
+	static const char* secret_cmds[] = {
+		"SYStem:WIFI:PASSword",
+		"SYStem:MQTT:PASSword",
+		"SYStem:SSH:PASSword",
+		"SYStem:TELNET:PASSword",
+		NULL
+	};
+	size_t offset = 0, arg_offset;
+
+	if (!cmd || !buf || buf_len < 1)
+		return cmd;
+
+	while (isspace((uint8_t)cmd[offset]))
+		offset++;
+	if (cmd[offset] == ':')
+		offset++;
+	if (cmd[offset] == 0)
+		return cmd;
+
+	for (int i = 0; secret_cmds[i]; i++) {
+		size_t pos = offset;
+		int m_pos = scpi_command_match(secret_cmds[i], &cmd[pos]);
+
+		if (m_pos <= 0)
+			continue;
+		pos += m_pos;
+
+		if (cmd[pos] == 0 || cmd[pos] == '?' || cmd[pos] == ':')
+			return cmd;
+		if (!isspace((unsigned char)cmd[pos]))
+			return cmd;
+
+		arg_offset = pos;
+		while (isspace((unsigned char)cmd[arg_offset]))
+			arg_offset++;
+		if (cmd[arg_offset] == 0)
+			return cmd;
+
+		if (arg_offset >= buf_len)
+			arg_offset = buf_len - 1;
+		memcpy(buf, cmd, arg_offset);
+		buf[arg_offset] = 0;
+		strncat(buf, "***", buf_len - strlen(buf) - 1);
+		return buf;
+	}
+
+	return cmd;
+}
+
 
 int secret_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
@@ -696,4 +794,3 @@ int array_float_setting(const char *cmd, const char *args, int query, struct pre
 	}
 	return 1;
 }
-
