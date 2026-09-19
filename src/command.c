@@ -609,8 +609,7 @@ int cmd_fan_filter(const char *cmd, const char *args, int query, struct prev_cmd
 			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
-			tok += strlen(tok) + 1;
-			new_ctx = filter_parse_args(new_filter, tok);
+			new_ctx = filter_parse_args(new_filter, saveptr ? saveptr : "");
 			if (new_filter == FILTER_NONE || new_ctx != NULL) {
 				f->filter = new_filter;
 				if (f->filter_ctx)
@@ -1169,8 +1168,7 @@ int cmd_mbfan_filter(const char *cmd, const char *args, int query, struct prev_c
 			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
-			tok += strlen(tok) + 1;
-			new_ctx = filter_parse_args(new_filter, tok);
+			new_ctx = filter_parse_args(new_filter, saveptr ? saveptr : "");
 			if (new_filter == FILTER_NONE || new_ctx != NULL) {
 				m->filter = new_filter;
 				if (m->filter_ctx)
@@ -1333,8 +1331,7 @@ int cmd_sensor_filter(const char *cmd, const char *args, int query, struct prev_
 			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
-			tok += strlen(tok) + 1;
-			new_ctx = filter_parse_args(new_filter, tok);
+			new_ctx = filter_parse_args(new_filter, saveptr ? saveptr : "");
 			if (new_filter == FILTER_NONE || new_ctx != NULL) {
 				s->filter = new_filter;
 				if (s->filter_ctx)
@@ -1613,8 +1610,7 @@ int cmd_vsensor_filter(const char *cmd, const char *args, int query, struct prev
 			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
-			tok += strlen(tok) + 1;
-			new_ctx = filter_parse_args(new_filter, tok);
+			new_ctx = filter_parse_args(new_filter, saveptr ? saveptr : "");
 			if (new_filter == FILTER_NONE || new_ctx != NULL) {
 				s->filter = new_filter;
 				if (s->filter_ctx)
