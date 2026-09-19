@@ -257,7 +257,7 @@ static int scpi_command_match(const char *scpi_cmd, const char *cmd)
 				if (scpi_cmd[scpi_cmd_pos] != ':')
 					return -cmd_pos;
 			}
-			else if (c == ' ') {
+			else if (isspace(c)) {
 				return cmd_pos;
 			}
 		}
