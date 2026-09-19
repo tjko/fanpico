@@ -223,6 +223,57 @@ int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
 
 /* Helper functions for commands */
 
+const char *mask_password_command(const char *cmd, char *buf, size_t buf_len)
+{
+	static const char *secret_cmds[] = {
+		"SYS:WIFI:PASS",
+		"SYS:MQTT:PASS",
+		"SYS:SSH:PASS",
+		"SYS:TELNET:PASS",
+		NULL
+	};
+	size_t offset = 0;
+
+	if (!cmd || !buf || buf_len < 1)
+		return cmd;
+
+	while (isspace((unsigned char)cmd[offset]))
+		offset++;
+
+	for (int i = 0; secret_cmds[i]; i++) {
+		size_t prefix_len = strlen(secret_cmds[i]);
+		size_t token_end;
+		size_t visible_len;
+
+		if (strncasecmp(cmd + offset, secret_cmds[i], prefix_len))
+			continue;
+
+		token_end = offset + prefix_len;
+		while (isalpha((unsigned char)cmd[token_end]))
+			token_end++;
+
+		if (cmd[token_end] == '?' || cmd[token_end] == 0)
+			return cmd;
+		if (!isspace((unsigned char)cmd[token_end]))
+			continue;
+
+		while (isspace((unsigned char)cmd[token_end]))
+			token_end++;
+		if (cmd[token_end] == 0)
+			return cmd;
+
+		visible_len = token_end;
+		if (visible_len >= buf_len)
+			visible_len = buf_len - 1;
+		memcpy(buf, cmd, visible_len);
+		buf[visible_len] = 0;
+		strncat(buf, "***", buf_len - strlen(buf) - 1);
+		return buf;
+	}
+
+	return cmd;
+}
+
 int secret_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
 {
@@ -696,4 +747,3 @@ int array_float_setting(const char *cmd, const char *args, int query, struct pre
 	}
 	return 1;
 }
-
