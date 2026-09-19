@@ -153,10 +153,9 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
 		topic, (unsigned int)tot_len);
 	if (!strncmp(topic, cfg->mqtt_cmd_topic, strlen(cfg->mqtt_cmd_topic) + 1)) {
 		incoming_topic = 1;
-	} else if (strlen(mqtt_ha_birth_topic) > 0) {
-		if (!strncmp(topic, mqtt_ha_birth_topic, strlen(mqtt_ha_birth_topic) + 1)) {
-			incoming_topic = 2;
-		}
+	} else if (strlen(mqtt_ha_birth_topic) > 0 &&
+		!strncmp(topic, mqtt_ha_birth_topic, strlen(mqtt_ha_birth_topic) + 1)) {
+		incoming_topic = 2;
 	} else {
 		log_msg(LOG_DEBUG, "Ignoring publish on unknown topic: %s", topic);
 		incoming_topic = 0;
