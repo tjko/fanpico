@@ -23,6 +23,7 @@
 #include <time.h>
 #include <assert.h>
 #include "pico/cyw43_arch.h"
+#include "lwip/pbuf.h"
 #include "lwip/prot/dhcp.h"
 
 #include "fanpico.h"
@@ -94,7 +95,8 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 		msg_type, option, option_len, option_value_offset);
 
 	if (option == DHCP_OPTION_LOG && option_len >= 4) {
-		memcpy(&log_ip.addr, pbuf->payload + option_value_offset, 4);
+		if (pbuf_copy_partial(pbuf, &log_ip.addr, 4, option_value_offset) != 4)
+			return;
 		if (ip_addr_isany(&cfg->syslog_server)) {
 			/* If no syslog server configured, use one from DHCP... */
 			if (!ip_addr_cmp(&net_state->syslog_server, &log_ip)) {
@@ -107,8 +109,9 @@ void pico_dhcp_option_parse_hook(struct netif *netif, struct dhcp *dhcp, u8_t st
 		}
 	}
 	else if (option == DHCP_OPTION_POSIX_TZ && option_len > 0) {
-		int  len = (option_len < sizeof(timezone) ? option_len : sizeof(timezone) - 1);
-		memcpy(timezone, pbuf->payload + option_value_offset, len);
+		u16_t len = (option_len < sizeof(timezone) ? option_len : sizeof(timezone) - 1);
+		if (pbuf_copy_partial(pbuf, timezone, len, option_value_offset) != len)
+			return;
 		timezone[len] = 0;
 		if (strlen(cfg->timezone) < 1) {
 			if (strncmp(timezone, m->timezone, len + 1)) {
