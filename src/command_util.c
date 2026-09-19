@@ -225,48 +225,75 @@ int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
 
 const char *mask_password_command(const char *cmd, char *buf, size_t buf_len)
 {
-	static const char *secret_cmds[] = {
-		"SYS:WIFI:PASS",
-		"SYS:MQTT:PASS",
-		"SYS:SSH:PASS",
-		"SYS:TELNET:PASS",
-		NULL
+	static const struct {
+		const char *parts[3];
+		uint8_t min_match[3];
+	} secret_cmds[] = {
+		{ { "SYStem", "WIFI", "PASSword" }, { 3, 4, 4 } },
+		{ { "SYStem", "MQTT", "PASSword" }, { 3, 4, 4 } },
+		{ { "SYStem", "SSH", "PASSword" }, { 3, 3, 4 } },
+		{ { "SYStem", "TELNET", "PASSword" }, { 3, 6, 4 } },
+		{ { NULL, NULL, NULL }, { 0, 0, 0 } }
 	};
-	size_t offset = 0;
+	size_t offset = 0, arg_offset;
 
 	if (!cmd || !buf || buf_len < 1)
 		return cmd;
 
 	while (isspace((unsigned char)cmd[offset]))
 		offset++;
+	if (cmd[offset] == ':')
+		offset++;
 
-	for (int i = 0; secret_cmds[i]; i++) {
-		size_t prefix_len = strlen(secret_cmds[i]);
-		size_t token_end;
-		size_t visible_len;
+	for (int i = 0; secret_cmds[i].parts[0]; i++) {
+		size_t pos = offset;
+		bool match = true;
 
-		if (strncasecmp(cmd + offset, secret_cmds[i], prefix_len))
+		for (int j = 0; j < 3; j++) {
+			size_t part_len = 0;
+			size_t full_len = strlen(secret_cmds[i].parts[j]);
+
+			while (cmd[pos + part_len] &&
+				cmd[pos + part_len] != ':' &&
+				cmd[pos + part_len] != '?' &&
+				!isspace((unsigned char)cmd[pos + part_len])) {
+				part_len++;
+			}
+
+			if (part_len < secret_cmds[i].min_match[j] ||
+				part_len > full_len ||
+				strncasecmp(cmd + pos, secret_cmds[i].parts[j], part_len)) {
+				match = false;
+				break;
+			}
+
+			pos += part_len;
+			if (j < 2) {
+				if (cmd[pos] != ':') {
+					match = false;
+					break;
+				}
+				pos++;
+			}
+		}
+		if (!match)
 			continue;
 
-		token_end = offset + prefix_len;
-		while (isalpha((unsigned char)cmd[token_end]))
-			token_end++;
-
-		if (cmd[token_end] == '?' || cmd[token_end] == 0)
+		if (cmd[pos] == '?' || cmd[pos] == 0 || cmd[pos] == ':')
 			return cmd;
-		if (!isspace((unsigned char)cmd[token_end]))
-			continue;
-
-		while (isspace((unsigned char)cmd[token_end]))
-			token_end++;
-		if (cmd[token_end] == 0)
+		if (!isspace((unsigned char)cmd[pos]))
 			return cmd;
 
-		visible_len = token_end;
-		if (visible_len >= buf_len)
-			visible_len = buf_len - 1;
-		memcpy(buf, cmd, visible_len);
-		buf[visible_len] = 0;
+		arg_offset = pos;
+		while (isspace((unsigned char)cmd[arg_offset]))
+			arg_offset++;
+		if (cmd[arg_offset] == 0)
+			return cmd;
+
+		if (arg_offset >= buf_len)
+			arg_offset = buf_len - 1;
+		memcpy(buf, cmd, arg_offset);
+		buf[arg_offset] = 0;
 		strncat(buf, "***", buf_len - strlen(buf) - 1);
 		return buf;
 	}
