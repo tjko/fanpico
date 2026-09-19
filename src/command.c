@@ -3229,7 +3229,6 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 	char *saveptr, *cmd;
 	struct prev_cmd_t cmd_stack;
 	const struct cmd_t *cmd_level = commands;
-	char disp_cmd[128];
 
 	if (!state || !config || !command)
 		return;
@@ -3241,8 +3240,7 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 	cmd = strtok_r(command, ";", &saveptr);
 	while (cmd) {
 		cmd = trim_str(cmd);
-		log_msg(LOG_DEBUG, "command: '%s'",
-			mask_password_command(cmd, disp_cmd, sizeof(disp_cmd)));
+		/* log_msg(LOG_DEBUG, "command: '%s'", cmd); */
 		if (cmd && strlen(cmd) > 0) {
 			cmd_stack.depth = 0;
 			cmd_stack.cmds[0] = NULL;

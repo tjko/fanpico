@@ -81,7 +81,11 @@ const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *commands, const struc
 			sub = NULL;
 			i = 0;
 			while (cmd_level[i].cmd) {
-				if (!strncasecmp(s, cmd_level[i].cmd, cmd_level[i].min_match)) {
+				size_t c_len = strlen(cmd_level[i].cmd);
+				size_t s_len = strlen(s);
+
+				if (s_len <= c_len && s_len >= cmd_level[i].min_match &&
+				    !strncasecmp(s, cmd_level[i].cmd, s_len)) {
 					sub = strtok_r(NULL, ":", &saveptr2);
 					if (cmd_level[i].subcmds && sub && strlen(sub) > 0) {
 						/* Match for subcommand...*/
