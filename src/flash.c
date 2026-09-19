@@ -113,7 +113,7 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename)
 				lfs_ssize_t read = lfs_file_read(&lfs, &lfs_file, *bufptr, file_size);
 				if (read < 0 || (uint32_t)read < file_size) {
 					log_msg(LOG_ERR, "Error reading file \"%s\": %ld",
-						filename, (int32_t)read);
+						filename, (long)read);
 					free(*bufptr);
 					*bufptr = NULL;
 					res = -5;
