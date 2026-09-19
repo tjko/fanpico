@@ -1,5 +1,5 @@
 /* command_util.c
-   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -223,63 +223,82 @@ int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
 
 /* Helper functions for commands */
 
+static int scpi_command_match(const char *scpi_cmd, const char *cmd)
+{
+	if (!cmd || !scpi_cmd)
+		return false;
+
+	size_t cmd_len = strlen(cmd);
+	size_t scpi_cmd_len = strlen(scpi_cmd);
+	int cmd_pos = 0;
+	int scpi_cmd_pos = 0;
+
+
+	while ((cmd_pos < cmd_len) && (scpi_cmd_pos < scpi_cmd_len)) {
+		unsigned char c = cmd[cmd_pos];
+		unsigned char sc = scpi_cmd[scpi_cmd_pos];
+
+		if (sc == ':') {
+			if (c != ':')
+				return -cmd_pos;
+		}
+		else if (isupper(sc)) {
+			if (sc != toupper(c))
+				return -cmd_pos;
+		}
+		else {
+			if (sc == tolower(c)) {
+				// match...
+			}
+			else if (c == ':') {
+				while (scpi_cmd_pos < scpi_cmd_len && scpi_cmd[scpi_cmd_pos] != ':') {
+					scpi_cmd_pos++;
+				}
+				if (scpi_cmd[scpi_cmd_pos] != ':')
+					return -cmd_pos;
+			}
+			else if (c == ' ') {
+				return cmd_pos;
+			}
+		}
+
+		scpi_cmd_pos++;
+		cmd_pos++;
+	}
+
+	return cmd_pos;
+}
+
 const char *mask_password_command(const char *cmd, char *buf, size_t buf_len)
 {
-	static const struct {
-		const char *parts[3];
-		uint8_t min_match[3];
-	} secret_cmds[] = {
-		{ { "SYStem", "WIFI", "PASSword" }, { 3, 4, 4 } },
-		{ { "SYStem", "MQTT", "PASSword" }, { 3, 4, 4 } },
-		{ { "SYStem", "SSH", "PASSword" }, { 3, 3, 4 } },
-		{ { "SYStem", "TELNET", "PASSword" }, { 3, 6, 4 } },
-		{ { NULL, NULL, NULL }, { 0, 0, 0 } }
+	static const char* secret_cmds[] = {
+		"SYStem:WIFI:PASSword",
+		"SYStem:MQTT:PASSword",
+		"SYStem:SSH:PASSword",
+		"SYStem:TELNET:PASSword",
+		NULL
 	};
 	size_t offset = 0, arg_offset;
 
 	if (!cmd || !buf || buf_len < 1)
 		return cmd;
 
-	while (isspace((unsigned char)cmd[offset]))
+	while (isspace((uint8_t)cmd[offset]))
 		offset++;
 	if (cmd[offset] == ':')
 		offset++;
+	if (cmd[offset] == 0)
+		return cmd;
 
-	for (int i = 0; secret_cmds[i].parts[0]; i++) {
+	for (int i = 0; secret_cmds[i]; i++) {
 		size_t pos = offset;
-		bool match = true;
+		int m_pos = scpi_command_match(secret_cmds[i], &cmd[pos]);
 
-		for (int j = 0; j < 3; j++) {
-			size_t part_len = 0;
-			size_t full_len = strlen(secret_cmds[i].parts[j]);
-
-			while (cmd[pos + part_len] &&
-				cmd[pos + part_len] != ':' &&
-				cmd[pos + part_len] != '?' &&
-				!isspace((unsigned char)cmd[pos + part_len])) {
-				part_len++;
-			}
-
-			if (part_len < secret_cmds[i].min_match[j] ||
-				part_len > full_len ||
-				strncasecmp(cmd + pos, secret_cmds[i].parts[j], part_len)) {
-				match = false;
-				break;
-			}
-
-			pos += part_len;
-			if (j < 2) {
-				if (cmd[pos] != ':') {
-					match = false;
-					break;
-				}
-				pos++;
-			}
-		}
-		if (!match)
+		if (m_pos <= 0)
 			continue;
+		pos += m_pos;
 
-		if (cmd[pos] == '?' || cmd[pos] == 0 || cmd[pos] == ':')
+		if (cmd[pos] == 0 || cmd[pos] == '?' || cmd[pos] == ':')
 			return cmd;
 		if (!isspace((unsigned char)cmd[pos]))
 			return cmd;
@@ -300,6 +319,7 @@ const char *mask_password_command(const char *cmd, char *buf, size_t buf_len)
 
 	return cmd;
 }
+
 
 int secret_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
