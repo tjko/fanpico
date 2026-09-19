@@ -223,6 +223,31 @@ int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
 
 /* Helper functions for commands */
 
+int secret_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
+		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
+{
+	if (query) {
+		printf("%s is %s.\n", name, strlen(var) > 0 ? "set" : "unset");
+	} else {
+		if (validate_func) {
+			if (!validate_func(args)) {
+				log_msg(LOG_WARNING, "%s invalid argument", name);
+				return 2;
+			}
+		}
+		if (strcmp(var, args)) {
+			if (strlen(args) > 0) {
+				log_msg(LOG_NOTICE, "%s set", name);
+			} else {
+				log_msg(LOG_NOTICE, "%s cleared", name);
+			}
+			strncopy(var, args, var_len);
+		}
+	}
+	return 0;
+}
+
+
 int string_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
 {
@@ -242,7 +267,6 @@ int string_setting(const char *cmd, const char *args, int query, struct prev_cmd
 	}
 	return 0;
 }
-
 
 
 int bitmask16_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,

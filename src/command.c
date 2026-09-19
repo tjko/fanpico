@@ -1778,8 +1778,8 @@ int cmd_wifi_country(const char *cmd, const char *args, int query, struct prev_c
 
 int cmd_wifi_password(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return string_setting(cmd, args, query, prev_cmd,
-			conf->wifi_passwd, sizeof(conf->wifi_passwd), "WiFi Password", NULL);
+	return secret_setting(cmd, args, query, prev_cmd,
+			      conf->wifi_passwd, sizeof(conf->wifi_passwd), "WiFi Password", NULL);
 }
 
 int cmd_wifi_hostname(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -1834,7 +1834,7 @@ int cmd_mqtt_user(const char *cmd, const char *args, int query, struct prev_cmd_
 
 int cmd_mqtt_pass(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return string_setting(cmd, args, query, prev_cmd,
+	return secret_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_pass, sizeof(conf->mqtt_pass), "MQTT Password", NULL);
 }
 

@@ -51,6 +51,8 @@ const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *commands,
 int get_cmd_index(const char *cmd);
 const char* get_prev_cmd(const struct prev_cmd_t *prev_cmd, uint depth);
 int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth);
+int secret_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
+		char *var, size_t var_len, const char *name, validate_str_func_t validate_func);
 int string_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		char *var, size_t var_len, const char *name, validate_str_func_t validate_func);
 int bitmask16_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
