@@ -83,9 +83,10 @@ const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *commands, const struc
 			while (cmd_level[i].cmd) {
 				size_t c_len = strlen(cmd_level[i].cmd);
 				size_t s_len = strlen(s);
+				size_t match_len = (s_len > 0 && s[s_len - 1] == '?') ? s_len - 1 : s_len;
 
-				if (s_len <= c_len && s_len >= cmd_level[i].min_match &&
-				    !strncasecmp(s, cmd_level[i].cmd, s_len)) {
+				if (match_len <= c_len && match_len >= cmd_level[i].min_match &&
+				    !strncasecmp(s, cmd_level[i].cmd, match_len)) {
 					sub = strtok_r(NULL, ":", &saveptr2);
 					if (cmd_level[i].subcmds && sub && strlen(sub) > 0) {
 						/* Match for subcommand...*/
@@ -287,9 +288,9 @@ const char *mask_password_command(const char *cmd, char *buf, size_t buf_len)
 	if (!cmd || !buf || buf_len < 1)
 		return cmd;
 
-	while (isspace((uint8_t)cmd[offset]))
+	while (isspace((unsigned char)cmd[offset]))
 		offset++;
-	if (cmd[offset] == ':')
+	while (cmd[offset] == ':')
 		offset++;
 	if (cmd[offset] == 0)
 		return cmd;
