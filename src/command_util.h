@@ -35,11 +35,15 @@ struct prev_cmd_t {
 	char* cmds[MAX_CMD_DEPTH];
 };
 
+
+#define CMD_INDEX  0x01   // indexed command (number follows command)
+
 struct cmd_t {
-	const char   *cmd;
-	uint8_t       min_match;
+	const char         *cmd;
+	uint8_t             min_match;
 	const struct cmd_t *subcmds;
-	int (*func)(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
+	int               (*func)(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
+	uint8_t             flags;
 };
 
 

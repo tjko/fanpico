@@ -86,10 +86,21 @@ const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *commands, const struc
 				size_t match_len = (s_len > 0 && s[s_len - 1] == '?') ? s_len - 1 : s_len;
 
 				/* Handle indexed commands that end with a number... */
-				while (match_len > 0 && isdigit((unsigned char)s[match_len - 1]))
-					match_len--;
+				if (cmd_level[i].flags & CMD_INDEX) {
+					int digits = 0;
 
-				if (match_len <= c_len && match_len >= cmd_level[i].min_match &&
+					while (match_len > 0 && isdigit((unsigned char)s[match_len - 1])) {
+						digits++;
+						match_len--;
+					}
+					if (digits <= 0) {
+						/* command requires a number at the end, but it's missing,
+						   skip command... */
+						match_len = 0;
+					}
+				}
+
+				if (match_len >= cmd_level[i].min_match && match_len <= c_len &&
 				    !strncasecmp(s, cmd_level[i].cmd, match_len)) {
 					sub = strtok_r(NULL, ":", &saveptr2);
 					if (cmd_level[i].subcmds && sub && strlen(sub) > 0) {

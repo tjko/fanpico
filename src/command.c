@@ -3134,16 +3134,16 @@ const struct cmd_t vsensors_c_commands[] = {
 };
 
 const struct cmd_t config_commands[] = {
-	{ "DELete",    3, NULL,              cmd_delete_config },
-	{ "FAN",       3, fan_c_commands,    NULL },
-	{ "MBFAN",     5, mbfan_c_commands,  NULL },
-	{ "Read",      1, NULL,              cmd_print_config },
-	{ "SAVe",      3, NULL,              cmd_save_config },
-	{ "SENSOR",    6, sensor_c_commands, NULL },
-	{ "UPLOAD",    6, NULL,              cmd_upload_config },
-	{ "VSENSORS",  8, vsensors_c_commands, cmd_vsensors_sources },
-	{ "VSENSOR",   7, vsensor_c_commands, NULL },
-	{ 0, 0, 0, 0 }
+	{ "DELete",    3, NULL,                cmd_delete_config,    0 },
+	{ "FAN",       3, fan_c_commands,      NULL,                 CMD_INDEX },
+	{ "MBFAN",     5, mbfan_c_commands,    NULL,                 CMD_INDEX },
+	{ "Read",      1, NULL,                cmd_print_config,     0 },
+	{ "SAVe",      3, NULL,                cmd_save_config,      0 },
+	{ "SENSOR",    6, sensor_c_commands,   NULL,                 CMD_INDEX },
+	{ "UPLOAD",    6, NULL,                cmd_upload_config,    0 },
+	{ "VSENSORS",  8, vsensors_c_commands, cmd_vsensors_sources, 0 },
+	{ "VSENSOR",   7, vsensor_c_commands,  NULL,                 CMD_INDEX },
+	{ 0, 0, 0, 0, 0 }
 };
 
 const struct cmd_t fan_commands[] = {
@@ -3177,13 +3177,13 @@ const struct cmd_t vsensor_commands[] = {
 };
 
 const struct cmd_t measure_commands[] = {
-	{ "FAN",       3, fan_commands,      cmd_fan_read },
-	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read },
-	{ "Read",      1, NULL,              cmd_read },
-	{ "SENSOR",    6, sensor_commands,   cmd_sensor_temp },
-	{ "VSENSORS",  8, NULL,              cmd_vsensors_read },
-	{ "VSENSOR",   7, vsensor_commands,  cmd_vsensor_temp },
-	{ 0, 0, 0, 0 }
+	{ "FAN",       3, fan_commands,      cmd_fan_read,      CMD_INDEX },
+	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read,    CMD_INDEX },
+	{ "Read",      1, NULL,              cmd_read,          0 },
+	{ "SENSOR",    6, sensor_commands,   cmd_sensor_temp,   CMD_INDEX },
+	{ "VSENSORS",  8, NULL,              cmd_vsensors_read, 0 },
+	{ "VSENSOR",   7, vsensor_commands,  cmd_vsensor_temp,  CMD_INDEX },
+	{ 0, 0, 0, 0, 0 }
 };
 
 const struct cmd_t write_commands[] = {
