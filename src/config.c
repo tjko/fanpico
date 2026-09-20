@@ -1572,7 +1572,8 @@ void upload_config()
 		printf("Uploaded JSON object missing 'id' field.\n");
 		goto panic;
 	}
-	if (strncmp(ref->valuestring, "fanpico-config-v", 16)) {
+	if (!cJSON_IsString(ref) || !ref->valuestring ||
+		strncmp(ref->valuestring, "fanpico-config-v", 16)) {
 		printf("Invalid configuration uploaded.\n");
 		goto panic;
 	}

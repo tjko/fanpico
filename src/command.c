@@ -562,13 +562,13 @@ int cmd_fan_pwm_map(const char *cmd, const char *args, int query, struct prev_cm
 			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
-		while (t) {
+		while (t && count < MAX_MAP_POINTS * 2) {
 			val = atoi(t);
 			new_map.pwm[count / 2][count % 2] = val;
 			count++;
 			t = strtok_r(NULL, ",", &saveptr);
 		}
-		if ((count >= 4) && (count % 2 == 0)) {
+		if (!t && (count >= 4) && (count % 2 == 0)) {
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
@@ -609,8 +609,7 @@ int cmd_fan_filter(const char *cmd, const char *args, int query, struct prev_cmd
 			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
-			tok += strlen(tok) + 1;
-			new_ctx = filter_parse_args(new_filter, tok);
+			new_ctx = filter_parse_args(new_filter, saveptr ? saveptr : "");
 			if (new_filter == FILTER_NONE || new_ctx != NULL) {
 				f->filter = new_filter;
 				if (f->filter_ctx)
@@ -893,13 +892,13 @@ int cmd_mbfan_rpm_map(const char *cmd, const char *args, int query, struct prev_
 			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
-		while (t) {
+		while (t && count < MAX_MAP_POINTS * 2) {
 			val = atoi(t);
 			new_map.tacho[count / 2][count % 2] = val;
 			count++;
 			t = strtok_r(NULL, ",", &saveptr);
 		}
-		if ((count >= 4) && (count % 2 == 0)) {
+		if (!t && (count >= 4) && (count % 2 == 0)) {
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
@@ -1169,8 +1168,7 @@ int cmd_mbfan_filter(const char *cmd, const char *args, int query, struct prev_c
 			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
-			tok += strlen(tok) + 1;
-			new_ctx = filter_parse_args(new_filter, tok);
+			new_ctx = filter_parse_args(new_filter, saveptr ? saveptr : "");
 			if (new_filter == FILTER_NONE || new_ctx != NULL) {
 				m->filter = new_filter;
 				if (m->filter_ctx)
@@ -1262,13 +1260,13 @@ int cmd_sensor_temp_map(const char *cmd, const char *args, int query, struct pre
 			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
-		while (t) {
+		while (t && count < MAX_MAP_POINTS * 2) {
 			val = atof(t);
 			new_map.temp[count / 2][count % 2] = val;
 			count++;
 			t = strtok_r(NULL, ",", &saveptr);
 		}
-		if ((count >= 4) && (count % 2 == 0)) {
+		if (!t && (count >= 4) && (count % 2 == 0)) {
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
@@ -1333,8 +1331,7 @@ int cmd_sensor_filter(const char *cmd, const char *args, int query, struct prev_
 			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
-			tok += strlen(tok) + 1;
-			new_ctx = filter_parse_args(new_filter, tok);
+			new_ctx = filter_parse_args(new_filter, saveptr ? saveptr : "");
 			if (new_filter == FILTER_NONE || new_ctx != NULL) {
 				s->filter = new_filter;
 				if (s->filter_ctx)
@@ -1504,13 +1501,13 @@ int cmd_vsensor_temp_map(const char *cmd, const char *args, int query, struct pr
 			return 2;
 		count = 0;
 		t = strtok_r(arg, ",", &saveptr);
-		while (t) {
+		while (t && count < MAX_MAP_POINTS * 2) {
 			val = atof(t);
 			new_map.temp[count / 2][count % 2] = val;
 			count++;
 			t = strtok_r(NULL, ",", &saveptr);
 		}
-		if ((count >= 4) && (count % 2 == 0)) {
+		if (!t && (count >= 4) && (count % 2 == 0)) {
 			new_map.points = count / 2;
 			*map = new_map;
 		} else {
@@ -1613,8 +1610,7 @@ int cmd_vsensor_filter(const char *cmd, const char *args, int query, struct prev
 			return 2;
 		if ((tok = strtok_r(param, ",", &saveptr)) != NULL) {
 			new_filter = str2filter(tok);
-			tok += strlen(tok) + 1;
-			new_ctx = filter_parse_args(new_filter, tok);
+			new_ctx = filter_parse_args(new_filter, saveptr ? saveptr : "");
 			if (new_filter == FILTER_NONE || new_ctx != NULL) {
 				s->filter = new_filter;
 				if (s->filter_ctx)
@@ -1778,8 +1774,8 @@ int cmd_wifi_country(const char *cmd, const char *args, int query, struct prev_c
 
 int cmd_wifi_password(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return string_setting(cmd, args, query, prev_cmd,
-			conf->wifi_passwd, sizeof(conf->wifi_passwd), "WiFi Password", NULL);
+	return secret_setting(cmd, args, query, prev_cmd,
+			      conf->wifi_passwd, sizeof(conf->wifi_passwd), "WiFi Password", NULL);
 }
 
 int cmd_wifi_hostname(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
@@ -1834,7 +1830,7 @@ int cmd_mqtt_user(const char *cmd, const char *args, int query, struct prev_cmd_
 
 int cmd_mqtt_pass(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd)
 {
-	return string_setting(cmd, args, query, prev_cmd,
+	return secret_setting(cmd, args, query, prev_cmd,
 			conf->mqtt_pass, sizeof(conf->mqtt_pass), "MQTT Password", NULL);
 }
 
@@ -3138,16 +3134,16 @@ const struct cmd_t vsensors_c_commands[] = {
 };
 
 const struct cmd_t config_commands[] = {
-	{ "DELete",    3, NULL,              cmd_delete_config },
-	{ "FAN",       3, fan_c_commands,    NULL },
-	{ "MBFAN",     5, mbfan_c_commands,  NULL },
-	{ "Read",      1, NULL,              cmd_print_config },
-	{ "SAVe",      3, NULL,              cmd_save_config },
-	{ "SENSOR",    6, sensor_c_commands, NULL },
-	{ "UPLOAD",    6, NULL,              cmd_upload_config },
-	{ "VSENSORS",  8, vsensors_c_commands, cmd_vsensors_sources },
-	{ "VSENSOR",   7, vsensor_c_commands, NULL },
-	{ 0, 0, 0, 0 }
+	{ "DELete",    3, NULL,                cmd_delete_config,    0 },
+	{ "FAN",       3, fan_c_commands,      NULL,                 CMD_INDEX },
+	{ "MBFAN",     5, mbfan_c_commands,    NULL,                 CMD_INDEX },
+	{ "Read",      1, NULL,                cmd_print_config,     0 },
+	{ "SAVe",      3, NULL,                cmd_save_config,      0 },
+	{ "SENSOR",    6, sensor_c_commands,   NULL,                 CMD_INDEX },
+	{ "UPLOAD",    6, NULL,                cmd_upload_config,    0 },
+	{ "VSENSORS",  8, vsensors_c_commands, cmd_vsensors_sources, 0 },
+	{ "VSENSOR",   7, vsensor_c_commands,  NULL,                 CMD_INDEX },
+	{ 0, 0, 0, 0, 0 }
 };
 
 const struct cmd_t fan_commands[] = {
@@ -3181,13 +3177,13 @@ const struct cmd_t vsensor_commands[] = {
 };
 
 const struct cmd_t measure_commands[] = {
-	{ "FAN",       3, fan_commands,      cmd_fan_read },
-	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read },
-	{ "Read",      1, NULL,              cmd_read },
-	{ "SENSOR",    6, sensor_commands,   cmd_sensor_temp },
-	{ "VSENSORS",  8, NULL,              cmd_vsensors_read },
-	{ "VSENSOR",   7, vsensor_commands,  cmd_vsensor_temp },
-	{ 0, 0, 0, 0 }
+	{ "FAN",       3, fan_commands,      cmd_fan_read,      CMD_INDEX },
+	{ "MBFAN",     5, mbfan_commands,    cmd_mbfan_read,    CMD_INDEX },
+	{ "Read",      1, NULL,              cmd_read,          0 },
+	{ "SENSOR",    6, sensor_commands,   cmd_sensor_temp,   CMD_INDEX },
+	{ "VSENSORS",  8, NULL,              cmd_vsensors_read, 0 },
+	{ "VSENSOR",   7, vsensor_commands,  cmd_vsensor_temp,  CMD_INDEX },
+	{ 0, 0, 0, 0, 0 }
 };
 
 const struct cmd_t write_commands[] = {
@@ -3244,7 +3240,7 @@ void process_command(const struct fanpico_state *state, struct fanpico_config *c
 	cmd = strtok_r(command, ";", &saveptr);
 	while (cmd) {
 		cmd = trim_str(cmd);
-		log_msg(LOG_DEBUG, "command: '%s'", cmd);
+		/* log_msg(LOG_DEBUG, "command: '%s'", cmd); */
 		if (cmd && strlen(cmd) > 0) {
 			cmd_stack.depth = 0;
 			cmd_stack.cmds[0] = NULL;

@@ -35,11 +35,15 @@ struct prev_cmd_t {
 	char* cmds[MAX_CMD_DEPTH];
 };
 
+
+#define CMD_INDEX  0x01   // indexed command (number follows command)
+
 struct cmd_t {
-	const char   *cmd;
-	uint8_t       min_match;
+	const char         *cmd;
+	uint8_t             min_match;
 	const struct cmd_t *subcmds;
-	int (*func)(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
+	int               (*func)(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd);
+	uint8_t             flags;
 };
 
 
@@ -48,9 +52,12 @@ struct cmd_t {
 const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *commands,
 			const struct cmd_t *cmd_level, struct prev_cmd_t *cmd_stack,
 			int *last_error_num);
+const char *mask_password_command(const char *cmd, char *buf, size_t buf_len);
 int get_cmd_index(const char *cmd);
 const char* get_prev_cmd(const struct prev_cmd_t *prev_cmd, uint depth);
 int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth);
+int secret_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
+		char *var, size_t var_len, const char *name, validate_str_func_t validate_func);
 int string_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		char *var, size_t var_len, const char *name, validate_str_func_t validate_func);
 int bitmask16_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,

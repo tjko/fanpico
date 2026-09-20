@@ -1,5 +1,5 @@
 /* command_util.c
-   Copyright (C) 2021-2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2021-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -81,7 +81,27 @@ const struct cmd_t* run_cmd(char *cmd, const struct cmd_t *commands, const struc
 			sub = NULL;
 			i = 0;
 			while (cmd_level[i].cmd) {
-				if (!strncasecmp(s, cmd_level[i].cmd, cmd_level[i].min_match)) {
+				size_t c_len = strlen(cmd_level[i].cmd);
+				size_t s_len = strlen(s);
+				size_t match_len = (s_len > 0 && s[s_len - 1] == '?') ? s_len - 1 : s_len;
+
+				/* Handle indexed commands that end with a number... */
+				if (cmd_level[i].flags & CMD_INDEX) {
+					int digits = 0;
+
+					while (match_len > 0 && isdigit((unsigned char)s[match_len - 1])) {
+						digits++;
+						match_len--;
+					}
+					if (digits <= 0) {
+						/* command requires a number at the end, but it's missing,
+						   skip command... */
+						match_len = 0;
+					}
+				}
+
+				if (match_len >= cmd_level[i].min_match && match_len <= c_len &&
+				    !strncasecmp(s, cmd_level[i].cmd, match_len)) {
 					sub = strtok_r(NULL, ":", &saveptr2);
 					if (cmd_level[i].subcmds && sub && strlen(sub) > 0) {
 						/* Match for subcommand...*/
@@ -223,6 +243,129 @@ int get_prev_cmd_index(const struct prev_cmd_t *prev_cmd, uint depth)
 
 /* Helper functions for commands */
 
+static int scpi_command_match(const char *scpi_cmd, const char *cmd)
+{
+	if (!cmd || !scpi_cmd)
+		return false;
+
+	size_t cmd_len = strlen(cmd);
+	size_t scpi_cmd_len = strlen(scpi_cmd);
+	int cmd_pos = 0;
+	int scpi_cmd_pos = 0;
+
+
+	while ((cmd_pos < cmd_len) && (scpi_cmd_pos < scpi_cmd_len)) {
+		unsigned char c = cmd[cmd_pos];
+		unsigned char sc = scpi_cmd[scpi_cmd_pos];
+
+		if (sc == ':') {
+			if (c != ':')
+				return -cmd_pos;
+		}
+		else if (isupper(sc)) {
+			if (sc != toupper(c))
+				return -cmd_pos;
+		}
+		else {
+			if (sc == tolower(c)) {
+				// match...
+			}
+			else if (c == ':') {
+				while (scpi_cmd_pos < scpi_cmd_len && scpi_cmd[scpi_cmd_pos] != ':') {
+					scpi_cmd_pos++;
+				}
+				if (scpi_cmd[scpi_cmd_pos] != ':')
+					return -cmd_pos;
+			}
+			else if (isspace(c)) {
+				return cmd_pos;
+			}
+		}
+
+		scpi_cmd_pos++;
+		cmd_pos++;
+	}
+
+	return cmd_pos;
+}
+
+const char *mask_password_command(const char *cmd, char *buf, size_t buf_len)
+{
+	static const char* secret_cmds[] = {
+		"SYStem:WIFI:PASSword",
+		"SYStem:MQTT:PASSword",
+		"SYStem:SSH:PASSword",
+		"SYStem:TELNET:PASSword",
+		NULL
+	};
+	size_t offset = 0, arg_offset;
+
+	if (!cmd || !buf || buf_len < 1)
+		return cmd;
+
+	while (isspace((unsigned char)cmd[offset]))
+		offset++;
+	while (cmd[offset] == ':')
+		offset++;
+	if (cmd[offset] == 0)
+		return cmd;
+
+	for (int i = 0; secret_cmds[i]; i++) {
+		size_t pos = offset;
+		int m_pos = scpi_command_match(secret_cmds[i], &cmd[pos]);
+
+		if (m_pos <= 0)
+			continue;
+		pos += m_pos;
+
+		if (cmd[pos] == 0 || cmd[pos] == '?' || cmd[pos] == ':')
+			return cmd;
+		if (!isspace((unsigned char)cmd[pos]))
+			return cmd;
+
+		arg_offset = pos;
+		while (isspace((unsigned char)cmd[arg_offset]))
+			arg_offset++;
+		if (cmd[arg_offset] == 0)
+			return cmd;
+
+		if (arg_offset >= buf_len)
+			arg_offset = buf_len - 1;
+		memcpy(buf, cmd, arg_offset);
+		buf[arg_offset] = 0;
+		strncat(buf, "***", buf_len - strlen(buf) - 1);
+		return buf;
+	}
+
+	return cmd;
+}
+
+
+int secret_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
+		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
+{
+	if (query) {
+		printf("%s is %s.\n", name, strlen(var) > 0 ? "set" : "unset");
+	} else {
+		if (validate_func) {
+			if (!validate_func(args)) {
+				log_msg(LOG_WARNING, "%s invalid argument", name);
+				return 2;
+			}
+		}
+		if (strcmp(var, args)) {
+			if (strlen(args) > 0) {
+				log_msg(LOG_NOTICE, "%s set", name);
+			} else {
+				log_msg(LOG_NOTICE, "%s cleared", name);
+			}
+			strncopy(var, args, var_len);
+		}
+	}
+	return 0;
+}
+
+
 int string_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
 		char *var, size_t var_len, const char *name, validate_str_func_t validate_func)
 {
@@ -242,7 +385,6 @@ int string_setting(const char *cmd, const char *args, int query, struct prev_cmd
 	}
 	return 0;
 }
-
 
 
 int bitmask16_setting(const char *cmd, const char *args, int query, struct prev_cmd_t *prev_cmd,
@@ -672,4 +814,3 @@ int array_float_setting(const char *cmd, const char *args, int query, struct pre
 	}
 	return 1;
 }
-

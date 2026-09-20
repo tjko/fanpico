@@ -110,11 +110,15 @@ int flash_read_file(char **bufptr, uint32_t *sizeptr, const char *filename)
 			} else {
 				/* Read file... */
 				log_msg(LOG_DEBUG, "Reading file \"%s\"...", filename);
-				*sizeptr = lfs_file_read(&lfs, &lfs_file, *bufptr, file_size);
-				if (*sizeptr < file_size) {
-					log_msg(LOG_ERR, "Error reading file \"%s\": %lu",
-						filename, *sizeptr);
+				lfs_ssize_t read = lfs_file_read(&lfs, &lfs_file, *bufptr, file_size);
+				if (read < 0 || (uint32_t)read < file_size) {
+					log_msg(LOG_ERR, "Error reading file \"%s\": %ld",
+						filename, (long)read);
+					free(*bufptr);
+					*bufptr = NULL;
 					res = -5;
+				} else {
+					*sizeptr = read;
 				}
 			}
 		}
