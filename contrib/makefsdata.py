@@ -4,7 +4,7 @@
 #
 # Changes:
 #
-# 2026-08-04 Add support to several command-line arguments
+# 2026-09-21 Add support to several command-line arguments
 #            that the original LwIP makefsdata program
 #            supports (by tjko@iki.fi)
 #
