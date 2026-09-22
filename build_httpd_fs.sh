@@ -14,4 +14,4 @@ fatal() { echo "`basename $0`: $*"; exit 1; }
 
 [ -d "$FSDIR" ] || fatal "cannot find fs directory: $FSDIR"
 
-./contrib/makefsdata.py ${FSDIR} -m -svr "${SERVER}" -ssi "${SSIFILENAME}" -f ${FSDATAFILE} -x "${EXCLUDE}" -v
+./contrib/makefsdata.py ${FSDIR} -M -svr "${SERVER}" -ssi "${SSIFILENAME}" -f ${FSDATAFILE} -x "${EXCLUDE}" -v

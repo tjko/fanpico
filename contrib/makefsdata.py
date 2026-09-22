@@ -12,7 +12,7 @@
 
 import argparse
 import mimetypes
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from pathlib import Path
 import re
 
@@ -84,8 +84,10 @@ def process_file(input_dir, file, ssi_files, last_modified):
 
         # last-modified
         if last_modified:
-            #mtime = datetime.fromtimestamp(file.stat().st_mtime)
-            mtime_str = datetime.now(timezone.utc).strftime('%a, %d %b %Y %H:%M:%S GMT')
+            if last_modified == 'file':
+                mtime_str = datetime.fromtimestamp(file.stat().st_mtime, tz=UTC).strftime('%a, %d %b %Y %H:%M:%S GMT')
+            else:
+                mtime_str = datetime.now(timezone.utc).strftime('%a, %d %b %Y %H:%M:%S GMT')
             data = f"Last-Modified: {mtime_str}\r\n"
             comment = f"\"Last-Modified: {mtime_str}\" ({len(data)} chars)"
             results.append({'data': bytes(data, "utf-8"), 'comment': comment})
@@ -210,6 +212,7 @@ def run_tool():
     parser = argparse.ArgumentParser(prog="makefsdata.py", description="Generates a source file for the lwip httpd server")
     parser.add_argument("-v", "--verbose", action='store_true', help="enable verbose output")
     parser.add_argument("-m", "--modified", action='store_true', help="include \"Last-Modified\" header based on file time")
+    parser.add_argument("-M", "--modified-now", action='store_true', help="include \"Last-Modified\" header based on current time")
     parser.add_argument(
         "-i",
         "--input",
@@ -240,6 +243,11 @@ def run_tool():
     if args.modified:
         if args.verbose:
             print('Include "Last-Modified" header')
+        last_modified_mode = 'file'
+    elif args.modified_now:
+        if args.verbose:
+            print('Include "Last-Modified" header set to current time (in UTC)')
+        last_modified_mode = 'time'
 
     if args.input_dir:
         if Path(args.input_dir).is_dir():
@@ -267,7 +275,7 @@ def run_tool():
         mimetypes.add_type("text/html", ext)
 
     with open(args.output, "w", encoding="utf-8") as fd:
-        process_file_list(fd, input_files, ssi_files, last_modified=args.modified)
+        process_file_list(fd, input_files, ssi_files, last_modified=last_modified_mode)
 
 
 if __name__ == "__main__":
