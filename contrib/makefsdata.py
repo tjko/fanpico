@@ -229,7 +229,7 @@ def run_tool():
         "--exclude",
         help="comma separated list of extensions of files to exclude",
     )
-    parser.add_argument("-ssi", "--ssi", help="ssi filename (ssi support controllerd by file list, not by extension)")
+    parser.add_argument("-ssi", "--ssi", help="ssi filename (ssi support controlled by file list, not by extension)")
     parser.add_argument("-svr", "--server", nargs='?', help="server identifier sent in HTTP response header")
     parser.add_argument('input_dir', nargs='?')
     args = parser.parse_args()
