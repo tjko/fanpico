@@ -5,7 +5,7 @@
 
 SERVER="lwIP/2.2.1 (FanPico)"
 
-EXCLUDE="html~,shtml~,json~,~"
+EXCLUDE="html~,shtml~,json~,csv~"
 SSIFILENAME=src/httpd-fs_ssi.list
 FSDIR=src/httpd-fs/
 FSDATAFILE=src/fanpico_fsdata.c
