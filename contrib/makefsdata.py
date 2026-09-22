@@ -12,7 +12,7 @@
 
 import argparse
 import mimetypes
-from datetime import datetime, timezone, UTC
+from datetime import datetime, timezone
 from pathlib import Path
 import re
 
@@ -85,7 +85,7 @@ def process_file(input_dir, file, ssi_files, last_modified):
         # last-modified
         if last_modified:
             if last_modified == 'file':
-                mtime_str = datetime.fromtimestamp(file.stat().st_mtime, tz=UTC).strftime('%a, %d %b %Y %H:%M:%S GMT')
+                mtime_str = datetime.fromtimestamp(file.stat().st_mtime, tz=timezone.utc).strftime('%a, %d %b %Y %H:%M:%S GMT')
             else:
                 mtime_str = datetime.now(timezone.utc).strftime('%a, %d %b %Y %H:%M:%S GMT')
             data = f"Last-Modified: {mtime_str}\r\n"
@@ -139,7 +139,7 @@ def process_file_list(fd, input_files, ssi_files, last_modified=False):
         var_name = re.sub(r"\W+", "_", var_name, flags=re.ASCII)
 
         # Add a suffix if the variable name is used already
-        if any(d["data_var"] == f"data_{var_name}" for d in data):
+        if any(d["data_var"] == f"data__{var_name}" for d in data):
             var_name += f"_{len(data)}"
 
         data_var = f"data__{var_name}"
@@ -240,6 +240,7 @@ def run_tool():
     if args.verbose:
         print(args)
 
+    last_modified_mode = False
     if args.modified:
         if args.verbose:
             print('Include "Last-Modified" header')
@@ -248,6 +249,7 @@ def run_tool():
         if args.verbose:
             print('Include "Last-Modified" header set to current time (in UTC)')
         last_modified_mode = 'time'
+
 
     if args.input_dir:
         if Path(args.input_dir).is_dir():

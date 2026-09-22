@@ -17,7 +17,7 @@ endif()
 
 
 project(fanpico
-  VERSION 1.7.9
+  VERSION 1.7.10
   DESCRIPTION "FanPico - Programmable PWM (PC) Fan Controller"
   HOMEPAGE_URL https://kokkonen.net/fanpico/
   LANGUAGES C CXX ASM
