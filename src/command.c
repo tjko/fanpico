@@ -2725,7 +2725,7 @@ int __attribute__((optimize("O0"))) cmd_memory(const char *cmd, const char *args
 	void *buf = NULL;
 	size_t bufsize = blocksize;
 	do {
-		log_msg(LOG_INFO, "test blocksize=%lu", bufsize);
+		//log_msg(LOG_INFO, "test blocksize=%lu", bufsize);
 		if (!(buf = malloc(bufsize)))
 			break;
 		free(buf);
