@@ -496,7 +496,7 @@ const char *network_ip();
 #if WIFI_SUPPORT
 /* httpd.c */
 u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
-			u16_t current_tag_part, u16_t *next_tag_part);
+			u16_t current_tag_part, u16_t *next_tag_part, void *conn_state);
 
 /* mqtt.c */
 void fanpico_setup_mqtt_client();
