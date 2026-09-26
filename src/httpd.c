@@ -1,5 +1,5 @@
 /* httpd.c
-   Copyright (C) 2022-2025 Timo Kokkonen <tjko@iki.fi>
+   Copyright (C) 2022-2026 Timo Kokkonen <tjko@iki.fi>
 
    SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -24,32 +24,76 @@
 #include <time.h>
 #include <assert.h>
 #include "pico/stdlib.h"
+#include "lwip/apps/fs.h"
 #include "cJSON.h"
 
 #include "fanpico.h"
 
 
+
+typedef struct ssi_conn_state {
+	void *buf;
+	uint32_t buf_size;
+	uint32_t buf_left;
+	uint16_t next_part;
+} ssi_conn_state_t;
+
+
+void *fs_state_init(struct fs_file *file, const char *name)
+{
+	ssi_conn_state_t *state = NULL;
+
+	log_msg(LOG_INFO, "fs_state_init(%p,'%s')", file, name);
+
+	if (strncmp(name, "/status.", 8))
+		return NULL;
+	if (!(state = malloc(sizeof(ssi_conn_state_t))))
+		return NULL;
+
+	state->buf = NULL;
+	state->buf_size = 0;
+	state->buf_left = 0;
+	state->next_part = 0;
+
+	return state;
+}
+
+void fs_state_free(struct fs_file *file, void *conn_state)
+{
+	ssi_conn_state_t *state = (ssi_conn_state_t*)conn_state;
+
+	log_msg(LOG_INFO, "fs_state_free(%p,%p)", file, state);
+
+	if (state == NULL)
+		return;
+	if (state->buf)
+		free(state->buf);
+	free(state);
+}
+
+
 #define BUF_LEN 1024
 
-u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part)
+u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part,
+		ssi_conn_state_t *state)
 {
 	const struct fanpico_state *st = fanpico_state;
-	static char *buf = NULL;
-	static char *p;
-	static u16_t part;
-	static size_t buf_left;
-	char row[128];
-	double rpm, pwm;
-	int i;
-	size_t printed, count;
+
+
+	if (!state)
+		return 0;
 
 	if (current_tag_part == 0) {
 		/* Generate 'output' into a buffer that then will be fed in chunks to LwIP... */
+		char *buf;
+		double rpm, pwm;
+		char row[128];
+
 		if (!(buf = malloc(BUF_LEN)))
 			return 0;
 		buf[0] = 0;
 
-		for (i = 0; i < FAN_COUNT; i++) {
+		for (int i = 0; i < FAN_COUNT; i++) {
 			rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
 			snprintf(row, sizeof(row), "fan%d,\"%s\",%.0lf,%.2f,%.1f\n",
 				i+1,
@@ -59,7 +103,7 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				st->fan_duty[i]);
 			strncatenate(buf, row, BUF_LEN);
 		}
-		for (i = 0; i < MBFAN_COUNT; i++) {
+		for (int i = 0; i < MBFAN_COUNT; i++) {
 			rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
 			snprintf(row, sizeof(row), "mbfan%d,\"%s\",%.0lf,%.2f,%.1f\n",
 				i+1,
@@ -69,7 +113,7 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				st->mbfan_duty[i]);
 			strncatenate(buf, row, BUF_LEN);
 		}
-		for (i = 0; i < SENSOR_COUNT; i++) {
+		for (int i = 0; i < SENSOR_COUNT; i++) {
 			pwm = sensor_get_duty(&cfg->sensors[i].map, st->temp[i]);
 			snprintf(row, sizeof(row), "sensor%d,\"%s\",%.1lf,%.1lf\n",
 				i+1,
@@ -78,7 +122,7 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 				pwm);
 			strncatenate(buf, row, BUF_LEN);
 		}
-		for (i = 0; i < VSENSOR_COUNT; i++) {
+		for (int i = 0; i < VSENSOR_COUNT; i++) {
 			pwm = sensor_get_duty(&cfg->vsensors[i].map, st->vtemp[i]);
 			snprintf(row, sizeof(row), "vsensor%d,\"%s\",%.1lf,%.1lf,%.0f,%.0f\n",
 				i+1,
@@ -94,40 +138,34 @@ u16_t csv_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next
 			cfg->adc_vref);
 		strncatenate(buf, row, BUF_LEN);
 
-		p = buf;
-		buf_left = strlen(buf);
-		part = 1;
+		state->buf = buf;
+		state->buf_left = state->buf_size = strlen(buf);
+		state->next_part = 1;
 	}
 
 	/* Copy a part of the multi-part response into LwIP buffer ...*/
-	count = (buf_left < insertlen - 1 ? buf_left : insertlen - 1);
-	memcpy(insert, p, count);
+	size_t count = (state->buf_left < insertlen - 1 ? state->buf_left : insertlen - 1);
 
-	p += count;
-	printed = count;
-	buf_left -= count;
-
-	if (buf_left > 0) {
-		*next_tag_part = part++;
-	} else {
-		free(buf);
-		buf = p = NULL;
+	if (count > 0) {
+		memcpy(insert, state->buf + (state->buf_size - state->buf_left), count);
+		state->buf_left -= count;
+		if (state->buf_left > 0)
+			*next_tag_part = state->next_part++;
 	}
 
-	return printed;
+	return count;
 }
 
 
-u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part)
+u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *next_tag_part,
+		ssi_conn_state_t *state)
 {
 	const struct fanpico_state *st = fanpico_state;
 	cJSON *json = NULL;
-	static char *buf = NULL;
-	static char *p;
-	static u16_t part;
-	static size_t buf_left;
-	int i;
-	size_t printed, count;
+	size_t count = 0;
+
+	if (!state)
+		return 0;
 
 	if (current_tag_part == 0) {
 		/* Generate 'output' into a buffer that then will be fed in chunks to LwIP... */
@@ -139,7 +177,7 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 		/* Fans */
 		if (!(array = cJSON_CreateArray()))
 			goto panic;
-		for (i = 0; i < FAN_COUNT; i++) {
+		for (int i = 0; i < FAN_COUNT; i++) {
 			double rpm = st->fan_freq[i] * 60 / cfg->fans[i].rpm_factor;
 
 			if (!(o = cJSON_CreateObject()))
@@ -157,7 +195,7 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 		/* MB Fans */
 		if (!(array = cJSON_CreateArray()))
 			goto panic;
-		for (i = 0; i < MBFAN_COUNT; i++) {
+		for (int i = 0; i < MBFAN_COUNT; i++) {
 			double rpm = st->mbfan_freq[i] * 60 / cfg->mbfans[i].rpm_factor;
 
 			if (!(o = cJSON_CreateObject()))
@@ -175,7 +213,7 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 		/* Sensors */
 		if (!(array = cJSON_CreateArray()))
 			goto panic;
-		for (i = 0; i < SENSOR_COUNT; i++) {
+		for (int i = 0; i < SENSOR_COUNT; i++) {
 			double pwm = sensor_get_duty(&cfg->sensors[i].map, st->temp[i]);
 			if (!(o = cJSON_CreateObject()))
 				goto panic;
@@ -192,7 +230,7 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 		/* Virtual Sensors */
 		if (!(array = cJSON_CreateArray()))
 			goto panic;
-		for (i = 0; i < VSENSOR_COUNT; i++) {
+		for (int i = 0; i < VSENSOR_COUNT; i++) {
 			double pwm = sensor_get_duty(&cfg->vsensors[i].map, st->vtemp[i]);
 			if (!(o = cJSON_CreateObject()))
 				goto panic;
@@ -209,47 +247,38 @@ u16_t json_stats(char *insert, int insertlen, u16_t current_tag_part, u16_t *nex
 		}
 		cJSON_AddItemToObject(json, "vsensors", array);
 
-		if (!(buf = cJSON_Print(json)))
+		if (!(state->buf = cJSON_Print(json)))
 			goto panic;
-		cJSON_Delete(json);
-		json = NULL;
 
-		p = buf;
-		buf_left = strlen(buf);
-		part = 1;
+		state->buf_left = state->buf_size = strlen(state->buf);
+		state->next_part = 1;
 	}
 
 	/* Copy a part of the multi-part response into LwIP buffer ...*/
-	count = (buf_left < insertlen - 1 ? buf_left : insertlen - 1);
-	memcpy(insert, p, count);
+	count = (state->buf_left < insertlen - 1 ? state->buf_left : insertlen - 1);
 
-	p += count;
-	printed = count;
-	buf_left -= count;
-
-	if (buf_left > 0) {
-		*next_tag_part = part++;
-	} else {
-		free(buf);
-		buf = p = NULL;
+	if (count > 0) {
+		memcpy(insert, state->buf + (state->buf_size - state->buf_left), count);
+		state->buf_left -= count;
+		if (state->buf_left > 0)
+			*next_tag_part = state->next_part++;
 	}
-
-	return printed;
 
 panic:
 	if (json)
 		cJSON_Delete(json);
-	return 0;
+	return count;
 }
 
 
 u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
-			u16_t current_tag_part, u16_t *next_tag_part)
+			u16_t current_tag_part, u16_t *next_tag_part, void *conn_state)
 {
 	const struct fanpico_state *st = fanpico_state;
+	ssi_conn_state_t *state = (ssi_conn_state_t*)conn_state;
 	size_t printed = 0;
 
-	/* printf("ssi_handler(\"%s\",%lx,%d,%u,%u)\n", tag, (uint32_t)insert, insertlen, current_tag_part, *next_tag_part); */
+	/* printf("ssi_handler(\"%s\",%lx,%d,%u,%u,%p)\n", tag, (uint32_t)insert, insertlen, current_tag_part, *next_tag_part, conn_state); */
 
 	if (!strncmp(tag, "datetime", 8)) {
 		time_t t;
@@ -344,10 +373,10 @@ u16_t fanpico_ssi_handler(const char *tag, char *insert, int insertlen,
 					cfg->adc_vref);
 	}
 	else if (!strncmp(tag, "csvstat", 7)) {
-		printed = csv_stats(insert, insertlen, current_tag_part, next_tag_part);
+		printed = csv_stats(insert, insertlen, current_tag_part, next_tag_part, state);
 	}
 	else if (!strncmp(tag, "jsonstat", 8)) {
-		printed = json_stats(insert, insertlen, current_tag_part, next_tag_part);
+		printed = json_stats(insert, insertlen, current_tag_part, next_tag_part, state);
 	}
 	else if (!strncmp(tag, "refresh", 8)) {
 		/* generate "random" refresh time for a page, to help spread out the load... */

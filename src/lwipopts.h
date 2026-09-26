@@ -30,6 +30,7 @@ extern uint16_t fanpico_https_server_port;
 #define MEM_OVERFLOW_CHECK          1
 #define MEMP_NUM_TCP_SEG            64
 #define MEMP_NUM_TCP_PCB            32
+#define MEMP_NUM_TCP_PCB_LISTEN     8
 #define MEMP_NUM_UDP_PCB            8
 #define MEMP_NUM_ARP_QUEUE          10
 #define MEMP_NUM_SYS_TIMEOUT        (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 4)
@@ -74,17 +75,21 @@ void pico_set_system_time(long int sec);
 #define LWIP_HOOK_DHCP_APPEND_OPTIONS   pico_dhcp_option_add_hook
 #define LWIP_HOOK_DHCP_PARSE_OPTION     pico_dhcp_option_parse_hook
 
-#define MQTT_OUTPUT_RINGBUF_SIZE        4096
-#define MQTT_REQ_MAX_IN_FLIGHT          32
-#define HTTPD_FSDATA_FILE               "fanpico_fsdata.c"
-#define HTTPD_USE_MEM_POOL              0
-#define HTTPD_SERVER_PORT               fanpico_http_server_port
-#define HTTPD_SERVER_PORT_HTTPS         fanpico_https_server_port
-#define LWIP_HTTPD_SSI                  1
-#define LWIP_HTTPD_SSI_RAW              1
-#define LWIP_HTTPD_SSI_MULTIPART        1
-#define LWIP_HTTPD_SSI_INCLUDE_TAG      0
-#define LWIP_HTTPD_SSI_EXTENSIONS       ".shtml", ".xml", ".json", ".csv"
+#define MQTT_OUTPUT_RINGBUF_SIZE          4096
+#define MQTT_REQ_MAX_IN_FLIGHT            32
+#define HTTPD_FSDATA_FILE                 "fanpico_fsdata.c"
+#define HTTPD_SERVER_PORT                 fanpico_http_server_port
+#define HTTPD_SERVER_PORT_HTTPS           fanpico_https_server_port
+#define HTTPD_USE_MEM_POOL                1
+#define MEMP_NUM_PARALLEL_HTTPD_CONNS     8
+#define MEMP_NUM_PARALLEL_HTTPD_SSI_CONNS 8
+#define LWIP_HTTPD_FILE_STATE             1
+#define LWIP_HTTPD_SSI                    1
+#define LWIP_HTTPD_SSI_RAW                1
+#define LWIP_HTTPD_SSI_MULTIPART          1
+#define LWIP_HTTPD_SSI_INCLUDE_TAG        0
+#define LWIP_HTTPD_SSI_EXTENSIONS         ".shtml", ".xml", ".json", ".csv"
+
 
 #define LWIP_SNMP                       1
 #define SNMP_LWIP_MIB2                  1
@@ -135,7 +140,7 @@ void pico_set_system_time(long int sec);
 #define SLIP_DEBUG                  LWIP_DBG_OFF
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 #define SNTP_DEBUG                  LWIP_DBG_OFF
-#define HTTPD_DEBUG                 LWIP_DBG_OFF
+#define HTTPD_DEBUG                 LWIP_DBG_ON
 #define MQTT_DEBUG                  LWIP_DBG_ON
 #define ALTCP_MBEDTLS_DEBUG         LWIP_DBG_ON
 #define ALTCP_MBEDTLS_MEM_DEBUG     LWIP_DBG_ON
