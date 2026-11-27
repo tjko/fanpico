@@ -408,12 +408,14 @@ static void json2vsensors(cJSON *item, uint8_t *s)
 	int i,val;
 	int count = 0;
 
-	for (i = 0; i < SENSOR_MAX_COUNT; i++)
+	for (i = 0; i < VSENSOR_SOURCE_MAX_COUNT; i++)
 		s[i] = 0;
 
 	cJSON_ArrayForEach(o, item) {
 		val = cJSON_GetNumberValue(o);
-		if (count < SENSOR_COUNT && val >= 1 && val <= SENSOR_COUNT) {
+		if (count < VSENSOR_SOURCE_MAX_COUNT &&
+			( (val >= 1 && val <= SENSOR_COUNT) ||
+				(val >= (100 + 1) && val <=  (100 + VSENSOR_COUNT) )) ) {
 			s[count++] = val;
 		}
 	}
@@ -428,11 +430,12 @@ static cJSON* vsensors2json(const uint8_t *s)
 	if ((o = cJSON_CreateArray()) == NULL)
 		return NULL;
 
-	for (i = 0; i < SENSOR_COUNT; i++) {
+	for (i = 0; i < VSENSOR_SOURCE_MAX_COUNT; i++) {
 		if (s[i]) {
 			cJSON_AddItemToArray(o, cJSON_CreateNumber(s[i]));
 		}
 	}
+
 	return o;
 }
 
